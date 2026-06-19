@@ -14,11 +14,11 @@ dcc_interaction_t *dcc_interaction_clone(const dcc_interaction_t *interaction) {
     }
 
     *copy = *interaction;
-    copy->token = dcc_clone_string_or_null(interaction->token);
-    copy->name = dcc_clone_string_or_null(interaction->name);
-    copy->custom_id = dcc_clone_string_or_null(interaction->custom_id);
-    copy->locale = dcc_clone_string_or_null(interaction->locale);
-    copy->guild_locale = dcc_clone_string_or_null(interaction->guild_locale);
+    copy->token = NULL;
+    copy->name = NULL;
+    copy->custom_id = NULL;
+    copy->locale = NULL;
+    copy->guild_locale = NULL;
     copy->values = NULL;
     copy->options = NULL;
     copy->authorizing_integration_owners = NULL;

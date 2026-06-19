@@ -4,6 +4,22 @@
 #include <openssl/ssl.h>
 
 #include <string.h>
+#if defined(_WIN32)
+#include <winsock2.h>
+#else
+#include <sys/socket.h>
+#endif
+
+static void dcc_conn_shutdown_fd(llam_fd_t fd) {
+    if (fd == LLAM_INVALID_FD) {
+        return;
+    }
+#if defined(_WIN32)
+    (void)shutdown((SOCKET)fd, SD_BOTH);
+#else
+    (void)shutdown((int)fd, SHUT_RDWR);
+#endif
+}
 
 dcc_status_t dcc_conn_open(dcc_conn_t *conn, const dcc_conn_options_t *options) {
     if (conn == NULL || options == NULL || options->host == NULL || options->port == NULL) {
@@ -36,6 +52,9 @@ void dcc_conn_close(dcc_conn_t *conn) {
         return;
     }
 
+    if (conn->fd != LLAM_INVALID_FD) {
+        dcc_conn_shutdown_fd(conn->fd);
+    }
     if (conn->ssl != NULL) {
         SSL_free((SSL *)conn->ssl);
         conn->ssl = NULL;
