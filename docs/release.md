@@ -13,7 +13,7 @@ tools/package_release.sh
 ```
 
 This writes normalized archives and checksum files to `target/dist/`, for
-example `dcc-0.1.0-macos-aarch64.tar.gz`.
+example `dcc-1.0.0-beta.1-macos-aarch64.tar.gz`.
 
 Binary release archives include:
 
@@ -21,11 +21,21 @@ Binary release archives include:
 - Bundled LLAM runtime headers, library, CMake package, and pkg-config metadata.
 - DCC command-line tools, examples, deployment templates, and docs.
 
-Users do not need to clone LLAM for release installs. The public install path is:
+Users do not need to clone LLAM for release installs. The public POSIX install
+path is:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
-  sh -s -- --prefix "$HOME/.local"
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.0.0-beta.1/install.sh |
+  sh -s -- --version 1.0.0-beta.1 \
+    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.0.0-beta.1" \
+    --prefix "$HOME/.local"
+```
+
+Windows installs use the release PowerShell installer:
+
+```powershell
+Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.0.0-beta.1/install.ps1" -OutFile install.ps1
+.\install.ps1 -Version 1.0.0-beta.1 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.0.0-beta.1" -Prefix "$env:LOCALAPPDATA\DCC"
 ```
 
 The installer installs the DCC release archive and then calls LLAM's latest
@@ -35,16 +45,16 @@ inside the DCC archive.
 GitHub Actions publishes releases automatically from version tags:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v1.0.0-beta.1
+git push origin v1.0.0-beta.1
 ```
 
 The `Release` workflow checks out `DCC` and `LLAM` side by side, builds LLAM
 through `DCC_LLAM_USE_SUBDIRECTORY=ON`, bundles LLAM into the DCC install tree,
 runs the DCC test suite, creates CPack binary/source archives, uploads artifacts,
-builds `SHA256SUMS`, and creates the GitHub Release. The tag version must match
-`project(dcc VERSION ...)` unless `DCC_ALLOW_VERSION_MISMATCH=1` is set for an
-explicit development package.
+builds `SHA256SUMS`, and creates the GitHub Release. Stable tag versions must
+match `project(dcc VERSION ...)`; prerelease suffixes such as `-beta.1` are
+allowed when the base version matches.
 
 The release path expects:
 

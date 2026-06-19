@@ -39,7 +39,8 @@ if [ -z "$version" ]; then
     echo "cannot determine release version" >&2
     exit 1
 fi
-if [ "$version" != "$cmake_version" ] && [ "${DCC_ALLOW_VERSION_MISMATCH:-0}" != "1" ]; then
+version_base=${version%%-*}
+if [ "$version_base" != "$cmake_version" ] && [ "${DCC_ALLOW_VERSION_MISMATCH:-0}" != "1" ]; then
     echo "release version $version does not match CMake project version $cmake_version" >&2
     echo "update CMakeLists.txt or set DCC_ALLOW_VERSION_MISMATCH=1 for an explicit development package" >&2
     exit 2
@@ -109,11 +110,18 @@ if [ "${DCC_SKIP_RELEASE_TESTS:-0}" != "1" ]; then
     ctest --test-dir "$build_dir" --output-on-failure --timeout "${DCC_CTEST_TIMEOUT:-180}"
 fi
 
-cpack -G TGZ --config "$build_dir/CPackConfig.cmake" -B "$build_dir/package-output"
-cpack -G TGZ --config "$build_dir/CPackSourceConfig.cmake" -B "$build_dir/package-output"
+cpack -G TGZ \
+    --config "$build_dir/CPackConfig.cmake" \
+    -B "$build_dir/package-output" \
+    -D "CPACK_PACKAGE_FILE_NAME=dcc-$version-$target"
+cpack -G TGZ \
+    --config "$build_dir/CPackSourceConfig.cmake" \
+    -B "$build_dir/package-output" \
+    -D "CPACK_PACKAGE_FILE_NAME=dcc-$version-source" \
+    -D "CPACK_SOURCE_PACKAGE_FILE_NAME=dcc-$version-source"
 
-package_archive=$(find "$build_dir/package-output" -maxdepth 1 -type f -name 'dcc-*.tar.gz' ! -name '*Source*' -print | head -n 1)
-source_archive=$(find "$build_dir/package-output" -maxdepth 1 -type f -name 'dcc-*Source*.tar.gz' -print | head -n 1)
+package_archive=$(find "$build_dir/package-output" -maxdepth 1 -type f -name 'dcc-*.tar.gz' ! -name '*Source*' ! -name '*-source.tar.gz' -print | head -n 1)
+source_archive=$(find "$build_dir/package-output" -maxdepth 1 -type f \( -name 'dcc-*Source*.tar.gz' -o -name 'dcc-*-source.tar.gz' \) -print | head -n 1)
 
 if [ -z "$package_archive" ]; then
     echo "binary package archive was not created" >&2

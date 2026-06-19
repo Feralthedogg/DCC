@@ -28,15 +28,15 @@ to a GitHub Release.
 Automatic release:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v1.0.0-beta.1
+git push origin v1.0.0-beta.1
 ```
 
 Manual release:
 
 1. Open `Actions -> Release`.
 2. Run workflow.
-3. Optionally set a release version such as `v0.1.0`.
+3. Optionally set a release version such as `v1.0.0-beta.1`.
 
 Artifacts are placed under `target/dist/` locally and uploaded as workflow
 artifacts before the publish job creates the GitHub Release.

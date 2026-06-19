@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example v0.1.0
+        description: Release version, for example v1.0.0-beta.1
         required: false
-        default: v0.1.0
+        default: v1.0.0-beta.1
         type: string
   push:
     tags:
@@ -36,6 +36,8 @@ jobs:
             runner: macos-14
           - target: macos-x86_64
             runner: macos-15-intel
+          - target: windows-x86_64
+            runner: windows-2025
 
     steps:
       - name: Checkout DCC
@@ -65,7 +67,15 @@ jobs:
           echo "OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "OPUS_ROOT=$(brew --prefix opus)" >> "$GITHUB_ENV"
 
-      - name: Build, test, and package
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          vcpkg install openssl:x64-windows
+          "DCC_WINDOWS_CMAKE_TOOLCHAIN=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" >> $env:GITHUB_ENV
+
+      - name: Build, test, and package POSIX
+        if: runner.os != 'Windows'
         working-directory: DCC
         env:
           DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
@@ -76,6 +86,18 @@ jobs:
           DCC_BUILD_PARALLEL: 4
         run: tools/package_release.sh "${{ matrix.target }}"
 
+      - name: Build, test, and package Windows
+        if: runner.os == 'Windows'
+        working-directory: DCC
+        shell: pwsh
+        env:
+          DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
+          DCC_LLAM_USE_SUBDIRECTORY: ON
+          DCC_BUNDLE_LLAM: ON
+          DCC_LLAM_ROOT: ${{ github.workspace }}\LLAM
+          DCC_BUILD_PARALLEL: 4
+        run: .\tools\package_release_windows.ps1 -Target "${{ matrix.target }}"
+
       - name: Upload platform artifact
         uses: actions/upload-artifact@v6
         with:
@@ -83,6 +105,8 @@ jobs:
           path: |
             DCC/target/dist/dcc-*-${{ matrix.target }}.tar.gz
             DCC/target/dist/dcc-*-${{ matrix.target }}.tar.gz.sha256
+            DCC/target/dist/dcc-*-${{ matrix.target }}.zip
+            DCC/target/dist/dcc-*-${{ matrix.target }}.zip.sha256
           if-no-files-found: error
 
       - name: Upload source artifact
@@ -114,6 +138,16 @@ jobs:
           cd release-artifacts
           cat ./*.sha256 | LC_ALL=C sort -k2 > SHA256SUMS
 
+      - name: Add standalone installers
+        run: |
+          cp tools/install.sh release-artifacts/install.sh
+          cp tools/install.ps1 release-artifacts/install.ps1
+          chmod +x release-artifacts/install.sh
+          cd release-artifacts
+          sha256sum install.sh > install.sh.sha256
+          sha256sum install.ps1 > install.ps1.sha256
+          cat install.sh.sha256 install.ps1.sha256 >> SHA256SUMS
+
       - name: Build release notes
         env:
           REPOSITORY: ${{ github.repository }}
@@ -131,28 +165,32 @@ jobs:
           base_url="https://github.com/${REPOSITORY}/releases/download/${tag}"
           run_url="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
           {
-            echo "# DCC ${version}"
+            echo "# DCC ${version} Beta"
             echo
-            echo "DCC ${version} publishes native Discord C runtime packages."
+            echo "DCC ${version} Beta publishes native Discord C runtime packages for Linux, macOS, and Windows."
             echo
-            echo "Install with:"
+            echo "## Highlights"
             echo
-            echo "\`\`\`sh"
-            echo "curl -fsSL https://raw.githubusercontent.com/${REPOSITORY}/main/tools/install.sh | sh -s -- --prefix \"\$HOME/.local\""
-            echo "\`\`\`"
+            echo "- DPP-inspired Discord C client surface with Gateway, REST, slash command, component, and interaction helpers."
+            echo "- LLAM-backed runtime and networking path bundled into release archives."
+            echo "- Hot-reload isolated worker mode with last-good rollback support."
+            echo "- Command registry reconciliation, component sessions, interaction flows, replay harness, and rate-limit firewall APIs."
+            echo "- SDK metadata for CMake and pkg-config consumers."
             echo
             echo "## Downloads"
             echo
             echo "| File | Platform | Checksum |"
             echo "| --- | --- | --- |"
             for row in \
-              "linux-x86_64|Linux x86_64" \
-              "linux-aarch64|Linux aarch64" \
-              "macos-aarch64|macOS arm64" \
-              "macos-x86_64|macOS x86_64"; do
-              target="${row%%|*}"
-              label="${row#*|}"
-              file="dcc-${version}-${target}.tar.gz"
+              "linux-x86_64|Linux x86_64|tar.gz" \
+              "linux-aarch64|Linux aarch64|tar.gz" \
+              "macos-aarch64|macOS arm64|tar.gz" \
+              "macos-x86_64|macOS x86_64|tar.gz" \
+              "windows-x86_64|Windows x86_64|zip"; do
+              target="$(printf '%s' "$row" | cut -d'|' -f1)"
+              label="$(printf '%s' "$row" | cut -d'|' -f2)"
+              ext="$(printf '%s' "$row" | cut -d'|' -f3)"
+              file="dcc-${version}-${target}.${ext}"
               checksum="${file}.sha256"
               if [ -f "$file" ]; then
                 echo "| [${file}](${base_url}/${file}) | ${label} | [checksum](${base_url}/${checksum}) |"
@@ -166,11 +204,40 @@ jobs:
             echo "## Package Contents"
             echo
             echo "- Public headers under \`include/dcc/\`."
-            echo "- Static or shared DCC library according to the package build."
-            echo "- CMake package files under \`lib/cmake/dcc/\` and pkg-config metadata under \`lib/pkgconfig/\`."
+            echo "- Static DCC library and runtime helper tools."
             echo "- Bundled LLAM runtime headers, libraries, \`llam-config.cmake\`, and \`llam.pc\`."
-            echo "- Runtime helper tools such as \`dcc_hot_reload_host\`, \`dcc_hot_reload_worker\`, \`dcc_command_sync\`, and \`dcc_replay\`."
+            echo "- CMake package files under \`lib/cmake/dcc/\` and pkg-config metadata under \`lib/pkgconfig/\`."
+            echo "- Runtime tools such as \`dcc_hot_reload_host\`, \`dcc_hot_reload_worker\`, \`dcc_command_sync\`, and \`dcc_replay\`."
             echo "- Examples, deployment templates, and Markdown documentation."
+            echo
+            echo "## Standalone Installers"
+            echo
+            echo "| File | Platform | Checksum |"
+            echo "| --- | --- | --- |"
+            echo "| [install.sh](${base_url}/install.sh) | POSIX release archives | [checksum](${base_url}/install.sh.sha256) |"
+            echo "| [install.ps1](${base_url}/install.ps1) | Windows release archives | [checksum](${base_url}/install.ps1.sha256) |"
+            echo
+            echo "## Install Commands"
+            echo
+            echo "POSIX auto-detect:"
+            echo
+            echo "\`\`\`bash"
+            echo "curl -fsSL ${base_url}/install.sh | sh -s -- --version ${version} --base-url \"${base_url}\" --prefix \"\$HOME/.local\""
+            echo "\`\`\`"
+            echo
+            echo "POSIX explicit target:"
+            echo
+            echo "\`\`\`bash"
+            echo "curl -fsSL ${base_url}/install.sh | sh -s -- --version ${version} --base-url \"${base_url}\" --target macos-aarch64 --prefix \"\$HOME/.local\""
+            echo "\`\`\`"
+            echo
+            echo "Windows x86_64:"
+            echo
+            echo "\`\`\`powershell"
+            echo "Invoke-WebRequest \"${base_url}/install.ps1\" -OutFile install.ps1; .\\install.ps1 -Version ${version} -BaseUrl \"${base_url}\" -Prefix \"\$env:LOCALAPPDATA\\DCC\""
+            echo "\`\`\`"
+            echo
+            echo "The installers install the DCC archive and then refresh LLAM from the latest LLAM release installer by default."
             echo
             echo "## Verification"
             echo
@@ -190,4 +257,10 @@ jobs:
           files: |
             release-artifacts/*.tar.gz
             release-artifacts/*.tar.gz.sha256
+            release-artifacts/*.zip
+            release-artifacts/*.zip.sha256
+            release-artifacts/install.sh
+            release-artifacts/install.sh.sha256
+            release-artifacts/install.ps1
+            release-artifacts/install.ps1.sha256
             release-artifacts/SHA256SUMS
