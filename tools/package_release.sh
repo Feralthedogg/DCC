@@ -107,7 +107,10 @@ else
 fi
 
 if [ "${DCC_SKIP_RELEASE_TESTS:-0}" != "1" ]; then
-    ctest --test-dir "$build_dir" --output-on-failure --timeout "${DCC_CTEST_TIMEOUT:-180}"
+    ctest --test-dir "$build_dir" \
+        -R "${DCC_RELEASE_CTEST_REGEX:-^dcc_}" \
+        --output-on-failure \
+        --timeout "${DCC_CTEST_TIMEOUT:-180}"
 fi
 
 cpack -G TGZ \
