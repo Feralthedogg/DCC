@@ -118,6 +118,7 @@ pkg_config_tool() {
 pkg_config_consumer_check() {
     prefix=$1
     build=$2
+    package_llam=${3:-}
     pc_tool=$(pkg_config_tool || true)
     if [ -z "$pc_tool" ]; then
         step "skip pkg-config consumer check: pkg-config/pkgconf not found"
@@ -150,10 +151,19 @@ pkg_config_consumer_check() {
     else
         libs=$("$pc_tool" --libs dcc)
     fi
+    extra_libs=
+    if [ -n "$package_llam" ]; then
+        extra_libs=$package_llam
+        case "$(uname -s)" in
+            Linux)
+                extra_libs="$extra_libs -luring -lm"
+                ;;
+        esac
+    fi
 
     # Deliberately use shell splitting here: pkg-config returns compiler tokens.
     # shellcheck disable=SC2086
-    "$cc" -std=c11 "$consumer_dir/main.c" $cflags $libs -o "$consumer_build_dir/dcc_pkg_config_consumer"
+    "$cc" -std=c11 "$consumer_dir/main.c" $cflags $libs $extra_libs -o "$consumer_build_dir/dcc_pkg_config_consumer"
     "$consumer_build_dir/dcc_pkg_config_consumer"
 }
 
@@ -516,7 +526,7 @@ if ! is_true "${DCC_SKIP_PACKAGE:-0}"; then
 
     if ! is_true "${DCC_SKIP_PKG_CONFIG_CHECK:-0}"; then
         step "build installed pkg-config consumer"
-        pkg_config_consumer_check "$package_prefix" "$package_consumer_build_dir"
+        pkg_config_consumer_check "$package_prefix" "$package_consumer_build_dir" "$package_llam_library"
     fi
 fi
 
@@ -596,7 +606,7 @@ if ! is_true "${DCC_SKIP_MINIMAL_PACKAGE:-0}"; then
 
     if ! is_true "${DCC_SKIP_PKG_CONFIG_CHECK:-0}"; then
         step "build minimal installed pkg-config consumer"
-        pkg_config_consumer_check "$minimal_package_prefix" "$minimal_package_consumer_build_dir"
+        pkg_config_consumer_check "$minimal_package_prefix" "$minimal_package_consumer_build_dir" "$package_llam_library"
     fi
 fi
 

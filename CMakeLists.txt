@@ -101,6 +101,12 @@ if(NOT TARGET llam::runtime)
     endif()
 endif()
 
+if(APPLE)
+    add_compile_definitions(_DARWIN_C_SOURCE)
+elseif(UNIX)
+    add_compile_definitions(_DEFAULT_SOURCE _POSIX_C_SOURCE=200809L)
+endif()
+
 set(DCC_LIBRARY_TYPE STATIC)
 if(DCC_BUILD_SHARED)
     set(DCC_LIBRARY_TYPE SHARED)
@@ -1453,8 +1459,6 @@ target_compile_definitions(dcc
         $<$<BOOL:${DCC_BUILD_SHARED}>:DCC_SHARED>
     PRIVATE
         DCC_BUILD
-        $<$<PLATFORM_ID:Darwin>:_DARWIN_C_SOURCE>
-        $<$<AND:$<NOT:$<PLATFORM_ID:Windows>>,$<NOT:$<PLATFORM_ID:Darwin>>>:_POSIX_C_SOURCE=200809L>
 )
 
 if(MSVC)
@@ -2479,14 +2483,25 @@ endif()
 
 set(DCC_CONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/dcc")
 set(DCC_CONFIG_HAVE_OPUS 0)
-set(DCC_PC_REQUIRES_PRIVATE "llam openssl")
+set(DCC_PC_REQUIRES_PRIVATE "")
 set(DCC_PC_LIBS_PRIVATE "")
+foreach(DCC_OPENSSL_LIBRARY IN ITEMS "${OPENSSL_SSL_LIBRARY}" "${OPENSSL_CRYPTO_LIBRARY}")
+    if(DCC_OPENSSL_LIBRARY)
+        string(APPEND DCC_PC_LIBS_PRIVATE " ${DCC_OPENSSL_LIBRARY}")
+    endif()
+endforeach()
+if(UNIX AND NOT APPLE)
+    string(APPEND DCC_PC_LIBS_PRIVATE " -pthread")
+endif()
 if(CMAKE_DL_LIBS)
     string(APPEND DCC_PC_LIBS_PRIVATE " -l${CMAKE_DL_LIBS}")
 endif()
 if(TARGET dcc_opus)
     set(DCC_CONFIG_HAVE_OPUS 1)
-    string(APPEND DCC_PC_REQUIRES_PRIVATE " opus")
+    string(APPEND DCC_PC_LIBS_PRIVATE " ${DCC_OPUS_LIBRARY}")
+endif()
+if(NOT DCC_LLAM_USE_SUBDIRECTORY AND DCC_LLAM_LIBRARY)
+    string(APPEND DCC_PC_LIBS_PRIVATE " ${DCC_LLAM_LIBRARY}")
 endif()
 
 configure_package_config_file(
