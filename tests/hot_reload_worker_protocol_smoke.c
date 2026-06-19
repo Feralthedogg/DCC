@@ -87,13 +87,13 @@ static int test_healthcheck_frame(void) {
 
     dcc_hot_reload_worker_process_t worker;
     memset(&worker, 0, sizeof(worker));
-    worker.in_fd = to_worker[0];
+    worker.in_fd = to_worker[1];
     worker.out_fd = from_worker[0];
     worker.loaded = 1U;
     dcc_status_t status = dcc_hot_reload_worker_process_healthcheck(&worker, 50U);
 
     dcc_hot_reload_worker_header_t request;
-    int request_status = dcc_hot_reload_worker_read_header(to_worker[1], &request, 50U);
+    int request_status = dcc_hot_reload_worker_read_header(to_worker[0], &request, 50U);
     test_close(to_worker[0]);
     test_close(to_worker[1]);
     test_close(from_worker[0]);
@@ -138,13 +138,13 @@ static int test_malformed_healthcheck_frame(void) {
 
     dcc_hot_reload_worker_process_t worker;
     memset(&worker, 0, sizeof(worker));
-    worker.in_fd = to_worker[0];
+    worker.in_fd = to_worker[1];
     worker.out_fd = from_worker[0];
     worker.loaded = 1U;
     dcc_status_t status = dcc_hot_reload_worker_process_healthcheck(&worker, 50U);
 
     dcc_hot_reload_worker_header_t request;
-    int request_status = dcc_hot_reload_worker_read_header(to_worker[1], &request, 50U);
+    int request_status = dcc_hot_reload_worker_read_header(to_worker[0], &request, 50U);
     test_close(to_worker[0]);
     test_close(to_worker[1]);
     test_close(from_worker[0]);
@@ -176,13 +176,13 @@ static int test_healthcheck_timeout(void) {
 
     dcc_hot_reload_worker_process_t worker;
     memset(&worker, 0, sizeof(worker));
-    worker.in_fd = to_worker[0];
+    worker.in_fd = to_worker[1];
     worker.out_fd = from_worker[0];
     worker.loaded = 1U;
     dcc_status_t status = dcc_hot_reload_worker_process_healthcheck(&worker, 10U);
 
     dcc_hot_reload_worker_header_t request;
-    int request_status = dcc_hot_reload_worker_read_header(to_worker[1], &request, 50U);
+    int request_status = dcc_hot_reload_worker_read_header(to_worker[0], &request, 50U);
     test_close(to_worker[0]);
     test_close(to_worker[1]);
     test_close(from_worker[0]);

@@ -7,10 +7,42 @@
 #include <dcc/rest/interactions.h>
 
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <sys/time.h>
+#endif
+
+static int pingpong_setenv(const char *name, const char *value, int overwrite) {
+#if defined(_WIN32)
+    if (!overwrite && getenv(name) != NULL) {
+        return 0;
+    }
+    return _putenv_s(name, value);
+#else
+    return setenv(name, value, overwrite);
+#endif
+}
+
+static uint64_t pingpong_now_ms(void) {
+#if defined(_WIN32)
+    FILETIME file_time;
+    ULARGE_INTEGER ticks;
+    GetSystemTimeAsFileTime(&file_time);
+    ticks.LowPart = file_time.dwLowDateTime;
+    ticks.HighPart = file_time.dwHighDateTime;
+    return (ticks.QuadPart - 116444736000000000ULL) / 10000ULL;
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (uint64_t)tv.tv_sec * 1000ULL + (uint64_t)tv.tv_usec / 1000ULL;
+#endif
+}
 
 typedef struct pingpong_state {
     dcc_snowflake_t guild_id;
@@ -27,7 +59,7 @@ static void load_env(void) {
             *eq = '\0';
             char *val = eq + 1;
             val[strcspn(val, "\r\n")] = '\0';
-            setenv(line, val, 1);
+            pingpong_setenv(line, val, 1);
         }
     }
     fclose(f);
@@ -165,9 +197,7 @@ static void on_ping(dcc_client_t *client, const dcc_event_t *event, void *ud) {
     const dcc_interaction_t *interaction = dcc_event_interaction(event);
     if (!interaction) return;
 
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    uint64_t current_ms = (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;
+    uint64_t current_ms = pingpong_now_ms();
     uint64_t interaction_ms = (interaction->id >> 22) + 1420070400000ULL;
     long long latency = (long long)(current_ms - interaction_ms);
 

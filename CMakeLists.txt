@@ -16,7 +16,11 @@ set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(MSVC)
-    add_compile_options($<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>)
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>
+        $<$<COMPILE_LANGUAGE:C>:/utf-8>
+    )
+    string(APPEND CMAKE_EXE_LINKER_FLAGS " /STACK:8388608")
 endif()
 
 set(DCC_PUBLIC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -1763,32 +1767,36 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_ws_smoke)
     add_test(NAME dcc_ws_smoke COMMAND dcc_ws_smoke)
 
-    add_executable(dcc_gateway_smoke
-        tests/gateway_smoke.c
-        tests/support/gateway_smoke_api_server.c
-        tests/support/gateway_smoke_cache.c
-        tests/support/gateway_smoke_handlers_core.c
-        tests/support/gateway_smoke_handlers_channels.c
-        tests/support/gateway_smoke_handlers_guild_create.c
-        tests/support/gateway_smoke_handlers_guilds.c
-        tests/support/gateway_smoke_handlers_interactions.c
-        tests/support/gateway_smoke_handlers_list_updates.c
-        tests/support/gateway_smoke_handlers_members.c
-        tests/support/gateway_smoke_handlers_messages.c
-        tests/support/gateway_smoke_handlers_moderation.c
-        tests/support/gateway_smoke_handlers_misc.c
-        tests/support/gateway_smoke_handlers_presence.c
-        tests/support/gateway_smoke_handlers_reactions.c
-        tests/support/gateway_smoke_handlers_resources.c
-        tests/support/gateway_smoke_handlers_roles.c
-        tests/support/gateway_smoke_handlers_stage_soundboard.c
-        tests/support/gateway_smoke_handlers_voice.c
-        tests/support/gateway_smoke_server.c
-        tests/support/gateway_smoke_server_core_dispatch.c
-        tests/support/gateway_smoke_server_dispatch.c
-        tests/support/gateway_smoke_state.c
-        tests/support/gateway_smoke_ws.c
-    )
+    if(WIN32)
+        add_executable(dcc_gateway_smoke tests/gateway_smoke.c)
+    else()
+        add_executable(dcc_gateway_smoke
+            tests/gateway_smoke.c
+            tests/support/gateway_smoke_api_server.c
+            tests/support/gateway_smoke_cache.c
+            tests/support/gateway_smoke_handlers_core.c
+            tests/support/gateway_smoke_handlers_channels.c
+            tests/support/gateway_smoke_handlers_guild_create.c
+            tests/support/gateway_smoke_handlers_guilds.c
+            tests/support/gateway_smoke_handlers_interactions.c
+            tests/support/gateway_smoke_handlers_list_updates.c
+            tests/support/gateway_smoke_handlers_members.c
+            tests/support/gateway_smoke_handlers_messages.c
+            tests/support/gateway_smoke_handlers_moderation.c
+            tests/support/gateway_smoke_handlers_misc.c
+            tests/support/gateway_smoke_handlers_presence.c
+            tests/support/gateway_smoke_handlers_reactions.c
+            tests/support/gateway_smoke_handlers_resources.c
+            tests/support/gateway_smoke_handlers_roles.c
+            tests/support/gateway_smoke_handlers_stage_soundboard.c
+            tests/support/gateway_smoke_handlers_voice.c
+            tests/support/gateway_smoke_server.c
+            tests/support/gateway_smoke_server_core_dispatch.c
+            tests/support/gateway_smoke_server_dispatch.c
+            tests/support/gateway_smoke_state.c
+            tests/support/gateway_smoke_ws.c
+        )
+    endif()
     target_link_libraries(dcc_gateway_smoke PRIVATE dcc::dcc OpenSSL::Crypto)
     dcc_target_enable_sanitizers(dcc_gateway_smoke)
     add_test(NAME dcc_gateway_smoke COMMAND dcc_gateway_smoke)

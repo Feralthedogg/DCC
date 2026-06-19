@@ -4,7 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(_WIN32)
+#include <process.h>
+#else
 #include <unistd.h>
+#endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -18,6 +22,25 @@ typedef struct hot_reload_host_args {
 typedef struct hot_reload_health_sidecar {
     dcc_interaction_server_t *server;
 } hot_reload_health_sidecar_t;
+
+static int hot_reload_setenv(const char *name, const char *value, int overwrite) {
+#if defined(_WIN32)
+    if (!overwrite && getenv(name) != NULL) {
+        return 0;
+    }
+    return _putenv_s(name, value);
+#else
+    return setenv(name, value, overwrite);
+#endif
+}
+
+static long hot_reload_process_id(void) {
+#if defined(_WIN32)
+    return (long)_getpid();
+#else
+    return (long)getpid();
+#endif
+}
 
 static int hot_reload_parse_args(int argc, char **argv, hot_reload_host_args_t *out) {
     if (out == NULL) {
@@ -100,7 +123,7 @@ static void hot_reload_load_env_file(const char *path) {
         value[strcspn(value, "\r\n")] = '\0';
 
         if (key[0] != '\0' && getenv(key) == NULL) {
-            setenv(key, value, 0);
+            hot_reload_setenv(key, value, 0);
         }
     }
 
@@ -191,7 +214,7 @@ int main(int argc, char **argv) {
 
     dcc_status_t status = DCC_OK;
     printf("DCC hot reload test host starting\n");
-    printf("Host pid: %ld\n", (long)getpid());
+    printf("Host pid: %ld\n", hot_reload_process_id());
     printf("Watching module: %s\n", module_path);
     printf("Worker executable: %s\n", worker_path);
 #if !defined(_WIN32)

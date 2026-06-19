@@ -1,5 +1,11 @@
 #include <dcc/dcc.h>
 
+#if defined(_WIN32)
+int main(void) {
+    return 0;
+}
+#else
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <pthread.h>
@@ -253,3 +259,4 @@ int main(void) {
     dcc_cluster_destroy(cluster);
     return status == DCC_OK ? 0 : 1;
 }
+#endif

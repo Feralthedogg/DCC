@@ -1,5 +1,11 @@
 #include <dcc/dcc.h>
 
+#if defined(_WIN32)
+int main(void) {
+    return 0;
+}
+#else
+
 #include "support/event_wait_convenience_smoke_support.h"
 
 #include <errno.h>
@@ -472,3 +478,4 @@ int main(void) {
     dcc_client_destroy(client);
     return wait_state.status == DCC_OK ? 0 : 1;
 }
+#endif

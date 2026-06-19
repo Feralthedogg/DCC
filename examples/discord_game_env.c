@@ -1,5 +1,16 @@
 #include "discord_game_internal.h"
 
+static int discord_game_setenv(const char *name, const char *value, int overwrite) {
+#if defined(_WIN32)
+    if (!overwrite && getenv(name) != NULL) {
+        return 0;
+    }
+    return _putenv_s(name, value);
+#else
+    return setenv(name, value, overwrite);
+#endif
+}
+
 void load_env(void) {
     FILE *f = fopen(".env", "r");
     if (f == NULL) {
@@ -15,7 +26,7 @@ void load_env(void) {
         *eq = '\0';
         char *val = eq + 1;
         val[strcspn(val, "\r\n")] = '\0';
-        setenv(line, val, 1);
+        discord_game_setenv(line, val, 1);
     }
 
     fclose(f);
