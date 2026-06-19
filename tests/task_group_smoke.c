@@ -31,6 +31,7 @@ typedef struct task_smoke_arg {
     int use_llam_sleep;
     atomic_uint *release_gate;
     atomic_uint *started;
+    atomic_uint *sleep_started;
     atomic_uint *sleep_canceled;
 } task_smoke_arg_t;
 
@@ -50,6 +51,9 @@ static void task_smoke_run(void *arg) {
         usleep(1000U);
     }
     if (task->use_llam_sleep) {
+        if (task->sleep_started != NULL) {
+            atomic_store_explicit(task->sleep_started, 1U, memory_order_release);
+        }
         if (llam_sleep_ns((uint64_t)task->delay_us * UINT64_C(1000)) != 0 && task->sleep_canceled != NULL) {
             atomic_fetch_add_explicit(task->sleep_canceled, 1U, memory_order_release);
         }
@@ -296,9 +300,11 @@ int main(void) {
     }
     atomic_uint predicate_flag;
     atomic_uint predicate_started;
+    atomic_uint predicate_sleep_started;
     atomic_uint predicate_canceled_sleep;
     atomic_init(&predicate_flag, 0U);
     atomic_init(&predicate_started, 0U);
+    atomic_init(&predicate_sleep_started, 0U);
     atomic_init(&predicate_canceled_sleep, 0U);
     task_smoke_arg_t predicate_arg = {
         .state = &state,
@@ -306,6 +312,7 @@ int main(void) {
         .delay_us = 5000000U,
         .use_llam_sleep = 1,
         .started = &predicate_started,
+        .sleep_started = &predicate_sleep_started,
         .sleep_canceled = &predicate_canceled_sleep,
     };
     if (dcc_task_group_spawn(group, task_smoke_run, &predicate_arg, NULL) != DCC_OK ||
@@ -313,12 +320,15 @@ int main(void) {
         return task_smoke_fail(client, &wait_thread, group, "task group predicate cancel setup failed");
     }
     for (unsigned i = 0; i < 1000U &&
-            atomic_load_explicit(&predicate_started, memory_order_acquire) == 0U;
+            atomic_load_explicit(&predicate_sleep_started, memory_order_acquire) == 0U;
          ++i) {
         usleep(1000U);
     }
     if (atomic_load_explicit(&predicate_started, memory_order_acquire) == 0U) {
         return task_smoke_fail(client, &wait_thread, group, "task group predicate task did not start");
+    }
+    if (atomic_load_explicit(&predicate_sleep_started, memory_order_acquire) == 0U) {
+        return task_smoke_fail(client, &wait_thread, group, "task group predicate task did not enter sleep");
     }
     atomic_store_explicit(&predicate_flag, 1U, memory_order_release);
     status = dcc_task_group_wait_result(group, 2000, &result);
