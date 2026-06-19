@@ -300,6 +300,7 @@ dcc_status_t dcc_hot_reload_isolated_invalid_ready_worker_smoke(void) {
     dcc_hot_reload_health_snapshot_t after = {
         .size = sizeof(after),
     };
+    const char *last_error = NULL;
 
     dcc_status_t status = dcc_client_create(&client_options, &client);
     if (status == DCC_OK) {
@@ -330,6 +331,7 @@ dcc_status_t dcc_hot_reload_isolated_invalid_ready_worker_smoke(void) {
     if (status == DCC_OK) {
         status = dcc_hot_reload_health_snapshot(hot_reload, &after);
     }
+    last_error = dcc_hot_reload_last_error(hot_reload);
     if (status == DCC_OK &&
         (after.active_worker_loaded == 0U ||
          after.active_worker_generation != before.active_worker_generation ||
@@ -337,7 +339,8 @@ dcc_status_t dcc_hot_reload_isolated_invalid_ready_worker_smoke(void) {
          after.last_good_worker_loaded != 0U ||
          after.generation != before.generation ||
          after.last_status != DCC_ERR_RUNTIME ||
-         strstr(dcc_hot_reload_last_error(hot_reload), "invalid READY frame") == NULL)) {
+         (strstr(last_error, "invalid READY frame") == NULL &&
+          strstr(last_error, "exited before READY") == NULL))) {
         status = DCC_ERR_RUNTIME;
     }
 

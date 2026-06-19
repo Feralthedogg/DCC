@@ -108,6 +108,14 @@ static void hang_worker(void) {
 #endif
 }
 
+static void settle_invalid_ready(void) {
+#if defined(_WIN32)
+    Sleep(250);
+#else
+    usleep(250000);
+#endif
+}
+
 static int discard_event_json(uint64_t json_len) {
     char buffer[512];
     while (json_len > 0U) {
@@ -190,7 +198,11 @@ int main(int argc, char **argv) {
     uint64_t generation = argc > 4 ? (uint64_t)strtoull(argv[4], NULL, 10) : 1U;
     fake_worker_mode_t mode = marker_mode(argv[1]);
     if (mode == FAKE_WORKER_INVALID_READY) {
-        return send_invalid_ready();
+        int rc = send_invalid_ready();
+        if (rc == 0) {
+            settle_invalid_ready();
+        }
+        return rc;
     }
     if (send_ready(generation) != 0) {
         return 1;

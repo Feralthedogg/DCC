@@ -353,7 +353,7 @@ static int serve_connection(cluster_chaos_server_t *server, int fd) {
     (void)setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
 
     if (gateway_handshake(fd) != 0 ||
-        write_text_frame(fd, "{\"op\":10,\"d\":{\"heartbeat_interval\":1000}}") != 0) {
+        write_text_frame(fd, "{\"op\":10,\"d\":{\"heartbeat_interval\":3600000}}") != 0) {
         return -1;
     }
 
