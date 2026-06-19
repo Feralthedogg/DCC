@@ -1,0 +1,61 @@
+#ifndef DCC_EVENT_OBJECT_DATA_INTERNAL_H
+#define DCC_EVENT_OBJECT_DATA_INTERNAL_H
+
+#include <dcc/dcc.h>
+
+typedef union dcc_event_object_data {
+    dcc_ready_event_t ready;
+    dcc_log_event_t log;
+    dcc_socket_close_event_t socket_close;
+    dcc_rate_limited_event_t rate_limited;
+    dcc_message_t message;
+    dcc_guild_t guild;
+    dcc_channel_t channel;
+    dcc_role_t role;
+    dcc_member_t member;
+    dcc_scheduled_event_t scheduled_event;
+    dcc_entitlement_t entitlement;
+    dcc_subscription_t subscription;
+    dcc_invite_t invite;
+    dcc_stage_instance_t stage_instance;
+    dcc_soundboard_sound_t soundboard_sound;
+    dcc_message_reaction_t message_reaction;
+    dcc_poll_vote_t poll_vote;
+    dcc_voice_channel_effect_t voice_channel_effect;
+    dcc_voice_buffer_send_event_t voice_buffer_send;
+    dcc_voice_ready_event_t voice_ready;
+    dcc_voice_receive_event_t voice_receive;
+    dcc_voice_track_marker_event_t voice_track_marker;
+    dcc_voice_client_speaking_event_t voice_client_speaking;
+    dcc_voice_client_disconnect_event_t voice_client_disconnect;
+    dcc_voice_client_platform_event_t voice_client_platform;
+    dcc_auto_moderation_action_t auto_moderation_action;
+    dcc_auto_moderation_rule_t auto_moderation_rule;
+    dcc_message_delete_bulk_t message_delete_bulk;
+    dcc_thread_member_t thread_member;
+    dcc_thread_members_update_t thread_members_update;
+    dcc_guild_members_chunk_t guild_members_chunk;
+    dcc_channel_pins_update_t channel_pins_update;
+    dcc_typing_start_t typing_start;
+    dcc_voice_server_update_t voice_server_update;
+    dcc_integration_t integration;
+    dcc_presence_t presence;
+    dcc_user_t user;
+    dcc_application_command_permissions_update_t application_command_permissions_update;
+    dcc_guild_audit_log_entry_t guild_audit_log_entry;
+    dcc_guild_ban_t guild_ban;
+    dcc_guild_id_list_update_t guild_id_list_update;
+    dcc_guild_update_notice_t guild_update_notice;
+    dcc_scheduled_event_user_update_t scheduled_event_user_update;
+    dcc_thread_list_sync_t thread_list_sync;
+    dcc_voice_channel_start_time_update_t voice_channel_start_time_update;
+    dcc_voice_channel_status_update_t voice_channel_status_update;
+    dcc_webhooks_update_t webhooks_update;
+    dcc_guild_join_request_update_t guild_join_request_update;
+    dcc_guild_application_command_update_t guild_application_command_update;
+    dcc_embedded_activity_update_t embedded_activity_update;
+    dcc_interaction_t interaction;
+    dcc_voice_state_t voice_state;
+} dcc_event_object_data_t;
+
+#endif

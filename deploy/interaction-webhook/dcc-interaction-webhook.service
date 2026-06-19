@@ -1,0 +1,31 @@
+[Unit]
+Description=DCC Discord interaction webhook
+Documentation=file:/usr/local/share/dcc/deploy/interaction-webhook/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dcc
+Group=dcc
+WorkingDirectory=/var/lib/dcc
+EnvironmentFile=/etc/dcc/dcc-interaction-webhook.env
+ExecStartPre=/usr/local/bin/dcc_interaction_webhook --check
+ExecStart=/usr/local/bin/dcc_interaction_webhook
+Restart=on-failure
+RestartSec=2s
+KillSignal=SIGTERM
+TimeoutStopSec=20s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/dcc /var/log/dcc
+CapabilityBoundingSet=
+LockPersonality=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

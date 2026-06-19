@@ -1,0 +1,16 @@
+[
+  {
+    "name": "ping",
+    "description": "pong",
+    "type": 1
+  },
+  {
+    "name": "echo",
+    "description": "repeat",
+    "type": 1
+  },
+  {
+    "name": "inspect",
+    "type": 2
+  }
+]

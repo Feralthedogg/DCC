@@ -1,0 +1,1 @@
+{"kind":"gateway","event":"READY","ts":10,"payload":{"op":0,"s":1,"t":"READY","d":{"session_id":"replay","application":{"id":"1"},"user":{"id":"1","username":"bot","discriminator":"0000","bot":true},"guilds":[]}}}

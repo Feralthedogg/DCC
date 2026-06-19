@@ -1,0 +1,24 @@
+#ifndef DCC_JSON_GATEWAY_NORMALIZE_FIELDS_H
+#define DCC_JSON_GATEWAY_NORMALIZE_FIELDS_H
+
+#include "internal/json/dcc_json_gateway_payload_state.h"
+
+void dcc_json_gateway_normalize_payload(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_identity(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_resource_events(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_scheduled_event_resource(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_commerce_resources(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_invite_stage_resources(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_soundboard_resource(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_message_events(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_message_reaction(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_moderation_events(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_poll_vote(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_thread_events(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_update_events(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_update_core_events(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_update_guild_events(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_update_channel_events(dcc_json_gateway_payload_t *out);
+void dcc_json_gateway_normalize_guild_collections(dcc_json_gateway_payload_t *out);
+
+#endif

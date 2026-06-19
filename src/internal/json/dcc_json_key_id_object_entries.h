@@ -1,0 +1,30 @@
+#ifndef DCC_JSON_KEY_ID_OBJECT_ENTRIES_H
+#define DCC_JSON_KEY_ID_OBJECT_ENTRIES_H
+
+#define DCC_JSON_KEY_ID_OBJECT_ENTRIES(X) \
+    X(POSITION) \
+    X(PERMISSIONS) \
+    X(COLOR) \
+    X(HOIST) \
+    X(MANAGED) \
+    X(MENTIONABLE) \
+    X(NSFW) \
+    X(RATE_LIMIT_PER_USER) \
+    X(BITRATE) \
+    X(USER_LIMIT) \
+    X(LAST_MESSAGE_ID) \
+    X(DESCRIPTION) \
+    X(IMAGE) \
+    X(LOCATION) \
+    X(CREATOR) \
+    X(ENTITY_METADATA) \
+    X(TAGS) \
+    X(PACK_ID) \
+    X(FORMAT_TYPE) \
+    X(SORT_VALUE) \
+    X(ASSET) \
+    X(REQUIRE_COLONS) \
+    X(ANIMATED) \
+    X(PERMISSION)
+
+#endif

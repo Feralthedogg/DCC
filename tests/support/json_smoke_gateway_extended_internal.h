@@ -1,0 +1,6 @@
+#ifndef DCC_TEST_JSON_SMOKE_GATEWAY_EXTENDED_INTERNAL_H
+#define DCC_TEST_JSON_SMOKE_GATEWAY_EXTENDED_INTERNAL_H
+
+int dcc_json_smoke_gateway_extended_presence_lists(void);
+
+#endif

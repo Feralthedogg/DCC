@@ -1,0 +1,175 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dcc
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dcc-interaction-webhook-secret
+  namespace: dcc
+type: Opaque
+stringData:
+  DISCORD_PUBLIC_KEY: replace_with_discord_application_public_key
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dcc-interaction-webhook-config
+  namespace: dcc
+data:
+  DCC_INTERACTION_ADDRESS: "0.0.0.0"
+  DCC_INTERACTION_PORT: "8080"
+  DCC_INTERACTION_PATH: "/interactions"
+  DCC_INTERACTION_BACKLOG: "128"
+  DCC_INTERACTION_MAX_HEADER: "8192"
+  DCC_INTERACTION_MAX_BODY: "16384"
+  DCC_INTERACTION_DRAIN_TIMEOUT_MS: "10000"
+  DCC_INTERACTION_EXIT_AFTER_ONE: "0"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcc-interaction-webhook
+  namespace: dcc
+  labels:
+    app.kubernetes.io/name: dcc-interaction-webhook
+    app.kubernetes.io/component: interaction-webhook
+    app.kubernetes.io/part-of: dcc
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dcc-interaction-webhook
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dcc-interaction-webhook
+        app.kubernetes.io/component: interaction-webhook
+        app.kubernetes.io/part-of: dcc
+    spec:
+      terminationGracePeriodSeconds: 25
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: preflight
+          image: ghcr.io/your-org/dcc-interaction-webhook:latest
+          imagePullPolicy: IfNotPresent
+          args: ["--check"]
+          envFrom:
+            - configMapRef:
+                name: dcc-interaction-webhook-config
+            - secretRef:
+                name: dcc-interaction-webhook-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      containers:
+        - name: webhook
+          image: ghcr.io/your-org/dcc-interaction-webhook:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: dcc-interaction-webhook-config
+            - secretRef:
+                name: dcc-interaction-webhook-secret
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 2
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 2
+            timeoutSeconds: 2
+            failureThreshold: 15
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcc-interaction-webhook
+  namespace: dcc
+  labels:
+    app.kubernetes.io/name: dcc-interaction-webhook
+    app.kubernetes.io/component: interaction-webhook
+    app.kubernetes.io/part-of: dcc
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: dcc-interaction-webhook
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dcc-interaction-webhook
+  namespace: dcc
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "32k"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "on"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - interactions.example.com
+      secretName: dcc-interaction-webhook-tls
+  rules:
+    - host: interactions.example.com
+      http:
+        paths:
+          - path: /interactions
+            pathType: Exact
+            backend:
+              service:
+                name: dcc-interaction-webhook
+                port:
+                  name: http
+# Preserve the raw request body plus X-Signature-Ed25519 and
+# X-Signature-Timestamp. Do not add rewrite, decompression, or body mutation
+# middleware in front of this Ingress.

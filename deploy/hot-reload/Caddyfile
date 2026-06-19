@@ -1,0 +1,9 @@
+{$DCC_HOT_RELOAD_HEALTH_LISTEN} {
+    encode zstd gzip
+
+    handle /hot-reloadz {
+        reverse_proxy hot-reload:18080
+    }
+
+    respond 404
+}

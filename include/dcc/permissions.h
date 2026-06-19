@@ -1,0 +1,89 @@
+#ifndef DCC_PERMISSIONS_H
+#define DCC_PERMISSIONS_H
+
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef uint64_t dcc_permission_t;
+
+#define DCC_PERMISSION_CREATE_INSTANT_INVITE              UINT64_C(0x0000000000000001)
+#define DCC_PERMISSION_KICK_MEMBERS                       UINT64_C(0x0000000000000002)
+#define DCC_PERMISSION_BAN_MEMBERS                        UINT64_C(0x0000000000000004)
+#define DCC_PERMISSION_ADMINISTRATOR                      UINT64_C(0x0000000000000008)
+#define DCC_PERMISSION_MANAGE_CHANNELS                    UINT64_C(0x0000000000000010)
+#define DCC_PERMISSION_MANAGE_GUILD                       UINT64_C(0x0000000000000020)
+#define DCC_PERMISSION_ADD_REACTIONS                      UINT64_C(0x0000000000000040)
+#define DCC_PERMISSION_VIEW_AUDIT_LOG                     UINT64_C(0x0000000000000080)
+#define DCC_PERMISSION_PRIORITY_SPEAKER                   UINT64_C(0x0000000000000100)
+#define DCC_PERMISSION_STREAM                             UINT64_C(0x0000000000000200)
+#define DCC_PERMISSION_VIEW_CHANNEL                       UINT64_C(0x0000000000000400)
+#define DCC_PERMISSION_SEND_MESSAGES                      UINT64_C(0x0000000000000800)
+#define DCC_PERMISSION_SEND_TTS_MESSAGES                  UINT64_C(0x0000000000001000)
+#define DCC_PERMISSION_MANAGE_MESSAGES                    UINT64_C(0x0000000000002000)
+#define DCC_PERMISSION_EMBED_LINKS                        UINT64_C(0x0000000000004000)
+#define DCC_PERMISSION_ATTACH_FILES                       UINT64_C(0x0000000000008000)
+#define DCC_PERMISSION_READ_MESSAGE_HISTORY               UINT64_C(0x0000000000010000)
+#define DCC_PERMISSION_MENTION_EVERYONE                   UINT64_C(0x0000000000020000)
+#define DCC_PERMISSION_USE_EXTERNAL_EMOJIS                UINT64_C(0x0000000000040000)
+#define DCC_PERMISSION_VIEW_GUILD_INSIGHTS                UINT64_C(0x0000000000080000)
+#define DCC_PERMISSION_CONNECT                            UINT64_C(0x0000000000100000)
+#define DCC_PERMISSION_SPEAK                              UINT64_C(0x0000000000200000)
+#define DCC_PERMISSION_MUTE_MEMBERS                       UINT64_C(0x0000000000400000)
+#define DCC_PERMISSION_DEAFEN_MEMBERS                     UINT64_C(0x0000000000800000)
+#define DCC_PERMISSION_MOVE_MEMBERS                       UINT64_C(0x0000000001000000)
+#define DCC_PERMISSION_USE_VAD                            UINT64_C(0x0000000002000000)
+#define DCC_PERMISSION_CHANGE_NICKNAME                    UINT64_C(0x0000000004000000)
+#define DCC_PERMISSION_MANAGE_NICKNAMES                   UINT64_C(0x0000000008000000)
+#define DCC_PERMISSION_MANAGE_ROLES                       UINT64_C(0x0000000010000000)
+#define DCC_PERMISSION_MANAGE_WEBHOOKS                    UINT64_C(0x0000000020000000)
+#define DCC_PERMISSION_MANAGE_EMOJIS_AND_STICKERS         UINT64_C(0x0000000040000000)
+#define DCC_PERMISSION_USE_APPLICATION_COMMANDS           UINT64_C(0x0000000080000000)
+#define DCC_PERMISSION_REQUEST_TO_SPEAK                   UINT64_C(0x0000000100000000)
+#define DCC_PERMISSION_MANAGE_EVENTS                      UINT64_C(0x0000000200000000)
+#define DCC_PERMISSION_MANAGE_THREADS                     UINT64_C(0x0000000400000000)
+#define DCC_PERMISSION_CREATE_PUBLIC_THREADS              UINT64_C(0x0000000800000000)
+#define DCC_PERMISSION_CREATE_PRIVATE_THREADS             UINT64_C(0x0000001000000000)
+#define DCC_PERMISSION_USE_EXTERNAL_STICKERS              UINT64_C(0x0000002000000000)
+#define DCC_PERMISSION_SEND_MESSAGES_IN_THREADS           UINT64_C(0x0000004000000000)
+#define DCC_PERMISSION_USE_EMBEDDED_ACTIVITIES            UINT64_C(0x0000008000000000)
+#define DCC_PERMISSION_MODERATE_MEMBERS                   UINT64_C(0x0000010000000000)
+#define DCC_PERMISSION_VIEW_CREATOR_MONETIZATION_ANALYTICS UINT64_C(0x0000020000000000)
+#define DCC_PERMISSION_USE_SOUNDBOARD                     UINT64_C(0x0000040000000000)
+#define DCC_PERMISSION_CREATE_GUILD_EXPRESSIONS           UINT64_C(0x0000080000000000)
+#define DCC_PERMISSION_CREATE_EVENTS                      UINT64_C(0x0000100000000000)
+#define DCC_PERMISSION_USE_EXTERNAL_SOUNDS                UINT64_C(0x0000200000000000)
+#define DCC_PERMISSION_SEND_VOICE_MESSAGES                UINT64_C(0x0000400000000000)
+#define DCC_PERMISSION_USE_CLYDE_AI                       UINT64_C(0x0000800000000000)
+#define DCC_PERMISSION_SEND_POLLS                         UINT64_C(0x0002000000000000)
+#define DCC_PERMISSION_USE_EXTERNAL_APPS                  UINT64_C(0x0004000000000000)
+#define DCC_PERMISSION_PIN_MESSAGES                       UINT64_C(0x0008000000000000)
+#define DCC_PERMISSION_BYPASS_SLOWMODE                    UINT64_C(0x0010000000000000)
+
+#define DCC_PERMISSION_MANAGE_EXPRESSIONS DCC_PERMISSION_MANAGE_EMOJIS_AND_STICKERS
+
+static inline int dcc_permissions_has(dcc_permission_t permissions, dcc_permission_t required) {
+    return (permissions & required) == required;
+}
+
+static inline int dcc_permissions_has_any(dcc_permission_t permissions, dcc_permission_t required) {
+    return (permissions & required) != 0;
+}
+
+static inline int dcc_permissions_can(dcc_permission_t permissions, dcc_permission_t required) {
+    return dcc_permissions_has_any(permissions, DCC_PERMISSION_ADMINISTRATOR) ||
+        dcc_permissions_has(permissions, required);
+}
+
+static inline int dcc_permissions_can_any(dcc_permission_t permissions, dcc_permission_t required) {
+    return dcc_permissions_has_any(permissions, DCC_PERMISSION_ADMINISTRATOR) ||
+        dcc_permissions_has_any(permissions, required);
+}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

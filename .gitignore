@@ -1,0 +1,64 @@
+# Local build trees
+build/
+build-*/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+Testing/
+
+# Release and documentation outputs
+target/
+dist/
+site/
+html/
+latex/
+_build/
+*.tar
+*.tar.gz
+*.tar.xz
+*.zip
+*.sha256
+
+# Local environments and secrets
+.env
+.env.*
+.venv/
+venv/
+env/
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editors and OS metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Native build artifacts
+*.dylib
+*.so
+*.so.*
+*.dll
+*.dll.a
+*.a
+*.lib
+*.o
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.gcda
+*.gcno
+*.profraw
+*.profdata

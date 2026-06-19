@@ -1,0 +1,1 @@
+{"t":"MESSAGE_CREATE","s":2,"op":0,"d":{"id":"111","channel_id":"222","guild_id":"333","author":{"id":"444","username":"feral"},"content":"hello DCC","timestamp":"2026-06-15T00:00:00.000000+00:00","tts":false,"mention_everyone":true,"pinned":false}}

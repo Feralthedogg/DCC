@@ -1,0 +1,2 @@
+{"kind":"gateway","event":"READY","ts":10,"payload":{"op":0,"s":1,"t":"READY","d":{"session_id":"replay","application":{"id":"1"},"user":{"id":"1","username":"bot","discriminator":"0000","bot":true},"guilds":[]}}}
+{"kind":"interaction","ts":11,"payload":{"id":"555","application_id":"666","type":2,"guild_id":"333","channel_id":"222","token":"replay-token","version":1,"data":{"id":"777","name":"replay","type":1}}}

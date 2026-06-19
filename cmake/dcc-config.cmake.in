@@ -1,0 +1,101 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(Threads)
+find_dependency(OpenSSL)
+
+if(NOT TARGET llam::runtime)
+    find_package(llam CONFIG QUIET)
+endif()
+
+if(NOT TARGET llam::runtime)
+    set(DCC_LLAM_ROOT "" CACHE PATH "Path to an installed or source LLAM tree")
+    set(DCC_LLAM_LIBRARY "" CACHE FILEPATH "Path to a prebuilt LLAM runtime library")
+    if(DCC_LLAM_ROOT AND DCC_LLAM_LIBRARY AND EXISTS "${DCC_LLAM_ROOT}/include/llam/runtime.h" AND EXISTS "${DCC_LLAM_LIBRARY}")
+        add_library(llam_runtime_prebuilt STATIC IMPORTED)
+        add_library(llam::runtime ALIAS llam_runtime_prebuilt)
+        set_target_properties(llam_runtime_prebuilt PROPERTIES
+            IMPORTED_LOCATION "${DCC_LLAM_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${DCC_LLAM_ROOT}/include"
+            INTERFACE_LINK_LIBRARIES Threads::Threads
+        )
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            find_library(DCC_URING_LIBRARY uring REQUIRED)
+            set_property(TARGET llam_runtime_prebuilt APPEND PROPERTY
+                INTERFACE_LINK_LIBRARIES "${DCC_URING_LIBRARY};m"
+            )
+        elseif(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+            set_property(TARGET llam_runtime_prebuilt APPEND PROPERTY
+                INTERFACE_LINK_LIBRARIES rt
+            )
+        elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            set_property(TARGET llam_runtime_prebuilt APPEND PROPERTY
+                INTERFACE_LINK_LIBRARIES ws2_32 mswsock synchronization advapi32
+            )
+        endif()
+    endif()
+endif()
+
+if(NOT TARGET llam::runtime)
+    set(dcc_FOUND FALSE)
+    set(dcc_NOT_FOUND_MESSAGE "DCC requires LLAM. Install LLAM's CMake package or configure DCC_LLAM_ROOT and DCC_LLAM_LIBRARY before find_package(dcc).")
+    return()
+endif()
+
+if(TARGET llam::runtime AND NOT TARGET llam_runtime_prebuilt)
+    add_library(llam_runtime_prebuilt INTERFACE IMPORTED)
+    set_target_properties(llam_runtime_prebuilt PROPERTIES
+        INTERFACE_LINK_LIBRARIES llam::runtime
+    )
+endif()
+
+if(@DCC_CONFIG_HAVE_OPUS@ AND NOT TARGET dcc_opus)
+    find_path(DCC_OPUS_INCLUDE_DIR
+        NAMES opus/opus.h
+        HINTS ENV OPUS_ROOT /opt/homebrew /usr/local
+        PATH_SUFFIXES include
+    )
+    find_library(DCC_OPUS_LIBRARY
+        NAMES opus
+        HINTS ENV OPUS_ROOT /opt/homebrew /usr/local
+        PATH_SUFFIXES lib
+    )
+    if(DCC_OPUS_INCLUDE_DIR AND DCC_OPUS_LIBRARY)
+        add_library(dcc_opus UNKNOWN IMPORTED)
+        set_target_properties(dcc_opus PROPERTIES
+            IMPORTED_LOCATION "${DCC_OPUS_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${DCC_OPUS_INCLUDE_DIR}"
+        )
+    else()
+        set(dcc_FOUND FALSE)
+        set(dcc_NOT_FOUND_MESSAGE "This DCC package was built with libopus support, but libopus could not be found.")
+        return()
+    endif()
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/dcc-targets.cmake")
+
+if(NOT COMMAND dcc_add_hot_reload_module)
+    function(dcc_add_hot_reload_module target)
+        set(options)
+        set(one_value_args OUTPUT_NAME)
+        set(multi_value_args SOURCES)
+        cmake_parse_arguments(DCC_HOT_RELOAD_MODULE "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+        set(sources ${DCC_HOT_RELOAD_MODULE_SOURCES} ${DCC_HOT_RELOAD_MODULE_UNPARSED_ARGUMENTS})
+        if(NOT sources)
+            message(FATAL_ERROR "dcc_add_hot_reload_module(<target> [SOURCES] <sources...>) requires at least one source")
+        endif()
+
+        add_library(${target} MODULE ${sources})
+        target_link_libraries(${target} PRIVATE dcc::dcc)
+        target_compile_features(${target} PRIVATE c_std_11)
+        set_target_properties(${target} PROPERTIES PREFIX "")
+        if(DCC_HOT_RELOAD_MODULE_OUTPUT_NAME)
+            set_target_properties(${target} PROPERTIES OUTPUT_NAME "${DCC_HOT_RELOAD_MODULE_OUTPUT_NAME}")
+        endif()
+    endfunction()
+endif()
+
+check_required_components(dcc)

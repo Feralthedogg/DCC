@@ -1,0 +1,51 @@
+ARG DEBIAN_VERSION=bookworm
+
+FROM debian:${DEBIAN_VERSION} AS build
+
+ARG DCC_DIR=DCC
+ARG LLAM_DIR=LLAM
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        cmake \
+        libssl-dev \
+        liburing-dev \
+        ninja-build && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+COPY ${LLAM_DIR}/ /src/LLAM/
+COPY ${DCC_DIR}/ /src/DCC/
+
+RUN cmake -S /src/DCC -B /build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DDCC_BUILD_EXAMPLES=ON \
+        -DDCC_BUILD_TESTS=OFF \
+        -DDCC_BUILD_BENCHMARKS=OFF \
+        -DDCC_BUILD_FUZZERS=OFF \
+        -DDCC_WITH_OPUS=OFF \
+        -DDCC_LLAM_USE_SUBDIRECTORY=ON \
+        -DDCC_LLAM_ROOT=/src/LLAM && \
+    cmake --build /build --target dcc_interaction_webhook && \
+    cmake --install /build --prefix /opt/dcc
+
+FROM debian:${DEBIAN_VERSION} AS runtime
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        libssl3 \
+        liburing2 \
+        wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd --system --gid 10001 dcc && \
+    useradd --system --uid 10001 --gid 10001 --home-dir /nonexistent --shell /usr/sbin/nologin dcc
+
+COPY --from=build /opt/dcc/bin/dcc_interaction_webhook /usr/local/bin/dcc_interaction_webhook
+
+USER dcc
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/dcc_interaction_webhook"]

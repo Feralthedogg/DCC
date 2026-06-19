@@ -1,0 +1,48 @@
+services:
+  hot-reload:
+    image: ghcr.io/your-org/dcc-hot-reload:latest
+    build:
+      context: ../../..
+      dockerfile: DCC/deploy/hot-reload/Containerfile
+      args:
+        DCC_DIR: DCC
+        LLAM_DIR: LLAM
+    restart: unless-stopped
+    init: true
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    env_file:
+      - ./dcc-hot-reload.env
+    environment:
+      DCC_BOT_MODULE: /var/lib/dcc/hot_reload/bot.so
+      DCC_HOT_RELOAD_WORKER: /usr/local/bin/dcc_hot_reload_worker
+      DCC_HOT_RELOAD_HEALTH_ADDRESS: 0.0.0.0
+      DCC_HOT_RELOAD_HEALTH_PORT: 18080
+    volumes:
+      - ./modules:/var/lib/dcc/hot_reload
+    expose:
+      - "18080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:18080/hot-reloadz >/dev/null"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      hot-reload:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18080:8080"
+    environment:
+      DCC_HOT_RELOAD_HEALTH_LISTEN: :8080
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+

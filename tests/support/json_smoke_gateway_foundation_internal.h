@@ -1,0 +1,7 @@
+#ifndef DCC_TEST_JSON_SMOKE_GATEWAY_FOUNDATION_INTERNAL_H
+#define DCC_TEST_JSON_SMOKE_GATEWAY_FOUNDATION_INTERNAL_H
+
+int dcc_json_smoke_gateway_foundation_automation(void);
+int dcc_json_smoke_gateway_foundation_members(void);
+
+#endif

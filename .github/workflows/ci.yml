@@ -1,0 +1,59 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  release-check:
+    name: release-check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-latest
+
+    steps:
+      - name: Checkout DCC
+        uses: actions/checkout@v6
+        with:
+          path: DCC
+
+      - name: Checkout LLAM
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.repository_owner }}/LLAM
+          path: LLAM
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake libssl-dev liburing-dev libopus-dev ninja-build python3
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install cmake ninja openssl@3 opus
+          echo "OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "OPUS_ROOT=$(brew --prefix opus)" >> "$GITHUB_ENV"
+
+      - name: Run release check
+        working-directory: DCC
+        env:
+          DCC_CMAKE_GENERATOR: Ninja
+          DCC_EXTRA_CMAKE_ARGS: -DDCC_LLAM_USE_SUBDIRECTORY=ON -DDCC_LLAM_ROOT=${{ github.workspace }}/LLAM
+          DCC_LLAM_ROOT: ${{ github.workspace }}/LLAM
+        run: tools/release_check.sh

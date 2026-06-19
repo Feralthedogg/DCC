@@ -1,0 +1,185 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, for example v0.1.0
+        required: false
+        default: v0.1.0
+        type: string
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      - '[0-9]+.[0-9]+.[0-9]+*'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-artifacts:
+    name: build-artifacts (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x86_64
+            runner: ubuntu-24.04
+          - target: linux-aarch64
+            runner: ubuntu-24.04-arm
+          - target: macos-aarch64
+            runner: macos-14
+          - target: macos-x86_64
+            runner: macos-15-intel
+
+    steps:
+      - name: Checkout DCC
+        uses: actions/checkout@v6
+        with:
+          path: DCC
+
+      - name: Checkout LLAM
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.repository_owner }}/LLAM
+          path: LLAM
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential ca-certificates clang cmake git libssl-dev \
+            liburing-dev libopus-dev ninja-build python3 xz-utils
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install cmake ninja openssl@3 opus
+          echo "OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "OPUS_ROOT=$(brew --prefix opus)" >> "$GITHUB_ENV"
+
+      - name: Build, test, and package
+        working-directory: DCC
+        env:
+          DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
+          DCC_CMAKE_GENERATOR: Ninja
+          DCC_LLAM_USE_SUBDIRECTORY: ON
+          DCC_LLAM_ROOT: ${{ github.workspace }}/LLAM
+          DCC_BUILD_PARALLEL: 4
+        run: tools/package_release.sh "${{ matrix.target }}"
+
+      - name: Upload platform artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-${{ matrix.target }}
+          path: |
+            DCC/target/dist/dcc-*-${{ matrix.target }}.tar.gz
+            DCC/target/dist/dcc-*-${{ matrix.target }}.tar.gz.sha256
+          if-no-files-found: error
+
+      - name: Upload source artifact
+        if: matrix.target == 'linux-x86_64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-source
+          path: |
+            DCC/target/dist/dcc-*-source.tar.gz
+            DCC/target/dist/dcc-*-source.tar.gz.sha256
+          if-no-files-found: error
+
+  publish-release:
+    name: publish-release
+    needs: build-artifacts
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: release-*
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Build checksum manifest
+        run: |
+          cd release-artifacts
+          cat ./*.sha256 | LC_ALL=C sort -k2 > SHA256SUMS
+
+      - name: Build release notes
+        env:
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          cd release-artifacts
+          version="${RELEASE_VERSION#v}"
+          tag="${RELEASE_VERSION}"
+          case "$tag" in
+            v*) ;;
+            *) tag="v$tag" ;;
+          esac
+          base_url="https://github.com/${REPOSITORY}/releases/download/${tag}"
+          run_url="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
+          {
+            echo "# DCC ${version}"
+            echo
+            echo "DCC ${version} publishes native Discord C runtime packages."
+            echo
+            echo "## Downloads"
+            echo
+            echo "| File | Platform | Checksum |"
+            echo "| --- | --- | --- |"
+            for row in \
+              "linux-x86_64|Linux x86_64" \
+              "linux-aarch64|Linux aarch64" \
+              "macos-aarch64|macOS arm64" \
+              "macos-x86_64|macOS x86_64"; do
+              target="${row%%|*}"
+              label="${row#*|}"
+              file="dcc-${version}-${target}.tar.gz"
+              checksum="${file}.sha256"
+              if [ -f "$file" ]; then
+                echo "| [${file}](${base_url}/${file}) | ${label} | [checksum](${base_url}/${checksum}) |"
+              fi
+            done
+            source_file="dcc-${version}-source.tar.gz"
+            if [ -f "$source_file" ]; then
+              echo "| [${source_file}](${base_url}/${source_file}) | Source | [checksum](${base_url}/${source_file}.sha256) |"
+            fi
+            echo
+            echo "## Package Contents"
+            echo
+            echo "- Public headers under \`include/dcc/\`."
+            echo "- Static or shared DCC library according to the package build."
+            echo "- CMake package files under \`lib/cmake/dcc/\` and pkg-config metadata under \`lib/pkgconfig/\`."
+            echo "- Runtime helper tools such as \`dcc_hot_reload_host\`, \`dcc_hot_reload_worker\`, \`dcc_command_sync\`, and \`dcc_replay\`."
+            echo "- Examples, deployment templates, and Markdown documentation."
+            echo
+            echo "## Verification"
+            echo
+            echo "- Release workflow succeeded: ${run_url}"
+            echo "- Release target commit: \`${RELEASE_SHA}\`."
+            echo "- Full checksum manifest: [SHA256SUMS](${base_url}/SHA256SUMS)."
+          } > RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.event.inputs.version }}
+          name: DCC ${{ github.event.inputs.version || github.ref_name }}
+          body_path: release-artifacts/RELEASE_NOTES.md
+          prerelease: ${{ contains(github.event.inputs.version || github.ref_name, '-') }}
+          fail_on_unmatched_files: true
+          files: |
+            release-artifacts/*.tar.gz
+            release-artifacts/*.tar.gz.sha256
+            release-artifacts/SHA256SUMS

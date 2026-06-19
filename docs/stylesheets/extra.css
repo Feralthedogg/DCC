@@ -1,0 +1,59 @@
+:root {
+  --dcc-accent: #67e8f9;
+  --dcc-accent-strong: #818cf8;
+}
+
+.md-header,
+.md-tabs {
+  background: #111827;
+}
+
+.md-typeset h1,
+.md-typeset h2 {
+  font-weight: 700;
+}
+
+.md-typeset .dcc-hero {
+  display: grid;
+  gap: 1.4rem;
+  padding: 2.2rem 0 1.2rem;
+}
+
+.md-typeset .dcc-hero h1 {
+  margin: 0;
+  max-width: 980px;
+  font-size: clamp(2.1rem, 5vw, 4rem);
+  line-height: 1.02;
+}
+
+.md-typeset .dcc-hero p {
+  max-width: 760px;
+  font-size: 1.08rem;
+}
+
+.md-typeset .dcc-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin: 1.2rem 0;
+}
+
+.md-typeset .dcc-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.md-typeset .dcc-card h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+}
+
+.md-typeset .dcc-card p {
+  margin: 0;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset code {
+  border-radius: 4px;
+}

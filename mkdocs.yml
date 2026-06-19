@@ -1,0 +1,81 @@
+site_name: DCC
+site_description: Discord C Client runtime documentation
+site_url: https://feralthedogg.github.io/DCC/
+repo_url: https://github.com/Feralthedogg/DCC
+repo_name: Feralthedogg/DCC
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  logo: assets/dcc.png
+  favicon: assets/dcc.png
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - toc.follow
+    - content.code.copy
+    - content.action.edit
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quickstart: getting-started.md
+      - Build Options: reference/build-options.md
+      - Project Layout: architecture.md
+  - Guides:
+      - Gateway And Events: guides/gateway-events.md
+      - Slash Command Registry: guides/command-registry.md
+      - Component Sessions: guides/component-sessions.md
+      - Interaction Flows: guides/interaction-flows.md
+      - Hot Reload: guides/hot-reload.md
+      - Replay Testing: guides/replay.md
+      - REST Firewall: guides/rate-limit-firewall.md
+  - API Reference:
+      - Public API Guide: api.md
+      - CLI Tools: reference/cli.md
+      - Runtime Modules: reference/runtime-modules.md
+  - Operations:
+      - Production Playbooks: production-playbooks.md
+      - Live Validation: live-validation.md
+      - Release Checklist: release.md
+      - GitHub Actions: deployment/github-actions.md
+  - Development:
+      - Coding Style: coding-style.md

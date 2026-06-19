@@ -1,0 +1,1 @@
+{"t":"READY","s":1,"op":0,"d":{"session_id":"mock-session","resume_gateway_url":"ws://127.0.0.1/gateway","heartbeat_interval":45000,"guilds":[{"id":"333"}]}}

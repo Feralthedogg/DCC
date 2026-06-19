@@ -1,0 +1,50 @@
+services:
+  interaction-webhook:
+    image: ghcr.io/your-org/dcc-interaction-webhook:latest
+    build:
+      context: ../../..
+      dockerfile: DCC/deploy/interaction-webhook/Containerfile
+      args:
+        DCC_DIR: DCC
+        LLAM_DIR: LLAM
+    restart: unless-stopped
+    init: true
+    stop_signal: SIGTERM
+    stop_grace_period: 20s
+    env_file:
+      - ./dcc-interaction-webhook.env
+    environment:
+      DCC_INTERACTION_ADDRESS: 0.0.0.0
+      DCC_INTERACTION_PORT: 8080
+    expose:
+      - "8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/healthz >/dev/null"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      interaction-webhook:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DCC_INTERACTION_HOST: interactions.example.com
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:
