@@ -1,4 +1,5 @@
 #include "internal/voice/dcc_voice_internal.h"
+#include "internal/dcc_platform_datagram.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -75,7 +76,7 @@ dcc_status_t dcc_voice_client_send_queued_packet(
         memcpy(rtp + DCC_VOICE_RTP_HEADER_SIZE, item->data, item->size);
     }
 
-    ssize_t sent = llam_sendto(
+    ssize_t sent = dcc_platform_sendto(
         voice_client->udp_fd,
         rtp,
         rtp_size,

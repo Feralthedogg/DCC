@@ -1,4 +1,5 @@
 #include "internal/voice/dcc_voice_internal.h"
+#include "internal/dcc_platform_resolve.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -27,16 +28,11 @@ dcc_status_t dcc_voice_client_connect_udp(
 
     struct addrinfo hints;
     struct addrinfo *result = NULL;
-    int gai_error = 0;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
 
-    if (llam_getaddrinfo_result(host, port_text, &hints, &result, &gai_error) != 0) {
-        return DCC_ERR_NETWORK;
-    }
-    if (gai_error != 0 || result == NULL) {
-        llam_freeaddrinfo_result(result);
+    if (dcc_platform_getaddrinfo(host, port_text, &hints, &result) != DCC_OK) {
         return DCC_ERR_NETWORK;
     }
 
@@ -60,7 +56,7 @@ dcc_status_t dcc_voice_client_connect_udp(
         break;
     }
 
-    llam_freeaddrinfo_result(result);
+    dcc_platform_freeaddrinfo(result);
     if (LLAM_FD_IS_INVALID(fd)) {
         return DCC_ERR_NETWORK;
     }

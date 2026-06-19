@@ -6,11 +6,17 @@
 #include <errno.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 static void dcc_worker_process_sleep_10ms(void) {
     if (llam_sleep_ns(UINT64_C(10000000)) != 0) {
-        usleep(10000U);
+        struct timespec req = {
+            .tv_sec = 0,
+            .tv_nsec = 10000000L,
+        };
+        while (nanosleep(&req, &req) != 0 && errno == EINTR) {
+        }
     }
 }
 

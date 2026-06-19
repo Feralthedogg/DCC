@@ -1,4 +1,5 @@
 #include "internal/voice/dcc_voice_internal.h"
+#include "internal/dcc_platform_datagram.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -41,7 +42,7 @@ dcc_status_t dcc_voice_client_discover_udp_ip(
         return status;
     }
 
-    ssize_t sent = llam_sendto(
+    ssize_t sent = dcc_platform_sendto(
         voice_client->udp_fd,
         packet,
         packet_len,
@@ -64,7 +65,8 @@ dcc_status_t dcc_voice_client_discover_udp_ip(
     }
 
     uint8_t response[DCC_VOICE_IP_DISCOVERY_PACKET_SIZE];
-    ssize_t received = llam_recvfrom(voice_client->udp_fd, response, sizeof(response), 0, NULL, NULL);
+    ssize_t received =
+        dcc_platform_recvfrom(voice_client->udp_fd, response, sizeof(response), 0, NULL, NULL);
     if (received < (ssize_t)DCC_VOICE_IP_DISCOVERY_PACKET_SIZE) {
         return DCC_ERR_NETWORK;
     }

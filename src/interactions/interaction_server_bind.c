@@ -1,4 +1,5 @@
 #include "internal/interactions/dcc_interaction_server_internal.h"
+#include "internal/dcc_platform_resolve.h"
 
 #include <llam/io.h>
 
@@ -18,7 +19,6 @@ dcc_status_t dcc_interaction_bind_listener(dcc_interaction_server_t *server, lla
     char port_text[16];
     struct addrinfo hints;
     struct addrinfo *result = NULL;
-    int gai_error = 0;
     dcc_status_t status = DCC_ERR_NETWORK;
     snprintf(port_text, sizeof(port_text), "%u", (unsigned)server->requested_port);
 
@@ -27,9 +27,7 @@ dcc_status_t dcc_interaction_bind_listener(dcc_interaction_server_t *server, lla
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    if (llam_getaddrinfo_result(server->address, port_text, &hints, &result, &gai_error) != 0 ||
-        gai_error != 0 || result == NULL) {
-        llam_freeaddrinfo_result(result);
+    if (dcc_platform_getaddrinfo(server->address, port_text, &hints, &result) != DCC_OK) {
         return DCC_ERR_NETWORK;
     }
 
@@ -68,7 +66,7 @@ dcc_status_t dcc_interaction_bind_listener(dcc_interaction_server_t *server, lla
         (void)llam_close(fd);
     }
 
-    llam_freeaddrinfo_result(result);
+    dcc_platform_freeaddrinfo(result);
     return status;
 #else
     (void)server;

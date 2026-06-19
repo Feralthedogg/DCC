@@ -908,6 +908,8 @@ target_sources(dcc
         src/json/dcc_json_string_utf8_append.c
         src/net/dcc_conn.c
         src/net/dcc_conn_io.c
+        src/net/dcc_platform_datagram.c
+        src/net/dcc_platform_resolve.c
         src/net/dcc_conn_tcp.c
         src/net/dcc_conn_tls.c
         src/objects/application_command_builder_buffer.c
@@ -1451,6 +1453,8 @@ target_compile_definitions(dcc
         $<$<BOOL:${DCC_BUILD_SHARED}>:DCC_SHARED>
     PRIVATE
         DCC_BUILD
+        $<$<PLATFORM_ID:Darwin>:_DARWIN_C_SOURCE>
+        $<$<AND:$<NOT:$<PLATFORM_ID:Windows>>,$<NOT:$<PLATFORM_ID:Darwin>>>:_POSIX_C_SOURCE=200809L>
 )
 
 if(MSVC)

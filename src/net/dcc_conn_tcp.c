@@ -1,4 +1,5 @@
 #include "internal/net/dcc_conn.h"
+#include "internal/dcc_platform_resolve.h"
 
 #include <llam/io.h>
 
@@ -14,16 +15,11 @@ dcc_status_t dcc_conn_tcp_open(dcc_conn_t *conn, const dcc_conn_options_t *optio
 #if LLAM_PLATFORM_POSIX
     struct addrinfo hints;
     struct addrinfo *result = NULL;
-    int gai_error = 0;
     memset(&hints, 0, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
 
-    if (llam_getaddrinfo_result(options->host, options->port, &hints, &result, &gai_error) != 0) {
-        return DCC_ERR_NETWORK;
-    }
-    if (gai_error != 0 || result == NULL) {
-        llam_freeaddrinfo_result(result);
+    if (dcc_platform_getaddrinfo(options->host, options->port, &hints, &result) != DCC_OK) {
         return DCC_ERR_NETWORK;
     }
 
@@ -47,7 +43,7 @@ dcc_status_t dcc_conn_tcp_open(dcc_conn_t *conn, const dcc_conn_options_t *optio
         (void)llam_close(fd);
     }
 
-    llam_freeaddrinfo_result(result);
+    dcc_platform_freeaddrinfo(result);
     return status;
 #else
     (void)conn;
