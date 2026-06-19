@@ -1,6 +1,5 @@
 #include "internal/dcc_platform_resolve.h"
 
-#if LLAM_PLATFORM_POSIX
 #include <llam/runtime.h>
 
 #include <stddef.h>
@@ -61,4 +60,3 @@ void dcc_platform_freeaddrinfo(struct addrinfo *result) {
         freeaddrinfo(result);
     }
 }
-#endif

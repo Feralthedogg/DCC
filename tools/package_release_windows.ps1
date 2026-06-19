@@ -97,6 +97,8 @@ $configureArgs = @(
     "-DDCC_LLAM_ROOT=$LlamRoot",
     "-DDCC_LLAM_USE_SUBDIRECTORY=ON",
     "-DDCC_BUNDLE_LLAM=ON",
+    "-DDCC_BUILD_EXAMPLES=OFF",
+    "-DDCC_BUILD_TESTS=OFF",
     "-DDCC_WITH_OPUS=OFF"
 )
 if ($generator -match "Visual Studio") {

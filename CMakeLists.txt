@@ -1441,6 +1441,9 @@ target_link_libraries(dcc
         OpenSSL::Crypto
         ${CMAKE_DL_LIBS}
 )
+if(WIN32)
+    target_link_libraries(dcc PRIVATE ws2_32)
+endif()
 if(TARGET dcc_opus)
     target_link_libraries(dcc PRIVATE dcc_opus)
     target_compile_definitions(dcc PRIVATE DCC_HAVE_OPUS=1)
@@ -1457,6 +1460,9 @@ if(TARGET dcc_opus)
 endif()
 if(CMAKE_DL_LIBS)
     list(APPEND DCC_INTERFACE_LINK_LIBRARIES "$<LINK_ONLY:${CMAKE_DL_LIBS}>")
+endif()
+if(WIN32)
+    list(APPEND DCC_INTERFACE_LINK_LIBRARIES "$<LINK_ONLY:ws2_32>")
 endif()
 set_property(TARGET dcc PROPERTY INTERFACE_LINK_LIBRARIES "${DCC_INTERFACE_LINK_LIBRARIES}")
 target_compile_definitions(dcc

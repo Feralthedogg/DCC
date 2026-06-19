@@ -5,8 +5,15 @@
 
 #include <llam/io.h>
 
-#if LLAM_PLATFORM_POSIX
+#if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <netdb.h>
+#endif
 
 dcc_status_t dcc_platform_getaddrinfo(
     const char *node,
@@ -15,6 +22,5 @@ dcc_status_t dcc_platform_getaddrinfo(
     struct addrinfo **out
 );
 void dcc_platform_freeaddrinfo(struct addrinfo *result);
-#endif
 
 #endif

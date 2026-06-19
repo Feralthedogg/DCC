@@ -5,14 +5,19 @@
 
 #include <string.h>
 
-#if LLAM_PLATFORM_POSIX
+#if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <netdb.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #endif
 
 dcc_status_t dcc_conn_tcp_open(dcc_conn_t *conn, const dcc_conn_options_t *options) {
-#if LLAM_PLATFORM_POSIX
     struct addrinfo hints;
     struct addrinfo *result = NULL;
     memset(&hints, 0, sizeof(hints));
@@ -26,7 +31,7 @@ dcc_status_t dcc_conn_tcp_open(dcc_conn_t *conn, const dcc_conn_options_t *optio
     dcc_status_t status = DCC_ERR_NETWORK;
     for (struct addrinfo *ai = result; ai != NULL; ai = ai->ai_next) {
         llam_fd_t fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-        if (fd < 0) {
+        if (LLAM_FD_IS_INVALID(fd)) {
             continue;
         }
 #if defined(SO_NOSIGPIPE)
@@ -45,9 +50,4 @@ dcc_status_t dcc_conn_tcp_open(dcc_conn_t *conn, const dcc_conn_options_t *optio
 
     dcc_platform_freeaddrinfo(result);
     return status;
-#else
-    (void)conn;
-    (void)options;
-    return DCC_ERR_NETWORK;
-#endif
 }
