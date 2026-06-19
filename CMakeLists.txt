@@ -2029,9 +2029,8 @@ if(DCC_BUILD_TESTS)
 
     if(TARGET dcc_hot_reload_host)
         set(DCC_HOT_RELOAD_HOST_ENV_DIR "${CMAKE_CURRENT_BINARY_DIR}/hot_reload_host_env")
-        file(MAKE_DIRECTORY "${DCC_HOT_RELOAD_HOST_ENV_DIR}")
         file(GENERATE
-            OUTPUT "${DCC_HOT_RELOAD_HOST_ENV_DIR}/.env"
+            OUTPUT "${DCC_HOT_RELOAD_HOST_ENV_DIR}/$<CONFIG>/.env"
             CONTENT "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>\nDCC_HOT_RELOAD_WORKER=$<TARGET_FILE:dcc_hot_reload_worker>\nDISCORD_TOKEN=fixture-token\nDCC_HOT_RELOAD_INTENTS=guilds,guild_messages\n"
         )
 
@@ -2203,7 +2202,7 @@ if(DCC_BUILD_TESTS)
                 "$<TARGET_FILE:dcc_hot_reload_host>" --check
         )
         set_tests_properties(dcc_hot_reload_host_check_dotenv PROPERTIES
-            WORKING_DIRECTORY "${DCC_HOT_RELOAD_HOST_ENV_DIR}"
+            WORKING_DIRECTORY "${DCC_HOT_RELOAD_HOST_ENV_DIR}/$<CONFIG>"
             PASS_REGULAR_EXPRESSION "worker_found=yes"
         )
     endif()
