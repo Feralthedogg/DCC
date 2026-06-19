@@ -27,6 +27,7 @@ option(DCC_BUILD_BENCHMARKS "Build DCC micro benchmarks" OFF)
 option(DCC_BUILD_FUZZERS "Build libFuzzer harnesses" OFF)
 option(DCC_ENABLE_SANITIZERS "Build DCC targets with AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(DCC_LLAM_USE_SUBDIRECTORY "Build LLAM from source through add_subdirectory" OFF)
+option(DCC_BUNDLE_LLAM "Install LLAM runtime files with DCC packages when LLAM is built as a subdirectory" ON)
 option(DCC_WITH_OPUS "Build the optional libopus voice codec backend when libopus is available" ON)
 set(DCC_LLAM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../LLAM" CACHE PATH "Path to the LLAM runtime source tree")
 set(DCC_LLAM_LIBRARY "${DCC_LLAM_ROOT}/libllam_runtime.a" CACHE FILEPATH "Path to a prebuilt LLAM static library")
@@ -2500,7 +2501,9 @@ if(TARGET dcc_opus)
     set(DCC_CONFIG_HAVE_OPUS 1)
     string(APPEND DCC_PC_LIBS_PRIVATE " ${DCC_OPUS_LIBRARY}")
 endif()
-if(NOT DCC_LLAM_USE_SUBDIRECTORY AND DCC_LLAM_LIBRARY)
+if(DCC_LLAM_USE_SUBDIRECTORY AND DCC_BUNDLE_LLAM)
+    set(DCC_PC_REQUIRES_PRIVATE "llam")
+elseif(NOT DCC_LLAM_USE_SUBDIRECTORY AND DCC_LLAM_LIBRARY)
     string(APPEND DCC_PC_LIBS_PRIVATE " ${DCC_LLAM_LIBRARY}")
 endif()
 
@@ -2516,6 +2519,52 @@ write_basic_package_version_file(
     COMPATIBILITY SameMajorVersion
 )
 
+if(DCC_LLAM_USE_SUBDIRECTORY AND DCC_BUNDLE_LLAM)
+    set(DCC_BUNDLED_LLAM_VERSION "0")
+    if(EXISTS "${DCC_LLAM_ROOT}/CMakeLists.txt")
+        file(
+            STRINGS "${DCC_LLAM_ROOT}/CMakeLists.txt"
+            DCC_BUNDLED_LLAM_MAJOR_LINE
+            REGEX "^set\\(LLAM_ABI_VERSION_MAJOR [0-9]+\\)"
+        )
+        file(
+            STRINGS "${DCC_LLAM_ROOT}/CMakeLists.txt"
+            DCC_BUNDLED_LLAM_MINOR_LINE
+            REGEX "^set\\(LLAM_ABI_VERSION_MINOR [0-9]+\\)"
+        )
+        if(DCC_BUNDLED_LLAM_MAJOR_LINE AND DCC_BUNDLED_LLAM_MINOR_LINE)
+            string(
+                REGEX REPLACE "^set\\(LLAM_ABI_VERSION_MAJOR ([0-9]+)\\)$" "\\1"
+                DCC_BUNDLED_LLAM_VERSION_MAJOR
+                "${DCC_BUNDLED_LLAM_MAJOR_LINE}"
+            )
+            string(
+                REGEX REPLACE "^set\\(LLAM_ABI_VERSION_MINOR ([0-9]+)\\)$" "\\1"
+                DCC_BUNDLED_LLAM_VERSION_MINOR
+                "${DCC_BUNDLED_LLAM_MINOR_LINE}"
+            )
+            set(DCC_BUNDLED_LLAM_VERSION "${DCC_BUNDLED_LLAM_VERSION_MAJOR}.${DCC_BUNDLED_LLAM_VERSION_MINOR}.0")
+        endif()
+    endif()
+    set(DCC_BUNDLED_LLAM_PC_PRIVATE_LIBS "-pthread")
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(DCC_BUNDLED_LLAM_PC_PRIVATE_LIBS "-pthread -luring -lm")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+        set(DCC_BUNDLED_LLAM_PC_PRIVATE_LIBS "-pthread -lrt")
+    endif()
+
+    configure_package_config_file(
+        cmake/llam-bundled-config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/dcc-bundled-llam-config.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/llam
+    )
+    configure_file(
+        cmake/llam-bundled.pc.in
+        ${CMAKE_CURRENT_BINARY_DIR}/dcc-bundled-llam.pc
+        @ONLY
+    )
+endif()
+
 configure_file(
     cmake/dcc.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/dcc.pc
@@ -2530,6 +2579,65 @@ install(
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
+
+if(DCC_LLAM_USE_SUBDIRECTORY AND DCC_BUNDLE_LLAM)
+    install(
+        FILES "$<TARGET_FILE:llam_runtime>"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+
+    install(
+        DIRECTORY "${DCC_LLAM_ROOT}/include/"
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+
+    if(EXISTS "${DCC_LLAM_ROOT}/README.md")
+        install(
+            FILES "${DCC_LLAM_ROOT}/README.md"
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/llam
+            RENAME README.md
+        )
+    endif()
+    if(EXISTS "${DCC_LLAM_ROOT}/LICENSE")
+        install(
+            FILES "${DCC_LLAM_ROOT}/LICENSE"
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/llam
+            RENAME LICENSE
+        )
+    endif()
+    if(EXISTS "${DCC_LLAM_ROOT}/CHANGELOG.md")
+        install(
+            FILES "${DCC_LLAM_ROOT}/CHANGELOG.md"
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/llam
+            RENAME CHANGELOG.md
+        )
+    endif()
+    if(EXISTS "${DCC_LLAM_ROOT}/docs")
+        install(
+            DIRECTORY "${DCC_LLAM_ROOT}/docs/"
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/llam/docs
+            FILES_MATCHING
+                PATTERN "*.md"
+        )
+    endif()
+
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/_deps/llam/llam-config-version.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/llam
+    )
+
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/dcc-bundled-llam.pc"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+        RENAME llam.pc
+    )
+
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/dcc-bundled-llam-config.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/llam
+        RENAME llam-config.cmake
+    )
+endif()
 
 install(
     DIRECTORY include/

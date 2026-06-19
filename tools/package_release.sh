@@ -85,7 +85,8 @@ if [ -n "${DCC_CMAKE_GENERATOR:-}" ]; then
         -DCMAKE_BUILD_TYPE="${DCC_BUILD_TYPE:-Release}" \
         -DDCC_LLAM_ROOT="${DCC_LLAM_ROOT:-$source_dir/../LLAM}" \
         -DDCC_LLAM_LIBRARY="${DCC_LLAM_LIBRARY:-$source_dir/../LLAM/libllam_runtime.a}" \
-        -DDCC_LLAM_USE_SUBDIRECTORY="${DCC_LLAM_USE_SUBDIRECTORY:-OFF}" \
+        -DDCC_LLAM_USE_SUBDIRECTORY="${DCC_LLAM_USE_SUBDIRECTORY:-ON}" \
+        -DDCC_BUNDLE_LLAM="${DCC_BUNDLE_LLAM:-ON}" \
         ${DCC_EXTRA_CMAKE_ARGS:-}
 else
     # shellcheck disable=SC2086
@@ -93,7 +94,8 @@ else
         -DCMAKE_BUILD_TYPE="${DCC_BUILD_TYPE:-Release}" \
         -DDCC_LLAM_ROOT="${DCC_LLAM_ROOT:-$source_dir/../LLAM}" \
         -DDCC_LLAM_LIBRARY="${DCC_LLAM_LIBRARY:-$source_dir/../LLAM/libllam_runtime.a}" \
-        -DDCC_LLAM_USE_SUBDIRECTORY="${DCC_LLAM_USE_SUBDIRECTORY:-OFF}" \
+        -DDCC_LLAM_USE_SUBDIRECTORY="${DCC_LLAM_USE_SUBDIRECTORY:-ON}" \
+        -DDCC_BUNDLE_LLAM="${DCC_BUNDLE_LLAM:-ON}" \
         ${DCC_EXTRA_CMAKE_ARGS:-}
 fi
 
@@ -134,6 +136,10 @@ cp "$source_archive" "$source_out"
 )
 
 tar -tf "$binary_out" | grep '/include/dcc/dcc.h$' >/dev/null
+tar -tf "$binary_out" | grep '/include/llam/runtime.h$' >/dev/null
+tar -tf "$binary_out" | grep -E '/lib/libllam_runtime(\.a|\.so|\.dylib)(\.[0-9.]+)?$' >/dev/null
+tar -tf "$binary_out" | grep '/lib/cmake/llam/llam-config.cmake$' >/dev/null
+tar -tf "$binary_out" | grep '/lib/pkgconfig/llam.pc$' >/dev/null
 tar -tf "$binary_out" | grep '/lib/pkgconfig/dcc.pc$' >/dev/null
 tar -tf "$binary_out" | grep '/share/dcc/docs/api.md$' >/dev/null
 tar -tf "$source_out" | grep '/CMakeLists.txt$' >/dev/null

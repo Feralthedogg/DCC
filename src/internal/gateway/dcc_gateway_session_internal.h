@@ -19,12 +19,23 @@ typedef enum dcc_gateway_next {
     DCC_GATEWAY_NEXT_RECONNECT_RESUME
 } dcc_gateway_next_t;
 
+typedef struct dcc_gateway_heartbeat_state {
+    dcc_ws_t *ws;
+    atomic_uint refs;
+    atomic_bool stop;
+    atomic_bool waiting_ack;
+    atomic_bool failed;
+    atomic_bool has_seq;
+    atomic_ullong seq;
+    uint32_t interval_ms;
+    uint32_t jitter_seed;
+} dcc_gateway_heartbeat_state_t;
+
 typedef struct dcc_gateway_session {
     dcc_client_t *client;
     dcc_ws_t *ws;
-    atomic_bool stop_heartbeat;
-    atomic_bool waiting_heartbeat_ack;
-    atomic_bool heartbeat_failed;
+    dcc_gateway_heartbeat_state_t *heartbeat;
+    bool heartbeat_failed;
     uint64_t seq;
     bool has_seq;
     uint32_t heartbeat_interval_ms;

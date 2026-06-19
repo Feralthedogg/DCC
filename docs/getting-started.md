@@ -1,6 +1,44 @@
-# Quickstart
+# Getting Started
 
-This page gets a local DCC build running with the neighboring LLAM runtime.
+The normal path is to install a published DCC release. The release archive is
+self-contained and includes a compatible LLAM runtime; the install script also
+refreshes LLAM through LLAM's latest release installer.
+
+## Install Release
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+  sh -s -- --prefix "$HOME/.local"
+```
+
+For system-wide installs use a system prefix:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+  sudo sh -s -- --prefix /usr/local
+```
+
+Upgrade an existing prefix with:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+  sh -s -- --prefix "$HOME/.local" --force
+```
+
+Use `--skip-llam` only when you want the LLAM copy bundled in the DCC archive
+to remain untouched. By default the script installs DCC and then fetches the
+latest LLAM release installer into the same prefix.
+
+Point CMake consumers at the prefix:
+
+```sh
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$HOME/.local"
+cmake --build build
+```
+
+## Build From Source
+
+This path is for working on DCC itself.
 
 ## Requirements
 
@@ -17,21 +55,10 @@ Linux also needs `liburing` for LLAM's io_uring backend.
 ```sh
 cmake -S . -B build \
   -DCMAKE_BUILD_TYPE=Debug \
-  -DDCC_LLAM_ROOT=../LLAM \
-  -DDCC_LLAM_LIBRARY=../LLAM/libllam_runtime.a
-
-cmake --build build
-ctest --test-dir build --output-on-failure
-```
-
-For CI or clean clones where LLAM has not already produced
-`libllam_runtime.a`, build LLAM as a subdirectory:
-
-```sh
-cmake -S . -B build \
   -DDCC_LLAM_USE_SUBDIRECTORY=ON \
   -DDCC_LLAM_ROOT=../LLAM
 cmake --build build
+ctest --test-dir build --output-on-failure
 ```
 
 ## Minimal Client

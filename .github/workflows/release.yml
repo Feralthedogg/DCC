@@ -71,6 +71,7 @@ jobs:
           DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
           DCC_CMAKE_GENERATOR: Ninja
           DCC_LLAM_USE_SUBDIRECTORY: ON
+          DCC_BUNDLE_LLAM: ON
           DCC_LLAM_ROOT: ${{ github.workspace }}/LLAM
           DCC_BUILD_PARALLEL: 4
         run: tools/package_release.sh "${{ matrix.target }}"
@@ -134,6 +135,12 @@ jobs:
             echo
             echo "DCC ${version} publishes native Discord C runtime packages."
             echo
+            echo "Install with:"
+            echo
+            echo "\`\`\`sh"
+            echo "curl -fsSL https://raw.githubusercontent.com/${REPOSITORY}/main/tools/install.sh | sh -s -- --prefix \"\$HOME/.local\""
+            echo "\`\`\`"
+            echo
             echo "## Downloads"
             echo
             echo "| File | Platform | Checksum |"
@@ -161,6 +168,7 @@ jobs:
             echo "- Public headers under \`include/dcc/\`."
             echo "- Static or shared DCC library according to the package build."
             echo "- CMake package files under \`lib/cmake/dcc/\` and pkg-config metadata under \`lib/pkgconfig/\`."
+            echo "- Bundled LLAM runtime headers, libraries, \`llam-config.cmake\`, and \`llam.pc\`."
             echo "- Runtime helper tools such as \`dcc_hot_reload_host\`, \`dcc_hot_reload_worker\`, \`dcc_command_sync\`, and \`dcc_replay\`."
             echo "- Examples, deployment templates, and Markdown documentation."
             echo

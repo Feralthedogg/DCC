@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void dcc_gateway_session_init(dcc_gateway_session_t *session, dcc_client_t *client, bool resume);
+dcc_status_t dcc_gateway_session_start_heartbeat(dcc_gateway_session_t *session, llam_task_t **out_heartbeat);
 void dcc_gateway_session_stop_heartbeat(dcc_gateway_session_t *session, llam_task_t *heartbeat);
 void dcc_gateway_session_drop_ws(dcc_gateway_session_t *session);
 void dcc_gateway_session_finish_ws(dcc_gateway_session_t *session);

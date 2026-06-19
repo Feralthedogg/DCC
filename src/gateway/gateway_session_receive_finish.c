@@ -15,7 +15,7 @@ dcc_status_t dcc_gateway_session_finalize_receive(
         session->next = dcc_gateway_take_reconnect_request(client);
         return DCC_ERR_CANCELED;
     }
-    if (atomic_load_explicit(&session->heartbeat_failed, memory_order_acquire)) {
+    if (session->heartbeat_failed) {
         session->next = dcc_gateway_reconnect_next(client);
         return DCC_ERR_DISCORD;
     }

@@ -40,12 +40,13 @@ dcc_status_t dcc_gateway_run_once(
         return status;
     }
 
-    llam_task_t *heartbeat = llam_spawn(dcc_gateway_heartbeat_task, &session, NULL);
-    if (heartbeat == NULL) {
+    llam_task_t *heartbeat = NULL;
+    status = dcc_gateway_session_start_heartbeat(&session, &heartbeat);
+    if (status != DCC_OK) {
         dcc_gateway_session_drop_ws(&session);
         dcc_set_error(client, "failed to spawn gateway heartbeat");
         *next = DCC_GATEWAY_NEXT_FATAL;
-        return DCC_ERR_RUNTIME;
+        return status;
     }
 
     if (!session.resume) {

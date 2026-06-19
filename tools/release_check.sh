@@ -27,6 +27,8 @@ minimal_package_consumer_build_dir=${DCC_MINIMAL_PACKAGE_CONSUMER_BUILD_DIR:-"$s
 
 llam_root=${DCC_LLAM_ROOT:-"$source_dir/../LLAM"}
 llam_library=${DCC_LLAM_LIBRARY:-"$llam_root/libllam_runtime.a"}
+llam_use_subdirectory=${DCC_LLAM_USE_SUBDIRECTORY:-ON}
+bundle_llam=${DCC_BUNDLE_LLAM:-ON}
 ctest_timeout=${DCC_CTEST_TIMEOUT:-180}
 ctest_regex=${DCC_CTEST_REGEX:-^dcc_}
 
@@ -103,6 +105,58 @@ package_llam_library_path() {
     fi
 }
 
+installed_llam_bundle_check() {
+    prefix=$1
+
+    [ -f "$prefix/include/llam/runtime.h" ] || {
+        printf 'installed package is missing bundled LLAM header\n' >&2
+        return 1
+    }
+    [ -f "$prefix/lib/cmake/llam/llam-config.cmake" ] || {
+        printf 'installed package is missing bundled LLAM CMake config\n' >&2
+        return 1
+    }
+    [ -f "$prefix/lib/pkgconfig/llam.pc" ] || {
+        printf 'installed package is missing bundled LLAM pkg-config metadata\n' >&2
+        return 1
+    }
+    find "$prefix/lib" -maxdepth 1 \( -type f -o -type l \) -name 'libllam_runtime*' -print | grep . >/dev/null || {
+        printf 'installed package is missing bundled LLAM runtime library\n' >&2
+        return 1
+    }
+}
+
+configure_package_consumer() {
+    consumer_source=$1
+    consumer_build=$2
+    prefix=$3
+    package_llam=${4:-}
+
+    if [ -n "${DCC_CMAKE_GENERATOR:-}" ] && [ -n "$package_llam" ]; then
+        cmake -S "$consumer_source" -B "$consumer_build" \
+            -G "$DCC_CMAKE_GENERATOR" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DDCC_LLAM_ROOT="$llam_root" \
+            -DDCC_LLAM_LIBRARY="$package_llam"
+    elif [ -n "${DCC_CMAKE_GENERATOR:-}" ]; then
+        cmake -S "$consumer_source" -B "$consumer_build" \
+            -G "$DCC_CMAKE_GENERATOR" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_PREFIX_PATH="$prefix"
+    elif [ -n "$package_llam" ]; then
+        cmake -S "$consumer_source" -B "$consumer_build" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DDCC_LLAM_ROOT="$llam_root" \
+            -DDCC_LLAM_LIBRARY="$package_llam"
+    else
+        cmake -S "$consumer_source" -B "$consumer_build" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_PREFIX_PATH="$prefix"
+    fi
+}
+
 pkg_config_tool() {
     if command -v pkg-config >/dev/null 2>&1; then
         command -v pkg-config
@@ -151,19 +205,9 @@ pkg_config_consumer_check() {
     else
         libs=$("$pc_tool" --libs dcc)
     fi
-    extra_libs=
-    if [ -n "$package_llam" ]; then
-        extra_libs=$package_llam
-        case "$(uname -s)" in
-            Linux)
-                extra_libs="$extra_libs -luring -lm"
-                ;;
-        esac
-    fi
-
     # Deliberately use shell splitting here: pkg-config returns compiler tokens.
     # shellcheck disable=SC2086
-    "$cc" -std=c11 "$consumer_dir/main.c" $cflags $libs $extra_libs -o "$consumer_build_dir/dcc_pkg_config_consumer"
+    "$cc" -std=c11 "$consumer_dir/main.c" $cflags $libs -o "$consumer_build_dir/dcc_pkg_config_consumer"
     "$consumer_build_dir/dcc_pkg_config_consumer"
 }
 
@@ -226,19 +270,24 @@ hot_reload_live_soak_script_check() {
 
 hot_reload_example_build_check() {
     prefix=$1
-    package_llam=$2
+    package_llam=${2:-}
     example_dir=$prefix/share/dcc/examples/hot_reload
     if [ ! -f "$example_dir/Makefile" ]; then
         printf 'missing installed hot reload example Makefile: %s\n' "$example_dir/Makefile" >&2
         return 1
     fi
 
-    DCC_LLAM_ROOT="$llam_root" \
-    DCC_LLAM_LIBRARY="$package_llam" \
+    if [ -n "$package_llam" ]; then
+        DCC_LLAM_ROOT="$llam_root" \
+        DCC_LLAM_LIBRARY="$package_llam" \
+            make -C "$example_dir" clean >/dev/null
+        DCC_LLAM_ROOT="$llam_root" \
+        DCC_LLAM_LIBRARY="$package_llam" \
+            make -C "$example_dir" all >/dev/null
+    else
         make -C "$example_dir" clean >/dev/null
-    DCC_LLAM_ROOT="$llam_root" \
-    DCC_LLAM_LIBRARY="$package_llam" \
         make -C "$example_dir" all >/dev/null
+    fi
 
     if [ ! -x "$example_dir/build/dcc_hot_reload_test_host" ]; then
         printf 'installed hot reload example did not prepare host executable\n' >&2
@@ -415,6 +464,8 @@ step "configure primary debug build"
 cmake_configure "$build_dir" \
     -DCMAKE_BUILD_TYPE=Debug \
     -DDCC_BUILD_BENCHMARKS=ON \
+    -DDCC_LLAM_USE_SUBDIRECTORY="$llam_use_subdirectory" \
+    -DDCC_BUNDLE_LLAM="$bundle_llam" \
     -DDCC_LLAM_ROOT="$llam_root" \
     -DDCC_LLAM_LIBRARY="$llam_library"
 
@@ -463,7 +514,13 @@ if ! is_true "${DCC_SKIP_PACKAGE:-0}"; then
     step "install package"
     cmake --install "$build_dir" --prefix "$package_prefix"
 
-    package_llam_library=$(package_llam_library_path)
+    package_llam_library=
+    if is_true "$llam_use_subdirectory" && is_true "$bundle_llam"; then
+        step "verify installed LLAM bundle"
+        installed_llam_bundle_check "$package_prefix"
+    else
+        package_llam_library=$(package_llam_library_path)
+    fi
 
     if ! is_true "${DCC_SKIP_HOT_RELOAD_HOST_CHECK:-0}"; then
         installed_hot_reload_host=$(find_executable "$package_prefix/bin" dcc_hot_reload_host)
@@ -506,27 +563,15 @@ if ! is_true "${DCC_SKIP_PACKAGE:-0}"; then
     fi
 
     step "build installed-package consumer"
-    if [ -n "${DCC_CMAKE_GENERATOR:-}" ]; then
-        cmake -S "$source_dir/tests/package_consumer" -B "$package_consumer_build_dir" \
-            -G "$DCC_CMAKE_GENERATOR" \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_PREFIX_PATH="$package_prefix" \
-            -DDCC_LLAM_ROOT="$llam_root" \
-            -DDCC_LLAM_LIBRARY="$package_llam_library"
-    else
-        cmake -S "$source_dir/tests/package_consumer" -B "$package_consumer_build_dir" \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_PREFIX_PATH="$package_prefix" \
-            -DDCC_LLAM_ROOT="$llam_root" \
-            -DDCC_LLAM_LIBRARY="$package_llam_library"
-    fi
+    configure_package_consumer "$source_dir/tests/package_consumer" "$package_consumer_build_dir" \
+        "$package_prefix" "$package_llam_library"
     cmake_build "$package_consumer_build_dir"
     consumer_exe=$(find_executable "$package_consumer_build_dir" dcc_package_consumer)
     "$consumer_exe"
 
     if ! is_true "${DCC_SKIP_PKG_CONFIG_CHECK:-0}"; then
         step "build installed pkg-config consumer"
-        pkg_config_consumer_check "$package_prefix" "$package_consumer_build_dir" "$package_llam_library"
+        pkg_config_consumer_check "$package_prefix" "$package_consumer_build_dir"
     fi
 fi
 
@@ -538,6 +583,8 @@ if ! is_true "${DCC_SKIP_MINIMAL_PACKAGE:-0}"; then
         -DDCC_BUILD_TESTS=OFF \
         -DDCC_BUILD_BENCHMARKS=OFF \
         -DDCC_BUILD_FUZZERS=OFF \
+        -DDCC_LLAM_USE_SUBDIRECTORY="$llam_use_subdirectory" \
+        -DDCC_BUNDLE_LLAM="$bundle_llam" \
         -DDCC_LLAM_ROOT="$llam_root" \
         -DDCC_LLAM_LIBRARY="$llam_library"
 
@@ -547,7 +594,13 @@ if ! is_true "${DCC_SKIP_MINIMAL_PACKAGE:-0}"; then
     step "install minimal tools package"
     cmake --install "$minimal_build_dir" --prefix "$minimal_package_prefix"
 
-    package_llam_library=$(package_llam_library_path)
+    package_llam_library=
+    if is_true "$llam_use_subdirectory" && is_true "$bundle_llam"; then
+        step "verify minimal installed LLAM bundle"
+        installed_llam_bundle_check "$minimal_package_prefix"
+    else
+        package_llam_library=$(package_llam_library_path)
+    fi
 
     if ! is_true "${DCC_SKIP_HOT_RELOAD_LIVE_SOAK_DRY_RUN:-0}"; then
         step "run minimal installed hot reload live soak helper dry run"
@@ -586,27 +639,15 @@ if ! is_true "${DCC_SKIP_MINIMAL_PACKAGE:-0}"; then
     fi
 
     step "build minimal installed-package consumer"
-    if [ -n "${DCC_CMAKE_GENERATOR:-}" ]; then
-        cmake -S "$source_dir/tests/package_consumer" -B "$minimal_package_consumer_build_dir" \
-            -G "$DCC_CMAKE_GENERATOR" \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_PREFIX_PATH="$minimal_package_prefix" \
-            -DDCC_LLAM_ROOT="$llam_root" \
-            -DDCC_LLAM_LIBRARY="$package_llam_library"
-    else
-        cmake -S "$source_dir/tests/package_consumer" -B "$minimal_package_consumer_build_dir" \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_PREFIX_PATH="$minimal_package_prefix" \
-            -DDCC_LLAM_ROOT="$llam_root" \
-            -DDCC_LLAM_LIBRARY="$package_llam_library"
-    fi
+    configure_package_consumer "$source_dir/tests/package_consumer" "$minimal_package_consumer_build_dir" \
+        "$minimal_package_prefix" "$package_llam_library"
     cmake_build "$minimal_package_consumer_build_dir"
     minimal_consumer_exe=$(find_executable "$minimal_package_consumer_build_dir" dcc_package_consumer)
     "$minimal_consumer_exe"
 
     if ! is_true "${DCC_SKIP_PKG_CONFIG_CHECK:-0}"; then
         step "build minimal installed pkg-config consumer"
-        pkg_config_consumer_check "$minimal_package_prefix" "$minimal_package_consumer_build_dir" "$package_llam_library"
+        pkg_config_consumer_check "$minimal_package_prefix" "$minimal_package_consumer_build_dir"
     fi
 fi
 
@@ -615,6 +656,8 @@ if ! is_true "${DCC_SKIP_ASAN:-0}"; then
     cmake_configure "$asan_build_dir" \
         -DCMAKE_BUILD_TYPE=Debug \
         -DDCC_ENABLE_SANITIZERS=ON \
+        -DDCC_LLAM_USE_SUBDIRECTORY="$llam_use_subdirectory" \
+        -DDCC_BUNDLE_LLAM="$bundle_llam" \
         -DDCC_LLAM_ROOT="$llam_root" \
         -DDCC_LLAM_LIBRARY="$llam_library"
 
@@ -630,6 +673,8 @@ if ! is_true "${DCC_SKIP_NOOPUS:-0}"; then
     cmake_configure "$noopus_build_dir" \
         -DCMAKE_BUILD_TYPE=Debug \
         -DDCC_WITH_OPUS=OFF \
+        -DDCC_LLAM_USE_SUBDIRECTORY="$llam_use_subdirectory" \
+        -DDCC_BUNDLE_LLAM="$bundle_llam" \
         -DDCC_LLAM_ROOT="$llam_root" \
         -DDCC_LLAM_LIBRARY="$llam_library"
 
@@ -652,6 +697,8 @@ if ! is_true "${DCC_SKIP_FUZZER:-0}"; then
             -G "$DCC_CMAKE_GENERATOR" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DDCC_BUILD_FUZZERS=ON \
+            -DDCC_LLAM_USE_SUBDIRECTORY="$llam_use_subdirectory" \
+            -DDCC_BUNDLE_LLAM="$bundle_llam" \
             -DDCC_LLAM_ROOT="$llam_root" \
             -DDCC_LLAM_LIBRARY="$llam_library" \
             ${DCC_EXTRA_CMAKE_ARGS:-}
@@ -659,6 +706,8 @@ if ! is_true "${DCC_SKIP_FUZZER:-0}"; then
         CC="$fuzz_cc" cmake -S "$source_dir" -B "$fuzz_build_dir" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DDCC_BUILD_FUZZERS=ON \
+            -DDCC_LLAM_USE_SUBDIRECTORY="$llam_use_subdirectory" \
+            -DDCC_BUNDLE_LLAM="$bundle_llam" \
             -DDCC_LLAM_ROOT="$llam_root" \
             -DDCC_LLAM_LIBRARY="$llam_library" \
             ${DCC_EXTRA_CMAKE_ARGS:-}

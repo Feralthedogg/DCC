@@ -41,7 +41,48 @@ static int gateway_server_handshake(gateway_server_t *server, int client) {
         return -1;
     }
 
-    return write_text_frame(client, "{\"op\":10,\"d\":{\"heartbeat_interval\":20}}");
+    return write_text_frame(client, "{\"op\":10,\"d\":{\"heartbeat_interval\":100}}");
+}
+
+static long long gateway_server_now_ms(void) {
+    struct timeval now;
+    if (gettimeofday(&now, NULL) != 0) {
+        return 0;
+    }
+    return ((long long)now.tv_sec * 1000LL) + ((long long)now.tv_usec / 1000LL);
+}
+
+static int gateway_server_wait_voice_state_update(gateway_server_t *server, int client, unsigned timeout_ms) {
+    long long deadline = gateway_server_now_ms() + (long long)timeout_ms;
+    while (gateway_server_now_ms() < deadline) {
+        long long remaining = deadline - gateway_server_now_ms();
+        int wait_ms = remaining > 250LL ? 250 : (int)remaining;
+        if (wait_ms <= 0) {
+            wait_ms = 1;
+        }
+
+        char frame[512];
+        if (read_text_frame_timeout(client, frame, sizeof(frame), wait_ms) != 0) {
+            usleep(1000);
+            continue;
+        }
+
+        if (strstr(frame, "\"op\":4") != NULL &&
+            strstr(frame, "\"guild_id\":\"333\"") != NULL &&
+            strstr(frame, "\"channel_id\":\"222\"") != NULL &&
+            strstr(frame, "\"self_mute\":false") != NULL &&
+            strstr(frame, "\"self_deaf\":false") != NULL) {
+            server->saw_voice_state_update = 1;
+            return 0;
+        }
+
+        if (strstr(frame, "\"op\":1") != NULL) {
+            server->saw_heartbeat = 1;
+            (void)write_text_frame(client, "{\"op\":11,\"d\":null}");
+        }
+    }
+
+    return -1;
 }
 
 static int gateway_server_first_connection(gateway_server_t *server, int client) {
@@ -81,16 +122,7 @@ static int gateway_server_first_connection(gateway_server_t *server, int client)
     if (write_text_frame(client, ready) != 0) {
         return -1;
     }
-    char voice_state_update[512];
-    if (read_text_frame_timeout(client, voice_state_update, sizeof(voice_state_update), 2000) == 0 &&
-        strstr(voice_state_update, "\"op\":4") != NULL &&
-        strstr(voice_state_update, "\"guild_id\":\"333\"") != NULL &&
-        strstr(voice_state_update, "\"channel_id\":\"222\"") != NULL &&
-        strstr(voice_state_update, "\"self_mute\":false") != NULL &&
-        strstr(voice_state_update, "\"self_deaf\":false") != NULL) {
-        server->saw_voice_state_update = 1;
-    }
-    if (!server->saw_voice_state_update) {
+    if (gateway_server_wait_voice_state_update(server, client, 8000) != 0) {
         return -1;
     }
     return write_text_frame(client, "{\"op\":7,\"d\":null}");

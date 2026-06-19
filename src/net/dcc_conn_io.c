@@ -47,7 +47,7 @@ ssize_t dcc_conn_read(dcc_conn_t *conn, void *buf, size_t len) {
     }
 
     if (!conn->use_tls) {
-        return llam_read(conn->fd, buf, len);
+        return llam_read_when_ready(conn->fd, buf, len, conn->timeout_ms);
     }
 
     SSL *ssl = (SSL *)conn->ssl;

@@ -54,6 +54,7 @@ jobs:
         working-directory: DCC
         env:
           DCC_CMAKE_GENERATOR: Ninja
-          DCC_EXTRA_CMAKE_ARGS: -DDCC_LLAM_USE_SUBDIRECTORY=ON -DDCC_LLAM_ROOT=${{ github.workspace }}/LLAM
+          DCC_LLAM_USE_SUBDIRECTORY: ON
+          DCC_BUNDLE_LLAM: ON
           DCC_LLAM_ROOT: ${{ github.workspace }}/LLAM
         run: tools/release_check.sh

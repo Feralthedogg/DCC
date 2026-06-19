@@ -1,6 +1,7 @@
 #include "internal/hot_reload/dcc_hot_reload_loader_file_internal.h"
 
 #include <stdio.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -9,6 +10,8 @@
 #else
 #include <unistd.h>
 #endif
+
+static atomic_ullong dcc_hot_reload_temp_nonce;
 
 dcc_status_t dcc_hot_reload_copy_file(const char *source, const char *target) {
     FILE *in = fopen(source, "rb");
@@ -59,18 +62,21 @@ char *dcc_hot_reload_temp_path(const char *path, uint64_t generation) {
 #endif
     size_t path_len = strlen(path);
     size_t suffix_len = strlen(suffix);
-    size_t cap = path_len + suffix_len + 64U;
+    size_t cap = path_len + suffix_len + 96U;
     char *out = (char *)malloc(cap);
     if (out == NULL) {
         return NULL;
     }
+    unsigned long long nonce =
+        (unsigned long long)atomic_fetch_add_explicit(&dcc_hot_reload_temp_nonce, 1ULL, memory_order_relaxed);
     int n = snprintf(
         out,
         cap,
-        "%s.dcc-hot-%lu-%llu%s",
+        "%s.dcc-hot-%lu-%llu-%llu%s",
         path,
         pid,
         (unsigned long long)generation,
+        nonce,
         suffix
     );
     if (n <= 0 || (size_t)n >= cap) {

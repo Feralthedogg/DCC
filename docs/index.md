@@ -48,19 +48,27 @@ int main(void) {
   </div>
 </div>
 
-## Install From Source
+## Install
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+  sh -s -- --prefix "$HOME/.local"
+```
+
+DCC release archives include a compatible LLAM runtime. The installer also
+refreshes LLAM through LLAM's latest release installer, so release users do not
+need a neighboring LLAM checkout.
+
+## Build From Source
 
 ```sh
 git clone https://github.com/Feralthedogg/DCC.git
 git clone https://github.com/Feralthedogg/LLAM.git
 cd DCC
-cmake -S . -B build -DDCC_LLAM_ROOT=../LLAM -DDCC_LLAM_LIBRARY=../LLAM/libllam_runtime.a
+cmake -S . -B build -DDCC_LLAM_USE_SUBDIRECTORY=ON -DDCC_LLAM_ROOT=../LLAM
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
-
-Use `-DDCC_LLAM_USE_SUBDIRECTORY=ON` when CI should build LLAM from the
-neighbor checkout instead of consuming a prebuilt `libllam_runtime.a`.
 
 ## Where To Go Next
 

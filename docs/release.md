@@ -15,6 +15,23 @@ tools/package_release.sh
 This writes normalized archives and checksum files to `target/dist/`, for
 example `dcc-0.1.0-macos-aarch64.tar.gz`.
 
+Binary release archives include:
+
+- DCC public headers, library, CMake package, and pkg-config metadata.
+- Bundled LLAM runtime headers, library, CMake package, and pkg-config metadata.
+- DCC command-line tools, examples, deployment templates, and docs.
+
+Users do not need to clone LLAM for release installs. The public install path is:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+  sh -s -- --prefix "$HOME/.local"
+```
+
+The installer installs the DCC release archive and then calls LLAM's latest
+release installer into the same prefix. `--skip-llam` keeps the LLAM copy bundled
+inside the DCC archive.
+
 GitHub Actions publishes releases automatically from version tags:
 
 ```sh
@@ -23,10 +40,11 @@ git push origin v0.1.0
 ```
 
 The `Release` workflow checks out `DCC` and `LLAM` side by side, builds LLAM
-through `DCC_LLAM_USE_SUBDIRECTORY=ON`, runs the DCC test suite, creates CPack
-binary/source archives, uploads artifacts, builds `SHA256SUMS`, and creates the
-GitHub Release. The tag version must match `project(dcc VERSION ...)` unless
-`DCC_ALLOW_VERSION_MISMATCH=1` is set for an explicit development package.
+through `DCC_LLAM_USE_SUBDIRECTORY=ON`, bundles LLAM into the DCC install tree,
+runs the DCC test suite, creates CPack binary/source archives, uploads artifacts,
+builds `SHA256SUMS`, and creates the GitHub Release. The tag version must match
+`project(dcc VERSION ...)` unless `DCC_ALLOW_VERSION_MISMATCH=1` is set for an
+explicit development package.
 
 The release path expects:
 
@@ -41,6 +59,9 @@ The release path expects:
 - Examples that compile using public headers.
 - Package consumer tests that verify installed CMake metadata and, when
   `pkg-config` or `pkgconf` is available, compile a `dcc.pc` consumer.
+- Bundled LLAM headers, libraries, `llam-config.cmake`, and `llam.pc` are present
+  in binary packages, so installed consumers do not need `DCC_LLAM_ROOT` or
+  `DCC_LLAM_LIBRARY`.
 - Installed hot reload host/worker preflight through `dcc_hot_reload_host
   --check`, including default-global, `--guild`, and `--global` command scope
   checks.

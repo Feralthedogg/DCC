@@ -70,7 +70,15 @@ int voice_websocket_smoke(void) {
     task.voice_client = voice_client;
     snprintf(task.url, sizeof(task.url), "ws://127.0.0.1:%u/?v=8", (unsigned)server.port);
 
-    llam_task_t *client_task = llam_spawn(voice_ws_client_task, &task, NULL);
+    llam_spawn_opts_t client_opts;
+    if (llam_spawn_opts_init(&client_opts, LLAM_SPAWN_OPTS_CURRENT_SIZE) != 0) {
+        fprintf(stderr, "voice websocket task options failed\n");
+        goto cleanup;
+    }
+    client_opts.stack_class = LLAM_STACK_CLASS_LARGE;
+
+    llam_task_t *client_task =
+        llam_spawn_ex(voice_ws_client_task, &task, &client_opts, LLAM_SPAWN_OPTS_CURRENT_SIZE);
     if (client_task == NULL || llam_detach(client_task) != 0) {
         fprintf(stderr, "voice websocket task spawn failed\n");
         goto cleanup;

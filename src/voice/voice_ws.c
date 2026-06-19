@@ -51,7 +51,17 @@ dcc_status_t dcc_voice_client_run_websocket_url(
     atomic_init(&session.stop_heartbeat, false);
     atomic_init(&session.heartbeat_failed, false);
 
-    llam_task_t *heartbeat = llam_spawn(dcc_voice_ws_heartbeat_task, &session, NULL);
+    llam_spawn_opts_t heartbeat_opts;
+    if (llam_spawn_opts_init(&heartbeat_opts, LLAM_SPAWN_OPTS_CURRENT_SIZE) != 0) {
+        dcc_voice_client_websocket_clear_current(voice_client, ws);
+        dcc_ws_destroy(ws);
+        dcc_set_error(voice_client->client, "failed to initialize voice heartbeat spawn options");
+        return DCC_ERR_RUNTIME;
+    }
+    heartbeat_opts.stack_class = LLAM_STACK_CLASS_LARGE;
+
+    llam_task_t *heartbeat =
+        llam_spawn_ex(dcc_voice_ws_heartbeat_task, &session, &heartbeat_opts, LLAM_SPAWN_OPTS_CURRENT_SIZE);
     if (heartbeat == NULL) {
         dcc_voice_client_websocket_clear_current(voice_client, ws);
         dcc_ws_destroy(ws);

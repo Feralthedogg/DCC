@@ -40,7 +40,8 @@ dcc_status_t dcc_gateway_session_receive_loop(dcc_gateway_session_t *session) {
         }
         if (status != DCC_OK) {
             session->next = dcc_gateway_reconnect_next(client);
-            if (!atomic_load_explicit(&session->heartbeat_failed, memory_order_acquire)) {
+            if (session->heartbeat == NULL ||
+                !atomic_load_explicit(&session->heartbeat->failed, memory_order_acquire)) {
                 dcc_set_error(client, "gateway receive failed");
             }
             break;

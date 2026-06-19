@@ -1,0 +1,11 @@
+prefix=${pcfiledir}/../..
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: LLAM
+Description: Stackful user-thread runtime for C applications
+Version: @DCC_BUNDLED_LLAM_VERSION@
+Libs: -L${libdir} -lllam_runtime
+Libs.private: @DCC_BUNDLED_LLAM_PC_PRIVATE_LIBS@
+Cflags: -I${includedir}

@@ -11,6 +11,10 @@ static void dcc_gateway_update_seq(dcc_gateway_session_t *session, const dcc_jso
         session->has_seq = true;
         session->client->gateway_seq = payload->seq;
         session->client->gateway_has_seq = true;
+        if (session->heartbeat != NULL) {
+            atomic_store_explicit(&session->heartbeat->seq, (unsigned long long)payload->seq, memory_order_release);
+            atomic_store_explicit(&session->heartbeat->has_seq, true, memory_order_release);
+        }
     }
 }
 
@@ -36,7 +40,9 @@ dcc_status_t dcc_gateway_session_handle_payload(
     } else if (payload->op == 1) {
         status = dcc_gateway_send_heartbeat(session);
         if (status == DCC_OK) {
-            atomic_store_explicit(&session->waiting_heartbeat_ack, true, memory_order_release);
+            if (session->heartbeat != NULL) {
+                atomic_store_explicit(&session->heartbeat->waiting_ack, true, memory_order_release);
+            }
         } else {
             session->next = dcc_gateway_reconnect_next(client);
         }
@@ -51,7 +57,9 @@ dcc_status_t dcc_gateway_session_handle_payload(
             : "gateway invalid session, identifying");
         status = DCC_ERR_DISCORD;
     } else if (payload->op == 11) {
-        atomic_store_explicit(&session->waiting_heartbeat_ack, false, memory_order_release);
+        if (session->heartbeat != NULL) {
+            atomic_store_explicit(&session->heartbeat->waiting_ack, false, memory_order_release);
+        }
         status = DCC_OK;
     }
 

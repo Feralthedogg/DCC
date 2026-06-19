@@ -30,7 +30,13 @@ dcc_status_t dcc_voice_ws_receive_loop(dcc_voice_ws_session_t *session) {
             if (dcc_voice_client_websocket_stop_requested(voice_client)) {
                 status = DCC_ERR_CANCELED;
             } else {
-                (void)dcc_voice_client_handle_disconnect(voice_client, 1006U, "voice websocket network error");
+                dcc_status_t close_status =
+                    dcc_voice_client_handle_disconnect(voice_client, 1006U, "voice websocket network error");
+                if (close_status != DCC_OK) {
+                    status = close_status;
+                } else if (voice_client->reconnect_requested || voice_client->full_reconnect_requested) {
+                    status = DCC_ERR_CANCELED;
+                }
             }
             dcc_ws_message_deinit(&message);
             return status;
