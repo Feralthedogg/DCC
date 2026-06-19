@@ -4,17 +4,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DCC_JSON_ARENA_ALIGNMENT ((size_t)_Alignof(max_align_t))
+#define DCC_JSON_ARENA_ALIGNMENT DCC_MAX_ALIGNMENT
 #define DCC_JSON_ARENA_MASK (DCC_JSON_ARENA_ALIGNMENT - 1U)
 #define DCC_JSON_ARENA_MAX_ALIGNED ((size_t)-1 - DCC_JSON_ARENA_MASK)
 
 _Static_assert(
     DCC_JSON_ARENA_ALIGNMENT != 0U,
-    "max_align_t alignment must be non-zero");
+    "DCC maximum alignment must be non-zero");
 
 _Static_assert(
     (DCC_JSON_ARENA_ALIGNMENT & DCC_JSON_ARENA_MASK) == 0U,
-    "max_align_t alignment must be a power of two");
+    "DCC maximum alignment must be a power of two");
 
 static inline size_t dcc_json_align_up_unchecked(size_t value) {
     return (value + DCC_JSON_ARENA_MASK) & ~DCC_JSON_ARENA_MASK;

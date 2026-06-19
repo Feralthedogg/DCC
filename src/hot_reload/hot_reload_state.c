@@ -1,5 +1,7 @@
 #include "internal/hot_reload/dcc_hot_reload_internal.h"
 
+#include "internal/dcc_align.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -13,7 +15,7 @@ static dcc_status_t dcc_hot_reload_normalize_alignment(size_t *alignment) {
         return DCC_ERR_INVALID_ARG;
     }
     if (*alignment == 0) {
-        *alignment = sizeof(max_align_t);
+        *alignment = DCC_MAX_ALIGNMENT;
     }
     if (*alignment < sizeof(void *)) {
         *alignment = sizeof(void *);
@@ -93,4 +95,3 @@ void *dcc_hot_reload_state_reserve(dcc_hot_reload_t *hot_reload, size_t size, si
     free(raw);
     return state;
 }
-

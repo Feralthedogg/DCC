@@ -6,7 +6,7 @@ int dcc_json_smoke_str_eq(const char *actual, const char *expected) {
 
 int dcc_json_smoke_arena_allocator_ok(void) {
     dcc_json_arena_t arena = {0};
-    size_t alignment = _Alignof(max_align_t);
+    size_t alignment = DCC_MAX_ALIGNMENT;
     size_t align_overflow_size =
         alignment > 1U ? (size_t)-1 - (alignment - 2U) : (size_t)-1;
     size_t chunk_overflow_size = ((size_t)-1 - sizeof(dcc_json_arena_chunk_t)) + 1U;
