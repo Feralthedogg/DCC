@@ -31,6 +31,8 @@ llam_use_subdirectory=${DCC_LLAM_USE_SUBDIRECTORY:-ON}
 bundle_llam=${DCC_BUNDLE_LLAM:-ON}
 ctest_timeout=${DCC_CTEST_TIMEOUT:-180}
 ctest_regex=${DCC_CTEST_REGEX:-^dcc_}
+ctest_exclude=${DCC_CTEST_EXCLUDE:-}
+asan_ctest_exclude=${DCC_ASAN_CTEST_EXCLUDE:-^dcc_cluster_gateway_smoke$}
 
 cmake_configure() {
     build=$1
@@ -92,7 +94,12 @@ find_artifact() {
 
 run_ctest() {
     build=$1
-    ctest --test-dir "$build" -R "$ctest_regex" --output-on-failure --timeout "$ctest_timeout"
+    exclude=${2:-$ctest_exclude}
+    if [ -n "$exclude" ]; then
+        ctest --test-dir "$build" -R "$ctest_regex" -E "$exclude" --output-on-failure --timeout "$ctest_timeout"
+    else
+        ctest --test-dir "$build" -R "$ctest_regex" --output-on-failure --timeout "$ctest_timeout"
+    fi
 }
 
 package_llam_library_path() {
@@ -665,7 +672,10 @@ if ! is_true "${DCC_SKIP_ASAN:-0}"; then
     cmake_build "$asan_build_dir"
 
     step "run ASAN/UBSAN test suite"
-    run_ctest "$asan_build_dir"
+    # The primary suite still runs the full cluster gateway integration smoke.
+    # Hosted macOS ASAN can occasionally leave that network-heavy test waiting
+    # in teardown, so the sanitizer pass keeps to deterministic checks by default.
+    run_ctest "$asan_build_dir" "$asan_ctest_exclude"
 fi
 
 if ! is_true "${DCC_SKIP_NOOPUS:-0}"; then
