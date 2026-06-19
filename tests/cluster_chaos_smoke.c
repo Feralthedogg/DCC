@@ -32,16 +32,12 @@ static void on_ready(dcc_client_t *client, const dcc_event_t *event, void *user_
     if (ready == NULL || ready->shard_count != CLUSTER_CHAOS_SHARDS ||
         ready->shard_id >= CLUSTER_CHAOS_SHARDS) {
         atomic_store(&state->bad, 1U);
-        (void)dcc_cluster_stop(state->cluster);
         return;
     }
 
     unsigned count = atomic_fetch_add(&state->ready_count, 1U) + 1U;
-    if (count == CLUSTER_CHAOS_SHARDS * 2U) {
-        (void)dcc_cluster_stop(state->cluster);
-    } else if (count > CLUSTER_CHAOS_SHARDS * 2U) {
+    if (count > CLUSTER_CHAOS_SHARDS * 2U) {
         atomic_store(&state->bad, 1U);
-        (void)dcc_cluster_stop(state->cluster);
     }
 }
 
@@ -76,8 +72,20 @@ static void *cluster_chaos_monitor_main(void *arg) {
         if (atomic_load(&state->monitor_done) != 0U) {
             return NULL;
         }
-        if (state->server != NULL && atomic_load(&state->server->bad) != 0U) {
+        if (atomic_load(&state->bad) != 0U ||
+            (state->server != NULL && atomic_load(&state->server->bad) != 0U)) {
             atomic_store(&state->bad, 1U);
+            (void)dcc_cluster_stop(state->cluster);
+            return NULL;
+        }
+        if (atomic_load(&state->ready_count) == CLUSTER_CHAOS_SHARDS * 2U &&
+            atomic_load(&state->resumed_count) == CLUSTER_CHAOS_SHARDS &&
+            atomic_load(&state->close_4000) == CLUSTER_CHAOS_SHARDS &&
+            atomic_load(&state->close_4009) == CLUSTER_CHAOS_SHARDS &&
+            state->server != NULL &&
+            atomic_load(&state->server->close_4000) == CLUSTER_CHAOS_SHARDS &&
+            atomic_load(&state->server->close_4009) == CLUSTER_CHAOS_SHARDS &&
+            atomic_load(&state->server->final_ready) == CLUSTER_CHAOS_SHARDS) {
             (void)dcc_cluster_stop(state->cluster);
             return NULL;
         }

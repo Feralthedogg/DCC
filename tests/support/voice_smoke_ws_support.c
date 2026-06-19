@@ -41,7 +41,7 @@ static void voice_ws_server_idle_hold(voice_ws_server_t *server) {
     }
 
     atomic_store_explicit(&server->idle_started, 1U, memory_order_release);
-    useconds_t waited = 0;
+    unsigned waited = 0;
     while (atomic_load_explicit(&server->idle_release, memory_order_acquire) == 0U &&
            waited < server->idle_max_us) {
         usleep(1000U);

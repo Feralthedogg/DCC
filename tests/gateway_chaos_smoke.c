@@ -35,10 +35,13 @@ typedef struct chaos_gateway_server {
 } chaos_gateway_server_t;
 
 typedef struct chaos_state {
+    dcc_client_t *client;
+    chaos_gateway_server_t *server;
     atomic_uint ready_count;
     atomic_uint resumed_count;
     atomic_uint close_4000;
     atomic_uint close_4009;
+    atomic_uint monitor_done;
     atomic_uint bad;
 } chaos_state_t;
 
@@ -406,21 +409,43 @@ static void *gateway_server_main(void *arg) {
     return NULL;
 }
 
+static void *chaos_monitor_main(void *arg) {
+    chaos_state_t *state = (chaos_state_t *)arg;
+    for (unsigned i = 0; i < 4500U; ++i) {
+        if (atomic_load(&state->monitor_done) != 0U) {
+            return NULL;
+        }
+        if (atomic_load(&state->bad) != 0U ||
+            (state->server != NULL && atomic_load(&state->server->bad) != 0U)) {
+            (void)dcc_client_stop(state->client);
+            return NULL;
+        }
+        if (atomic_load(&state->ready_count) == 2U &&
+            atomic_load(&state->resumed_count) == 2U &&
+            atomic_load(&state->close_4000) == 1U &&
+            atomic_load(&state->close_4009) == 1U) {
+            (void)dcc_client_stop(state->client);
+            return NULL;
+        }
+        (void)usleep(10000U);
+    }
+    atomic_store(&state->bad, 1U);
+    (void)dcc_client_stop(state->client);
+    return NULL;
+}
+
 static void on_ready(dcc_client_t *client, const dcc_event_t *event, void *user_data) {
+    (void)client;
     chaos_state_t *state = (chaos_state_t *)user_data;
     const dcc_ready_event_t *ready = dcc_event_ready(event);
     if (ready == NULL || ready->shard_id != 0 || ready->shard_count != 1 || ready->session_id == NULL) {
         atomic_store(&state->bad, 1U);
-        (void)dcc_client_stop(client);
         return;
     }
 
     unsigned count = atomic_fetch_add(&state->ready_count, 1U) + 1U;
-    if (count == 2U) {
-        (void)dcc_client_stop(client);
-    } else if (count > 2U) {
+    if (count > 2U) {
         atomic_store(&state->bad, 1U);
-        (void)dcc_client_stop(client);
     }
 }
 
@@ -489,11 +514,17 @@ int main(void) {
 
     chaos_state_t state;
     memset(&state, 0, sizeof(state));
+    state.client = client;
+    state.server = &server;
     atomic_init(&state.ready_count, 0U);
     atomic_init(&state.resumed_count, 0U);
     atomic_init(&state.close_4000, 0U);
     atomic_init(&state.close_4009, 0U);
+    atomic_init(&state.monitor_done, 0U);
     atomic_init(&state.bad, 0U);
+
+    pthread_t monitor_thread;
+    int monitor_started = pthread_create(&monitor_thread, NULL, chaos_monitor_main, &state) == 0;
 
     if (status == DCC_OK) {
         status = dcc_client_on(client, DCC_EVENT_READY, on_ready, &state, NULL);
@@ -511,6 +542,10 @@ int main(void) {
         status = dcc_client_wait(client);
     }
 
+    atomic_store(&state.monitor_done, 1U);
+    if (monitor_started) {
+        (void)pthread_join(monitor_thread, NULL);
+    }
     (void)pthread_join(server_thread, NULL);
     close(server.fd);
 

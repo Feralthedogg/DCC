@@ -80,7 +80,7 @@ typedef struct voice_ws_server {
     int udp_fd;
     unsigned short port;
     unsigned short udp_port;
-    useconds_t idle_max_us;
+    unsigned idle_max_us;
     atomic_uint idle_started;
     atomic_uint idle_release;
     int saw_identify;
