@@ -316,6 +316,22 @@ static void gateway_frame_settle(void) {
     (void)usleep(20000U);
 }
 
+static void drain_client_close(int fd) {
+    char frame[256];
+    for (unsigned i = 0; i < 8U; ++i) {
+        int frame_status = read_text_frame(fd, frame, sizeof(frame));
+        if (frame_status == 1) {
+            return;
+        }
+        if (frame_status != 0) {
+            return;
+        }
+        if (strstr(frame, "\"op\":1") != NULL) {
+            (void)write_text_frame(fd, "{\"op\":11,\"d\":null}");
+        }
+    }
+}
+
 static int write_resumed(int fd, unsigned shard) {
     char resumed[96];
     int resumed_len = snprintf(
@@ -362,6 +378,7 @@ static int serve_connection(cluster_chaos_server_t *server, int fd) {
             if (write_close_frame(fd, 4000, "cluster chaos transient close") != 0) {
                 return -1;
             }
+            drain_client_close(fd);
             atomic_fetch_add(&server->close_4000, 1U);
             return 0;
         }
@@ -398,6 +415,7 @@ static int serve_connection(cluster_chaos_server_t *server, int fd) {
     if (write_close_frame(fd, 4009, "cluster chaos stale session") != 0) {
         return -1;
     }
+    drain_client_close(fd);
     atomic_fetch_add(&server->close_4009, 1U);
     return 0;
 }

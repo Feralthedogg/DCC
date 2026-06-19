@@ -320,6 +320,22 @@ static void gateway_frame_settle(void) {
     (void)usleep(20000U);
 }
 
+static void drain_client_close(int fd) {
+    char frame[256];
+    for (unsigned i = 0; i < 8U; ++i) {
+        int frame_status = read_text_frame(fd, frame, sizeof(frame));
+        if (frame_status == 1) {
+            return;
+        }
+        if (frame_status != 0) {
+            return;
+        }
+        if (strstr(frame, "\"op\":1") != NULL) {
+            (void)write_text_frame(fd, "{\"op\":11,\"d\":null}");
+        }
+    }
+}
+
 static int serve_connection(chaos_gateway_server_t *server, int fd, unsigned attempt) {
     struct timeval timeout;
     timeout.tv_sec = 5;
@@ -356,6 +372,7 @@ static int serve_connection(chaos_gateway_server_t *server, int fd, unsigned att
             if (write_close_frame(fd, 4000, "chaos transient close") != 0) {
                 return -1;
             }
+            drain_client_close(fd);
             break;
         case 1:
             if (write_resumed(fd, 2U) != 0) {
@@ -374,6 +391,7 @@ static int serve_connection(chaos_gateway_server_t *server, int fd, unsigned att
             if (write_close_frame(fd, 4009, "chaos stale seq") != 0) {
                 return -1;
             }
+            drain_client_close(fd);
             break;
         case 3:
             if (write_ready(server, fd, 4U, "chaos-session-final") != 0) {

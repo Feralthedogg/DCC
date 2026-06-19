@@ -14,10 +14,46 @@ int main(void) {
 
 #include <pthread.h>
 #include <signal.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+typedef struct gateway_smoke_monitor {
+    dcc_client_t *client;
+    atomic_uint socket_close_seen;
+    atomic_uint done;
+} gateway_smoke_monitor_t;
+
+static void gateway_smoke_monitor_socket_close(dcc_client_t *client, const dcc_event_t *event, void *user_data) {
+    (void)client;
+    gateway_smoke_monitor_t *monitor = (gateway_smoke_monitor_t *)user_data;
+    const dcc_socket_close_event_t *close_event = dcc_event_socket_close(event);
+    if (monitor != NULL &&
+        close_event != NULL &&
+        close_event->code == 4000 &&
+        close_event->reason != NULL &&
+        strcmp(close_event->reason, "gateway smoke close") == 0) {
+        atomic_store(&monitor->socket_close_seen, 1U);
+    }
+}
+
+static void *gateway_smoke_monitor_main(void *arg) {
+    gateway_smoke_monitor_t *monitor = (gateway_smoke_monitor_t *)arg;
+    for (unsigned i = 0; i < 4500U; ++i) {
+        if (atomic_load(&monitor->done) != 0U) {
+            return NULL;
+        }
+        if (atomic_load(&monitor->socket_close_seen) != 0U) {
+            (void)dcc_client_stop(monitor->client);
+            return NULL;
+        }
+        (void)usleep(10000U);
+    }
+    (void)dcc_client_stop(monitor->client);
+    return NULL;
+}
 
 int main(void) {
     (void)signal(SIGPIPE, SIG_IGN);
@@ -278,11 +314,23 @@ int main(void) {
     (void)dcc_client_on(client, DCC_EVENT_LOG, on_log, &state, NULL);
     (void)dcc_client_on(client, DCC_EVENT_SOCKET_CLOSE, on_socket_close, &state, NULL);
 
+    gateway_smoke_monitor_t monitor;
+    monitor.client = client;
+    atomic_init(&monitor.socket_close_seen, 0U);
+    atomic_init(&monitor.done, 0U);
+    pthread_t monitor_thread;
+    int monitor_started = pthread_create(&monitor_thread, NULL, gateway_smoke_monitor_main, &monitor) == 0;
+    (void)dcc_client_on(client, DCC_EVENT_SOCKET_CLOSE, gateway_smoke_monitor_socket_close, &monitor, NULL);
+
     st = dcc_client_start(client);
     if (st == DCC_OK) {
         st = dcc_client_wait(client);
     }
 
+    atomic_store(&monitor.done, 1U);
+    if (monitor_started) {
+        (void)pthread_join(monitor_thread, NULL);
+    }
     (void)pthread_join(api_thread, NULL);
     (void)pthread_join(gateway_thread, NULL);
     close(api.fd);

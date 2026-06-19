@@ -290,6 +290,5 @@ void on_socket_close(dcc_client_t *client, const dcc_event_t *event, void *user_
         close_event->reason != NULL &&
         strcmp(close_event->reason, "gateway smoke close") == 0) {
         state->socket_close_seen = 1;
-        (void)dcc_client_stop(client);
     }
 }
