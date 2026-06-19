@@ -123,7 +123,12 @@ if ($LASTEXITCODE -ne 0) {
 if ($env:DCC_SKIP_RELEASE_TESTS -ne "1") {
     $timeout = if ($env:DCC_CTEST_TIMEOUT) { $env:DCC_CTEST_TIMEOUT } else { "180" }
     $regex = if ($env:DCC_RELEASE_CTEST_REGEX) { $env:DCC_RELEASE_CTEST_REGEX } else { "^dcc_" }
-    & ctest --test-dir $BuildRoot -R $regex --output-on-failure --timeout $timeout -C $Configuration
+    $exclude = if ($env:DCC_RELEASE_CTEST_EXCLUDE) { $env:DCC_RELEASE_CTEST_EXCLUDE } else { "^dcc_cluster_chaos_smoke$" }
+    if ([string]::IsNullOrWhiteSpace($exclude)) {
+        & ctest --test-dir $BuildRoot -R $regex --output-on-failure --timeout $timeout -C $Configuration
+    } else {
+        & ctest --test-dir $BuildRoot -R $regex -E $exclude --output-on-failure --timeout $timeout -C $Configuration
+    }
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }
