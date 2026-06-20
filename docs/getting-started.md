@@ -110,5 +110,13 @@ Use focused headers in library code:
 #include <dcc/rest/application_commands.h>
 ```
 
+Use the opt-in sugar layer for compact builder literals:
+
+```c
+#include <dcc/sugar.h>
+
+dcc_message_builder_t message = DCC_MESSAGE_TEXT("pong");
+```
+
 Public headers live under `include/dcc/`. Internal headers under
 `src/internal/` are not part of the package API.

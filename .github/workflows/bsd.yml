@@ -152,9 +152,10 @@ jobs:
             dcc_smoke \
             dcc_json_smoke \
             dcc_component_v2_smoke \
+            dcc_sugar_smoke \
             dcc_pkg_config_consumer_smoke
           ctest --test-dir "$GITHUB_WORKSPACE/DCC/build-bsd" \
-            -R '^(dcc_smoke|dcc_json_smoke|dcc_component_v2_smoke|dcc_pkg_config_consumer_smoke)$' \
+            -R '^(dcc_smoke|dcc_json_smoke|dcc_component_v2_smoke|dcc_sugar_smoke|dcc_pkg_config_consumer_smoke)$' \
             --output-on-failure \
             --timeout 240
 

@@ -4,6 +4,38 @@ DCC public headers are installed under `include/dcc/` and are included as
 `<dcc/name.h>`. Applications may also include `<dcc/dcc.h>` for the aggregate
 header.
 
+## Sugar Header
+
+`<dcc/sugar.h>` is an opt-in convenience layer for common struct literals and
+option defaults. It does not replace the explicit builder APIs; use it where a
+simple value can stay readable as one expression.
+
+```c
+#include <dcc/sugar.h>
+
+dcc_application_command_builder_t ping =
+    DCC_SLASH_COMMAND("ping", "Latency check");
+
+dcc_component_v2_builder_t refresh =
+    DCC_V2_BUTTON_PRIMARY("Refresh", "status.refresh");
+dcc_component_v2_builder_t text =
+    DCC_V2_TEXT("# Runtime status");
+dcc_component_v2_builder_t section =
+    DCC_V2_SECTION(&text, 1, &refresh);
+dcc_component_v2_builder_t message_components[] = {
+    DCC_V2_CONTAINER_ACCENT(&section, 1, 0x5865F2),
+};
+dcc_message_builder_t message =
+    DCC_MESSAGE_COMPONENTS_V2(message_components, DCC_ARRAY_LEN(message_components));
+```
+
+The header covers client options, intent sets, messages, embeds, legacy
+components, Components v2, modals, slash/user/message commands, command
+registration scope, component sessions, interaction flows, hot reload canary
+options, REST firewall options, and replay records. Components v2 message sugar
+sets `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2` and intentionally avoids mixing v2
+components with legacy `content` or `embeds`.
+
 ## Core Lifecycle
 
 - `client.h`: client creation, options, start/wait/stop, gateway discovery,
