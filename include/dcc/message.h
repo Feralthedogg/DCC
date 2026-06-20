@@ -2,6 +2,7 @@
 #define DCC_MESSAGE_H
 
 #include <dcc/component.h>
+#include <dcc/component_v2.h>
 #include <dcc/embed.h>
 #include <dcc/error.h>
 #include <dcc/export.h>
@@ -12,6 +13,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 (1ULL << 15)
 
 typedef enum dcc_poll_layout_type {
     DCC_POLL_LAYOUT_DEFAULT = 1
@@ -53,6 +56,9 @@ typedef struct dcc_message_builder {
     size_t embeds_count;
     const dcc_component_builder_t *components;
     size_t components_count;
+    const dcc_component_v2_builder_t *components_v2;
+    size_t components_v2_count;
+    const char *components_v2_json;
     const dcc_poll_builder_t *poll;
     const dcc_snowflake_t *sticker_ids;
     size_t sticker_ids_count;
@@ -92,8 +98,17 @@ DCC_API dcc_status_t dcc_message_builder_set_components(
     const dcc_component_builder_t *components,
     size_t components_count
 );
+DCC_API dcc_status_t dcc_message_builder_set_components_v2(
+    dcc_message_builder_t *builder,
+    const dcc_component_v2_builder_t *components,
+    size_t components_count
+);
 DCC_API dcc_status_t dcc_message_builder_set_embeds_json(dcc_message_builder_t *builder, const char *embeds_json);
 DCC_API dcc_status_t dcc_message_builder_set_components_json(
+    dcc_message_builder_t *builder,
+    const char *components_json
+);
+DCC_API dcc_status_t dcc_message_builder_set_components_v2_json(
     dcc_message_builder_t *builder,
     const char *components_json
 );

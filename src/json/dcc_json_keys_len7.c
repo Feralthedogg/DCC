@@ -4,6 +4,18 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len7(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "options")) {
         return DCC_JSON_KEY_OPTIONS;
     }
+    if (dcc_json_key_span_eq(key, len, "default")) {
+        return DCC_JSON_KEY_DEFAULT;
+    }
+    if (dcc_json_key_span_eq(key, len, "divider")) {
+        return DCC_JSON_KEY_DIVIDER;
+    }
+    if (dcc_json_key_span_eq(key, len, "spacing")) {
+        return DCC_JSON_KEY_SPACING;
+    }
+    if (dcc_json_key_span_eq(key, len, "spoiler")) {
+        return DCC_JSON_KEY_SPOILER;
+    }
     if (dcc_json_key_span_eq(key, len, "focused")) {
         return DCC_JSON_KEY_FOCUSED;
     }

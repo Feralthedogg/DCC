@@ -19,6 +19,11 @@ int dcc_clone_interaction_values(
     const dcc_interaction_t *interaction
 );
 
+int dcc_clone_interaction_form_fields(
+    dcc_interaction_t *copy,
+    const dcc_interaction_t *interaction
+);
+
 int dcc_clone_interaction_options(
     dcc_interaction_t *copy,
     const dcc_interaction_t *interaction

@@ -34,6 +34,12 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len8(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "messages")) {
         return DCC_JSON_KEY_MESSAGES;
     }
+    if (dcc_json_key_span_eq(key, len, "disabled")) {
+        return DCC_JSON_KEY_DISABLED;
+    }
+    if (dcc_json_key_span_eq(key, len, "required")) {
+        return DCC_JSON_KEY_REQUIRED;
+    }
     if (dcc_json_key_span_eq(key, len, "filename")) {
         return DCC_JSON_KEY_FILENAME;
     }

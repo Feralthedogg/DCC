@@ -59,10 +59,12 @@ case "$target" in
         ;;
 esac
 case "$target" in
-    linux-x86_64|linux-aarch64|macos-x86_64|macos-aarch64) ;;
+    linux-x86_64|linux-aarch64|macos-x86_64|macos-aarch64|\
+    freebsd-x86_64|freebsd-aarch64|openbsd-x86_64|openbsd-aarch64|\
+    netbsd-x86_64|netbsd-aarch64|dragonflybsd-x86_64) ;;
     *)
         echo "unsupported release target: $target" >&2
-        echo "supported targets: linux-x86_64 linux-aarch64 macos-x86_64 macos-aarch64" >&2
+        echo "supported targets: linux-x86_64 linux-aarch64 macos-x86_64 macos-aarch64 freebsd-x86_64 freebsd-aarch64 openbsd-x86_64 openbsd-aarch64 netbsd-x86_64 netbsd-aarch64 dragonflybsd-x86_64" >&2
         exit 2
         ;;
 esac
@@ -70,10 +72,39 @@ esac
 write_sha256() {
     file=$1
     out=$2
+    name=${file##*/}
     if command -v sha256sum >/dev/null 2>&1; then
         sha256sum "$file" >"$out"
-    else
+    elif command -v shasum >/dev/null 2>&1; then
         shasum -a 256 "$file" >"$out"
+    elif command -v openssl >/dev/null 2>&1; then
+        hash=$(openssl dgst -sha256 "$file" | awk '{ print $NF }')
+        printf '%s  %s\n' "$hash" "$name" >"$out"
+    elif command -v sha256 >/dev/null 2>&1; then
+        if hash=$(sha256 -q "$file" 2>/dev/null); then
+            :
+        else
+            hash=$(sha256 "$file" | awk '{ print $NF }')
+        fi
+        printf '%s  %s\n' "$hash" "$name" >"$out"
+    elif command -v cksum >/dev/null 2>&1; then
+        hash=$(cksum -a sha256 "$file" 2>/dev/null | awk '{
+            for (i = 1; i <= NF; i++) {
+                if (length($i) == 64 && $i ~ /^[0-9A-Fa-f]+$/) {
+                    print tolower($i)
+                    exit
+                }
+            }
+        }')
+        if [ -n "$hash" ]; then
+            printf '%s  %s\n' "$hash" "$name" >"$out"
+        else
+            echo "could not parse cksum sha256 output for $file" >&2
+            exit 127
+        fi
+    else
+        echo "sha256sum, shasum, openssl, sha256, or cksum is required" >&2
+        exit 127
     fi
 }
 
@@ -156,15 +187,15 @@ cp "$source_archive" "$source_out"
     write_sha256 "$(basename "$source_out")" "$(basename "$source_out").sha256"
 )
 
-tar -tf "$binary_out" | grep '/include/dcc/dcc.h$' >/dev/null
-tar -tf "$binary_out" | grep '/include/llam/runtime.h$' >/dev/null
-tar -tf "$binary_out" | grep -E '/lib/libllam_runtime(\.a|\.so|\.dylib)(\.[0-9.]+)?$' >/dev/null
-tar -tf "$binary_out" | grep '/lib/cmake/llam/llam-config.cmake$' >/dev/null
-tar -tf "$binary_out" | grep '/lib/pkgconfig/llam.pc$' >/dev/null
-tar -tf "$binary_out" | grep '/lib/pkgconfig/dcc.pc$' >/dev/null
-tar -tf "$binary_out" | grep '/share/dcc/docs/api.md$' >/dev/null
-tar -tf "$source_out" | grep '/CMakeLists.txt$' >/dev/null
-tar -tf "$source_out" | grep '/docs/index.md$' >/dev/null
+tar -tzf "$binary_out" | grep '/include/dcc/dcc.h$' >/dev/null
+tar -tzf "$binary_out" | grep '/include/llam/runtime.h$' >/dev/null
+tar -tzf "$binary_out" | grep -E '/lib/libllam_runtime(\.a|\.so|\.dylib)(\.[0-9.]+)?$' >/dev/null
+tar -tzf "$binary_out" | grep '/lib/cmake/llam/llam-config.cmake$' >/dev/null
+tar -tzf "$binary_out" | grep '/lib/pkgconfig/llam.pc$' >/dev/null
+tar -tzf "$binary_out" | grep '/lib/pkgconfig/dcc.pc$' >/dev/null
+tar -tzf "$binary_out" | grep '/share/dcc/docs/api.md$' >/dev/null
+tar -tzf "$source_out" | grep '/CMakeLists.txt$' >/dev/null
+tar -tzf "$source_out" | grep '/docs/index.md$' >/dev/null
 
 printf '%s\n' "$binary_out"
 printf '%s\n' "$source_out"

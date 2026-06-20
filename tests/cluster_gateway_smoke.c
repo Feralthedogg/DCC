@@ -33,6 +33,17 @@ typedef struct cluster_gateway_state {
     atomic_uint rolling_seen_shard[CLUSTER_GATEWAY_SHARDS];
 } cluster_gateway_state_t;
 
+typedef struct cluster_gateway_wait_state {
+    dcc_cluster_t *cluster;
+    dcc_status_t status;
+} cluster_gateway_wait_state_t;
+
+static void *cluster_gateway_wait_main(void *arg) {
+    cluster_gateway_wait_state_t *state = (cluster_gateway_wait_state_t *)arg;
+    state->status = dcc_cluster_wait(state->cluster);
+    return NULL;
+}
+
 static void on_ready(dcc_client_t *client, const dcc_event_t *event, void *user_data) {
     (void)client;
     cluster_gateway_state_t *state = (cluster_gateway_state_t *)user_data;
@@ -55,65 +66,82 @@ static void on_ready(dcc_client_t *client, const dcc_event_t *event, void *user_
     }
 
     unsigned count = atomic_fetch_add(&state->ready_count, 1U) + 1U;
-    if (count == CLUSTER_GATEWAY_SHARDS) {
-        dcc_cluster_health_summary_t ready_summary = {
-            .size = sizeof(ready_summary),
-        };
-        dcc_status_t wait_status =
-            dcc_cluster_wait_until_ready(state->cluster, 1U, &ready_summary);
-        atomic_store(&state->wait_ready_status, (unsigned)wait_status);
-        atomic_store(&state->wait_ready_shards, ready_summary.ready_shards);
+    (void)count;
+}
 
-        dcc_cluster_health_wait_options_t health_options;
-        dcc_cluster_health_wait_options_init(&health_options);
-        health_options.timeout_ms = 1U;
-        health_options.interval_ms = 0U;
-        dcc_cluster_recovery_plan_t health_plan = {
-            .size = sizeof(health_plan),
-        };
-        dcc_status_t health_status =
-            dcc_cluster_wait_until_health(state->cluster, &health_options, &health_plan);
-        atomic_store(&state->wait_health_status, (unsigned)health_status);
-        atomic_store(&state->wait_health_state, (unsigned)health_plan.health);
-        atomic_store(&state->wait_health_action, (unsigned)health_plan.action);
-        atomic_store(&state->wait_health_shards, health_plan.summary.ready_shards);
+static int wait_for_ready_count(cluster_gateway_state_t *state, unsigned expected, unsigned timeout_ms) {
+    unsigned waited_ms = 0;
+    while (waited_ms <= timeout_ms) {
+        if (atomic_load(&state->bad) != 0U) {
+            return 0;
+        }
+        if (atomic_load(&state->ready_count) >= expected) {
+            return 1;
+        }
+        (void)usleep(10000U);
+        waited_ms += 10U;
+    }
+    return 0;
+}
 
-        dcc_cluster_rolling_reconnect_options_t rolling = {
-            .size = sizeof(rolling),
-            .first_index = 0,
-            .shard_count = CLUSTER_GATEWAY_SHARDS,
-            .batch_size = 1,
-            .delay_ms = 1,
-            .resume = 0,
-        };
-        dcc_status_t rolling_status = DCC_ERR_STATE;
-        for (unsigned i = 0; i < 100U && rolling_status == DCC_ERR_STATE; ++i) {
-            rolling_status = dcc_cluster_rolling_reconnect(state->cluster, &rolling);
-            if (rolling_status == DCC_ERR_STATE) {
-                (void)usleep(1000U);
-            }
+static dcc_status_t run_initial_wait_assertions(cluster_gateway_state_t *state) {
+    dcc_cluster_health_summary_t ready_summary = {
+        .size = sizeof(ready_summary),
+    };
+    dcc_status_t wait_status =
+        dcc_cluster_wait_until_ready(state->cluster, 1U, &ready_summary);
+    atomic_store(&state->wait_ready_status, (unsigned)wait_status);
+    atomic_store(&state->wait_ready_shards, ready_summary.ready_shards);
+
+    dcc_cluster_health_wait_options_t health_options;
+    dcc_cluster_health_wait_options_init(&health_options);
+    health_options.timeout_ms = 1U;
+    health_options.interval_ms = 0U;
+    dcc_cluster_recovery_plan_t health_plan = {
+        .size = sizeof(health_plan),
+    };
+    dcc_status_t health_status =
+        dcc_cluster_wait_until_health(state->cluster, &health_options, &health_plan);
+    atomic_store(&state->wait_health_status, (unsigned)health_status);
+    atomic_store(&state->wait_health_state, (unsigned)health_plan.health);
+    atomic_store(&state->wait_health_action, (unsigned)health_plan.action);
+    atomic_store(&state->wait_health_shards, health_plan.summary.ready_shards);
+
+    return wait_status == DCC_OK && health_status == DCC_OK ? DCC_OK : DCC_ERR_RUNTIME;
+}
+
+static dcc_status_t run_rolling_reconnect(cluster_gateway_state_t *state) {
+    dcc_cluster_rolling_reconnect_options_t rolling = {
+        .size = sizeof(rolling),
+        .first_index = 0,
+        .shard_count = CLUSTER_GATEWAY_SHARDS,
+        .batch_size = 1,
+        .delay_ms = 1,
+        .resume = 0,
+    };
+    dcc_status_t rolling_status = DCC_ERR_STATE;
+    for (unsigned i = 0; i < 100U && rolling_status == DCC_ERR_STATE; ++i) {
+        rolling_status = dcc_cluster_rolling_reconnect(state->cluster, &rolling);
+        if (rolling_status == DCC_ERR_STATE) {
+            (void)usleep(1000U);
         }
-        atomic_store(&state->rolling_status, (unsigned)rolling_status);
-        dcc_cluster_operation_status_t operation = {
-            .size = sizeof(operation),
-        };
-        dcc_status_t operation_status = dcc_cluster_operation_status(state->cluster, &operation);
-        if (rolling_status == DCC_OK && operation_status == DCC_OK) {
-            atomic_store(&state->operation_completed, operation.completed);
-            atomic_store(&state->operation_completed_shards, operation.completed_shards);
-            atomic_store(&state->operation_failed_shards, operation.failed_shards);
-            atomic_store(&state->operation_total_batches, operation.total_batches);
-            atomic_store(&state->operation_last_status, (unsigned)operation.last_status);
-        } else {
-            atomic_store(&state->bad, 1U);
-            (void)dcc_cluster_stop(state->cluster);
-        }
-        atomic_store(&state->rolling_seen, 1U);
-        return;
     }
-    if (count == CLUSTER_GATEWAY_CONNECTIONS) {
-        (void)dcc_cluster_stop(state->cluster);
+    atomic_store(&state->rolling_status, (unsigned)rolling_status);
+    dcc_cluster_operation_status_t operation = {
+        .size = sizeof(operation),
+    };
+    dcc_status_t operation_status = dcc_cluster_operation_status(state->cluster, &operation);
+    if (rolling_status == DCC_OK && operation_status == DCC_OK) {
+        atomic_store(&state->operation_completed, operation.completed);
+        atomic_store(&state->operation_completed_shards, operation.completed_shards);
+        atomic_store(&state->operation_failed_shards, operation.failed_shards);
+        atomic_store(&state->operation_total_batches, operation.total_batches);
+        atomic_store(&state->operation_last_status, (unsigned)operation.last_status);
+    } else {
+        atomic_store(&state->bad, 1U);
     }
+    atomic_store(&state->rolling_seen, 1U);
+    return rolling_status == DCC_OK && operation_status == DCC_OK ? DCC_OK : DCC_ERR_RUNTIME;
 }
 
 int main(void) {
@@ -182,11 +210,50 @@ int main(void) {
     }
 
     status = dcc_cluster_on(cluster, DCC_EVENT_READY, on_ready, &state, NULL, 0);
+    int cluster_started = 0;
     if (status == DCC_OK) {
         status = dcc_cluster_start(cluster);
+        cluster_started = status == DCC_OK;
+    }
+    cluster_gateway_wait_state_t wait_state = {
+        .cluster = cluster,
+        .status = DCC_ERR_RUNTIME,
+    };
+    pthread_t cluster_wait_thread;
+    int cluster_wait_thread_started = 0;
+    if (status == DCC_OK) {
+        if (pthread_create(&cluster_wait_thread, NULL, cluster_gateway_wait_main, &wait_state) == 0) {
+            cluster_wait_thread_started = 1;
+        } else {
+            status = DCC_ERR_RUNTIME;
+        }
     }
     if (status == DCC_OK) {
-        status = dcc_cluster_wait(cluster);
+        if (!wait_for_ready_count(&state, CLUSTER_GATEWAY_SHARDS, 5000U)) {
+            status = DCC_ERR_TIMEOUT;
+        }
+    }
+    if (status == DCC_OK) {
+        status = run_initial_wait_assertions(&state);
+    }
+    if (status == DCC_OK) {
+        status = run_rolling_reconnect(&state);
+    }
+    if (status == DCC_OK) {
+        if (!wait_for_ready_count(&state, CLUSTER_GATEWAY_CONNECTIONS, 10000U)) {
+            status = DCC_ERR_TIMEOUT;
+        }
+    }
+    if (cluster_started) {
+        dcc_status_t stop_status = dcc_cluster_stop(cluster);
+        dcc_status_t wait_status = DCC_OK;
+        if (cluster_wait_thread_started) {
+            (void)pthread_join(cluster_wait_thread, NULL);
+            wait_status = wait_state.status;
+        }
+        if (status == DCC_OK) {
+            status = stop_status == DCC_OK ? wait_status : stop_status;
+        }
     }
 
     (void)pthread_join(api_thread, NULL);

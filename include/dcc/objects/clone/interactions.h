@@ -20,6 +20,19 @@ DCC_API const dcc_interaction_option_t *dcc_interaction_option_child_by_name(
     const dcc_interaction_option_t *option,
     const char *name
 );
+DCC_API const dcc_interaction_form_field_t *dcc_interaction_form_field_by_custom_id(
+    const dcc_interaction_t *interaction,
+    const char *custom_id
+);
+DCC_API const char *dcc_interaction_form_value(
+    const dcc_interaction_t *interaction,
+    const char *custom_id
+);
+DCC_API int dcc_interaction_form_boolean(
+    const dcc_interaction_t *interaction,
+    const char *custom_id,
+    uint8_t *out
+);
 DCC_API const dcc_interaction_option_t *dcc_interaction_subcommand(
     const dcc_interaction_t *interaction
 );

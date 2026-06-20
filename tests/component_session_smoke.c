@@ -103,10 +103,15 @@ int main(void) {
 
     char custom_id[DCC_COMPONENT_SESSION_CUSTOM_ID_MAX + 1U];
     dcc_component_builder_t button;
+    dcc_component_v2_builder_t button_v2;
     if (dcc_component_session_custom_id(&session, "bad:action", custom_id, sizeof(custom_id)) != DCC_ERR_INVALID_ARG ||
         dcc_component_session_button(&session, "next", "Next", DCC_BUTTON_PRIMARY, &button) != DCC_OK ||
+        dcc_component_session_button_v2(&session, "prev", "Previous", DCC_BUTTON_SECONDARY, &button_v2) !=
+            DCC_OK ||
         button.custom_id == NULL ||
         strncmp(button.custom_id, "dcc:v1:sess123:next:nonce123:", 29U) != 0 ||
+        button_v2.custom_id == NULL ||
+        strncmp(button_v2.custom_id, "dcc:v1:sess123:prev:nonce123:", 29U) != 0 ||
         strlen(button.custom_id) > DCC_COMPONENT_SESSION_CUSTOM_ID_MAX) {
         fprintf(stderr, "failed to build component session button\n");
         dcc_component_session_deinit(&session);
@@ -123,6 +128,18 @@ int main(void) {
         return 1;
     }
     dcc_component_builder_json_free(button_json);
+
+    char *button_v2_json = NULL;
+    if (dcc_component_v2_builder_build_json(&button_v2, &button_v2_json) != DCC_OK ||
+        button_v2_json == NULL ||
+        strstr(button_v2_json, "\"type\":2") == NULL ||
+        strstr(button_v2_json, "\"custom_id\":\"dcc:v1:sess123:prev:nonce123:") == NULL) {
+        fprintf(stderr, "failed to serialize component session v2 button\n");
+        dcc_component_v2_builder_json_free(button_v2_json);
+        dcc_component_session_deinit(&session);
+        return 1;
+    }
+    dcc_component_v2_builder_json_free(button_v2_json);
 
     dcc_component_session_check_t check = {
         .size = sizeof(check),

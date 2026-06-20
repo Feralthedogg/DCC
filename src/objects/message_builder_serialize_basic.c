@@ -16,10 +16,16 @@ dcc_status_t dcc_message_builder_append_basic_json(
             status = dcc_message_json_append_cstr(buffer, builder->tts ? "true" : "false");
         }
     }
-    if (status == DCC_OK && builder->has_flags) {
+    const int has_components_v2 = builder->components_v2_count != 0 ||
+        builder->components_v2_json != NULL;
+    if (status == DCC_OK && (builder->has_flags || has_components_v2)) {
+        uint64_t flags = builder->flags;
+        if (has_components_v2) {
+            flags |= DCC_MESSAGE_FLAG_IS_COMPONENTS_V2;
+        }
         status = dcc_message_json_member_prefix(buffer, first, "flags");
         if (status == DCC_OK) {
-            status = dcc_message_json_append_u64(buffer, builder->flags);
+            status = dcc_message_json_append_u64(buffer, flags);
         }
     }
     if (status == DCC_OK && builder->has_nonce) {

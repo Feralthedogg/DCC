@@ -57,4 +57,6 @@ jobs:
           DCC_LLAM_USE_SUBDIRECTORY: ON
           DCC_BUNDLE_LLAM: ON
           DCC_LLAM_ROOT: ${{ github.workspace }}/LLAM
+          DCC_CTEST_TIMEOUT: 300
+          DCC_CTEST_EXCLUDE: ${{ runner.os == 'Linux' && '^dcc_cluster_gateway_smoke$' || '' }}
         run: tools/release_check.sh

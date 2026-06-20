@@ -18,6 +18,10 @@ int dcc_package_consumer_check_interaction_api(void) {
     dcc_package_interaction_focused_option_fn interaction_focused_option = dcc_interaction_focused_option;
     dcc_package_interaction_option_child_by_name_fn interaction_option_child_by_name =
         dcc_interaction_option_child_by_name;
+    dcc_package_interaction_form_field_by_custom_id_fn interaction_form_field_by_custom_id =
+        dcc_interaction_form_field_by_custom_id;
+    dcc_package_interaction_form_value_fn interaction_form_value = dcc_interaction_form_value;
+    dcc_package_interaction_form_boolean_fn interaction_form_boolean = dcc_interaction_form_boolean;
     dcc_package_interaction_subcommand_fn interaction_subcommand = dcc_interaction_subcommand;
     dcc_package_interaction_subcommand_fn interaction_subcommand_group = dcc_interaction_subcommand_group;
     dcc_package_interaction_option_string_fn interaction_option_string = dcc_interaction_option_string;
@@ -45,6 +49,12 @@ int dcc_package_consumer_check_interaction_api(void) {
     dcc_package_interaction_entitlement_fn interaction_entitlement = dcc_interaction_entitlement;
     dcc_package_attachment_clone_fn attachment_clone = dcc_attachment_clone;
     dcc_package_attachment_free_fn attachment_free = dcc_attachment_free;
+    dcc_package_modal_builder_set_components_v2_fn modal_set_components_v2 =
+        dcc_modal_builder_set_components_v2;
+    dcc_package_modal_builder_set_components_v2_json_fn modal_set_components_v2_json =
+        dcc_modal_builder_set_components_v2_json;
+    dcc_package_component_session_button_v2_fn component_session_button_v2 =
+        dcc_component_session_button_v2;
 
     const dcc_snowflake_t package_resolved_member_roles[] = {55};
     dcc_user_t package_resolved_users[1] = {
@@ -65,7 +75,13 @@ int dcc_package_consumer_check_interaction_api(void) {
         { .id = 66, .guild_id = 1, .name = "channel" }
     };
     dcc_message_t package_resolved_messages[1] = {
-        { .id = 77, .channel_id = 66, .guild_id = 1, .content = "message" }
+        {
+            .id = 77,
+            .channel_id = 66,
+            .guild_id = 1,
+            .content = "message",
+            .components_json = "[]"
+        }
     };
     dcc_attachment_t package_resolved_attachments[1] = {
         {
@@ -131,6 +147,28 @@ int dcc_package_consumer_check_interaction_api(void) {
             .focused = 1
         }
     };
+    const char *package_form_values[] = {"alpha", "beta"};
+    dcc_interaction_form_field_t package_form_fields[3] = {
+        {
+            .custom_id = "name",
+            .component_type = 4,
+            .value_type = DCC_INTERACTION_FORM_VALUE_STRING,
+            .value = "form-value"
+        },
+        {
+            .custom_id = "accept",
+            .component_type = 23,
+            .value_type = DCC_INTERACTION_FORM_VALUE_BOOLEAN,
+            .boolean_value = 1
+        },
+        {
+            .custom_id = "tags",
+            .component_type = 3,
+            .value_type = DCC_INTERACTION_FORM_VALUE_VALUES,
+            .values = package_form_values,
+            .values_count = 2
+        }
+    };
     dcc_interaction_t package_interaction = {
         .message_id = 77,
         .app_permissions = 8192,
@@ -142,6 +180,8 @@ int dcc_package_consumer_check_interaction_api(void) {
         .guild_locale = "en-US",
         .options = package_interaction_options,
         .options_count = 5,
+        .form_fields = package_form_fields,
+        .form_fields_count = 3,
         .authorizing_integration_owners = package_authorizing_owners,
         .authorizing_integration_owners_count = 2,
         .entitlements = package_interaction_entitlements,
@@ -196,6 +236,33 @@ int dcc_package_consumer_check_interaction_api(void) {
     double package_option_number = 0.0;
     uint8_t package_option_boolean = 0;
     dcc_snowflake_t package_option_snowflake = 0;
+    dcc_component_v2_builder_t package_modal_upload;
+    dcc_component_v2_builder_t package_modal_label;
+    dcc_component_v2_builder_init(&package_modal_upload, DCC_COMPONENT_V2_FILE_UPLOAD);
+    dcc_component_v2_builder_init(&package_modal_label, DCC_COMPONENT_V2_LABEL);
+    dcc_modal_builder_t package_modal;
+    dcc_modal_builder_init(&package_modal);
+    char *package_modal_json = NULL;
+    int modal_v2_ok = modal_set_components_v2 != NULL &&
+                      modal_set_components_v2_json != NULL &&
+                      dcc_component_v2_builder_set_custom_id(
+                          &package_modal_upload,
+                          "package.upload"
+                      ) == DCC_OK &&
+                      dcc_component_v2_builder_set_label(
+                          &package_modal_label,
+                          "Package upload"
+                      ) == DCC_OK &&
+                      dcc_component_v2_builder_set_children(
+                          &package_modal_label,
+                          &package_modal_upload,
+                          1U
+                      ) == DCC_OK &&
+                      dcc_modal_builder_set_custom_id(&package_modal, "package.modal") == DCC_OK &&
+                      dcc_modal_builder_set_title(&package_modal, "Package Modal") == DCC_OK &&
+                      modal_set_components_v2(&package_modal, &package_modal_label, 1U) == DCC_OK &&
+                      dcc_modal_builder_build_json(&package_modal, &package_modal_json) == DCC_OK;
+    dcc_modal_builder_json_free(package_modal_json);
 
     return on_interaction_name != NULL &&
                    on_interaction_custom_id != NULL &&
@@ -215,6 +282,9 @@ int dcc_package_consumer_check_interaction_api(void) {
                    interaction_option_by_name != NULL &&
                    interaction_focused_option != NULL &&
                    interaction_option_child_by_name != NULL &&
+                   interaction_form_field_by_custom_id != NULL &&
+                   interaction_form_value != NULL &&
+                   interaction_form_boolean != NULL &&
                    interaction_subcommand != NULL &&
                    interaction_subcommand_group != NULL &&
                    interaction_option_string != NULL &&
@@ -233,6 +303,10 @@ int dcc_package_consumer_check_interaction_api(void) {
                    interaction_entitlement != NULL &&
                    attachment_clone != NULL &&
                    attachment_free != NULL &&
+                   modal_set_components_v2 != NULL &&
+                   modal_set_components_v2_json != NULL &&
+                   component_session_button_v2 != NULL &&
+                   modal_v2_ok != 0 &&
                    DCC_INTERACTION_DEFAULT_ATTACHMENT_SIZE_LIMIT == 10485760U &&
                    package_attachment_copy != NULL &&
                    package_attachment_copy->filename != NULL &&
@@ -247,6 +321,13 @@ int dcc_package_consumer_check_interaction_api(void) {
                        &package_nested_groups[0],
                        "ban"
                    ) == &package_nested_subcommands[0] &&
+                   interaction_form_field_by_custom_id(&package_interaction, "tags") ==
+                       &package_form_fields[2] &&
+                   interaction_form_value(&package_interaction, "name") != NULL &&
+                   strcmp(interaction_form_value(&package_interaction, "name"), "form-value") == 0 &&
+                   interaction_form_boolean(&package_interaction, "accept", &package_option_boolean) ==
+                       1 &&
+                   package_option_boolean == 1 &&
                    interaction_subcommand(&package_nested_interaction) == &package_nested_subcommands[0] &&
                    interaction_subcommand_group(&package_nested_interaction) == &package_nested_groups[0] &&
                    interaction_option_string(&package_nested_interaction, "reason") != NULL &&
@@ -289,6 +370,7 @@ int dcc_package_consumer_check_interaction_api(void) {
                        &package_resolved_channels[0] &&
                    interaction_resolved_message(&package_interaction, 77) ==
                        &package_resolved_messages[0] &&
+                   interaction_resolved_message(&package_interaction, 77)->components_json != NULL &&
                    interaction_resolved_attachment(&package_interaction, 88) ==
                        &package_resolved_attachments[0] &&
                    interaction_resolved_permission(&package_interaction, 42) ==

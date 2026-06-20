@@ -30,6 +30,19 @@ typedef const dcc_interaction_option_t *(*dcc_package_interaction_option_child_b
         const dcc_interaction_option_t *,
         const char *
     );
+typedef const dcc_interaction_form_field_t *(*dcc_package_interaction_form_field_by_custom_id_fn)(
+        const dcc_interaction_t *,
+        const char *
+    );
+typedef const char *(*dcc_package_interaction_form_value_fn)(
+        const dcc_interaction_t *,
+        const char *
+    );
+typedef int (*dcc_package_interaction_form_boolean_fn)(
+        const dcc_interaction_t *,
+        const char *,
+        uint8_t *
+    );
 typedef const dcc_interaction_option_t *(*dcc_package_interaction_subcommand_fn)(
         const dcc_interaction_t *
     );
@@ -97,5 +110,21 @@ typedef const dcc_entitlement_t *(*dcc_package_interaction_entitlement_fn)(
     );
 typedef dcc_attachment_t *(*dcc_package_attachment_clone_fn)(const dcc_attachment_t *);
 typedef void (*dcc_package_attachment_free_fn)(dcc_attachment_t *);
+typedef dcc_status_t (*dcc_package_modal_builder_set_components_v2_fn)(
+        dcc_modal_builder_t *,
+        const dcc_component_v2_builder_t *,
+        size_t
+    );
+typedef dcc_status_t (*dcc_package_modal_builder_set_components_v2_json_fn)(
+        dcc_modal_builder_t *,
+        const char *
+    );
+typedef dcc_status_t (*dcc_package_component_session_button_v2_fn)(
+        dcc_component_session_t *,
+        const char *,
+        const char *,
+        dcc_button_style_t,
+        dcc_component_v2_builder_t *
+    );
 
 #endif

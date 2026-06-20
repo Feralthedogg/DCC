@@ -7,6 +7,7 @@
 #include <dcc/client.h>
 #include <dcc/cluster.h>
 #include <dcc/component.h>
+#include <dcc/component_v2.h>
 #include <dcc/component_session.h>
 #include <dcc/command_registry.h>
 #include <dcc/embed.h>

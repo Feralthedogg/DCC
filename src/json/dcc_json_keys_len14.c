@@ -4,6 +4,9 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len14(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "require_colons")) {
         return DCC_JSON_KEY_REQUIRE_COLONS;
     }
+    if (dcc_json_key_span_eq(key, len, "default_values")) {
+        return DCC_JSON_KEY_DEFAULT_VALUES;
+    }
     if (dcc_json_key_span_eq(key, len, "application_id")) {
         return DCC_JSON_KEY_APPLICATION_ID;
     }

@@ -65,7 +65,7 @@ dcc_status_t dcc_replay_tool_dispatch_frame(
     if (runtime == NULL || runtime->client == NULL || json == NULL || json_len == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    dcc_json_gateway_payload_t payload;
+    static _Thread_local dcc_json_gateway_payload_t payload;
     dcc_status_t status = dcc_json_parse_gateway_payload(json, json_len, &payload);
     if (status != DCC_OK) {
         return status;

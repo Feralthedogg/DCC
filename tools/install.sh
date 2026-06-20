@@ -153,6 +153,10 @@ detect_target() {
     case "$os" in
         Linux) os_name=linux ;;
         Darwin) os_name=macos ;;
+        FreeBSD) os_name=freebsd ;;
+        OpenBSD) os_name=openbsd ;;
+        NetBSD) os_name=netbsd ;;
+        DragonFly) os_name=dragonflybsd ;;
         *)
             echo "unsupported OS for DCC installer: $os" >&2
             exit 1

@@ -1,5 +1,7 @@
 #include "internal/cache/dcc_cache_internal.h"
 
+#include <string.h>
+
 void dcc_cache_merge_message_view(dcc_message_t *merged, const dcc_message_t *existing, uint64_t fields) {
     if (merged == NULL || existing == NULL) {
         return;
@@ -29,6 +31,19 @@ void dcc_cache_merge_message_view(dcc_message_t *merged, const dcc_message_t *ex
     }
     if ((fields & DCC_CACHE_FIELD_MESSAGE_EDITED_TIMESTAMP) == 0 && merged->edited_timestamp == NULL) {
         merged->edited_timestamp = existing->edited_timestamp;
+    }
+    if ((fields & DCC_CACHE_FIELD_MESSAGE_COMPONENTS) == 0 && merged->components_json == NULL) {
+        merged->components_json = existing->components_json;
+        merged->components_json_truncated = existing->components_json_truncated;
+        merged->components = existing->components;
+        merged->components_count = existing->components_count;
+        memcpy(
+            merged->component_root_indices,
+            existing->component_root_indices,
+            sizeof(merged->component_root_indices)
+        );
+        merged->component_root_count = existing->component_root_count;
+        merged->components_truncated = existing->components_truncated;
     }
     if ((fields & DCC_CACHE_FIELD_MESSAGE_WEBHOOK_ID) == 0 && merged->webhook_id == 0) {
         merged->webhook_id = existing->webhook_id;

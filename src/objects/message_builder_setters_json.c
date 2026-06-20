@@ -41,6 +41,21 @@ dcc_status_t dcc_message_builder_set_components_json(
     return DCC_OK;
 }
 
+dcc_status_t dcc_message_builder_set_components_v2_json(
+    dcc_message_builder_t *builder,
+    const char *components_json
+) {
+    if (builder == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    builder->components_v2_json = components_json;
+    if (components_json != NULL) {
+        builder->flags |= DCC_MESSAGE_FLAG_IS_COMPONENTS_V2;
+        builder->has_flags = 1;
+    }
+    return DCC_OK;
+}
+
 dcc_status_t dcc_message_builder_set_attachments_json(
     dcc_message_builder_t *builder,
     const char *attachments_json

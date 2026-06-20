@@ -463,7 +463,10 @@ def parse_gateway_payload_object_fields(text: str) -> list[str]:
 
 
 def collect_payload_field_refs(text: str) -> set[str]:
-    return set(re.findall(r"\bpayload(?:\.[A-Za-z_][A-Za-z0-9_]*){1,5}", text))
+    refs: set[str] = set()
+    for match in re.findall(r"\bpayload((?:(?:\.|->)[A-Za-z_][A-Za-z0-9_]*){1,5})", text):
+        refs.add("payload" + match.replace("->", "."))
+    return refs
 
 
 def read_json_smoke_text() -> str:
@@ -474,7 +477,7 @@ def read_json_smoke_text() -> str:
 
 
 def direct_projection_seen(object_name: str, text: str) -> bool:
-    return re.search(rf"\bpayload\.{re.escape(object_name)}\.", text) is not None
+    return re.search(rf"\bpayload(?:\.|->){re.escape(object_name)}\.", text) is not None
 
 
 def accessor_projection_seen(object_name: str, text: str) -> bool:

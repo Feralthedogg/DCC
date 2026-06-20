@@ -22,6 +22,10 @@ void dcc_json_gateway_payload_reset(dcc_json_gateway_payload_t *out) {
     DCC_JSON_ZERO_FIELD(has_message);
     DCC_JSON_ZERO_FIELD(cache_fields);
     DCC_JSON_ZERO_FIELD(message);
+    DCC_JSON_ZERO_FIELD(message_component_option_count);
+    DCC_JSON_ZERO_FIELD(message_component_media_count);
+    DCC_JSON_ZERO_FIELD(message_component_default_value_count);
+    DCC_JSON_ZERO_FIELD(message_component_channel_type_count);
     DCC_JSON_ZERO_FIELD(has_guild);
     DCC_JSON_ZERO_FIELD(guild);
     DCC_JSON_ZERO_FIELD(has_channel);
@@ -100,6 +104,11 @@ void dcc_json_gateway_payload_reset(dcc_json_gateway_payload_t *out) {
     DCC_JSON_ZERO_FIELD(interaction);
     out->interaction.attachment_size_limit = DCC_INTERACTION_DEFAULT_ATTACHMENT_SIZE_LIMIT;
     DCC_JSON_ZERO_FIELD(interaction_values);
+    DCC_JSON_ZERO_FIELD(interaction_form_fields);
+    DCC_JSON_ZERO_FIELD(interaction_form_field_custom_ids);
+    DCC_JSON_ZERO_FIELD(interaction_form_field_values);
+    DCC_JSON_ZERO_FIELD(interaction_form_field_value_lists);
+    DCC_JSON_ZERO_FIELD(interaction_form_field_value_storage);
     DCC_JSON_ZERO_FIELD(interaction_option_list_count);
     DCC_JSON_ZERO_FIELD(interaction_option_lists);
     DCC_JSON_ZERO_FIELD(has_voice_state);

@@ -4,6 +4,9 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len13(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "discriminator")) {
         return DCC_JSON_KEY_DISCRIMINATOR;
     }
+    if (dcc_json_key_span_eq(key, len, "channel_types")) {
+        return DCC_JSON_KEY_CHANNEL_TYPES;
+    }
     if (dcc_json_key_span_eq(key, len, "privacy_level")) {
         return DCC_JSON_KEY_PRIVACY_LEVEL;
     }

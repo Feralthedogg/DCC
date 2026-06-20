@@ -3,6 +3,7 @@
 
 /* This header is part of the DCC public object model. */
 
+#include <dcc/component_v2.h>
 #include <dcc/export.h>
 #include <dcc/permissions.h>
 #include <dcc/snowflake.h>
@@ -45,11 +46,18 @@ typedef struct dcc_message {
     uint64_t flags;
     const char *timestamp;
     const char *edited_timestamp;
+    const char *components_json;
+    const dcc_component_v2_t *components;
+    size_t components_count;
     dcc_snowflake_t webhook_id;
     uint32_t type;
+    uint8_t component_root_indices[DCC_COMPONENT_V2_MAX_COMPONENTS];
+    size_t component_root_count;
     uint8_t tts;
     uint8_t mention_everyone;
     uint8_t pinned;
+    uint8_t components_json_truncated;
+    uint8_t components_truncated;
 } dcc_message_t;
 
 #endif

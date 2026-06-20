@@ -4,6 +4,23 @@ include(CMakeFindDependencyMacro)
 
 find_dependency(Threads)
 
+function(llam_link_platform_libraries target)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        find_library(LLAM_URING_LIBRARY uring REQUIRED)
+        set_property(TARGET ${target} APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES "${LLAM_URING_LIBRARY};m"
+        )
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+        set_property(TARGET ${target} APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES rt
+        )
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set_property(TARGET ${target} APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES ws2_32 mswsock synchronization advapi32
+        )
+    endif()
+endfunction()
+
 if(NOT TARGET llam::runtime)
     add_library(llam::runtime STATIC IMPORTED)
     set_target_properties(llam::runtime PROPERTIES
@@ -11,20 +28,7 @@ if(NOT TARGET llam::runtime)
         INTERFACE_INCLUDE_DIRECTORIES "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_INCLUDEDIR@"
         INTERFACE_LINK_LIBRARIES Threads::Threads
     )
-    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        find_library(LLAM_URING_LIBRARY uring REQUIRED)
-        set_property(TARGET llam::runtime APPEND PROPERTY
-            INTERFACE_LINK_LIBRARIES "${LLAM_URING_LIBRARY};m"
-        )
-    elseif(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
-        set_property(TARGET llam::runtime APPEND PROPERTY
-            INTERFACE_LINK_LIBRARIES rt
-        )
-    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set_property(TARGET llam::runtime APPEND PROPERTY
-            INTERFACE_LINK_LIBRARIES ws2_32 mswsock synchronization advapi32
-        )
-    endif()
+    llam_link_platform_libraries(llam::runtime)
 endif()
 
 check_required_components(llam)

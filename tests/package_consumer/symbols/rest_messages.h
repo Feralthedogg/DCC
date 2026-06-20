@@ -60,6 +60,91 @@ typedef dcc_status_t (*dcc_package_message_builder_set_poll_fn)(
         dcc_message_builder_t *,
         const dcc_poll_builder_t *
     );
+typedef dcc_status_t (*dcc_package_message_builder_set_components_v2_fn)(
+        dcc_message_builder_t *,
+        const dcc_component_v2_builder_t *,
+        size_t
+    );
+typedef dcc_status_t (*dcc_package_message_builder_set_components_v2_json_fn)(
+        dcc_message_builder_t *,
+        const char *
+    );
+typedef void (*dcc_package_component_v2_builder_init_fn)(
+        dcc_component_v2_builder_t *,
+        dcc_component_v2_type_t
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_init_text_display_fn)(
+        dcc_component_v2_builder_t *,
+        const char *
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_init_button_fn)(
+        dcc_component_v2_builder_t *,
+        dcc_button_style_t,
+        const char *,
+        const char *
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_init_container_fn)(
+        dcc_component_v2_builder_t *,
+        const dcc_component_v2_builder_t *,
+        size_t
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_set_content_fn)(
+        dcc_component_v2_builder_t *,
+        const char *
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_set_custom_id_fn)(
+        dcc_component_v2_builder_t *,
+        const char *
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_set_default_fn)(
+        dcc_component_v2_builder_t *,
+        uint8_t
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_set_default_values_fn)(
+        dcc_component_v2_builder_t *,
+        const dcc_component_v2_select_default_value_t *,
+        size_t
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_set_channel_types_fn)(
+        dcc_component_v2_builder_t *,
+        const uint32_t *,
+        size_t
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_build_json_fn)(
+        const dcc_component_v2_builder_t *,
+        char **
+    );
+typedef dcc_status_t (*dcc_package_component_v2_builder_build_array_json_fn)(
+        const dcc_component_v2_builder_t *,
+        size_t,
+        char **
+    );
+typedef void (*dcc_package_component_v2_builder_json_free_fn)(char *);
+typedef const dcc_component_v2_t *(*dcc_package_message_component_at_fn)(
+        const dcc_message_t *,
+        size_t
+    );
+typedef const dcc_component_v2_t *(*dcc_package_message_component_root_fn)(
+        const dcc_message_t *,
+        size_t
+    );
+typedef const dcc_component_v2_t *(*dcc_package_message_component_by_custom_id_fn)(
+        const dcc_message_t *,
+        const char *
+    );
+typedef const dcc_component_v2_t *(*dcc_package_component_v2_child_fn)(
+        const dcc_message_t *,
+        const dcc_component_v2_t *,
+        size_t
+    );
+typedef const dcc_component_v2_t *(*dcc_package_component_v2_accessory_fn)(
+        const dcc_message_t *,
+        const dcc_component_v2_t *
+    );
+typedef const dcc_component_v2_t *(*dcc_package_component_v2_labeled_component_fn)(
+        const dcc_message_t *,
+        const dcc_component_v2_t *
+    );
 typedef dcc_status_t (*dcc_package_message_poll_builder_build_json_fn)(
         const dcc_poll_builder_t *,
         char **

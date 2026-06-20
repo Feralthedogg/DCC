@@ -263,6 +263,41 @@ int main(void) {
     dcc_package_application_command_options_set_guild_fn application_command_options_set_guild =
         dcc_application_command_registration_options_set_guild;
     dcc_package_message_builder_set_poll_fn message_builder_set_poll = dcc_message_builder_set_poll;
+    dcc_package_message_builder_set_components_v2_fn message_builder_set_components_v2 =
+        dcc_message_builder_set_components_v2;
+    dcc_package_message_builder_set_components_v2_json_fn message_builder_set_components_v2_json =
+        dcc_message_builder_set_components_v2_json;
+    dcc_package_component_v2_builder_init_fn component_v2_init = dcc_component_v2_builder_init;
+    dcc_package_component_v2_builder_init_text_display_fn component_v2_init_text_display =
+        dcc_component_v2_builder_init_text_display;
+    dcc_package_component_v2_builder_init_button_fn component_v2_init_button =
+        dcc_component_v2_builder_init_button;
+    dcc_package_component_v2_builder_init_container_fn component_v2_init_container =
+        dcc_component_v2_builder_init_container;
+    dcc_package_component_v2_builder_set_content_fn component_v2_set_content =
+        dcc_component_v2_builder_set_content;
+    dcc_package_component_v2_builder_set_custom_id_fn component_v2_set_custom_id =
+        dcc_component_v2_builder_set_custom_id;
+    dcc_package_component_v2_builder_set_default_fn component_v2_set_default =
+        dcc_component_v2_builder_set_default;
+    dcc_package_component_v2_builder_set_default_values_fn component_v2_set_default_values =
+        dcc_component_v2_builder_set_default_values;
+    dcc_package_component_v2_builder_set_channel_types_fn component_v2_set_channel_types =
+        dcc_component_v2_builder_set_channel_types;
+    dcc_package_component_v2_builder_build_json_fn component_v2_build_json =
+        dcc_component_v2_builder_build_json;
+    dcc_package_component_v2_builder_build_array_json_fn component_v2_build_array_json =
+        dcc_component_v2_builder_build_array_json;
+    dcc_package_component_v2_builder_json_free_fn component_v2_json_free =
+        dcc_component_v2_builder_json_free;
+    dcc_package_message_component_at_fn message_component_at = dcc_message_component_at;
+    dcc_package_message_component_root_fn message_component_root = dcc_message_component_root;
+    dcc_package_message_component_by_custom_id_fn message_component_by_custom_id =
+        dcc_message_component_by_custom_id;
+    dcc_package_component_v2_child_fn component_v2_child = dcc_component_v2_child;
+    dcc_package_component_v2_accessory_fn component_v2_accessory = dcc_component_v2_accessory;
+    dcc_package_component_v2_labeled_component_fn component_v2_labeled_component =
+        dcc_component_v2_labeled_component;
     dcc_package_message_poll_builder_build_json_fn message_poll_build_json =
         dcc_message_poll_builder_build_json;
     dcc_package_message_poll_builder_json_free_fn message_poll_json_free =
@@ -323,6 +358,128 @@ int main(void) {
     if (message_poll_json_free != NULL) {
         message_poll_json_free(poll_json);
     }
+    dcc_component_v2_builder_t package_v2_component;
+    char *component_v2_json = NULL;
+    char *component_v2_select_json = NULL;
+    char *component_v2_array_json = NULL;
+    char *message_v2_json = NULL;
+    dcc_message_builder_t package_v2_message;
+    int component_v2_ok = component_v2_init != NULL &&
+                          component_v2_init_text_display != NULL &&
+                          component_v2_init_button != NULL &&
+                          component_v2_init_container != NULL &&
+                          component_v2_set_content != NULL &&
+                          component_v2_set_custom_id != NULL &&
+                          component_v2_set_default != NULL &&
+                          component_v2_set_default_values != NULL &&
+                          component_v2_set_channel_types != NULL &&
+                          component_v2_build_json != NULL &&
+                          component_v2_build_array_json != NULL &&
+                          component_v2_json_free != NULL &&
+                          message_builder_set_components_v2 != NULL &&
+                          message_builder_set_components_v2_json != NULL;
+    if (component_v2_ok) {
+        dcc_message_builder_init(&package_v2_message);
+        dcc_component_v2_builder_t package_v2_select;
+        dcc_component_v2_builder_t package_v2_checkbox;
+        dcc_component_v2_builder_t package_v2_button;
+        dcc_component_v2_builder_t package_v2_container;
+        const dcc_component_v2_select_default_value_t package_v2_defaults[] = {
+            {
+                .id = 456,
+                .type = DCC_COMPONENT_V2_SELECT_DEFAULT_CHANNEL
+            }
+        };
+        const uint32_t package_v2_channel_types[] = {0U, 5U};
+        component_v2_init(&package_v2_select, DCC_COMPONENT_V2_CHANNEL_SELECT);
+        component_v2_init(&package_v2_checkbox, DCC_COMPONENT_V2_CHECKBOX);
+        component_v2_ok =
+            component_v2_init_text_display(&package_v2_component, "package component v2") == DCC_OK &&
+            component_v2_init_button(
+                &package_v2_button,
+                DCC_BUTTON_PRIMARY,
+                "Refresh",
+                "package.refresh"
+            ) == DCC_OK &&
+            component_v2_init_container(&package_v2_container, &package_v2_component, 1U) == DCC_OK &&
+            component_v2_set_custom_id(&package_v2_select, "package.channel") == DCC_OK &&
+            component_v2_set_custom_id(&package_v2_checkbox, "package.accept") == DCC_OK &&
+            dcc_component_v2_builder_set_label(&package_v2_checkbox, "Accept") == DCC_OK &&
+            component_v2_set_default(&package_v2_checkbox, 1U) == DCC_OK &&
+            component_v2_set_default_values(
+                &package_v2_select,
+                package_v2_defaults,
+                sizeof(package_v2_defaults) / sizeof(package_v2_defaults[0])
+            ) == DCC_OK &&
+            component_v2_set_channel_types(
+                &package_v2_select,
+                package_v2_channel_types,
+                sizeof(package_v2_channel_types) / sizeof(package_v2_channel_types[0])
+            ) == DCC_OK &&
+            component_v2_build_json(&package_v2_component, &component_v2_json) == DCC_OK &&
+            component_v2_build_json(&package_v2_select, &component_v2_select_json) == DCC_OK &&
+            component_v2_build_array_json(&package_v2_component, 1U, &component_v2_array_json) ==
+                DCC_OK &&
+            message_builder_set_components_v2(&package_v2_message, &package_v2_component, 1U) ==
+                DCC_OK &&
+            dcc_message_builder_build_json(&package_v2_message, &message_v2_json) == DCC_OK &&
+            package_v2_message.has_flags != 0U &&
+            (package_v2_message.flags & DCC_MESSAGE_FLAG_IS_COMPONENTS_V2) != 0U;
+    }
+    dcc_component_v2_t package_message_components[3] = {
+        {
+            .type = DCC_COMPONENT_V2_SECTION,
+            .child_indices = {1U},
+            .child_count = 1U,
+            .accessory_index = 2U,
+            .has_accessory = 1U
+        },
+        {
+            .type = DCC_COMPONENT_V2_TEXT_DISPLAY,
+            .content = "body",
+            .parent_index = 0U,
+            .has_parent = 1U
+        },
+        {
+            .type = DCC_COMPONENT_V2_BUTTON,
+            .custom_id = "package.refresh",
+            .label = "Refresh",
+            .parent_index = 0U,
+            .has_parent = 1U
+        }
+    };
+    dcc_message_t package_component_message = {
+        .components = package_message_components,
+        .components_count = 3U,
+        .component_root_indices = {0U},
+        .component_root_count = 1U
+    };
+    const dcc_component_v2_t *package_root =
+        message_component_root != NULL ? message_component_root(&package_component_message, 0U) : NULL;
+    const dcc_component_v2_t *package_child =
+        component_v2_child != NULL ? component_v2_child(&package_component_message, package_root, 0U) : NULL;
+    const dcc_component_v2_t *package_accessory =
+        component_v2_accessory != NULL ? component_v2_accessory(&package_component_message, package_root) : NULL;
+    int component_v2_accessors_ok =
+        message_component_at != NULL &&
+        message_component_root != NULL &&
+        message_component_by_custom_id != NULL &&
+        component_v2_child != NULL &&
+        component_v2_accessory != NULL &&
+        component_v2_labeled_component != NULL &&
+        message_component_at(&package_component_message, 1U) == &package_message_components[1] &&
+        package_root == &package_message_components[0] &&
+        package_child == &package_message_components[1] &&
+        package_accessory == &package_message_components[2] &&
+        message_component_by_custom_id(&package_component_message, "package.refresh") ==
+            &package_message_components[2] &&
+        component_v2_labeled_component(&package_component_message, package_root) == NULL;
+    if (component_v2_json_free != NULL) {
+        component_v2_json_free(component_v2_json);
+        component_v2_json_free(component_v2_select_json);
+        component_v2_json_free(component_v2_array_json);
+    }
+    dcc_message_builder_json_free(message_v2_json);
     dcc_application_command_registration_options_t package_command_options;
     int command_options_ok = application_command_options_init != NULL &&
                              application_command_options_set_global != NULL &&
@@ -367,6 +524,8 @@ int main(void) {
                    direct_message_builder.has_content != 0U &&
                    direct_message_builder.poll == &poll_builder &&
                    poll_json_ok != 0 &&
+                   component_v2_ok != 0 &&
+                   component_v2_accessors_ok != 0 &&
                    sticker.data_len == 3U &&
                    command_permissions_params.permission_count == 1U &&
                    bulk_command_permissions.command_count == 1U &&
@@ -403,6 +562,25 @@ int main(void) {
                    application_command_options_set_guild != NULL &&
                    command_options_ok != 0 &&
                    message_builder_set_poll != NULL &&
+                   message_builder_set_components_v2 != NULL &&
+                   message_builder_set_components_v2_json != NULL &&
+                   component_v2_init != NULL &&
+                   component_v2_init_text_display != NULL &&
+                   component_v2_init_button != NULL &&
+                   component_v2_init_container != NULL &&
+                   component_v2_set_content != NULL &&
+                   component_v2_set_custom_id != NULL &&
+                   component_v2_set_default_values != NULL &&
+                   component_v2_set_channel_types != NULL &&
+                   component_v2_build_json != NULL &&
+                   component_v2_build_array_json != NULL &&
+                   component_v2_json_free != NULL &&
+                   message_component_at != NULL &&
+                   message_component_root != NULL &&
+                   message_component_by_custom_id != NULL &&
+                   component_v2_child != NULL &&
+                   component_v2_accessory != NULL &&
+                   component_v2_labeled_component != NULL &&
                    message_poll_build_json != NULL &&
                    message_poll_json_free != NULL &&
                    webhook_message_modify != NULL &&

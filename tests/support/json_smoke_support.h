@@ -11,6 +11,7 @@
 #include <string.h>
 
 int dcc_json_smoke_str_eq(const char *actual, const char *expected);
+dcc_json_gateway_payload_t *dcc_json_smoke_payload(void);
 int dcc_json_smoke_arena_allocator_ok(void);
 int dcc_json_smoke_interaction_resolved_ok(const dcc_interaction_t *interaction);
 int dcc_json_smoke_interaction_metadata_ok(const dcc_interaction_t *interaction);

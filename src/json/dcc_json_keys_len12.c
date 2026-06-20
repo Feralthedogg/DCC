@@ -4,6 +4,9 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len12(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "guild_locale")) {
         return DCC_JSON_KEY_GUILD_LOCALE;
     }
+    if (dcc_json_key_span_eq(key, len, "accent_color")) {
+        return DCC_JSON_KEY_ACCENT_COLOR;
+    }
     if (dcc_json_key_span_eq(key, len, "entitlements")) {
         return DCC_JSON_KEY_ENTITLEMENTS;
     }

@@ -2,6 +2,7 @@
 #include "internal/objects/dcc_message_json_members_internal.h"
 
 #include <dcc/component.h>
+#include <dcc/component_v2.h>
 #include <dcc/embed.h>
 
 dcc_status_t dcc_message_builder_append_rich_json(
@@ -21,7 +22,21 @@ dcc_status_t dcc_message_builder_append_rich_json(
     } else if (builder->embeds_json != NULL) {
         status = dcc_message_json_append_raw_member(buffer, first, "embeds", builder->embeds_json);
     }
-    if (status == DCC_OK && builder->components_count != 0) {
+    if (status == DCC_OK && builder->components_v2_count != 0) {
+        char *components_json = NULL;
+        status = dcc_component_v2_builder_build_array_json(
+            builder->components_v2,
+            builder->components_v2_count,
+            &components_json
+        );
+        if (status != DCC_OK) {
+            return status;
+        }
+        status = dcc_message_json_append_raw_member(buffer, first, "components", components_json);
+        dcc_component_v2_builder_json_free(components_json);
+    } else if (status == DCC_OK && builder->components_v2_json != NULL) {
+        status = dcc_message_json_append_raw_member(buffer, first, "components", builder->components_v2_json);
+    } else if (status == DCC_OK && builder->components_count != 0) {
         char *components_json = NULL;
         status = dcc_component_builder_build_array_json(
             builder->components,

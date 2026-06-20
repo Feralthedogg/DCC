@@ -3,6 +3,7 @@
 
 #include "internal/json/dcc_json_gateway_d_core_message_dispatch_fields.h"
 #include "internal/json/dcc_json_gateway_d_core_message_text_fields.h"
+#include "internal/json/dcc_json_gateway_d_core_message_components_fields.h"
 #include "internal/json/dcc_json_gateway_d_core_message_bool_fields.h"
 #include "internal/json/dcc_json_gateway_d_core_message_scheduled_fields.h"
 #include "internal/json/dcc_json_gateway_d_core_message_flags_fields.h"

@@ -4,6 +4,21 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len10(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "session_id")) {
         return DCC_JSON_KEY_SESSION_ID;
     }
+    if (dcc_json_key_span_eq(key, len, "components")) {
+        return DCC_JSON_KEY_COMPONENTS;
+    }
+    if (dcc_json_key_span_eq(key, len, "min_values")) {
+        return DCC_JSON_KEY_MIN_VALUES;
+    }
+    if (dcc_json_key_span_eq(key, len, "max_values")) {
+        return DCC_JSON_KEY_MAX_VALUES;
+    }
+    if (dcc_json_key_span_eq(key, len, "min_length")) {
+        return DCC_JSON_KEY_MIN_LENGTH;
+    }
+    if (dcc_json_key_span_eq(key, len, "max_length")) {
+        return DCC_JSON_KEY_MAX_LENGTH;
+    }
     if (dcc_json_key_span_eq(key, len, "channel_id")) {
         return DCC_JSON_KEY_CHANNEL_ID;
     }

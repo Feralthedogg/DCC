@@ -2,6 +2,7 @@
 #define DCC_COMPONENT_SESSION_H
 
 #include <dcc/component.h>
+#include <dcc/component_v2.h>
 #include <dcc/error.h>
 #include <dcc/events/base.h>
 #include <dcc/export.h>
@@ -146,6 +147,13 @@ DCC_API dcc_status_t dcc_component_session_button(
     const char *label,
     dcc_button_style_t style,
     dcc_component_builder_t *out
+);
+DCC_API dcc_status_t dcc_component_session_button_v2(
+    dcc_component_session_t *session,
+    const char *action,
+    const char *label,
+    dcc_button_style_t style,
+    dcc_component_v2_builder_t *out
 );
 DCC_API dcc_status_t dcc_component_session_verify(
     const dcc_component_session_t *session,
