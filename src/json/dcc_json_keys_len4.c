@@ -22,6 +22,9 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len4(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "data")) {
         return DCC_JSON_KEY_DATA;
     }
+    if (dcc_json_key_span_eq(key, len, "file")) {
+        return DCC_JSON_KEY_FILE;
+    }
     if (dcc_json_key_span_eq(key, len, "tags")) {
         return DCC_JSON_KEY_TAGS;
     }

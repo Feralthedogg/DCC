@@ -4,6 +4,12 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len9(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "custom_id")) {
         return DCC_JSON_KEY_CUSTOM_ID;
     }
+    if (dcc_json_key_span_eq(key, len, "component")) {
+        return DCC_JSON_KEY_COMPONENT;
+    }
+    if (dcc_json_key_span_eq(key, len, "accessory")) {
+        return DCC_JSON_KEY_ACCESSORY;
+    }
     if (dcc_json_key_span_eq(key, len, "self_deaf")) {
         return DCC_JSON_KEY_SELF_DEAF;
     }

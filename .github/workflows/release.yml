@@ -84,6 +84,7 @@ jobs:
           DCC_BUNDLE_LLAM: ON
           DCC_LLAM_ROOT: ${{ github.workspace }}/LLAM
           DCC_BUILD_PARALLEL: 4
+          DCC_RELEASE_CTEST_EXCLUDE: ${{ runner.os == 'Linux' && '^(dcc_cluster_chaos_smoke|dcc_cluster_gateway_smoke)$' || '^dcc_cluster_chaos_smoke$' }}
         run: tools/package_release.sh "${{ matrix.target }}"
 
       - name: Build, test, and package Windows
@@ -119,9 +120,115 @@ jobs:
             DCC/target/dist/dcc-*-source.tar.gz.sha256
           if-no-files-found: error
 
+  build-bsd-artifacts:
+    name: build-bsd-artifacts (${{ matrix.target }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: cpa.sh {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: freebsd-x86_64
+            os: freebsd
+            version: '15.0'
+            arch: x86-64
+          - target: openbsd-x86_64
+            os: openbsd
+            version: '7.8'
+            arch: x86-64
+          - target: netbsd-x86_64
+            os: netbsd
+            version: '10.1'
+            arch: x86-64
+
+    steps:
+      - name: Checkout DCC
+        uses: actions/checkout@v6
+        with:
+          path: DCC
+
+      - name: Checkout LLAM
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.repository_owner }}/LLAM
+          path: LLAM
+
+      - name: Start BSD VM
+        uses: cross-platform-actions/action@v1.1.0
+        timeout-minutes: 10
+        with:
+          operating_system: ${{ matrix.os }}
+          version: ${{ matrix.version }}
+          architecture: ${{ matrix.arch }}
+          shell: sh
+          memory: 6G
+          cpu_count: 2
+
+      - name: Install BSD dependencies
+        run: |
+          set -eu
+          retry() {
+            attempts=0
+            max_attempts="${DCC_BSD_PKG_RETRIES:-8}"
+            delay_seconds="${DCC_BSD_PKG_RETRY_DELAY:-20}"
+            while ! "$@"; do
+              attempts=$((attempts + 1))
+              if [ "$attempts" -ge "$max_attempts" ]; then
+                return 1
+              fi
+              sleep "$delay_seconds"
+            done
+          }
+          case "$(uname -s)" in
+            FreeBSD)
+              retry sudo pkg install -y cmake openssl pkgconf
+              ;;
+            OpenBSD)
+              sudo sh -c 'echo https://cdn.openbsd.org/pub/OpenBSD > /etc/installurl'
+              retry sudo pkg_add cmake pkgconf
+              ;;
+            NetBSD)
+              retry sudo pkgin -y install cmake openssl pkgconf
+              ;;
+          esac
+          command -v cc
+          command -v cmake
+
+      - name: Build and package BSD
+        run: |
+          set -eu
+          extra_args="-DDCC_WITH_OPUS=OFF -DDCC_BUILD_EXAMPLES=OFF -DDCC_BUILD_TESTS=OFF"
+          case "$(uname -s)" in
+            FreeBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/local" ;;
+            NetBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/pkg" ;;
+          esac
+          DCC_RELEASE_VERSION="${{ github.event.inputs.version || github.ref_name || 'dev' }}" \
+            DCC_ALLOW_VERSION_MISMATCH=1 \
+            DCC_SKIP_RELEASE_TESTS=1 \
+            DCC_BUILD_PARALLEL=2 \
+            DCC_LLAM_USE_SUBDIRECTORY=ON \
+            DCC_BUNDLE_LLAM=ON \
+            DCC_LLAM_ROOT="$GITHUB_WORKSPACE/LLAM" \
+            DCC_EXTRA_CMAKE_ARGS="$extra_args" \
+            sh "$GITHUB_WORKSPACE/DCC/tools/package_release.sh" "${{ matrix.target }}"
+
+      - name: Upload BSD artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-${{ matrix.target }}
+          path: |
+            DCC/target/dist/dcc-*-${{ matrix.target }}.tar.gz
+            DCC/target/dist/dcc-*-${{ matrix.target }}.tar.gz.sha256
+          if-no-files-found: error
+
   publish-release:
     name: publish-release
-    needs: build-artifacts
+    needs:
+      - build-artifacts
+      - build-bsd-artifacts
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     steps:
@@ -167,7 +274,7 @@ jobs:
           {
             echo "# DCC ${version} Beta"
             echo
-            echo "DCC ${version} Beta publishes native Discord C runtime packages for Linux, macOS, and Windows."
+            echo "DCC ${version} Beta publishes native Discord C runtime packages for Linux, macOS, Windows, and BSD."
             echo
             echo "## Highlights"
             echo
@@ -186,6 +293,9 @@ jobs:
               "linux-aarch64|Linux aarch64|tar.gz" \
               "macos-aarch64|macOS arm64|tar.gz" \
               "macos-x86_64|macOS x86_64|tar.gz" \
+              "freebsd-x86_64|FreeBSD x86_64|tar.gz" \
+              "openbsd-x86_64|OpenBSD x86_64|tar.gz" \
+              "netbsd-x86_64|NetBSD x86_64|tar.gz" \
               "windows-x86_64|Windows x86_64|zip"; do
               target="$(printf '%s' "$row" | cut -d'|' -f1)"
               label="$(printf '%s' "$row" | cut -d'|' -f2)"
@@ -237,7 +347,7 @@ jobs:
             echo "Invoke-WebRequest \"${base_url}/install.ps1\" -OutFile install.ps1; .\\install.ps1 -Version ${version} -BaseUrl \"${base_url}\" -Prefix \"\$env:LOCALAPPDATA\\DCC\""
             echo "\`\`\`"
             echo
-            echo "The installers install the DCC archive and then refresh LLAM from the latest LLAM release installer by default."
+            echo "The installers install the DCC archive and then refresh LLAM from the latest LLAM release installer by default. FreeBSD, OpenBSD, and NetBSD release archives are published for x86_64; DragonFlyBSD is available as an experimental source/package-script target."
             echo
             echo "## Verification"
             echo

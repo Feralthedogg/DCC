@@ -49,6 +49,24 @@ cmake -S . -B build \
 cmake --build build
 ```
 
+## Platform Notes
+
+DCC follows LLAM's platform backend split:
+
+| Platform | LLAM backend | Extra runtime link requirements |
+| --- | --- | --- |
+| Linux | io_uring | `liburing`, `libm` |
+| macOS | kqueue | none beyond system frameworks selected by the toolchain |
+| FreeBSD | kqueue | none |
+| OpenBSD | kqueue | none |
+| NetBSD | kqueue | `librt` |
+| DragonFlyBSD | kqueue | none, experimental CI target |
+| Windows | IOCP / Win32 | `ws2_32`, `mswsock`, `synchronization`, `advapi32` |
+
+FreeBSD, OpenBSD, and NetBSD x86_64 packages are built by the release workflow.
+DragonFlyBSD is kept as an experimental source/package-script target because
+public package mirrors and VM availability are less stable.
+
 ## Package Build
 
 ```sh

@@ -181,9 +181,21 @@ interaction pointer for `SOCKET_CLOSE`. Use
   under `dcc/rest/webhooks/management/` for create, fetch, modify, and delete
   operations. Webhook message declarations split further under
   `dcc/rest/webhooks/messages/` for fetch, edit, and delete operations.
-- `message.h`, `embed.h`, `component.h`, `modal.h`, `autocomplete.h`, and
-  `application_command.h`: stack-friendly JSON builders for payloads used by
-  REST and interaction responses.
+- `message.h`, `embed.h`, `component.h`, `component_v2.h`, `modal.h`,
+  `autocomplete.h`, and `application_command.h`: stack-friendly JSON builders
+  for payloads used by REST and interaction responses. `component_v2.h`
+  provides Components v2 layout, media, select-default, modal-input
+  serializers, convenience initializers, and typed message component accessors;
+  `message.h` sets `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2` when v2 components are
+  attached.
+- `objects/clone/interactions.h`: command option accessors, resolved object
+  lookups, and Components v2 modal submit helpers such as
+  `dcc_interaction_form_value()` and `dcc_interaction_form_boolean()`.
+- `objects/base.h`: gateway message objects preserve message `components` as
+  raw `dcc_message_t::components_json` and project a typed
+  `dcc_message_t::components` tree for Components v2 layouts.
+- `component_session.h`: signed stateful UI sessions for legacy and Components
+  v2 controls, including `dcc_component_session_button_v2()`.
 
 REST futures are LLAM-backed. Completion callbacks run on DCC worker context;
 callers that need synchronous behavior should use the wait helpers.

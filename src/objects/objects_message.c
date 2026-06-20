@@ -37,21 +37,8 @@ dcc_message_t *dcc_message_clone(const dcc_message_t *message) {
         return NULL;
     }
 
-    *copy = *message;
-    copy->author.username = dcc_clone_string_or_null(message->author.username);
-    copy->author.global_name = dcc_clone_string_or_null(message->author.global_name);
-    copy->author.avatar = dcc_clone_string_or_null(message->author.avatar);
-    copy->content = dcc_clone_string_or_null(message->content);
-    copy->timestamp = dcc_clone_string_or_null(message->timestamp);
-    copy->edited_timestamp = dcc_clone_string_or_null(message->edited_timestamp);
-
-    if ((message->author.username != NULL && copy->author.username == NULL) ||
-        (message->author.global_name != NULL && copy->author.global_name == NULL) ||
-        (message->author.avatar != NULL && copy->author.avatar == NULL) ||
-        (message->content != NULL && copy->content == NULL) ||
-        (message->timestamp != NULL && copy->timestamp == NULL) ||
-        (message->edited_timestamp != NULL && copy->edited_timestamp == NULL)) {
-        dcc_message_free(copy);
+    if (dcc_clone_message_fields(copy, message) != 0) {
+        free(copy);
         return NULL;
     }
 
@@ -62,11 +49,6 @@ void dcc_message_free(dcc_message_t *message) {
     if (message == NULL) {
         return;
     }
-    free((void *)message->author.username);
-    free((void *)message->author.global_name);
-    free((void *)message->author.avatar);
-    free((void *)message->content);
-    free((void *)message->timestamp);
-    free((void *)message->edited_timestamp);
+    dcc_free_message_fields(message);
     free(message);
 }

@@ -149,8 +149,9 @@ static int dcc_json_bench_run(
     const dcc_json_bench_sample_t *sample,
     unsigned long long iterations
 ) {
+    static _Thread_local dcc_json_gateway_payload_t payload;
+
     for (unsigned i = 0; i < 128U; ++i) {
-        dcc_json_gateway_payload_t payload;
         dcc_status_t status = parse(sample->json, sample->len, &payload);
         if (status != DCC_OK) {
             fprintf(stderr, "%s warmup failed for %s: %s\n", label, sample->name, dcc_status_string(status));
@@ -161,7 +162,6 @@ static int dcc_json_bench_run(
 
     clock_t start = clock();
     for (unsigned long long i = 0; i < iterations; ++i) {
-        dcc_json_gateway_payload_t payload;
         dcc_status_t status = parse(sample->json, sample->len, &payload);
         if (status != DCC_OK) {
             fprintf(stderr, "%s failed for %s: %s\n", label, sample->name, dcc_status_string(status));

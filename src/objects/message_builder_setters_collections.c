@@ -39,6 +39,23 @@ dcc_status_t dcc_message_builder_set_components(
     return DCC_OK;
 }
 
+dcc_status_t dcc_message_builder_set_components_v2(
+    dcc_message_builder_t *builder,
+    const dcc_component_v2_builder_t *components,
+    size_t components_count
+) {
+    if (builder == NULL || (components_count != 0 && components == NULL)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    builder->components_v2 = components;
+    builder->components_v2_count = components_count;
+    if (components_count != 0) {
+        builder->flags |= DCC_MESSAGE_FLAG_IS_COMPONENTS_V2;
+        builder->has_flags = 1;
+    }
+    return DCC_OK;
+}
+
 dcc_status_t dcc_message_builder_set_poll(
     dcc_message_builder_t *builder,
     const dcc_poll_builder_t *poll

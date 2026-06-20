@@ -2,7 +2,12 @@
 
 int dcc_json_smoke_interactions(void) {
     dcc_status_t st = DCC_OK;
-    dcc_json_gateway_payload_t payload;
+    dcc_json_gateway_payload_t *payload = dcc_json_smoke_payload();
+    if (payload == NULL) {
+        fprintf(stderr, "json smoke payload allocation failed\n");
+        return 1;
+    }
+    dcc_interaction_t *interaction = &payload->interaction;
 
     const char interaction_options_input[] =
         "{\"t\":\"INTERACTION_CREATE\",\"s\":111,\"op\":0,\"d\":{\"id\":\"555\","
@@ -54,42 +59,42 @@ int dcc_json_smoke_interactions(void) {
     st = dcc_json_parse_gateway_payload(
         interaction_options_input,
         sizeof(interaction_options_input) - 1,
-        &payload
+        payload
     );
     int64_t option_count = 0;
     double option_ratio = 0.0;
     uint8_t option_visible = 0;
     dcc_snowflake_t option_target = 0;
-    const dcc_interaction_option_t *focused_option = dcc_interaction_focused_option(&payload.interaction);
-    const char *text_option = dcc_interaction_option_string(&payload.interaction, "text");
-    const char *query_option = dcc_interaction_option_string(&payload.interaction, "query");
-    dcc_interaction_t *interaction_copy = dcc_interaction_clone(&payload.interaction);
+    const dcc_interaction_option_t *focused_option = dcc_interaction_focused_option(interaction);
+    const char *text_option = dcc_interaction_option_string(interaction, "text");
+    const char *query_option = dcc_interaction_option_string(interaction, "query");
+    dcc_interaction_t *interaction_copy = dcc_interaction_clone(interaction);
     if (st != DCC_OK ||
-        payload.has_interaction != 1 ||
-        payload.interaction.options == NULL ||
-        payload.interaction.options_count != 6 ||
+        payload->has_interaction != 1 ||
+        payload->interaction.options == NULL ||
+        payload->interaction.options_count != 6 ||
         text_option == NULL ||
         strcmp(text_option, "hello") != 0 ||
-        dcc_interaction_option_integer(&payload.interaction, "count", &option_count) != 1 ||
+        dcc_interaction_option_integer(interaction, "count", &option_count) != 1 ||
         option_count != 42 ||
-        dcc_interaction_option_number(&payload.interaction, "ratio", &option_ratio) != 1 ||
+        dcc_interaction_option_number(interaction, "ratio", &option_ratio) != 1 ||
         option_ratio < 1.49 ||
         option_ratio > 1.51 ||
-        dcc_interaction_option_boolean(&payload.interaction, "visible", &option_visible) != 1 ||
+        dcc_interaction_option_boolean(interaction, "visible", &option_visible) != 1 ||
         option_visible != 1 ||
-        dcc_interaction_option_snowflake(&payload.interaction, "target", &option_target) != 1 ||
+        dcc_interaction_option_snowflake(interaction, "target", &option_target) != 1 ||
         option_target != 446 ||
         focused_option == NULL ||
-        focused_option != payload.interaction.focused_option ||
+        focused_option != payload->interaction.focused_option ||
         focused_option->name == NULL ||
         strcmp(focused_option->name, "query") != 0 ||
         query_option == NULL ||
         strcmp(query_option, "he") != 0 ||
-        dcc_interaction_option_by_name(&payload.interaction, "missing") != NULL ||
-        !dcc_json_smoke_interaction_resolved_ok(&payload.interaction) ||
-        !dcc_json_smoke_interaction_metadata_ok(&payload.interaction) ||
+        dcc_interaction_option_by_name(interaction, "missing") != NULL ||
+        !dcc_json_smoke_interaction_resolved_ok(interaction) ||
+        !dcc_json_smoke_interaction_metadata_ok(interaction) ||
         interaction_copy == NULL ||
-        !dcc_json_smoke_interaction_resolved_clone_ok(&payload.interaction, interaction_copy)) {
+        !dcc_json_smoke_interaction_resolved_clone_ok(interaction, interaction_copy)) {
         fprintf(stderr, "gateway interaction option validation failed: %s\n", dcc_status_string(st));
         dcc_interaction_free(interaction_copy);
         return 1;
@@ -105,14 +110,14 @@ int dcc_json_smoke_interactions(void) {
     st = dcc_json_parse_gateway_payload(
         interaction_member_permissions_input,
         sizeof(interaction_member_permissions_input) - 1,
-        &payload
+        payload
     );
     const dcc_interaction_resolved_permission_t *issuer_permissions =
-        dcc_interaction_resolved_permission(&payload.interaction, 447);
+        dcc_interaction_resolved_permission(interaction, 447);
     if (st != DCC_OK ||
         issuer_permissions == NULL ||
         issuer_permissions->permissions != 4096 ||
-        dcc_interaction_resolved_permission(&payload.interaction, 999) != NULL) {
+        dcc_interaction_resolved_permission(interaction, 999) != NULL) {
         fprintf(stderr, "gateway interaction member permission validation failed: %s\n", dcc_status_string(st));
         return 1;
     }
@@ -128,25 +133,25 @@ int dcc_json_smoke_interactions(void) {
     st = dcc_json_parse_gateway_payload(
         interaction_nested_options_input,
         sizeof(interaction_nested_options_input) - 1,
-        &payload
+        payload
     );
     dcc_snowflake_t nested_target = 0;
-    const dcc_interaction_option_t *group = dcc_interaction_subcommand_group(&payload.interaction);
-    const dcc_interaction_option_t *subcommand = dcc_interaction_subcommand(&payload.interaction);
+    const dcc_interaction_option_t *group = dcc_interaction_subcommand_group(interaction);
+    const dcc_interaction_option_t *subcommand = dcc_interaction_subcommand(interaction);
     const dcc_interaction_option_t *ban_from_group =
         dcc_interaction_option_child_by_name(group, "ban");
     const dcc_interaction_option_t *reason_from_subcommand =
         dcc_interaction_option_child_by_name(subcommand, "reason");
-    const char *nested_reason = dcc_interaction_option_string(&payload.interaction, "reason");
-    dcc_interaction_t *nested_copy = dcc_interaction_clone(&payload.interaction);
+    const char *nested_reason = dcc_interaction_option_string(interaction, "reason");
+    dcc_interaction_t *nested_copy = dcc_interaction_clone(interaction);
     const dcc_interaction_option_t *copy_group = dcc_interaction_subcommand_group(nested_copy);
     const dcc_interaction_option_t *copy_subcommand = dcc_interaction_subcommand(nested_copy);
     const char *copy_reason = dcc_interaction_option_string(nested_copy, "reason");
     int copy_target_ok = dcc_interaction_option_snowflake(nested_copy, "target", &nested_target);
     if (st != DCC_OK ||
-        payload.interaction.options == NULL ||
-        payload.interaction.attachment_size_limit != DCC_INTERACTION_DEFAULT_ATTACHMENT_SIZE_LIMIT ||
-        payload.interaction.options_count != 1 ||
+        payload->interaction.options == NULL ||
+        payload->interaction.attachment_size_limit != DCC_INTERACTION_DEFAULT_ATTACHMENT_SIZE_LIMIT ||
+        payload->interaction.options_count != 1 ||
         group == NULL ||
         group->type != 2 ||
         group->options_count != 1 ||
@@ -173,6 +178,66 @@ int dcc_json_smoke_interactions(void) {
         return 1;
     }
     dcc_interaction_free(nested_copy);
+
+    const char interaction_components_v2_input[] =
+        "{\"t\":\"INTERACTION_CREATE\",\"s\":113,\"op\":0,\"d\":{\"id\":\"557\","
+        "\"application_id\":\"666\",\"type\":5,\"guild_id\":\"333\",\"channel_id\":\"222\","
+        "\"token\":\"interaction-token\",\"data\":{\"custom_id\":\"modal-v2\","
+        "\"components\":["
+        "{\"type\":18,\"label\":\"Name\",\"component\":"
+        "{\"type\":4,\"custom_id\":\"name\",\"value\":\"Feral\"}},"
+        "{\"type\":18,\"label\":\"Accept\",\"component\":"
+        "{\"type\":23,\"custom_id\":\"accept\",\"value\":true}},"
+        "{\"type\":17,\"components\":[{\"type\":1,\"components\":["
+        "{\"type\":3,\"custom_id\":\"tags\",\"values\":[\"alpha\",\"beta\"]}]}]}]}}}";
+    st = dcc_json_parse_gateway_payload(
+        interaction_components_v2_input,
+        sizeof(interaction_components_v2_input) - 1,
+        payload
+    );
+    const dcc_interaction_form_field_t *name_field =
+        dcc_interaction_form_field_by_custom_id(interaction, "name");
+    const dcc_interaction_form_field_t *accept_field =
+        dcc_interaction_form_field_by_custom_id(interaction, "accept");
+    const dcc_interaction_form_field_t *tags_field =
+        dcc_interaction_form_field_by_custom_id(interaction, "tags");
+    const char *name_value = dcc_interaction_form_value(interaction, "name");
+    uint8_t accepted = 0;
+    int accepted_ok = dcc_interaction_form_boolean(interaction, "accept", &accepted);
+    dcc_interaction_t *components_copy = dcc_interaction_clone(interaction);
+    const dcc_interaction_form_field_t *copy_tags =
+        dcc_interaction_form_field_by_custom_id(components_copy, "tags");
+    if (st != DCC_OK ||
+        payload->has_interaction != 1 ||
+        payload->interaction.form_fields == NULL ||
+        payload->interaction.form_fields_count != 3 ||
+        name_field == NULL ||
+        name_field->component_type != 4U ||
+        name_value == NULL ||
+        strcmp(name_value, "Feral") != 0 ||
+        accept_field == NULL ||
+        accept_field->component_type != 23U ||
+        accepted_ok != 1 ||
+        accepted != 1 ||
+        tags_field == NULL ||
+        tags_field->component_type != 3U ||
+        tags_field->value_type != DCC_INTERACTION_FORM_VALUE_VALUES ||
+        tags_field->values_count != 2 ||
+        tags_field->values == NULL ||
+        strcmp(tags_field->values[0], "alpha") != 0 ||
+        strcmp(tags_field->values[1], "beta") != 0 ||
+        dcc_interaction_form_value(interaction, "missing") != NULL ||
+        components_copy == NULL ||
+        copy_tags == NULL ||
+        copy_tags == tags_field ||
+        copy_tags->values == tags_field->values ||
+        copy_tags->values_count != 2 ||
+        strcmp(copy_tags->values[1], "beta") != 0) {
+        fprintf(stderr, "gateway interaction components v2 validation failed: %s\n", dcc_status_string(st));
+        dcc_interaction_free(components_copy);
+        return 1;
+    }
+    dcc_interaction_free(components_copy);
 
     return 0;
 }

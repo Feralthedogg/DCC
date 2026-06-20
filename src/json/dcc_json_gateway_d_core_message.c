@@ -15,6 +15,11 @@ dcc_status_t dcc_json_gateway_parse_d_core_message_key(
         return status;
     }
 
+    status = dcc_json_gateway_parse_d_core_message_components_key(parser, out, key_id, handled);
+    if (status != DCC_OK || *handled) {
+        return status;
+    }
+
     status = dcc_json_gateway_parse_d_core_message_bool_key(parser, out, key_id, handled);
     if (status != DCC_OK || *handled) {
         return status;

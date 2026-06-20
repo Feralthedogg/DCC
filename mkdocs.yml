@@ -64,6 +64,7 @@ nav:
       - Gateway And Events: guides/gateway-events.md
       - Slash Command Registry: guides/command-registry.md
       - Component Sessions: guides/component-sessions.md
+      - Components v2: guides/components-v2.md
       - Interaction Flows: guides/interaction-flows.md
       - Hot Reload: guides/hot-reload.md
       - Replay Testing: guides/replay.md

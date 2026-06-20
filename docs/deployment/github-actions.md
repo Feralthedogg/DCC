@@ -1,12 +1,17 @@
 # GitHub Actions
 
-DCC ships three workflow groups.
+DCC ships four workflow groups.
 
 ## CI
 
 `.github/workflows/ci.yml` runs the release check on Linux and macOS. It checks
 out DCC and LLAM side by side, builds with CMake, runs CTest, validates CPack,
 installs the package, and builds an installed-package consumer.
+
+`.github/workflows/bsd.yml` runs BSD smoke gates through VM-backed GitHub
+Actions jobs. FreeBSD, OpenBSD, and NetBSD are hard gates; DragonFlyBSD is kept
+as an experimental allowed-failure target because public package mirrors and VM
+availability are less stable.
 
 ## Docs
 
@@ -23,7 +28,8 @@ Repository settings required:
 ## Release
 
 `.github/workflows/release.yml` builds native CPack archives and uploads them
-to a GitHub Release.
+to a GitHub Release. Linux, macOS, Windows, FreeBSD, OpenBSD, and NetBSD
+artifacts are published from this workflow.
 
 Automatic release:
 

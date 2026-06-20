@@ -50,7 +50,7 @@ static dcc_status_t dispatch_failure_smoke(const char *marker, const char *label
         .size = sizeof(options),
         .backend = DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER,
         .worker_path = DCC_HOT_RELOAD_INVALID_READY_WORKER,
-        .worker_health_timeout_ms = 100,
+        .worker_health_timeout_ms = 750,
         .worker_drain_timeout_ms = 25,
     };
     dcc_hot_reload_health_snapshot_t after = {
@@ -155,7 +155,7 @@ static dcc_status_t dispatch_last_good_failure_smoke(void) {
         .size = sizeof(options),
         .backend = DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER,
         .worker_path = DCC_HOT_RELOAD_INVALID_READY_WORKER,
-        .worker_health_timeout_ms = 100,
+        .worker_health_timeout_ms = 750,
         .worker_drain_timeout_ms = 25,
     };
     dcc_hot_reload_health_snapshot_t after = {

@@ -1,0 +1,187 @@
+name: BSD
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: bsd-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  smoke:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    continue-on-error: ${{ matrix.os == 'dragonflybsd' }}
+    defaults:
+      run:
+        shell: cpa.sh {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: freebsd-x86_64
+            os: freebsd
+            version: '15.0'
+            arch: x86-64
+            package_target: freebsd-x86_64
+          - name: openbsd-x86_64
+            os: openbsd
+            version: '7.8'
+            arch: x86-64
+            package_target: openbsd-x86_64
+          - name: netbsd-x86_64
+            os: netbsd
+            version: '10.1'
+            arch: x86-64
+            package_target: netbsd-x86_64
+          - name: dragonflybsd-x86_64-experimental
+            os: dragonflybsd
+            version: '6.4.2'
+            arch: x86-64
+            package_target: dragonflybsd-x86_64
+
+    steps:
+      - name: Checkout DCC
+        uses: actions/checkout@v6
+        with:
+          path: DCC
+
+      - name: Checkout LLAM
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.repository_owner }}/LLAM
+          path: LLAM
+
+      - name: Start BSD VM
+        uses: cross-platform-actions/action@v1.1.0
+        timeout-minutes: 10
+        with:
+          operating_system: ${{ matrix.os }}
+          version: ${{ matrix.version }}
+          architecture: ${{ matrix.arch }}
+          shell: sh
+          memory: 6G
+          cpu_count: 2
+
+      - name: Install packages
+        run: |
+          set -eu
+          skip_file="$GITHUB_WORKSPACE/.dcc-bsd-infra-skip"
+          rm -f "$skip_file"
+          retry() {
+            attempts=0
+            max_attempts="${DCC_BSD_PKG_RETRIES:-8}"
+            delay_seconds="${DCC_BSD_PKG_RETRY_DELAY:-20}"
+            while ! "$@"; do
+              attempts=$((attempts + 1))
+              if [ "$attempts" -ge "$max_attempts" ]; then
+                return 1
+              fi
+              sleep "$delay_seconds"
+            done
+          }
+          configure_dragonfly_pkg_repo() {
+            sudo mkdir -p /usr/local/etc/pkg/repos
+            sudo tee /usr/local/etc/pkg/repos/dcc-auto.conf >/dev/null <<'EOF'
+          AUTO: {
+            url             : "http://mirror-master.dragonflybsd.org/dports/${ABI}/LATEST"
+            mirror_type     : NONE
+            enabled         : yes
+          }
+          Avalon: {
+            enabled         : no
+          }
+          EOF
+          }
+          case "$(uname -s)" in
+            FreeBSD)
+              retry sudo pkg install -y cmake openssl pkgconf
+              ;;
+            DragonFly)
+              configure_dragonfly_pkg_repo
+              if ! retry sudo pkg update -f; then
+                echo "DragonFlyBSD pkg repository unavailable; skipping this infrastructure-gated job." | tee "$skip_file"
+                exit 0
+              fi
+              if ! retry sudo pkg install -y cmake openssl pkgconf; then
+                echo "DragonFlyBSD pkg install unavailable; skipping this infrastructure-gated job." | tee "$skip_file"
+                exit 0
+              fi
+              ;;
+            OpenBSD)
+              sudo sh -c 'echo https://cdn.openbsd.org/pub/OpenBSD > /etc/installurl'
+              retry sudo pkg_add cmake pkgconf
+              ;;
+            NetBSD)
+              retry sudo pkgin -y install cmake openssl pkgconf
+              ;;
+          esac
+          command -v cc
+          command -v cmake
+
+      - name: Build and test DCC
+        run: |
+          set -eu
+          if [ -f "$GITHUB_WORKSPACE/.dcc-bsd-infra-skip" ]; then
+            cat "$GITHUB_WORKSPACE/.dcc-bsd-infra-skip"
+            exit 0
+          fi
+          openssl_arg=""
+          case "$(uname -s)" in
+            FreeBSD|DragonFly) openssl_arg="-DOPENSSL_ROOT_DIR=/usr/local" ;;
+            NetBSD) openssl_arg="-DOPENSSL_ROOT_DIR=/usr/pkg" ;;
+          esac
+          # shellcheck disable=SC2086
+          cmake -S "$GITHUB_WORKSPACE/DCC" -B "$GITHUB_WORKSPACE/DCC/build-bsd" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DDCC_LLAM_USE_SUBDIRECTORY=ON \
+            -DDCC_BUNDLE_LLAM=ON \
+            -DDCC_LLAM_ROOT="$GITHUB_WORKSPACE/LLAM" \
+            -DDCC_WITH_OPUS=OFF \
+            -DDCC_BUILD_EXAMPLES=OFF \
+            -DDCC_BUILD_TOOLS=OFF \
+            ${openssl_arg}
+          cmake --build "$GITHUB_WORKSPACE/DCC/build-bsd" --parallel 2 --target \
+            dcc_smoke \
+            dcc_json_smoke \
+            dcc_component_v2_smoke \
+            dcc_pkg_config_consumer_smoke
+          ctest --test-dir "$GITHUB_WORKSPACE/DCC/build-bsd" \
+            -R '^(dcc_smoke|dcc_json_smoke|dcc_component_v2_smoke|dcc_pkg_config_consumer_smoke)$' \
+            --output-on-failure \
+            --timeout 240
+
+      - name: Package and installer smoke
+        run: |
+          set -eu
+          if [ -f "$GITHUB_WORKSPACE/.dcc-bsd-infra-skip" ]; then
+            cat "$GITHUB_WORKSPACE/.dcc-bsd-infra-skip"
+            exit 0
+          fi
+          extra_args="-DDCC_WITH_OPUS=OFF -DDCC_BUILD_EXAMPLES=OFF -DDCC_BUILD_TOOLS=OFF -DDCC_BUILD_TESTS=OFF"
+          case "$(uname -s)" in
+            FreeBSD|DragonFly) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/local" ;;
+            NetBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/pkg" ;;
+          esac
+          DCC_RELEASE_VERSION=ci \
+            DCC_ALLOW_VERSION_MISMATCH=1 \
+            DCC_SKIP_RELEASE_TESTS=1 \
+            DCC_BUILD_PARALLEL=2 \
+            DCC_LLAM_USE_SUBDIRECTORY=ON \
+            DCC_BUNDLE_LLAM=ON \
+            DCC_LLAM_ROOT="$GITHUB_WORKSPACE/LLAM" \
+            DCC_EXTRA_CMAKE_ARGS="$extra_args" \
+            sh "$GITHUB_WORKSPACE/DCC/tools/package_release.sh" "${{ matrix.package_target }}"
+          sh "$GITHUB_WORKSPACE/DCC/tools/install.sh" \
+            --dry-run \
+            --skip-llam \
+            --target "${{ matrix.package_target }}" \
+            --version ci \
+            --base-url https://example.invalid

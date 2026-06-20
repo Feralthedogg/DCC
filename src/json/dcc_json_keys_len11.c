@@ -4,6 +4,9 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len11(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "description")) {
         return DCC_JSON_KEY_DESCRIPTION;
     }
+    if (dcc_json_key_span_eq(key, len, "placeholder")) {
+        return DCC_JSON_KEY_PLACEHOLDER;
+    }
     if (dcc_json_key_span_eq(key, len, "attachments")) {
         return DCC_JSON_KEY_ATTACHMENTS;
     }

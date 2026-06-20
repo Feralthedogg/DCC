@@ -1,7 +1,17 @@
 #include "json_smoke_support.h"
 
+#include <stdlib.h>
+
 int dcc_json_smoke_str_eq(const char *actual, const char *expected) {
     return actual != NULL && strcmp(actual, expected) == 0;
+}
+
+dcc_json_gateway_payload_t *dcc_json_smoke_payload(void) {
+    static dcc_json_gateway_payload_t *payload;
+    if (payload == NULL) {
+        payload = (dcc_json_gateway_payload_t *)calloc(1, sizeof(*payload));
+    }
+    return payload;
 }
 
 int dcc_json_smoke_arena_allocator_ok(void) {

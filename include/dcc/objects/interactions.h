@@ -41,6 +41,24 @@ typedef struct dcc_interaction_option {
     uint8_t options_truncated;
 } dcc_interaction_option_t;
 
+typedef enum dcc_interaction_form_value_type {
+    DCC_INTERACTION_FORM_VALUE_NONE = 0,
+    DCC_INTERACTION_FORM_VALUE_STRING,
+    DCC_INTERACTION_FORM_VALUE_BOOLEAN,
+    DCC_INTERACTION_FORM_VALUE_VALUES
+} dcc_interaction_form_value_type_t;
+
+typedef struct dcc_interaction_form_field {
+    const char *custom_id;
+    uint32_t component_type;
+    dcc_interaction_form_value_type_t value_type;
+    const char *value;
+    uint8_t boolean_value;
+    const char **values;
+    size_t values_count;
+    uint8_t values_truncated;
+} dcc_interaction_form_field_t;
+
 typedef struct dcc_interaction_resolved {
     const dcc_user_t *users;
     size_t users_count;
@@ -92,6 +110,9 @@ typedef struct dcc_interaction {
     const dcc_interaction_option_t *options;
     size_t options_count;
     uint8_t options_truncated;
+    const dcc_interaction_form_field_t *form_fields;
+    size_t form_fields_count;
+    uint8_t form_fields_truncated;
     const dcc_interaction_authorizing_integration_owner_t *authorizing_integration_owners;
     size_t authorizing_integration_owners_count;
     uint8_t authorizing_integration_owners_truncated;

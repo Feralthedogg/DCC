@@ -55,5 +55,17 @@ dcc_json_key_id_t dcc_json_gateway_key_id_len5(const char *key, size_t len) {
     if (dcc_json_key_span_eq(key, len, "value")) {
         return DCC_JSON_KEY_VALUE;
     }
+    if (dcc_json_key_span_eq(key, len, "items")) {
+        return DCC_JSON_KEY_ITEMS;
+    }
+    if (dcc_json_key_span_eq(key, len, "media")) {
+        return DCC_JSON_KEY_MEDIA;
+    }
+    if (dcc_json_key_span_eq(key, len, "style")) {
+        return DCC_JSON_KEY_STYLE;
+    }
+    if (dcc_json_key_span_eq(key, len, "label")) {
+        return DCC_JSON_KEY_LABEL;
+    }
     return DCC_JSON_KEY_UNKNOWN;
 }

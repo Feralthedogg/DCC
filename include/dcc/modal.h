@@ -2,6 +2,7 @@
 #define DCC_MODAL_H
 
 #include <dcc/component.h>
+#include <dcc/component_v2.h>
 #include <dcc/error.h>
 #include <dcc/export.h>
 #include <stddef.h>
@@ -17,6 +18,9 @@ typedef struct dcc_modal_builder {
     const char *components_json;
     const dcc_component_builder_t *components;
     size_t components_count;
+    const dcc_component_v2_builder_t *components_v2;
+    size_t components_v2_count;
+    const char *components_v2_json;
     uint8_t has_custom_id;
     uint8_t has_title;
 } dcc_modal_builder_t;
@@ -29,7 +33,16 @@ DCC_API dcc_status_t dcc_modal_builder_set_components(
     const dcc_component_builder_t *components,
     size_t components_count
 );
+DCC_API dcc_status_t dcc_modal_builder_set_components_v2(
+    dcc_modal_builder_t *builder,
+    const dcc_component_v2_builder_t *components,
+    size_t components_count
+);
 DCC_API dcc_status_t dcc_modal_builder_set_components_json(
+    dcc_modal_builder_t *builder,
+    const char *components_json
+);
+DCC_API dcc_status_t dcc_modal_builder_set_components_v2_json(
     dcc_modal_builder_t *builder,
     const char *components_json
 );

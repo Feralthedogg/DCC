@@ -41,6 +41,12 @@ set(DCC_LLAM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../LLAM" CACHE PATH "Path to the 
 set(DCC_LLAM_LIBRARY "${DCC_LLAM_ROOT}/libllam_runtime.a" CACHE FILEPATH "Path to a prebuilt LLAM static library")
 set(DCC_OPUS_ROOT "" CACHE PATH "Path to a libopus installation")
 
+set(DCC_SYSTEM_IS_BSD FALSE)
+if(CMAKE_SYSTEM_NAME MATCHES "^(FreeBSD|OpenBSD|NetBSD|DragonFly)$")
+    set(DCC_SYSTEM_IS_BSD TRUE)
+endif()
+set(DCC_BSD_FEATURE_DEFINITIONS _BSD_SOURCE)
+
 if(DCC_BUILD_FUZZERS AND NOT DCC_ENABLE_SANITIZERS)
     set(DCC_ENABLE_SANITIZERS ON CACHE BOOL "Build DCC targets with AddressSanitizer and UndefinedBehaviorSanitizer" FORCE)
 endif()
@@ -71,6 +77,23 @@ if(DCC_WITH_OPUS)
     endif()
 endif()
 
+function(dcc_target_link_llam_platform target)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        find_library(DCC_URING_LIBRARY uring REQUIRED)
+        set_property(TARGET ${target} APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES "${DCC_URING_LIBRARY};m"
+        )
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+        set_property(TARGET ${target} APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES rt
+        )
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set_property(TARGET ${target} APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES ws2_32 mswsock synchronization advapi32
+        )
+    endif()
+endfunction()
+
 if(NOT TARGET llam::runtime)
     if(DCC_LLAM_USE_SUBDIRECTORY)
         if(NOT EXISTS "${DCC_LLAM_ROOT}/CMakeLists.txt")
@@ -93,25 +116,14 @@ if(NOT TARGET llam::runtime)
             INTERFACE_LINK_LIBRARIES Threads::Threads
         )
 
-        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-            find_library(DCC_URING_LIBRARY uring REQUIRED)
-            set_property(TARGET llam_runtime_prebuilt APPEND PROPERTY
-                INTERFACE_LINK_LIBRARIES "${DCC_URING_LIBRARY};m"
-            )
-        elseif(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
-            set_property(TARGET llam_runtime_prebuilt APPEND PROPERTY
-                INTERFACE_LINK_LIBRARIES rt
-            )
-        elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-            set_property(TARGET llam_runtime_prebuilt APPEND PROPERTY
-                INTERFACE_LINK_LIBRARIES ws2_32 mswsock synchronization advapi32
-            )
-        endif()
+        dcc_target_link_llam_platform(llam_runtime_prebuilt)
     endif()
 endif()
 
 if(APPLE)
     add_compile_definitions(_DARWIN_C_SOURCE)
+elseif(DCC_SYSTEM_IS_BSD)
+    add_compile_definitions(${DCC_BSD_FEATURE_DEFINITIONS})
 elseif(UNIX)
     add_compile_definitions(_DEFAULT_SOURCE _POSIX_C_SOURCE=200809L)
 endif()
@@ -569,6 +581,7 @@ target_sources(dcc
         src/json/dcc_json_gateway_d_core_message.c
         src/json/dcc_json_gateway_d_core_message_author.c
         src/json/dcc_json_gateway_d_core_message_bool.c
+        src/json/dcc_json_gateway_d_core_message_components.c
         src/json/dcc_json_gateway_d_core_message_flags.c
         src/json/dcc_json_gateway_d_core_message_scheduled.c
         src/json/dcc_json_gateway_d_core_message_scheduled_object.c
@@ -663,6 +676,7 @@ target_sources(dcc
         src/json/dcc_json_gateway_interaction_data_object_fields.c
         src/json/dcc_json_gateway_interaction_data_scalar_fields.c
         src/json/dcc_json_gateway_interaction_data_text_fields.c
+        src/json/dcc_json_gateway_interaction_components.c
         src/json/dcc_json_gateway_interaction_owner_entries.c
         src/json/dcc_json_gateway_interaction_owners.c
         src/json/dcc_json_gateway_interaction_option_array_loop.c
@@ -958,6 +972,12 @@ target_sources(dcc
         src/objects/component_builder_setters_state.c
         src/objects/component_builder_setters_text_input.c
         src/objects/component_builder_validate.c
+        src/objects/component_v2_build.c
+        src/objects/component_v2_accessors.c
+        src/objects/component_v2_builder.c
+        src/objects/component_v2_convenience.c
+        src/objects/component_v2_serialize.c
+        src/objects/component_v2_validate.c
         src/objects/component_json_buffer.c
         src/objects/component_json_escape.c
         src/objects/component_json_members.c
@@ -975,6 +995,7 @@ target_sources(dcc
         src/objects/embed_json_members.c
         src/objects/embed_json_numbers.c
         src/objects/interaction_accessors.c
+        src/objects/interaction_form_accessors.c
         src/objects/interaction_option_values.c
         src/objects/interaction_resolved_accessors.c
         src/objects/interaction_resolved_accessors_misc.c
@@ -1039,6 +1060,7 @@ target_sources(dcc
         src/objects/objects_guild_collections_resources.c
         src/objects/objects_guild_strings.c
         src/objects/objects_interaction_clone_collections.c
+        src/objects/objects_interaction_clone_form_fields.c
         src/objects/objects_interaction_clone_options.c
         src/objects/objects_interaction_clone_strings.c
         src/objects/objects_interaction_clone_values.c
@@ -1722,6 +1744,11 @@ if(DCC_BUILD_TESTS)
     dcc_target_use_private_headers(dcc_component_session_smoke)
     dcc_target_enable_sanitizers(dcc_component_session_smoke)
     add_test(NAME dcc_component_session_smoke COMMAND dcc_component_session_smoke)
+
+    add_executable(dcc_component_v2_smoke tests/component_v2_smoke.c)
+    target_link_libraries(dcc_component_v2_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_component_v2_smoke)
+    add_test(NAME dcc_component_v2_smoke COMMAND dcc_component_v2_smoke)
 
     add_executable(dcc_interaction_flow_smoke
         tests/interaction_flow_smoke.c
@@ -2503,6 +2530,12 @@ set(DCC_CONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/dcc")
 set(DCC_CONFIG_HAVE_OPUS 0)
 set(DCC_PC_REQUIRES_PRIVATE "")
 set(DCC_PC_LIBS_PRIVATE "")
+set(DCC_LLAM_PC_PRIVATE_LIBS "")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(DCC_LLAM_PC_PRIVATE_LIBS " -luring -lm")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+    set(DCC_LLAM_PC_PRIVATE_LIBS " -lrt")
+endif()
 foreach(DCC_OPENSSL_LIBRARY IN ITEMS "${OPENSSL_SSL_LIBRARY}" "${OPENSSL_CRYPTO_LIBRARY}")
     if(DCC_OPENSSL_LIBRARY)
         string(APPEND DCC_PC_LIBS_PRIVATE " ${DCC_OPENSSL_LIBRARY}")
@@ -2522,6 +2555,7 @@ if(DCC_LLAM_USE_SUBDIRECTORY AND DCC_BUNDLE_LLAM)
     set(DCC_PC_REQUIRES_PRIVATE "llam")
 elseif(NOT DCC_LLAM_USE_SUBDIRECTORY AND DCC_LLAM_LIBRARY)
     string(APPEND DCC_PC_LIBS_PRIVATE " ${DCC_LLAM_LIBRARY}")
+    string(APPEND DCC_PC_LIBS_PRIVATE "${DCC_LLAM_PC_PRIVATE_LIBS}")
 endif()
 
 configure_package_config_file(

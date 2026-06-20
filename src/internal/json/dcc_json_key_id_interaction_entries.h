@@ -5,11 +5,33 @@
     X(ACTION) \
     X(INVITER) \
     X(DATA) \
+    X(COMPONENT) \
+    X(COMPONENTS) \
+    X(ACCESSORY) \
+    X(ITEMS) \
+    X(MEDIA) \
+    X(FILE) \
+    X(STYLE) \
     X(CUSTOM_ID) \
     X(COMPONENT_TYPE) \
     X(VALUES) \
     X(OPTIONS) \
+    X(DEFAULT_VALUES) \
+    X(CHANNEL_TYPES) \
     X(VALUE) \
+    X(LABEL) \
+    X(PLACEHOLDER) \
+    X(DISABLED) \
+    X(REQUIRED) \
+    X(DEFAULT) \
+    X(DIVIDER) \
+    X(SPACING) \
+    X(MIN_VALUES) \
+    X(MAX_VALUES) \
+    X(MIN_LENGTH) \
+    X(MAX_LENGTH) \
+    X(ACCENT_COLOR) \
+    X(SPOILER) \
     X(FOCUSED) \
     X(LOCALE) \
     X(GUILD_LOCALE) \

@@ -42,6 +42,19 @@ dcc_component_session_button(
 );
 ```
 
+For Components v2 layouts, build the signed button directly as a v2 component:
+
+```c
+dcc_component_v2_builder_t next_v2;
+dcc_component_session_button_v2(
+    &session,
+    "next",
+    "Next",
+    DCC_BUTTON_PRIMARY,
+    &next_v2
+);
+```
+
 ## Route Session Actions
 
 ```c

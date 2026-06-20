@@ -49,6 +49,10 @@ This path is for working on DCC itself.
 - Optional libopus development headers for voice Opus encode/decode
 
 Linux also needs `liburing` for LLAM's io_uring backend.
+macOS and BSD use LLAM's kqueue backend. FreeBSD, OpenBSD, NetBSD, and
+DragonFlyBSD builds need CMake, OpenSSL or LibreSSL development headers, and
+`pkgconf` when validating pkg-config consumers. NetBSD also needs `librt`; DCC
+propagates that through CMake package files and pkg-config metadata.
 
 ## Build
 

@@ -19,6 +19,15 @@ dcc_status_t dcc_json_gateway_parse_interaction_data_object_field(
         return DCC_OK;
     }
 
+    if (key_id == DCC_JSON_KEY_COMPONENTS) {
+        dcc_status_t status = dcc_json_gateway_parse_interaction_components(parser, out);
+        if (status != DCC_OK) {
+            return status;
+        }
+        *handled = 1;
+        return DCC_OK;
+    }
+
     if (key_id == DCC_JSON_KEY_OPTIONS) {
         dcc_status_t status = dcc_json_gateway_parse_interaction_options(parser, out);
         if (status != DCC_OK) {

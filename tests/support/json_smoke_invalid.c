@@ -2,7 +2,11 @@
 
 int dcc_json_smoke_invalid_inputs(void) {
     dcc_json_t *root = NULL;
-    dcc_json_gateway_payload_t payload;
+    dcc_json_gateway_payload_t *payload = dcc_json_smoke_payload();
+    if (payload == NULL) {
+        fprintf(stderr, "json smoke payload allocation failed\n");
+        return 1;
+    }
 
     const char bad_utf8[] = "{\"x\":\"" "\xC0" "\xAF" "\"}";
     root = NULL;
@@ -26,14 +30,14 @@ int dcc_json_smoke_invalid_inputs(void) {
         fprintf(stderr, "stage1 accepted raw control string\n");
         return 1;
     }
-    if (dcc_json_parse_gateway_payload(gateway_bad_control, sizeof(gateway_bad_control) - 1, &payload) != DCC_ERR_JSON) {
+    if (dcc_json_parse_gateway_payload(gateway_bad_control, sizeof(gateway_bad_control) - 1, payload) != DCC_ERR_JSON) {
         fprintf(stderr, "gateway raw control string was accepted\n");
         return 1;
     }
 
     const char gateway_bad_utf8[] =
         "{\"t\":\"MESSAGE_CREATE\",\"s\":1,\"op\":0,\"d\":{\"content\":\"" "\xC0" "\xAF" "\"}}";
-    if (dcc_json_parse_gateway_payload(gateway_bad_utf8, sizeof(gateway_bad_utf8) - 1, &payload) != DCC_ERR_JSON) {
+    if (dcc_json_parse_gateway_payload(gateway_bad_utf8, sizeof(gateway_bad_utf8) - 1, payload) != DCC_ERR_JSON) {
         fprintf(stderr, "gateway invalid utf8 string was accepted\n");
         return 1;
     }
@@ -44,7 +48,7 @@ int dcc_json_smoke_invalid_inputs(void) {
         fprintf(stderr, "stage1 accepted unterminated string\n");
         return 1;
     }
-    if (dcc_json_parse_gateway_payload(gateway_unclosed_string, sizeof(gateway_unclosed_string) - 1, &payload) != DCC_ERR_JSON) {
+    if (dcc_json_parse_gateway_payload(gateway_unclosed_string, sizeof(gateway_unclosed_string) - 1, payload) != DCC_ERR_JSON) {
         fprintf(stderr, "gateway unterminated string was accepted\n");
         return 1;
     }
