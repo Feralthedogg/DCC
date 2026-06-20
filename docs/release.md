@@ -13,7 +13,7 @@ tools/package_release.sh
 ```
 
 This writes normalized archives and checksum files to `target/dist/`, for
-example `dcc-1.0.0-beta.1-macos-aarch64.tar.gz`.
+example `dcc-1.1.0-macos-aarch64.tar.gz`.
 
 Binary release archives include:
 
@@ -25,17 +25,17 @@ Users do not need to clone LLAM for release installs. The public POSIX install
 path is:
 
 ```sh
-curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.0.0-beta.1/install.sh |
-  sh -s -- --version 1.0.0-beta.1 \
-    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.0.0-beta.1" \
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.1.0/install.sh |
+  sh -s -- --version 1.1.0 \
+    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.1.0" \
     --prefix "$HOME/.local"
 ```
 
 Windows installs use the release PowerShell installer:
 
 ```powershell
-Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.0.0-beta.1/install.ps1" -OutFile install.ps1
-.\install.ps1 -Version 1.0.0-beta.1 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.0.0-beta.1" -Prefix "$env:LOCALAPPDATA\DCC"
+Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.1.0/install.ps1" -OutFile install.ps1
+.\install.ps1 -Version 1.1.0 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.1.0" -Prefix "$env:LOCALAPPDATA\DCC"
 ```
 
 The installer installs the DCC release archive and then calls LLAM's latest
@@ -45,16 +45,16 @@ inside the DCC archive.
 GitHub Actions publishes releases automatically from version tags:
 
 ```sh
-git tag v1.0.0-beta.1
-git push origin v1.0.0-beta.1
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
 The `Release` workflow checks out `DCC` and `LLAM` side by side, builds LLAM
 through `DCC_LLAM_USE_SUBDIRECTORY=ON`, bundles LLAM into the DCC install tree,
 runs the DCC test suite, creates CPack binary/source archives, uploads artifacts,
-builds `SHA256SUMS`, and creates the GitHub Release. Stable tag versions must
-match `project(dcc VERSION ...)`; prerelease suffixes such as `-beta.1` are
-allowed when the base version matches.
+builds `SHA256SUMS`, and creates the GitHub Release. Tag versions must match
+`project(dcc VERSION ...)`. DCC Beta releases use the release title and notes
+for the Beta label while keeping GitHub's prerelease option disabled.
 
 The release path expects:
 
