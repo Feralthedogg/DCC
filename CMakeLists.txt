@@ -1754,6 +1754,11 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_component_v2_smoke)
     add_test(NAME dcc_component_v2_smoke COMMAND dcc_component_v2_smoke)
 
+    add_executable(dcc_sugar_smoke tests/sugar_smoke.c)
+    target_link_libraries(dcc_sugar_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_smoke)
+    add_test(NAME dcc_sugar_smoke COMMAND dcc_sugar_smoke)
+
     add_executable(dcc_interaction_flow_smoke
         tests/interaction_flow_smoke.c
         tests/support/http_smoke_server.c
