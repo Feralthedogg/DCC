@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example v1.0.0-beta.1
+        description: Release version, for example v1.1.0
         required: false
-        default: v1.0.0-beta.1
+        default: v1.1.0
         type: string
   push:
     tags:
@@ -360,9 +360,9 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.event.inputs.version }}
-          name: DCC ${{ github.event.inputs.version || github.ref_name }}
+          name: DCC ${{ github.event.inputs.version || github.ref_name }} Beta
           body_path: release-artifacts/RELEASE_NOTES.md
-          prerelease: ${{ contains(github.event.inputs.version || github.ref_name, '-') }}
+          prerelease: false
           fail_on_unmatched_files: true
           files: |
             release-artifacts/*.tar.gz

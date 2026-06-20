@@ -4,7 +4,7 @@
 #include <dcc/export.h>
 
 #define DCC_VERSION_MAJOR 1
-#define DCC_VERSION_MINOR 0
+#define DCC_VERSION_MINOR 1
 #define DCC_VERSION_PATCH 0
 
 #ifdef __cplusplus
