@@ -7,6 +7,11 @@ dcc_status_t dcc_task_group_wait(dcc_task_group_t *group, uint32_t timeout_ms) {
         return DCC_ERR_INVALID_ARG;
     }
 
+    dcc_status_t status = dcc_task_group_wait_all_entries(group, timeout_ms);
+    if (status != DCC_OK) {
+        return status;
+    }
+
     int rc;
     if (timeout_ms == 0U) {
         rc = llam_task_group_join(group->group);

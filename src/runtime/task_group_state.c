@@ -48,6 +48,36 @@ void dcc_task_group_state_broadcast(dcc_task_group_t *group) {
         (void)pthread_cond_broadcast(&group->state_cond);
     }
 }
+
+dcc_status_t dcc_task_group_wait_all_entries(dcc_task_group_t *group, uint32_t timeout_ms) {
+    dcc_status_t status = dcc_task_group_state_lock(group);
+    if (status != DCC_OK) {
+        return status;
+    }
+
+    struct timespec deadline;
+    if (timeout_ms != 0U) {
+        status = dcc_task_group_make_deadline_ms(timeout_ms, &deadline);
+        if (status != DCC_OK) {
+            dcc_task_group_state_unlock(group);
+            return status;
+        }
+    }
+
+    while (group->completed_count < group->entry_count && status == DCC_OK) {
+        int rc = timeout_ms == 0U
+            ? pthread_cond_wait(&group->state_cond, &group->state_mutex)
+            : pthread_cond_timedwait(&group->state_cond, &group->state_mutex, &deadline);
+        if (rc == ETIMEDOUT) {
+            status = group->completed_count >= group->entry_count ? DCC_OK : DCC_ERR_TIMEOUT;
+        } else {
+            status = dcc_task_group_wait_status_from_errno(rc);
+        }
+    }
+
+    dcc_task_group_state_unlock(group);
+    return status;
+}
 #else
 dcc_status_t dcc_task_group_state_lock(dcc_task_group_t *group) {
     if (group == NULL) {
@@ -68,6 +98,27 @@ void dcc_task_group_state_broadcast(dcc_task_group_t *group) {
 
 void dcc_task_group_sleep_poll(void) {
     Sleep(1U);
+}
+
+dcc_status_t dcc_task_group_wait_all_entries(dcc_task_group_t *group, uint32_t timeout_ms) {
+    uint64_t deadline = timeout_ms == 0U ? UINT64_MAX : dcc_task_group_deadline_from_timeout(timeout_ms);
+
+    for (;;) {
+        dcc_status_t status = dcc_task_group_state_lock(group);
+        if (status != DCC_OK) {
+            return status;
+        }
+        if (group->completed_count >= group->entry_count) {
+            dcc_task_group_state_unlock(group);
+            return DCC_OK;
+        }
+        dcc_task_group_state_unlock(group);
+
+        if (timeout_ms != 0U && llam_now_ns() >= deadline) {
+            return DCC_ERR_TIMEOUT;
+        }
+        dcc_task_group_sleep_poll();
+    }
 }
 #endif
 
