@@ -128,6 +128,10 @@ set(DCC_LIBRARY_TYPE STATIC)
 if(DCC_BUILD_SHARED)
     set(DCC_LIBRARY_TYPE SHARED)
 endif()
+set(DCC_PUBLIC_SYSTEM_LIBRARIES)
+if(UNIX AND NOT APPLE)
+    list(APPEND DCC_PUBLIC_SYSTEM_LIBRARIES m)
+endif()
 
 add_library(dcc ${DCC_LIBRARY_TYPE})
 add_library(dcc::dcc ALIAS dcc)
@@ -1458,6 +1462,7 @@ target_link_libraries(dcc
         $<BUILD_INTERFACE:llam::runtime>
         $<INSTALL_INTERFACE:llam::runtime>
         Threads::Threads
+        ${DCC_PUBLIC_SYSTEM_LIBRARIES}
     PRIVATE
         OpenSSL::SSL
         OpenSSL::Crypto
@@ -1477,6 +1482,9 @@ set(DCC_INTERFACE_LINK_LIBRARIES
     "$<LINK_ONLY:OpenSSL::SSL>"
     "$<LINK_ONLY:OpenSSL::Crypto>"
 )
+foreach(DCC_PUBLIC_SYSTEM_LIBRARY IN LISTS DCC_PUBLIC_SYSTEM_LIBRARIES)
+    list(APPEND DCC_INTERFACE_LINK_LIBRARIES "$<LINK_ONLY:${DCC_PUBLIC_SYSTEM_LIBRARY}>")
+endforeach()
 if(TARGET dcc_opus)
     list(APPEND DCC_INTERFACE_LINK_LIBRARIES "$<LINK_ONLY:dcc_opus>")
 endif()
@@ -2534,7 +2542,7 @@ foreach(DCC_OPENSSL_LIBRARY IN ITEMS "${OPENSSL_SSL_LIBRARY}" "${OPENSSL_CRYPTO_
     endif()
 endforeach()
 if(UNIX AND NOT APPLE)
-    string(APPEND DCC_PC_LIBS_PRIVATE " -pthread")
+    string(APPEND DCC_PC_LIBS_PRIVATE " -pthread -lm")
 endif()
 if(CMAKE_DL_LIBS)
     string(APPEND DCC_PC_LIBS_PRIVATE " -l${CMAKE_DL_LIBS}")
