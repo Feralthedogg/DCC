@@ -60,12 +60,13 @@ void dcc_gateway_heartbeat_task(void *arg) {
             dcc_ws_abort(state->ws);
             break;
         }
+        /* Mark before send so a fast ACK cannot be overwritten after send returns. */
+        atomic_store_explicit(&state->waiting_ack, true, memory_order_release);
         if (dcc_gateway_send_heartbeat_state(state) != DCC_OK) {
             atomic_store_explicit(&state->failed, true, memory_order_release);
             dcc_ws_abort(state->ws);
             break;
         }
-        atomic_store_explicit(&state->waiting_ack, true, memory_order_release);
         delay_ms = interval_ms;
     }
     dcc_gateway_heartbeat_state_release(state);

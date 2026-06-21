@@ -38,12 +38,12 @@ dcc_status_t dcc_gateway_session_handle_payload(
             session->next = DCC_GATEWAY_NEXT_FATAL;
         }
     } else if (payload->op == 1) {
+        if (session->heartbeat != NULL) {
+            /* Mark before send so a fast ACK cannot be overwritten after send returns. */
+            atomic_store_explicit(&session->heartbeat->waiting_ack, true, memory_order_release);
+        }
         status = dcc_gateway_send_heartbeat(session);
-        if (status == DCC_OK) {
-            if (session->heartbeat != NULL) {
-                atomic_store_explicit(&session->heartbeat->waiting_ack, true, memory_order_release);
-            }
-        } else {
+        if (status != DCC_OK) {
             session->next = dcc_gateway_reconnect_next(client);
         }
     } else if (payload->op == 7) {
