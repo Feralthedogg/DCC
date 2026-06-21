@@ -3,10 +3,12 @@
 #include <llam/io.h>
 #include <openssl/ssl.h>
 
+#include <errno.h>
 #include <string.h>
 #if defined(_WIN32)
 #include <winsock2.h>
 #else
+#include <fcntl.h>
 #include <sys/socket.h>
 #endif
 
@@ -18,6 +20,26 @@ static void dcc_conn_shutdown_fd(llam_fd_t fd) {
     (void)shutdown((SOCKET)fd, SD_BOTH);
 #else
     (void)shutdown((int)fd, SHUT_RDWR);
+#endif
+}
+
+int dcc_conn_set_nonblocking(llam_fd_t fd) {
+    if (LLAM_FD_IS_INVALID(fd)) {
+        errno = EBADF;
+        return -1;
+    }
+#if defined(_WIN32)
+    u_long mode = 1UL;
+    return ioctlsocket((SOCKET)fd, FIONBIO, &mode);
+#else
+    int flags = fcntl((int)fd, F_GETFL, 0);
+    if (flags < 0) {
+        return -1;
+    }
+    if ((flags & O_NONBLOCK) != 0) {
+        return 0;
+    }
+    return fcntl((int)fd, F_SETFL, flags | O_NONBLOCK);
 #endif
 }
 
@@ -38,6 +60,11 @@ dcc_status_t dcc_conn_open(dcc_conn_t *conn, const dcc_conn_options_t *options) 
 
     if (!conn->use_tls) {
         return DCC_OK;
+    }
+
+    if (dcc_conn_set_nonblocking(conn->fd) != 0) {
+        dcc_conn_close(conn);
+        return DCC_ERR_NETWORK;
     }
 
     status = dcc_conn_tls_open(conn, options);

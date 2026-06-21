@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 1.2.2
+    VERSION 1.2.3
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )

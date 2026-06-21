@@ -13,7 +13,7 @@ tools/package_release.sh
 ```
 
 This writes normalized archives and checksum files to `target/dist/`, for
-example `dcc-1.2.2-macos-aarch64.tar.gz`.
+example `dcc-1.2.3-macos-aarch64.tar.gz`.
 
 Binary release archives include:
 
@@ -25,17 +25,17 @@ Users do not need to clone LLAM for release installs. The public POSIX install
 path is:
 
 ```sh
-curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.2.2/install.sh |
-  sh -s -- --version 1.2.2 \
-    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.2.2" \
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.2.3/install.sh |
+  sh -s -- --version 1.2.3 \
+    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.2.3" \
     --prefix "$HOME/.local"
 ```
 
 Windows installs use the release PowerShell installer:
 
 ```powershell
-Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.2.2/install.ps1" -OutFile install.ps1
-.\install.ps1 -Version 1.2.2 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.2.2" -Prefix "$env:LOCALAPPDATA\DCC"
+Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.2.3/install.ps1" -OutFile install.ps1
+.\install.ps1 -Version 1.2.3 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.2.3" -Prefix "$env:LOCALAPPDATA\DCC"
 ```
 
 The installer installs the DCC release archive and then calls LLAM's latest
@@ -45,8 +45,8 @@ inside the DCC archive.
 GitHub Actions publishes releases automatically from version tags:
 
 ```sh
-git tag v1.2.2
-git push origin v1.2.2
+git tag v1.2.3
+git push origin v1.2.3
 ```
 
 The `Release` workflow checks out `DCC` and `LLAM` side by side, builds LLAM
