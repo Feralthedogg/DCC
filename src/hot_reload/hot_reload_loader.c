@@ -29,7 +29,10 @@ dcc_status_t dcc_hot_reload_open_library(
 #if defined(_WIN32)
     HMODULE handle = LoadLibraryA(temp_path);
     if (handle == NULL) {
+        dcc_hot_reload_lock(hot_reload);
         snprintf(hot_reload->last_error, sizeof(hot_reload->last_error), "LoadLibrary failed for %s", temp_path);
+        dcc_hot_reload_broadcast(hot_reload);
+        dcc_hot_reload_unlock(hot_reload);
         remove(temp_path);
         free(temp_path);
         return DCC_ERR_RUNTIME;
@@ -40,6 +43,7 @@ dcc_status_t dcc_hot_reload_open_library(
     void *handle = dlopen(temp_path, RTLD_NOW | RTLD_LOCAL);
     if (handle == NULL) {
         const char *error = dlerror();
+        dcc_hot_reload_lock(hot_reload);
         snprintf(
             hot_reload->last_error,
             sizeof(hot_reload->last_error),
@@ -47,6 +51,8 @@ dcc_status_t dcc_hot_reload_open_library(
             temp_path,
             error != NULL ? error : "unknown error"
         );
+        dcc_hot_reload_broadcast(hot_reload);
+        dcc_hot_reload_unlock(hot_reload);
         remove(temp_path);
         free(temp_path);
         return DCC_ERR_RUNTIME;

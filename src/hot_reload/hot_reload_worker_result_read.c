@@ -1,7 +1,18 @@
 #include "internal/hot_reload/dcc_hot_reload_internal.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+static dcc_status_t dcc_worker_ipc_status_from_errno(void) {
+    if (errno == ETIMEDOUT) {
+        return DCC_ERR_TIMEOUT;
+    }
+    if (errno == ENOMEM) {
+        return DCC_ERR_NOMEM;
+    }
+    return DCC_ERR_RUNTIME;
+}
 
 static void dcc_worker_rest_entry_deinit(dcc_hot_reload_worker_rest_entry_t *entry) {
     if (entry == NULL) {
@@ -16,10 +27,12 @@ static void dcc_worker_rest_entry_deinit(dcc_hot_reload_worker_rest_entry_t *ent
 
 static char *dcc_worker_read_text(int fd, size_t len, uint32_t timeout_ms) {
     if (len > SIZE_MAX - 1U) {
+        errno = EOVERFLOW;
         return NULL;
     }
     char *out = (char *)malloc(len + 1U);
     if (out == NULL) {
+        errno = ENOMEM;
         return NULL;
     }
     if (len != 0U &&
@@ -37,8 +50,10 @@ static dcc_status_t dcc_worker_read_rest_entry(
     dcc_hot_reload_worker_rest_entry_t *out
 ) {
     dcc_hot_reload_worker_rest_t rest;
-    if (dcc_hot_reload_worker_read_all_timeout(fd, &rest, sizeof(rest), timeout_ms) != 0 ||
-        rest.method_len == 0U ||
+    if (dcc_hot_reload_worker_read_all_timeout(fd, &rest, sizeof(rest), timeout_ms) != 0) {
+        return dcc_worker_ipc_status_from_errno();
+    }
+    if (rest.method_len == 0U ||
         rest.path_len == 0U ||
         rest.method_len > DCC_HOT_RELOAD_WORKER_MAX_METHOD_LEN ||
         rest.path_len > DCC_HOT_RELOAD_WORKER_MAX_PATH_LEN ||
@@ -54,8 +69,9 @@ static dcc_status_t dcc_worker_read_rest_entry(
     out->body = dcc_worker_read_text(fd, (size_t)rest.body_len, timeout_ms);
     out->body_len = (size_t)rest.body_len;
     if (out->method == NULL || out->path == NULL || out->content_type == NULL || out->body == NULL) {
+        dcc_status_t status = dcc_worker_ipc_status_from_errno();
         dcc_worker_rest_entry_deinit(out);
-        return DCC_ERR_NOMEM;
+        return status;
     }
     return DCC_OK;
 }
@@ -66,14 +82,16 @@ dcc_status_t dcc_hot_reload_worker_result_set_read(
     dcc_hot_reload_worker_result_set_t *out
 ) {
     dcc_hot_reload_worker_header_t header;
-    if (dcc_hot_reload_worker_read_header(worker->out_fd, &header, timeout_ms) != 0 ||
-        header.kind != DCC_HOT_RELOAD_WORKER_MSG_EVENT_RESULT ||
+    if (dcc_hot_reload_worker_read_header(worker->out_fd, &header, timeout_ms) != 0) {
+        return dcc_worker_ipc_status_from_errno();
+    }
+    if (header.kind != DCC_HOT_RELOAD_WORKER_MSG_EVENT_RESULT ||
         header.size != sizeof(dcc_hot_reload_worker_result_t)) {
         return DCC_ERR_RUNTIME;
     }
     dcc_hot_reload_worker_result_t result;
     if (dcc_hot_reload_worker_read_all_timeout(worker->out_fd, &result, sizeof(result), timeout_ms) != 0) {
-        return DCC_ERR_RUNTIME;
+        return dcc_worker_ipc_status_from_errno();
     }
     memset(out, 0, sizeof(*out));
     out->status = (dcc_status_t)result.status;

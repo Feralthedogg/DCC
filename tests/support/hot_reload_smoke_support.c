@@ -5,9 +5,11 @@
 #include "hot_reload_isolated_support.h"
 #include "hot_reload_test_state.h"
 #include "internal/client/dcc_client_state_internal.h"
+#include "internal/hot_reload/dcc_hot_reload_internal.h"
 
 #include <pthread.h>
 #include <stdatomic.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -24,6 +26,71 @@ int dcc_hot_reload_smoke_dispatch_ready(dcc_client_t *client, const char *sessio
     event.data.ready.shard_count = 1;
     event.data.ready.session_id = session_id;
     return dcc_event_bus_dispatch(&client->events, client, &event) == DCC_OK ? 0 : -1;
+}
+
+static int dcc_hot_reload_smoke_generation_overflow_backend(dcc_hot_reload_backend_t backend) {
+    char path[256];
+    int n = snprintf(path, sizeof(path), "/tmp/dcc-hot-reload-overflow-%ld-%u.so", (long)getpid(), (unsigned)backend);
+    if (n <= 0 || (size_t)n >= sizeof(path) ||
+        dcc_hot_reload_smoke_copy_file(DCC_HOT_RELOAD_MODULE_V1, path) != 0) {
+        fprintf(stderr, "failed to prepare overflow module\n");
+        return 1;
+    }
+
+    dcc_client_t *client = NULL;
+    dcc_client_options_t client_options = {
+        .size = sizeof(client_options),
+        .token = "",
+        .intents = DCC_INTENT_GUILDS,
+    };
+    dcc_status_t status = dcc_client_create(&client_options, &client);
+    if (status != DCC_OK) {
+        fprintf(stderr, "overflow client create failed: %s\n", dcc_status_string(status));
+        unlink(path);
+        return 1;
+    }
+
+    dcc_hot_reload_t *hot_reload = NULL;
+    dcc_hot_reload_options_t options = {
+        .size = sizeof(options),
+        .backend = backend,
+        .worker_path = backend == DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER
+            ? DCC_HOT_RELOAD_DEFAULT_WORKER
+            : NULL,
+    };
+    status = dcc_hot_reload_create(client, path, &options, &hot_reload);
+    if (status == DCC_OK) {
+        hot_reload->generation = UINT64_MAX;
+        status = dcc_hot_reload_reload(hot_reload);
+    }
+    uint64_t generation = hot_reload != NULL ? hot_reload->generation : 0U;
+    char last_error[256];
+    snprintf(last_error, sizeof(last_error), "%s", hot_reload != NULL ? dcc_hot_reload_last_error(hot_reload) : "");
+    dcc_hot_reload_destroy(hot_reload);
+    dcc_client_destroy(client);
+    unlink(path);
+
+    if (status != DCC_ERR_STATE ||
+        generation != UINT64_MAX ||
+        strstr(last_error, "generation counter overflow") == NULL) {
+        fprintf(
+            stderr,
+            "generation overflow failed: backend=%u status=%s generation=%llu error=%s\n",
+            (unsigned)backend,
+            dcc_status_string(status),
+            (unsigned long long)generation,
+            last_error
+        );
+        return 1;
+    }
+    return 0;
+}
+
+int dcc_hot_reload_smoke_generation_overflow(void) {
+    return dcc_hot_reload_smoke_generation_overflow_backend(DCC_HOT_RELOAD_BACKEND_IN_PROCESS) != 0 ||
+           dcc_hot_reload_smoke_generation_overflow_backend(DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER) != 0
+        ? 1
+        : 0;
 }
 
 int dcc_hot_reload_smoke_watcher(void) {

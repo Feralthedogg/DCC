@@ -13,12 +13,18 @@ int dcc_hot_reload_worker_capture_send_result(
         .status = (uint32_t)status,
         .rest_count = (uint32_t)(capture != NULL ? capture->count : 0U),
     };
-    if (dcc_hot_reload_worker_send_header(
+    if (dcc_hot_reload_worker_send_header_timeout(
             DCC_HOT_RELOAD_WORKER_FD_OUT,
             DCC_HOT_RELOAD_WORKER_MSG_EVENT_RESULT,
-            sizeof(result)
+            sizeof(result),
+            DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
         ) != 0 ||
-        dcc_hot_reload_worker_write_all(DCC_HOT_RELOAD_WORKER_FD_OUT, &result, sizeof(result)) != 0) {
+        dcc_hot_reload_worker_write_all_timeout(
+            DCC_HOT_RELOAD_WORKER_FD_OUT,
+            &result,
+            sizeof(result),
+            DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
+        ) != 0) {
         return -1;
     }
     for (size_t i = 0; capture != NULL && i < capture->count; ++i) {
@@ -40,15 +46,36 @@ int dcc_hot_reload_worker_capture_send_result(
             .content_type_len = (uint32_t)content_type_len,
             .body_len = entry->body_len,
         };
-        if (dcc_hot_reload_worker_write_all(DCC_HOT_RELOAD_WORKER_FD_OUT, &rest, sizeof(rest)) != 0 ||
-            dcc_hot_reload_worker_write_all(DCC_HOT_RELOAD_WORKER_FD_OUT, entry->method, rest.method_len) != 0 ||
-            dcc_hot_reload_worker_write_all(DCC_HOT_RELOAD_WORKER_FD_OUT, entry->path, rest.path_len) != 0 ||
-            dcc_hot_reload_worker_write_all(
+        if (dcc_hot_reload_worker_write_all_timeout(
+                DCC_HOT_RELOAD_WORKER_FD_OUT,
+                &rest,
+                sizeof(rest),
+                DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
+            ) != 0 ||
+            dcc_hot_reload_worker_write_all_timeout(
+                DCC_HOT_RELOAD_WORKER_FD_OUT,
+                entry->method,
+                rest.method_len,
+                DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
+            ) != 0 ||
+            dcc_hot_reload_worker_write_all_timeout(
+                DCC_HOT_RELOAD_WORKER_FD_OUT,
+                entry->path,
+                rest.path_len,
+                DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
+            ) != 0 ||
+            dcc_hot_reload_worker_write_all_timeout(
                 DCC_HOT_RELOAD_WORKER_FD_OUT,
                 entry->content_type,
-                rest.content_type_len
+                rest.content_type_len,
+                DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
             ) != 0 ||
-            dcc_hot_reload_worker_write_all(DCC_HOT_RELOAD_WORKER_FD_OUT, entry->body, entry->body_len) != 0) {
+            dcc_hot_reload_worker_write_all_timeout(
+                DCC_HOT_RELOAD_WORKER_FD_OUT,
+                entry->body,
+                entry->body_len,
+                DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
+            ) != 0) {
             return -1;
         }
     }

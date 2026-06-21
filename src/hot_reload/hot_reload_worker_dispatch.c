@@ -14,6 +14,11 @@ dcc_status_t dcc_hot_reload_worker_dispatch_event(
     }
 
     dcc_hot_reload_lock(hot_reload);
+    dcc_status_t enter_status = dcc_hot_reload_enter_active_call_locked(hot_reload);
+    if (enter_status != DCC_OK) {
+        dcc_hot_reload_unlock(hot_reload);
+        return enter_status;
+    }
     dcc_hot_reload_worker_process_t *active = hot_reload->active_worker;
     dcc_hot_reload_worker_process_t *last_good = hot_reload->last_good_worker;
     dcc_hot_reload_worker_process_t *candidate = hot_reload->candidate_worker;
@@ -119,5 +124,8 @@ dcc_status_t dcc_hot_reload_worker_dispatch_event(
             fallback_status == DCC_OK ? 1U : 0U
         );
     }
+    dcc_hot_reload_lock(hot_reload);
+    dcc_hot_reload_leave_active_call_locked(hot_reload);
+    dcc_hot_reload_unlock(hot_reload);
     return status;
 }

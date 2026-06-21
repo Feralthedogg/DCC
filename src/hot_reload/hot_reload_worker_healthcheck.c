@@ -18,13 +18,15 @@ static dcc_status_t dcc_worker_healthcheck_direct(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_hot_reload_worker_process_io_lock(worker);
-    if (dcc_hot_reload_worker_send_header(
+    if (dcc_hot_reload_worker_send_header_timeout(
             worker->in_fd,
             DCC_HOT_RELOAD_WORKER_MSG_HEALTH,
-            0U
+            0U,
+            timeout_ms
         ) != 0) {
+        dcc_status_t status = errno == ETIMEDOUT ? DCC_ERR_TIMEOUT : DCC_ERR_RUNTIME;
         dcc_hot_reload_worker_process_io_unlock(worker);
-        return DCC_ERR_RUNTIME;
+        return status;
     }
 
     dcc_hot_reload_worker_header_t header;
@@ -42,8 +44,9 @@ static dcc_status_t dcc_worker_healthcheck_direct(
 
     dcc_hot_reload_worker_health_t health;
     if (dcc_hot_reload_worker_read_all_timeout(worker->out_fd, &health, sizeof(health), timeout_ms) != 0) {
+        dcc_status_t status = errno == ETIMEDOUT ? DCC_ERR_TIMEOUT : DCC_ERR_RUNTIME;
         dcc_hot_reload_worker_process_io_unlock(worker);
-        return DCC_ERR_RUNTIME;
+        return status;
     }
     if (health.generation != 0U) {
         worker->generation = health.generation;

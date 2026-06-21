@@ -29,7 +29,10 @@ void dcc_hot_reload_worker_supervise_once(dcc_hot_reload_t *hot_reload) {
         dcc_hot_reload_unlock(hot_reload);
         return;
     }
-    hot_reload->active_calls++;
+    if (dcc_hot_reload_enter_active_call_locked(hot_reload) != DCC_OK) {
+        dcc_hot_reload_unlock(hot_reload);
+        return;
+    }
     dcc_hot_reload_unlock(hot_reload);
 
     active_alive = dcc_hot_reload_worker_supervisor_probe(active, hot_reload->worker_health_timeout_ms);
@@ -41,13 +44,10 @@ void dcc_hot_reload_worker_supervise_once(dcc_hot_reload_t *hot_reload) {
         : dcc_hot_reload_worker_supervisor_probe(candidate, hot_reload->worker_health_timeout_ms);
 
     dcc_hot_reload_lock(hot_reload);
-    if (hot_reload->active_calls > 0U) {
-        hot_reload->active_calls--;
-    }
+    dcc_hot_reload_leave_active_call_locked(hot_reload);
     if (hot_reload->active_worker != active ||
         hot_reload->last_good_worker != last_good ||
         hot_reload->candidate_worker != candidate) {
-        dcc_hot_reload_broadcast(hot_reload);
         dcc_hot_reload_unlock(hot_reload);
         return;
     }

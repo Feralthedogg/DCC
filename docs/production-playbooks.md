@@ -161,7 +161,13 @@ that sidecar. Tune watcher and worker timing with
 `DCC_HOT_RELOAD_POLL_MS`, `DCC_HOT_RELOAD_SETTLE_MS`,
 `DCC_HOT_RELOAD_WORKER_HEALTH_MS`, and `DCC_HOT_RELOAD_WORKER_DRAIN_MS`.
 The worker health timeout covers candidate readiness, idle supervisor IPC
-health pings, and event dispatch replies.
+health pings, event dispatch sends, event dispatch replies, worker READY
+frames, and worker result payload reads. Stalled or half-written worker frames
+surface as timeout failures instead of blocking the parent process, which keeps
+Gateway ownership available for last-good retry or temporary interaction errors.
+Workers also enforce a maximum forwarded event JSON size and bounded child-side
+EVENT body reads. During shutdown, the host sends STOP, waits for the configured
+drain timeout, and then escalates termination with a bounded grace window.
 Set `DCC_HOT_RELOAD_SETTLE_MS=none` only when module replacement is explicitly
 atomic. Use
 `dcc_hot_reload_attach()` when a production host owns client startup and

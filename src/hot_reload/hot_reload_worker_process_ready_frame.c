@@ -43,6 +43,9 @@ dcc_status_t dcc_hot_reload_worker_process_read_ready_direct(
     }
     dcc_hot_reload_worker_ready_t ready;
     if (dcc_hot_reload_worker_read_all_timeout(worker->out_fd, &ready, sizeof(ready), timeout_ms) != 0) {
+        if (errno == ETIMEDOUT) {
+            return DCC_ERR_TIMEOUT;
+        }
         return DCC_ERR_RUNTIME;
     }
     worker->generation = ready.generation;
@@ -57,6 +60,9 @@ dcc_status_t dcc_hot_reload_worker_process_read_ready_direct(
     for (uint32_t i = 0; i < ready.handler_count; ++i) {
         int32_t raw_type = 0;
         if (dcc_hot_reload_worker_read_all_timeout(worker->out_fd, &raw_type, sizeof(raw_type), timeout_ms) != 0) {
+            if (errno == ETIMEDOUT) {
+                return DCC_ERR_TIMEOUT;
+            }
             return DCC_ERR_RUNTIME;
         }
         if (raw_type < 0 || raw_type >= DCC_EVENT_MAX) {

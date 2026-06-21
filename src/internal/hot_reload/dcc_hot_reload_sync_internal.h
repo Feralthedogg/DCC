@@ -30,6 +30,8 @@ static inline void dcc_hot_reload_unlock(dcc_hot_reload_t *hot_reload) {
 void dcc_hot_reload_broadcast(dcc_hot_reload_t *hot_reload);
 void dcc_hot_reload_wait_locked(dcc_hot_reload_t *hot_reload);
 dcc_status_t dcc_hot_reload_wait_timeout_locked(dcc_hot_reload_t *hot_reload, uint32_t timeout_ms);
+dcc_status_t dcc_hot_reload_enter_active_call_locked(dcc_hot_reload_t *hot_reload);
+void dcc_hot_reload_leave_active_call_locked(dcc_hot_reload_t *hot_reload);
 
 #ifdef __cplusplus
 }

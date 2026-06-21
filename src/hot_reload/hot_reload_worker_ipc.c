@@ -20,7 +20,8 @@ static dcc_status_t dcc_worker_send_event_direct(
 ) {
     if (worker == NULL || event == NULL || out == NULL ||
         event->raw.json == NULL || event->raw.json_len == 0U ||
-        event->raw.json_len > UINT64_MAX) {
+        event->raw.json_len > UINT64_MAX ||
+        event->raw.json_len > DCC_HOT_RELOAD_WORKER_MAX_EVENT_JSON_LEN) {
         return DCC_ERR_INVALID_ARG;
     }
     dcc_hot_reload_worker_event_t message = {
@@ -29,15 +30,17 @@ static dcc_status_t dcc_worker_send_event_direct(
         .json_len = (uint64_t)event->raw.json_len,
     };
     dcc_hot_reload_worker_process_io_lock(worker);
-    if (dcc_hot_reload_worker_send_header(
+    if (dcc_hot_reload_worker_send_header_timeout(
             worker->in_fd,
             DCC_HOT_RELOAD_WORKER_MSG_EVENT,
-            sizeof(message)
+            sizeof(message),
+            timeout_ms
         ) != 0 ||
-        dcc_hot_reload_worker_write_all(worker->in_fd, &message, sizeof(message)) != 0 ||
-        dcc_hot_reload_worker_write_all(worker->in_fd, event->raw.json, event->raw.json_len) != 0) {
+        dcc_hot_reload_worker_write_all_timeout(worker->in_fd, &message, sizeof(message), timeout_ms) != 0 ||
+        dcc_hot_reload_worker_write_all_timeout(worker->in_fd, event->raw.json, event->raw.json_len, timeout_ms) != 0) {
+        dcc_status_t status = errno == ETIMEDOUT ? DCC_ERR_TIMEOUT : DCC_ERR_RUNTIME;
         dcc_hot_reload_worker_process_io_unlock(worker);
-        return DCC_ERR_RUNTIME;
+        return status;
     }
     dcc_status_t status = dcc_hot_reload_worker_result_set_read(worker, timeout_ms, out);
     dcc_hot_reload_worker_process_io_unlock(worker);

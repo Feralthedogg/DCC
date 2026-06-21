@@ -31,6 +31,16 @@ The parent keeps a last-good worker alive. If a candidate crashes, times out, or
 fails healthcheck, the parent keeps routing to last-good and reports rollback
 state in health JSON.
 
+Worker IPC is bounded by the configured worker health timeout. Parent-to-worker
+event and health writes, worker-to-parent READY/result writes, and response body
+reads all return timeout instead of blocking the Gateway owner forever. A worker
+that stalls mid-frame is treated as unhealthy and can be retried or rolled back
+through last-good. Event JSON forwarded to workers is capped, and child workers
+also time out partial event bodies after accepting an EVENT frame.
+
+Worker shutdown is bounded as well. The parent sends STOP, waits for the drain
+window, then escalates termination instead of waiting forever for a stuck module.
+
 ## Canary Promotion
 
 Candidate workers can receive a small percentage of requests before promotion.

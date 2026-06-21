@@ -14,6 +14,10 @@ int main(void) {
 #include <unistd.h>
 
 int main(void) {
+    if (dcc_hot_reload_smoke_generation_overflow() != 0) {
+        return 1;
+    }
+
     char path[256];
     int n = snprintf(path, sizeof(path), "/tmp/dcc-hot-reload-smoke-%ld.so", (long)getpid());
     if (n <= 0 || (size_t)n >= sizeof(path)) {

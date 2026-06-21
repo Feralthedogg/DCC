@@ -18,16 +18,7 @@ static void dcc_hot_reload_trampoline(dcc_client_t *client, const dcc_event_t *e
     }
 
     if (hot_reload->backend == DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER) {
-        dcc_hot_reload_lock(hot_reload);
-        hot_reload->active_calls++;
-        dcc_hot_reload_unlock(hot_reload);
         (void)dcc_hot_reload_worker_dispatch_event(hot_reload, event);
-        dcc_hot_reload_lock(hot_reload);
-        if (hot_reload->active_calls > 0) {
-            hot_reload->active_calls--;
-        }
-        dcc_hot_reload_broadcast(hot_reload);
-        dcc_hot_reload_unlock(hot_reload);
         return;
     }
 
@@ -48,6 +39,7 @@ static void dcc_hot_reload_trampoline(dcc_client_t *client, const dcc_event_t *e
     snapshot = (dcc_hot_reload_handler_t *)malloc(snapshot_len * sizeof(snapshot[0]));
     if (snapshot == NULL) {
         dcc_hot_reload_set_error(hot_reload, DCC_ERR_NOMEM, "hot reload handler snapshot allocation failed");
+        dcc_hot_reload_broadcast(hot_reload);
         dcc_hot_reload_unlock(hot_reload);
         return;
     }
@@ -57,7 +49,12 @@ static void dcc_hot_reload_trampoline(dcc_client_t *client, const dcc_event_t *e
             snapshot[cursor++] = module->handlers[i];
         }
     }
-    hot_reload->active_calls++;
+    dcc_status_t enter_status = dcc_hot_reload_enter_active_call_locked(hot_reload);
+    if (enter_status != DCC_OK) {
+        dcc_hot_reload_unlock(hot_reload);
+        free(snapshot);
+        return;
+    }
     dcc_hot_reload_unlock(hot_reload);
 
     for (size_t i = 0; i < snapshot_len; ++i) {
@@ -69,10 +66,7 @@ static void dcc_hot_reload_trampoline(dcc_client_t *client, const dcc_event_t *e
     free(snapshot);
 
     dcc_hot_reload_lock(hot_reload);
-    if (hot_reload->active_calls > 0) {
-        hot_reload->active_calls--;
-    }
-    dcc_hot_reload_broadcast(hot_reload);
+    dcc_hot_reload_leave_active_call_locked(hot_reload);
     dcc_hot_reload_unlock(hot_reload);
 }
 

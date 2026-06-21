@@ -5,6 +5,8 @@
 
 #include <windows.h>
 
+#define DCC_WORKER_PROCESS_TERM_GRACE_MS 1000U
+
 static void dcc_worker_process_sleep_10ms(void) {
     if (llam_sleep_ns(UINT64_C(10000000)) != 0) {
         Sleep(10);
@@ -28,7 +30,12 @@ static void dcc_hot_reload_worker_process_stop_direct(
         return;
     }
     dcc_hot_reload_worker_process_io_lock(worker);
-    (void)dcc_hot_reload_worker_send_header(worker->in_fd, DCC_HOT_RELOAD_WORKER_MSG_STOP, 0);
+    (void)dcc_hot_reload_worker_send_header_timeout(
+        worker->in_fd,
+        DCC_HOT_RELOAD_WORKER_MSG_STOP,
+        0U,
+        timeout_ms != 0U ? timeout_ms : 1U
+    );
     dcc_hot_reload_worker_process_close_fds_windows(worker);
     dcc_hot_reload_worker_process_io_unlock(worker);
 
@@ -43,7 +50,7 @@ static void dcc_hot_reload_worker_process_stop_direct(
         waited_ms += 10U;
     }
     (void)TerminateProcess((HANDLE)worker->process, 1U);
-    (void)WaitForSingleObject((HANDLE)worker->process, INFINITE);
+    (void)WaitForSingleObject((HANDLE)worker->process, DCC_WORKER_PROCESS_TERM_GRACE_MS);
     dcc_hot_reload_worker_process_close(worker);
 }
 

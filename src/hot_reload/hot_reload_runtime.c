@@ -55,6 +55,33 @@ dcc_status_t dcc_hot_reload_wait_timeout_locked(dcc_hot_reload_t *hot_reload, ui
 #endif
 }
 
+dcc_status_t dcc_hot_reload_enter_active_call_locked(dcc_hot_reload_t *hot_reload) {
+    if (hot_reload == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (hot_reload->active_calls == UINT32_MAX) {
+        dcc_hot_reload_set_error(
+            hot_reload,
+            DCC_ERR_STATE,
+            "hot reload active call counter overflow"
+        );
+        dcc_hot_reload_broadcast(hot_reload);
+        return DCC_ERR_STATE;
+    }
+    hot_reload->active_calls++;
+    return DCC_OK;
+}
+
+void dcc_hot_reload_leave_active_call_locked(dcc_hot_reload_t *hot_reload) {
+    if (hot_reload == NULL) {
+        return;
+    }
+    if (hot_reload->active_calls > 0U) {
+        hot_reload->active_calls--;
+    }
+    dcc_hot_reload_broadcast(hot_reload);
+}
+
 void dcc_hot_reload_set_error(dcc_hot_reload_t *hot_reload, dcc_status_t status, const char *message) {
     if (hot_reload == NULL) {
         return;
@@ -77,4 +104,3 @@ void dcc_hot_reload_log(dcc_hot_reload_t *hot_reload, dcc_log_level_t level, con
 uint64_t dcc_hot_reload_now_ms(void) {
     return llam_now_ns() / UINT64_C(1000000);
 }
-

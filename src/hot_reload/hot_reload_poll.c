@@ -10,7 +10,12 @@ dcc_status_t dcc_hot_reload_poll(dcc_hot_reload_t *hot_reload) {
     dcc_hot_reload_file_sig_t sig;
     dcc_status_t status = dcc_hot_reload_file_sig(hot_reload->path, &sig);
     if (status != DCC_OK) {
+        dcc_hot_reload_lock(hot_reload);
         dcc_hot_reload_set_error(hot_reload, status, "hot reload module path is not readable");
+        hot_reload->has_pending_file_sig = 0U;
+        hot_reload->pending_since_ms = 0U;
+        dcc_hot_reload_broadcast(hot_reload);
+        dcc_hot_reload_unlock(hot_reload);
         return status;
     }
 

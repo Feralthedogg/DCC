@@ -12,6 +12,7 @@ DCC is configured through CMake.
 | `DCC_BUILD_FUZZERS` | `OFF` | Build JSON fuzz harnesses. |
 | `DCC_ENABLE_SANITIZERS` | `OFF` | Enable ASAN/UBSAN for supported compilers. |
 | `DCC_LLAM_USE_SUBDIRECTORY` | `OFF` | Build LLAM from source through `add_subdirectory`. |
+| `DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS` | `OFF` | Keep LLAM's own tests enabled when LLAM is added as a subdirectory. |
 | `DCC_BUNDLE_LLAM` | `ON` | Install LLAM runtime package files with DCC when LLAM is built as a subdirectory. |
 | `DCC_LLAM_ROOT` | `../LLAM` | LLAM source or install root. |
 | `DCC_LLAM_LIBRARY` | `../LLAM/libllam_runtime.a` | Prebuilt LLAM static library. |
@@ -39,6 +40,11 @@ cmake -S . -B build \
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
+
+When `DCC_LLAM_USE_SUBDIRECTORY=ON`, DCC disables LLAM's own CTest entries by
+default so `ctest` reports DCC failures only. Add
+`-DDCC_LLAM_ENABLE_SUBDIRECTORY_TESTS=ON` when you intentionally want to run
+the LLAM test suite from the combined build tree.
 
 ## CI Build With LLAM Source
 

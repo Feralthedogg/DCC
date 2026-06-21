@@ -1,6 +1,7 @@
 #include "internal/hot_reload/dcc_hot_reload_internal.h"
 
 #include <stdlib.h>
+#include <stdint.h>
 
 dcc_status_t dcc_hot_reload_worker_reload(dcc_hot_reload_t *hot_reload) {
     if (hot_reload == NULL) {
@@ -9,6 +10,16 @@ dcc_status_t dcc_hot_reload_worker_reload(dcc_hot_reload_t *hot_reload) {
 
     dcc_hot_reload_lock(hot_reload);
     if (hot_reload->reloading) {
+        dcc_hot_reload_unlock(hot_reload);
+        return DCC_ERR_STATE;
+    }
+    if (hot_reload->generation == UINT64_MAX) {
+        dcc_hot_reload_set_error(
+            hot_reload,
+            DCC_ERR_STATE,
+            "hot reload generation counter overflow"
+        );
+        dcc_hot_reload_broadcast(hot_reload);
         dcc_hot_reload_unlock(hot_reload);
         return DCC_ERR_STATE;
     }

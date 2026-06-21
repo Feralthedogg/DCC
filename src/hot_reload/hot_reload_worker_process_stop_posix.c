@@ -5,9 +5,12 @@
 
 #include <errno.h>
 #include <signal.h>
+#include <stdint.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+
+#define DCC_WORKER_PROCESS_TERM_GRACE_MS UINT32_C(1000)
 
 static void dcc_worker_process_sleep_10ms(void) {
     if (llam_sleep_ns(UINT64_C(10000000)) != 0) {
@@ -17,6 +20,25 @@ static void dcc_worker_process_sleep_10ms(void) {
         };
         while (nanosleep(&req, &req) != 0 && errno == EINTR) {
         }
+    }
+}
+
+static uint8_t dcc_worker_process_wait_exit(pid_t pid, uint32_t timeout_ms) {
+    uint32_t waited_ms = 0;
+    for (;;) {
+        int status = 0;
+        pid_t rc = waitpid(pid, &status, WNOHANG);
+        if (rc == pid || (rc < 0 && errno == ECHILD)) {
+            return 1U;
+        }
+        if (waited_ms >= timeout_ms) {
+            return 0U;
+        }
+        dcc_worker_process_sleep_10ms();
+        if (waited_ms > UINT32_MAX - 10U) {
+            return 0U;
+        }
+        waited_ms += 10U;
     }
 }
 
@@ -41,22 +63,24 @@ static void dcc_hot_reload_worker_process_stop_direct(
         return;
     }
     dcc_hot_reload_worker_process_io_lock(worker);
-    (void)dcc_hot_reload_worker_send_header(worker->in_fd, DCC_HOT_RELOAD_WORKER_MSG_STOP, 0);
+    (void)dcc_hot_reload_worker_send_header_timeout(
+        worker->in_fd,
+        DCC_HOT_RELOAD_WORKER_MSG_STOP,
+        0U,
+        timeout_ms != 0U ? timeout_ms : 1U
+    );
     dcc_hot_reload_worker_process_io_unlock(worker);
     dcc_hot_reload_worker_process_close(worker);
 
-    uint32_t waited_ms = 0;
-    while (waited_ms <= timeout_ms) {
-        int status = 0;
-        pid_t rc = waitpid(worker->pid, &status, WNOHANG);
-        if (rc == worker->pid || (rc < 0 && errno == ECHILD)) {
-            return;
-        }
-        dcc_worker_process_sleep_10ms();
-        waited_ms += 10U;
+    if (dcc_worker_process_wait_exit(worker->pid, timeout_ms)) {
+        return;
     }
     (void)kill(worker->pid, SIGTERM);
-    (void)waitpid(worker->pid, NULL, 0);
+    if (dcc_worker_process_wait_exit(worker->pid, DCC_WORKER_PROCESS_TERM_GRACE_MS)) {
+        return;
+    }
+    (void)kill(worker->pid, SIGKILL);
+    (void)dcc_worker_process_wait_exit(worker->pid, DCC_WORKER_PROCESS_TERM_GRACE_MS);
 }
 
 static void *dcc_worker_process_stop_blocking(void *arg) {

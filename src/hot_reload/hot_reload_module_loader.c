@@ -37,12 +37,15 @@ dcc_status_t dcc_hot_reload_load_next(
     } init_cast;
     init_cast.symbol = dcc_hot_reload_symbol(out, hot_reload->init_symbol);
     if (init_cast.init == NULL) {
+        dcc_hot_reload_lock(hot_reload);
         snprintf(
             hot_reload->last_error,
             sizeof(hot_reload->last_error),
             "hot reload module is missing symbol %s",
             hot_reload->init_symbol
         );
+        dcc_hot_reload_broadcast(hot_reload);
+        dcc_hot_reload_unlock(hot_reload);
         dcc_hot_reload_module_deinit(hot_reload, out);
         return DCC_ERR_STATE;
     }
@@ -57,12 +60,15 @@ dcc_status_t dcc_hot_reload_load_next(
     dcc_bot_module_ctx_t ctx = dcc_hot_reload_ctx(hot_reload, out);
     status = init_cast.init(&ctx);
     if (status != DCC_OK) {
+        dcc_hot_reload_lock(hot_reload);
         snprintf(
             hot_reload->last_error,
             sizeof(hot_reload->last_error),
             "hot reload module init failed: %s",
             dcc_status_string(status)
         );
+        dcc_hot_reload_broadcast(hot_reload);
+        dcc_hot_reload_unlock(hot_reload);
         dcc_hot_reload_module_deinit(hot_reload, out);
         return status;
     }

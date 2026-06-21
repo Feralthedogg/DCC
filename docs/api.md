@@ -81,7 +81,11 @@ you want to pass a pointer plus a count.
   package build installs the `dcc_hot_reload_host` and `dcc_hot_reload_worker`
   helpers through `DCC_BUILD_TOOLS=ON`. Parent supervision uses LLAM tasks, and
   blocking worker IPC waits use LLAM blocking calls when running inside a
-  managed task. When a worker dies while handling an interaction and last-good
+  managed task. Worker IPC writes and reads are bounded by the configured worker
+  health timeout, so stalled parent/worker pipes report timeout instead of
+  blocking Gateway ownership. Forwarded event payloads are capped, partial child
+  EVENT bodies time out, and shutdown escalates after the drain window instead
+  of waiting forever. When a worker dies while handling an interaction and last-good
   retry is unavailable or also fails, the parent responds with an ephemeral
   temporary interaction error; health snapshots include worker failure,
   promotion, dispatch failure, and temporary-response counters. The installed

@@ -15,7 +15,10 @@
 #define DCC_HOT_RELOAD_WORKER_MAX_PATH_LEN UINT32_C(8192)
 #define DCC_HOT_RELOAD_WORKER_MAX_CONTENT_TYPE_LEN UINT32_C(128)
 #define DCC_HOT_RELOAD_WORKER_MAX_BODY_LEN UINT64_C(16777216)
+#define DCC_HOT_RELOAD_WORKER_MAX_EVENT_JSON_LEN UINT64_C(16777216)
 #define DCC_HOT_RELOAD_WORKER_MAX_ERROR_LEN 256U
+#define DCC_HOT_RELOAD_WORKER_CHILD_READ_TIMEOUT_MS UINT32_C(5000)
+#define DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS UINT32_C(5000)
 
 typedef enum dcc_hot_reload_worker_msg {
     DCC_HOT_RELOAD_WORKER_MSG_READY = 1,
@@ -65,9 +68,16 @@ typedef struct dcc_hot_reload_worker_rest {
 } dcc_hot_reload_worker_rest_t;
 
 int dcc_hot_reload_worker_write_all(int fd, const void *data, size_t len);
+int dcc_hot_reload_worker_write_all_timeout(int fd, const void *data, size_t len, uint32_t timeout_ms);
 int dcc_hot_reload_worker_read_all(int fd, void *data, size_t len);
 int dcc_hot_reload_worker_read_all_timeout(int fd, void *data, size_t len, uint32_t timeout_ms);
 int dcc_hot_reload_worker_send_header(int fd, dcc_hot_reload_worker_msg_t kind, uint32_t size);
+int dcc_hot_reload_worker_send_header_timeout(
+    int fd,
+    dcc_hot_reload_worker_msg_t kind,
+    uint32_t size,
+    uint32_t timeout_ms
+);
 int dcc_hot_reload_worker_read_header(
     int fd,
     dcc_hot_reload_worker_header_t *out,

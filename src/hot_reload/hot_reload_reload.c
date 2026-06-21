@@ -15,6 +15,16 @@ dcc_status_t dcc_hot_reload_reload(dcc_hot_reload_t *hot_reload) {
         dcc_hot_reload_unlock(hot_reload);
         return DCC_ERR_STATE;
     }
+    if (hot_reload->generation == UINT64_MAX) {
+        dcc_hot_reload_set_error(
+            hot_reload,
+            DCC_ERR_STATE,
+            "hot reload generation counter overflow"
+        );
+        dcc_hot_reload_broadcast(hot_reload);
+        dcc_hot_reload_unlock(hot_reload);
+        return DCC_ERR_STATE;
+    }
     hot_reload->reloading = 1U;
     uint64_t next_generation = hot_reload->generation + 1U;
     dcc_hot_reload_unlock(hot_reload);

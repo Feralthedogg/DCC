@@ -26,6 +26,11 @@ int dcc_hot_reload_worker_write_all(int fd, const void *data, size_t len) {
     return 0;
 }
 
+int dcc_hot_reload_worker_write_all_timeout(int fd, const void *data, size_t len, uint32_t timeout_ms) {
+    (void)timeout_ms;
+    return dcc_hot_reload_worker_write_all(fd, data, len);
+}
+
 int dcc_hot_reload_worker_read_all(int fd, void *data, size_t len) {
     unsigned char *cursor = (unsigned char *)data;
     while (len > 0U) {

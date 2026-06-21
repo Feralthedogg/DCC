@@ -29,12 +29,18 @@ static int dcc_worker_send_health(dcc_hot_reload_t *hot_reload) {
         .status = DCC_OK,
         .reserved = 0U,
     };
-    return dcc_hot_reload_worker_send_header(
+    return dcc_hot_reload_worker_send_header_timeout(
                DCC_HOT_RELOAD_WORKER_FD_OUT,
                DCC_HOT_RELOAD_WORKER_MSG_HEALTH_RESULT,
-               sizeof(health)
+               sizeof(health),
+               DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
            ) != 0 ||
-           dcc_hot_reload_worker_write_all(DCC_HOT_RELOAD_WORKER_FD_OUT, &health, sizeof(health)) != 0
+           dcc_hot_reload_worker_write_all_timeout(
+               DCC_HOT_RELOAD_WORKER_FD_OUT,
+               &health,
+               sizeof(health),
+               DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
+           ) != 0
         ? -1
         : 0;
 }
@@ -47,7 +53,12 @@ static int dcc_worker_dispatch_event(
     if (json == NULL) {
         return 1;
     }
-    if (dcc_hot_reload_worker_read_all(DCC_HOT_RELOAD_WORKER_FD_IN, json, (size_t)event->json_len) != 0) {
+    if (dcc_hot_reload_worker_read_all_timeout(
+            DCC_HOT_RELOAD_WORKER_FD_IN,
+            json,
+            (size_t)event->json_len,
+            DCC_HOT_RELOAD_WORKER_CHILD_READ_TIMEOUT_MS
+        ) != 0) {
         free(json);
         return 1;
     }
@@ -72,7 +83,7 @@ int dcc_hot_reload_worker_child_event_loop(dcc_hot_reload_t *hot_reload) {
         if (dcc_hot_reload_worker_read_header(DCC_HOT_RELOAD_WORKER_FD_IN, &header, 0) != 0) {
             return 1;
         }
-        if (header.kind == DCC_HOT_RELOAD_WORKER_MSG_STOP) {
+        if (header.kind == DCC_HOT_RELOAD_WORKER_MSG_STOP && header.size == 0U) {
             return 0;
         }
         if (header.kind == DCC_HOT_RELOAD_WORKER_MSG_HEALTH && header.size == 0U) {
@@ -87,7 +98,15 @@ int dcc_hot_reload_worker_child_event_loop(dcc_hot_reload_t *hot_reload) {
         }
 
         dcc_hot_reload_worker_event_t event;
-        if (dcc_hot_reload_worker_read_all(DCC_HOT_RELOAD_WORKER_FD_IN, &event, sizeof(event)) != 0 ||
+        if (dcc_hot_reload_worker_read_all_timeout(
+                DCC_HOT_RELOAD_WORKER_FD_IN,
+                &event,
+                sizeof(event),
+                DCC_HOT_RELOAD_WORKER_CHILD_READ_TIMEOUT_MS
+            ) != 0 ||
+            event.type < 0 ||
+            event.type >= DCC_EVENT_MAX ||
+            event.json_len > DCC_HOT_RELOAD_WORKER_MAX_EVENT_JSON_LEN ||
             event.json_len > (uint64_t)SIZE_MAX - 1U ||
             dcc_worker_dispatch_event(client, &event) != 0) {
             return 1;
