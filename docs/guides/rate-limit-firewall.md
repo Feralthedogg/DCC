@@ -7,8 +7,8 @@ bots.
 ## Attach
 
 ```c
-dcc_rest_firewall_options_t options;
-dcc_rest_firewall_options_init(&options);
+dcc_rest_firewall_options_t options =
+    DCC_REST_FIREWALL_OPTIONS();
 options.invalid_request_soft_limit = 8000;
 options.invalid_request_hard_limit = 9500;
 

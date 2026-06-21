@@ -27,6 +27,18 @@ build/dcc_replay --file events.jsonl --summary
 build/dcc_replay --file events.jsonl --validate
 ```
 
+## API Records
+
+When recording from a custom harness, use the sugar record literals:
+
+```c
+dcc_replay_record_t gateway =
+    DCC_REPLAY_GATEWAY_RECORD("MESSAGE_CREATE", now_ms, payload, payload_len);
+
+dcc_replay_record_t interaction =
+    DCC_REPLAY_INTERACTION_RECORD(now_ms, payload, payload_len);
+```
+
 ## Replay Into A Module
 
 ```sh

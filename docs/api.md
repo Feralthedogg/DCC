@@ -6,9 +6,9 @@ header.
 
 ## Sugar Header
 
-`<dcc/sugar.h>` is an opt-in convenience layer for common struct literals and
-option defaults. It does not replace the explicit builder APIs; use it where a
-simple value can stay readable as one expression.
+`<dcc/sugar.h>` is the recommended first stop for application code. It provides
+compact struct literals and option defaults over the same public types used by
+the explicit builder APIs.
 
 ```c
 #include <dcc/sugar.h>
@@ -39,6 +39,11 @@ Variadic sugar macros hide short-lived arrays with C compound literals, so
 message, embed, component, poll, select, and modal trees can be written inline.
 Use the `*_ARRAY` variants when the data already lives in an explicit array and
 you want to pass a pointer plus a count.
+
+The explicit builder APIs remain the lower-level escape hatch. Use them when a
+value is generated dynamically, when each setter needs error handling, or when
+the data must outlive the current C block. The documentation shows sugar first
+and calls out explicit APIs only where that extra control matters.
 
 ## Core Lifecycle
 

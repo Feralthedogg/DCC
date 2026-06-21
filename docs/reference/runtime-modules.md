@@ -6,7 +6,7 @@ Discord state; the module owns handler logic and optional module state.
 ## Minimal Module
 
 ```c
-#include <dcc/dcc.h>
+#include <dcc/sugar.h>
 
 static void on_ready(dcc_client_t *client, const dcc_event_t *event, void *data) {
     (void)client;
@@ -14,15 +14,11 @@ static void on_ready(dcc_client_t *client, const dcc_event_t *event, void *data)
     (void)data;
 }
 
-static const dcc_bot_module_event_t events[] = {
+static const dcc_bot_module_handler_t handlers[] = {
     { DCC_EVENT_READY, on_ready },
 };
 
-DCC_BOT_MODULE_EXPORT int dcc_bot_module_init(dcc_bot_module_context_t *ctx) {
-    ctx->events = events;
-    ctx->events_count = sizeof(events) / sizeof(events[0]);
-    return 0;
-}
+DCC_BOT_MODULE(handlers)
 ```
 
 ## State Macro

@@ -48,12 +48,11 @@ The canary policy tracks failures and promotes only after the configured window
 stays healthy.
 
 ```c
-dcc_hot_reload_canary_options_t canary;
-dcc_hot_reload_canary_options_init(&canary);
-canary.canary_percent = 5;
-canary.promote_after_ms = 30000;
-canary.max_error_rate = 0.05;
-canary.max_consecutive_failures = 3;
+dcc_hot_reload_canary_options_t canary =
+    DCC_HOT_RELOAD_CANARY_OPTIONS_DEFAULT();
+
+dcc_hot_reload_options_t options =
+    DCC_HOT_RELOAD_ISOLATED_CANARY_OPTIONS("dcc_hot_reload_worker", canary);
 ```
 
 ## Host CLI

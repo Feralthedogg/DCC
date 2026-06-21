@@ -1,8 +1,8 @@
 # Components v2
 
 Components v2 lets a message be built from layout components instead of legacy
-`content` and `embeds`. DCC exposes this through `<dcc/component_v2.h>` and the
-message builder.
+`content` and `embeds`. DCC exposes this through `<dcc/sugar.h>` for compact
+layouts and through `<dcc/component_v2.h>` for explicit builder control.
 
 ## Message Rules
 
@@ -20,6 +20,29 @@ Attachments are still allowed. Reference them from v2 media components with
 `attachment://filename`.
 
 ## Basic Layout
+
+```c
+dcc_message_builder_t message =
+    DCC_MESSAGE_COMPONENTS_V2(
+        DCC_V2_CONTAINER_ACCENT(
+            0x5865F2,
+            DCC_V2_SECTION(
+                DCC_V2_BUTTON_PRIMARY("Refresh", "status.refresh"),
+                DCC_V2_TEXT("# Runtime status")
+            ),
+            DCC_V2_ACTION_ROW(
+                DCC_V2_BUTTON_SECONDARY("Details", "status.details"),
+                DCC_V2_BUTTON_DANGER("Close", "status.close")
+            )
+        )
+    );
+```
+
+The v2 message macro sets `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2` and hides the
+short-lived component arrays.
+
+Use the explicit builder API when you generate the tree incrementally or need
+setter-level error handling:
 
 ```c
 dcc_component_v2_builder_t title;
@@ -40,29 +63,9 @@ dcc_component_v2_builder_t container;
 dcc_component_v2_builder_init_container(&container, &section, 1);
 dcc_component_v2_builder_set_accent_color(&container, 0x5865F2);
 
-dcc_message_builder_t message;
-dcc_message_builder_init(&message);
-dcc_message_builder_set_components_v2(&message, &container, 1);
-```
-
-The same layout can be written with `<dcc/sugar.h>` without explicit component
-arrays:
-
-```c
-dcc_message_builder_t message =
-    DCC_MESSAGE_COMPONENTS_V2(
-        DCC_V2_CONTAINER_ACCENT(
-            0x5865F2,
-            DCC_V2_SECTION(
-                DCC_V2_BUTTON_PRIMARY("Refresh", "status.refresh"),
-                DCC_V2_TEXT("# Runtime status")
-            ),
-            DCC_V2_ACTION_ROW(
-                DCC_V2_BUTTON_SECONDARY("Details", "status.details"),
-                DCC_V2_BUTTON_DANGER("Close", "status.close")
-            )
-        )
-    );
+dcc_message_builder_t explicit_message;
+dcc_message_builder_init(&explicit_message);
+dcc_message_builder_set_components_v2(&explicit_message, &container, 1);
 ```
 
 The variadic sugar macros create block-scoped compound literal arrays. Use the
@@ -73,24 +76,21 @@ matching `*_ARRAY` macro when you already have a persistent array and count.
 Media Gallery, Thumbnail, and File components use `dcc_component_v2_media_t`.
 
 ```c
-dcc_component_v2_media_t media[] = {
-    {
-        .url = "attachment://graph.png",
-        .description = "Gateway latency graph",
-    },
-};
-
-dcc_component_v2_builder_t gallery;
-dcc_component_v2_builder_init_media_gallery(&gallery, media, 1);
-```
-
-With sugar:
-
-```c
 dcc_component_v2_builder_t gallery =
     DCC_V2_MEDIA_GALLERY(
         DCC_V2_MEDIA("attachment://graph.png", "Gateway latency graph")
     );
+```
+
+Use the `_ARRAY` form when media entries already live in an array:
+
+```c
+dcc_component_v2_media_t media[] = {
+    DCC_V2_MEDIA("attachment://graph.png", "Gateway latency graph"),
+};
+
+dcc_component_v2_builder_t gallery =
+    DCC_V2_MEDIA_GALLERY_ARRAY(media, DCC_ARRAY_LEN(media));
 ```
 
 Add the matching attachment through the message builder:
@@ -108,49 +108,31 @@ Entity selects support `default_values`. Channel selects may also restrict
 allowed channel types.
 
 ```c
-const dcc_component_v2_select_default_value_t defaults[] = {
-    {
-        .id = 222,
-        .type = DCC_COMPONENT_V2_SELECT_DEFAULT_CHANNEL,
-    },
-};
-const uint32_t channel_types[] = {0, 5};
-
-dcc_component_v2_builder_t select;
-dcc_component_v2_builder_init(&select, DCC_COMPONENT_V2_CHANNEL_SELECT);
-dcc_component_v2_builder_set_custom_id(&select, "settings.channel");
-dcc_component_v2_builder_set_default_values(&select, defaults, 1);
-dcc_component_v2_builder_set_channel_types(&select, channel_types, 2);
+dcc_component_v2_builder_t select =
+    DCC_V2_CHANNEL_SELECT(
+        "settings.channel",
+        DCC_V2_DEFAULT_VALUES(DCC_V2_DEFAULT_CHANNEL(222)),
+        DCC_V2_CHANNEL_TYPES(0U, 5U)
+    );
 ```
 
 For string selects, use `dcc_select_option_t::has_default` on options instead
-of `default_values`.
+of `default_values`:
+
+```c
+dcc_component_v2_builder_t string_select =
+    DCC_V2_STRING_SELECT(
+        "settings.mode",
+        DCC_SELECT_OPTION("Fast", "fast"),
+        DCC_SELECT_OPTION_DEFAULT("Safe", "safe")
+    );
+```
 
 ## Modal Inputs
 
 The v2 builder also supports modal-only components such as Label, File Upload,
 Radio Group, Checkbox Group, and Checkbox. A Label wraps exactly one input
 component.
-
-```c
-dcc_component_v2_builder_t upload;
-dcc_component_v2_builder_init(&upload, DCC_COMPONENT_V2_FILE_UPLOAD);
-dcc_component_v2_builder_set_custom_id(&upload, "config.upload");
-dcc_component_v2_builder_set_min_values(&upload, 1);
-dcc_component_v2_builder_set_max_values(&upload, 3);
-dcc_component_v2_builder_set_required(&upload, 1);
-
-dcc_component_v2_builder_t label;
-dcc_component_v2_builder_init_label(&label, "Config files", &upload);
-
-dcc_modal_builder_t modal;
-dcc_modal_builder_init(&modal);
-dcc_modal_builder_set_custom_id(&modal, "config-modal");
-dcc_modal_builder_set_title(&modal, "Upload config");
-dcc_modal_builder_set_components_v2(&modal, &label, 1);
-```
-
-With sugar:
 
 ```c
 dcc_component_v2_builder_t upload = DCC_V2_FILE_UPLOAD("config.upload");
@@ -165,20 +147,19 @@ dcc_modal_builder_t modal =
     DCC_MODAL_V2_BUILDER(
         "config-modal",
         "Upload config",
-        DCC_V2_LABEL("Config files", upload)
+        DCC_V2_LABEL("Config files", upload),
+        DCC_V2_LABEL(
+            "Apply immediately",
+            DCC_V2_CHECKBOX("config.accept", "Apply after submit", 1U)
+        )
     );
 ```
 
 Checkbox uses Discord's `default` JSON field for its initial checked state:
 
 ```c
-dcc_component_v2_builder_t accept;
-dcc_component_v2_builder_init_checkbox(
-    &accept,
-    "config.accept",
-    "Apply immediately",
-    1
-);
+dcc_component_v2_builder_t accept =
+    DCC_V2_CHECKBOX("config.accept", "Apply immediately", 1U);
 ```
 
 ## Reading Message Layouts

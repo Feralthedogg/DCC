@@ -68,16 +68,13 @@ ctest --test-dir build --output-on-failure
 ## Minimal Client
 
 ```c
-#include <dcc/dcc.h>
+#include <dcc/sugar.h>
 
 #include <stdlib.h>
 
 int main(void) {
-    dcc_client_options_t options = {
-        .size = sizeof(options),
-        .token = getenv("DISCORD_TOKEN"),
-        .intents = DCC_INTENT_GUILDS,
-    };
+    dcc_client_options_t options =
+        DCC_CLIENT_OPTIONS(getenv("DISCORD_TOKEN"), DCC_INTENTS_DEFAULT);
 
     dcc_client_t *client = NULL;
     if (dcc_client_create(&options, &client) != DCC_OK) {
@@ -96,26 +93,37 @@ int main(void) {
 
 ## Include Style
 
-Use the aggregate header while prototyping:
+Application code should usually start with the sugar header:
+
+```c
+#include <dcc/sugar.h>
+```
+
+It includes the common public types and adds compact literals for options,
+commands, messages, embeds, components, modals, sessions, flows, hot reload,
+firewall, and replay records:
+
+```c
+dcc_message_builder_t message =
+    DCC_MESSAGE_TEXT_EMBEDS(
+        "pong",
+        DCC_EMBED_COLOR("Latency", "Gateway online", 0x5865F2)
+    );
+```
+
+Use the aggregate header when you want every public declaration without sugar
+macros:
 
 ```c
 #include <dcc/dcc.h>
 ```
 
-Use focused headers in library code:
+Use focused headers in low-level library code:
 
 ```c
 #include <dcc/client.h>
 #include <dcc/events/listeners.h>
 #include <dcc/rest/application_commands.h>
-```
-
-Use the opt-in sugar layer for compact builder literals:
-
-```c
-#include <dcc/sugar.h>
-
-dcc_message_builder_t message = DCC_MESSAGE_TEXT("pong");
 ```
 
 Public headers live under `include/dcc/`. Internal headers under

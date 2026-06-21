@@ -17,19 +17,21 @@ or edited component id fails verification before user code handles it.
 ```c
 static const unsigned char secret[] = "rotate-this-secret";
 
-dcc_component_session_options_t options;
-dcc_component_session_options_init(&options);
-dcc_component_session_options_set_secret(&options, secret, sizeof(secret) - 1);
-dcc_component_session_options_set_ttl(&options, now_ms, 300000);
-dcc_component_session_options_lock_user(&options, interaction_user_id);
-dcc_component_session_options_lock_channel(&options, channel_id);
-dcc_component_session_options_lock_guild(&options, guild_id);
+dcc_component_session_options_t options =
+    DCC_COMPONENT_SESSION_OPTIONS_USER(secret, sizeof(secret) - 1, interaction_user_id);
+options.now_ms = now_ms;
+options.ttl_ms = 300000U;
+options.channel_id = channel_id;
+options.guild_id = guild_id;
+options.lock_channel = 1U;
+options.lock_guild = 1U;
 
 dcc_component_session_t session;
 dcc_component_session_create(&options, &session);
 ```
 
-Build a button:
+Build a signed legacy button. The button itself is created by the session API
+because DCC must sign the `custom_id`:
 
 ```c
 dcc_component_builder_t next;
@@ -53,6 +55,11 @@ dcc_component_session_button_v2(
     DCC_BUTTON_PRIMARY,
     &next_v2
 );
+
+dcc_message_builder_t page =
+    DCC_MESSAGE_COMPONENTS_V2(
+        DCC_V2_ACTION_ROW(next_v2)
+    );
 ```
 
 ## Route Session Actions
@@ -77,7 +84,9 @@ static void on_action(
 }
 
 dcc_component_session_listener_t listener;
-dcc_client_on_component_session(client, &session, NULL, on_action, state, &listener);
+dcc_component_session_listener_options_t listen =
+    DCC_COMPONENT_SESSION_LISTENER_OPTIONS();
+dcc_client_on_component_session(client, &session, &listen, on_action, state, &listener);
 ```
 
 Stop routing:

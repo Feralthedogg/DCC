@@ -8,14 +8,11 @@
 </section>
 
 ```c
-#include <dcc/dcc.h>
+#include <dcc/sugar.h>
 
 int main(void) {
-    dcc_client_options_t options = {
-        .size = sizeof(options),
-        .token = getenv("DISCORD_TOKEN"),
-        .intents = DCC_INTENT_GUILDS,
-    };
+    dcc_client_options_t options =
+        DCC_CLIENT_OPTIONS(getenv("DISCORD_TOKEN"), DCC_INTENTS_DEFAULT);
 
     dcc_client_t *client = NULL;
     if (dcc_client_create(&options, &client) != DCC_OK) {
@@ -73,6 +70,7 @@ ctest --test-dir build --output-on-failure
 ## Where To Go Next
 
 - Start with [Quickstart](getting-started.md) for a minimal bot and local build.
+- Use [Sugar-First API](guides/sugar.md) for compact command, message, component, and runtime options.
 - Use [Slash Command Registry](guides/command-registry.md) before deploying commands.
 - Use [Component Sessions](guides/component-sessions.md) for buttons, selects, and modals.
 - Use [Hot Reload](guides/hot-reload.md) when bot logic should change without dropping Gateway.
