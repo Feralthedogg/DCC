@@ -298,24 +298,24 @@ esac
 
 base_url=${base_url:-https://github.com/Feralthedogg/DCC/releases/download/$release_tag}
 package="dcc-$version-$target"
-archive="$package.tar.gz"
+package_archive="$package.tar.gz"
 
 tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/dcc-install.XXXXXX")
 trap 'rm -rf "$tmp_dir"' EXIT HUP INT TERM
 
 if [ "$dry_run" -eq 1 ]; then
-    echo "download $base_url/$archive"
-    echo "download $base_url/$archive.sha256"
-    echo "verify $archive.sha256"
-    echo "extract $archive"
+    echo "download $base_url/$package_archive"
+    echo "download $base_url/$package_archive.sha256"
+    echo "verify $package_archive.sha256"
+    echo "extract $package_archive"
     echo "install extracted $package -> $prefix"
     install_latest_llam
     exit 0
 else
-    download_file "$base_url/$archive" "$tmp_dir/$archive"
-    download_file "$base_url/$archive.sha256" "$tmp_dir/$archive.sha256"
-    verify_checksum "$tmp_dir/$archive" "$tmp_dir/$archive.sha256" "$archive"
-    tar -xf "$tmp_dir/$archive" -C "$tmp_dir"
+    download_file "$base_url/$package_archive" "$tmp_dir/$package_archive"
+    download_file "$base_url/$package_archive.sha256" "$tmp_dir/$package_archive.sha256"
+    verify_checksum "$tmp_dir/$package_archive" "$tmp_dir/$package_archive.sha256" "$package_archive"
+    tar -xf "$tmp_dir/$package_archive" -C "$tmp_dir"
 fi
 
 package_root=$(find "$tmp_dir" -type f -path '*/include/dcc/dcc.h' -print |
