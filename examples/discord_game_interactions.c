@@ -66,41 +66,24 @@ static dcc_status_t build_game_message(
     }
 
     for (int i = 0; i < GAME_BOARD_LEN; ++i) {
-        dcc_component_builder_init(&buttons[i], DCC_COMPONENT_BUTTON);
         int id_len = snprintf(custom_ids[i], 32, GAME_CUSTOM_ID_PREFIX "%s:%d", board, i);
         if (id_len <= 0 || id_len >= 32) {
             return DCC_ERR_INVALID_ARG;
         }
 
-        dcc_status_t st = dcc_component_builder_set_style(&buttons[i], cell_style(board[i]));
-        if (st == DCC_OK) {
-            st = dcc_component_builder_set_label(&buttons[i], cell_label(board[i]));
-        }
-        if (st == DCC_OK) {
-            st = dcc_component_builder_set_custom_id(&buttons[i], custom_ids[i]);
-        }
-        if (st == DCC_OK) {
-            st = dcc_component_builder_set_disabled(&buttons[i], game_over || board[i] != '0');
-        }
-        if (st != DCC_OK) {
-            return st;
-        }
+        buttons[i] = DCC_BUTTON_BUILDER(cell_style(board[i]), cell_label(board[i]), custom_ids[i]);
+        buttons[i].disabled = (uint8_t)(game_over || board[i] != '0');
+        buttons[i].has_disabled = 1U;
     }
 
     for (int row = 0; row < 3; ++row) {
-        dcc_component_builder_init(&rows[row], DCC_COMPONENT_ACTION_ROW);
-        dcc_status_t st = dcc_component_builder_set_children(&rows[row], &buttons[row * 3], 3);
-        if (st != DCC_OK) {
-            return st;
-        }
+        rows[row] = DCC_ACTION_ROW_ARRAY(&buttons[row * 3], 3U);
     }
 
-    dcc_message_builder_init(message);
-    dcc_status_t st = dcc_message_builder_set_content(message, content);
-    if (st == DCC_OK) {
-        st = dcc_message_builder_set_components(message, rows, 3);
-    }
-    return st;
+    *message = DCC_MESSAGE_COMPONENTS_ARRAY(rows, 3U);
+    message->content = content;
+    message->has_content = 1U;
+    return DCC_OK;
 }
 
 void rest_response_log_cb(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data) {
@@ -128,12 +111,7 @@ dcc_status_t respond_text(
     dcc_interaction_response_type_t type,
     const char *content
 ) {
-    dcc_message_builder_t message;
-    dcc_message_builder_init(&message);
-    dcc_status_t st = dcc_message_builder_set_content(&message, content);
-    if (st != DCC_OK) {
-        return st;
-    }
+    dcc_message_builder_t message = DCC_MESSAGE_TEXT(content);
     return dcc_rest_interaction_response_create_from_interaction_message_builder(
         client,
         interaction,

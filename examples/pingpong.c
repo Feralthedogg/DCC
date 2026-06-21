@@ -1,9 +1,4 @@
-#include <dcc/dcc.h>
-#include <dcc/application_command.h>
-#include <dcc/client.h>
-#include <dcc/events.h>
-#include <dcc/message.h>
-#include <dcc/rest/application_commands.h>
+#include <dcc/sugar.h>
 #include <dcc/rest/interactions.h>
 
 #include <errno.h>
@@ -116,40 +111,14 @@ static void register_ping_command(dcc_client_t *client, dcc_snowflake_t applicat
         return;
     }
 
-    dcc_application_command_builder_t command;
-    dcc_application_command_builder_init(&command);
+    dcc_application_command_builder_t command =
+        DCC_SLASH_COMMAND_DM("핑", "퐁으로 응답합니다", 1U);
+    dcc_application_command_registration_options_t options =
+        guild_id != 0
+            ? DCC_APPLICATION_COMMAND_REGISTRATION_GUILD(guild_id)
+            : DCC_APPLICATION_COMMAND_REGISTRATION_GLOBAL();
 
-    dcc_status_t st = dcc_application_command_builder_set_name(&command, "핑");
-    if (st == DCC_OK) {
-        st = dcc_application_command_builder_set_description(&command, "퐁으로 응답합니다");
-    }
-    if (st == DCC_OK) {
-        st = dcc_application_command_builder_set_type(&command, DCC_APPLICATION_COMMAND_CHAT_INPUT);
-    }
-    if (st == DCC_OK) {
-        st = dcc_application_command_builder_set_dm_permission(&command, 1);
-    }
-    if (st != DCC_OK) {
-        fprintf(stderr, "Cannot build /핑 command: %s\n", dcc_status_string(st));
-        return;
-    }
-
-    dcc_application_command_registration_options_t options;
-    const dcc_application_command_registration_options_t *registration_options = NULL;
-
-    dcc_application_command_registration_options_init(&options);
     if (guild_id != 0) {
-        st = dcc_application_command_registration_options_set_guild(&options, guild_id);
-        if (st != DCC_OK) {
-            fprintf(
-                stderr,
-                "Cannot scope /핑 to guild %llu: %s\n",
-                (unsigned long long)guild_id,
-                dcc_status_string(st)
-            );
-            return;
-        }
-        registration_options = &options;
         printf(
             "Registering /핑 as guild command for guild %llu\n",
             (unsigned long long)guild_id
@@ -159,10 +128,10 @@ static void register_ping_command(dcc_client_t *client, dcc_snowflake_t applicat
             "Registering /핑 for all guilds (global command; Discord can take a while to show it)\n"
         );
     }
-    st = dcc_rest_create_application_command_builder(
+    dcc_status_t st = dcc_rest_create_application_command_builder(
         client,
         application_id,
-        registration_options,
+        &options,
         &command,
         on_command_registered,
         guild_id != 0 ? "guild" : "global"
@@ -204,16 +173,10 @@ static void on_ping(dcc_client_t *client, const dcc_event_t *event, void *ud) {
     char footer_text[64];
     snprintf(footer_text, sizeof(footer_text), "%lld ms", latency);
 
-    dcc_embed_builder_t embed;
-    dcc_embed_builder_init(&embed);
-    dcc_embed_builder_set_title(&embed, "🏓");
-    dcc_embed_builder_set_description(&embed, "퐁!");
-    dcc_embed_builder_set_color(&embed, 0xFF0000);
-    dcc_embed_builder_set_footer(&embed, footer_text, NULL);
-
-    dcc_message_builder_t msg;
-    dcc_message_builder_init(&msg);
-    dcc_message_builder_set_embeds(&msg, &embed, 1);
+    dcc_embed_builder_t embed = DCC_EMBED_COLOR("🏓", "퐁!", 0xFF0000U);
+    embed.footer = DCC_EMBED_FOOTER(footer_text, NULL);
+    embed.has_footer = 1U;
+    dcc_message_builder_t msg = DCC_MESSAGE_EMBEDS(embed);
 
     dcc_rest_interaction_response_create_from_interaction_message_builder(
         client,
@@ -277,13 +240,8 @@ int main(void) {
     };
 
     dcc_client_t *client = NULL;
-    dcc_client_options_t opts = {
-        .size = sizeof(opts),
-        .token = token,
-        .intents = DCC_INTENT_GUILDS,
-        .shard_id = 0,
-        .shard_count = 1,
-    };
+    dcc_client_options_t opts =
+        DCC_CLIENT_SHARDED_OPTIONS(token, DCC_INTENTS_DEFAULT, 0U, 1U);
 
     dcc_status_t st = dcc_client_create(&opts, &client);
     if (st != DCC_OK) {

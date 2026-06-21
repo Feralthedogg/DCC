@@ -1,4 +1,5 @@
 #include <dcc/dcc.h>
+#include <dcc/sugar.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -176,12 +177,9 @@ int main(void) {
     int connected = 0;
     int exit_code = 1;
 
-    dcc_client_options_t options = {
-        .size = sizeof(options),
-        .token = token,
-        .intents = DCC_INTENT_GUILDS | DCC_INTENT_GUILD_VOICE_STATES,
-        .gateway_max_concurrency = env_u32("DCC_VOICE_MAX_CONCURRENCY", 1U, 1U, 16U),
-    };
+    dcc_client_options_t options =
+        DCC_CLIENT_OPTIONS(token, DCC_INTENTS_DEFAULT | DCC_INTENT_GUILD_VOICE_STATES);
+    options.gateway_max_concurrency = env_u32("DCC_VOICE_MAX_CONCURRENCY", 1U, 1U, 16U);
 
     dcc_status_t status = dcc_client_create(&options, &client);
     if (status != DCC_OK) {

@@ -35,41 +35,14 @@ void register_game_command(dcc_client_t *client, dcc_snowflake_t application_id,
         return;
     }
 
-    dcc_application_command_builder_t command;
-    dcc_application_command_builder_init(&command);
+    dcc_application_command_builder_t command =
+        DCC_SLASH_COMMAND_DM(GAME_COMMAND_NAME, "Start a Tic Tac Toe game", 1U);
+    dcc_application_command_registration_options_t options =
+        guild_id != 0
+            ? DCC_APPLICATION_COMMAND_REGISTRATION_GUILD(guild_id)
+            : DCC_APPLICATION_COMMAND_REGISTRATION_GLOBAL();
 
-    dcc_status_t st = dcc_application_command_builder_set_name(&command, GAME_COMMAND_NAME);
-    if (st == DCC_OK) {
-        st = dcc_application_command_builder_set_description(&command, "Start a Tic Tac Toe game");
-    }
-    if (st == DCC_OK) {
-        st = dcc_application_command_builder_set_type(&command, DCC_APPLICATION_COMMAND_CHAT_INPUT);
-    }
-    if (st == DCC_OK) {
-        st = dcc_application_command_builder_set_dm_permission(&command, 1);
-    }
-    if (st != DCC_OK) {
-        fprintf(stderr, "Cannot build /%s command: %s\n", GAME_COMMAND_NAME, dcc_status_string(st));
-        return;
-    }
-
-    dcc_application_command_registration_options_t options;
-    const dcc_application_command_registration_options_t *registration_options = NULL;
-
-    dcc_application_command_registration_options_init(&options);
     if (guild_id != 0) {
-        st = dcc_application_command_registration_options_set_guild(&options, guild_id);
-        if (st != DCC_OK) {
-            fprintf(
-                stderr,
-                "Cannot scope /%s to guild %llu: %s\n",
-                GAME_COMMAND_NAME,
-                (unsigned long long)guild_id,
-                dcc_status_string(st)
-            );
-            return;
-        }
-        registration_options = &options;
         printf(
             "Registering /%s as guild command for guild %llu\n",
             GAME_COMMAND_NAME,
@@ -81,10 +54,10 @@ void register_game_command(dcc_client_t *client, dcc_snowflake_t application_id,
             GAME_COMMAND_NAME
         );
     }
-    st = dcc_rest_create_application_command_builder(
+    dcc_status_t st = dcc_rest_create_application_command_builder(
         client,
         application_id,
-        registration_options,
+        &options,
         &command,
         on_command_registered,
         guild_id != 0 ? "guild" : "global"

@@ -1,4 +1,5 @@
-#include <dcc/dcc.h>
+#include <dcc/sugar.h>
+#include <dcc/interaction_server.h>
 
 #include <limits.h>
 #include <stdio.h>
@@ -225,13 +226,8 @@ int main(int argc, char **argv) {
 #endif
     printf("Rebuild it with: make\n");
 
-    dcc_client_options_t client_options;
-    memset(&client_options, 0, sizeof(client_options));
-    client_options.size = sizeof(client_options);
-    client_options.token = token;
-    client_options.intents = DCC_INTENT_GUILDS;
-    client_options.shard_id = 0;
-    client_options.shard_count = 1;
+    dcc_client_options_t client_options =
+        DCC_CLIENT_SHARDED_OPTIONS(token, DCC_INTENTS_DEFAULT, 0U, 1U);
     client_options.log_fn = hot_reload_log_fn;
 
     dcc_client_t *client = NULL;
@@ -241,13 +237,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    dcc_hot_reload_options_t hot_reload_options;
-    memset(&hot_reload_options, 0, sizeof(hot_reload_options));
-    hot_reload_options.size = sizeof(hot_reload_options);
+    dcc_hot_reload_options_t hot_reload_options =
+        DCC_HOT_RELOAD_ISOLATED_OPTIONS(worker_path);
     hot_reload_options.poll_interval_ms = 250;
     hot_reload_options.settle_interval_ms = 100;
-    hot_reload_options.backend = DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER;
-    hot_reload_options.worker_path = worker_path;
     hot_reload_options.worker_health_timeout_ms = 3000;
     hot_reload_options.worker_drain_timeout_ms = 500;
 

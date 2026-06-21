@@ -1,13 +1,7 @@
 #ifndef DCC_DISCORD_GAME_INTERNAL_H
 #define DCC_DISCORD_GAME_INTERNAL_H
 
-#include <dcc/dcc.h>
-#include <dcc/application_command.h>
-#include <dcc/client.h>
-#include <dcc/component.h>
-#include <dcc/events.h>
-#include <dcc/message.h>
-#include <dcc/rest/application_commands.h>
+#include <dcc/sugar.h>
 #include <dcc/rest/interactions.h>
 
 #include <errno.h>

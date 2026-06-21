@@ -1,4 +1,4 @@
-#include <dcc/dcc.h>
+#include <dcc/sugar.h>
 
 #include <stdio.h>
 #include <stdint.h>

@@ -17,13 +17,8 @@ int main(void) {
     };
 
     dcc_client_t *client = NULL;
-    dcc_client_options_t opts = {
-        .size = sizeof(opts),
-        .token = token,
-        .intents = DCC_INTENT_GUILDS,
-        .shard_id = 0,
-        .shard_count = 1,
-    };
+    dcc_client_options_t opts =
+        DCC_CLIENT_SHARDED_OPTIONS(token, DCC_INTENTS_DEFAULT, 0U, 1U);
 
     dcc_status_t st = dcc_client_create(&opts, &client);
     if (st != DCC_OK) {

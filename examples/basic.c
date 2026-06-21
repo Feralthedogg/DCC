@@ -1,4 +1,4 @@
-#include <dcc/dcc.h>
+#include <dcc/sugar.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,13 +23,8 @@ static void on_ready(dcc_client_t *client, const dcc_event_t *event, void *user_
 
 int main(void) {
     dcc_client_t *client = NULL;
-    dcc_client_options_t opts = {
-        .size = sizeof(opts),
-        .token = getenv("BOT_TOKEN"),
-        .intents = DCC_INTENT_GUILDS,
-        .shard_id = 0,
-        .shard_count = 1,
-    };
+    dcc_client_options_t opts =
+        DCC_CLIENT_SHARDED_OPTIONS(getenv("BOT_TOKEN"), DCC_INTENTS_DEFAULT, 0U, 1U);
 
     dcc_status_t st = dcc_client_create(&opts, &client);
     if (st != DCC_OK) {
@@ -63,4 +58,3 @@ int main(void) {
     dcc_client_destroy(client);
     return 0;
 }
-

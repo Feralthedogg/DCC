@@ -1,4 +1,5 @@
 #include <dcc/dcc.h>
+#include <dcc/sugar.h>
 
 #include <stdatomic.h>
 #include <stdint.h>
@@ -235,11 +236,7 @@ int main(void) {
     dcc_cluster_t *cluster = NULL;
     dcc_cluster_options_t opts = {
         .size = sizeof(opts),
-        .client_options = {
-            .size = sizeof(dcc_client_options_t),
-            .token = token,
-            .intents = DCC_INTENT_GUILDS,
-        },
+        .client_options = DCC_CLIENT_OPTIONS(token, DCC_INTENTS_DEFAULT),
         .shard_count = shard_count,
         .first_shard_id = first_shard,
         .total_shard_count = total_shards,
