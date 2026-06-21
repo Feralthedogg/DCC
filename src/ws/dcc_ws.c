@@ -34,6 +34,13 @@ dcc_status_t dcc_ws_retain(dcc_ws_t *ws) {
         }
     }
 }
+void dcc_ws_set_timeout_ms(dcc_ws_t *ws, int timeout_ms) {
+    if (ws == NULL || timeout_ms <= 0) {
+        return;
+    }
+
+    ws->conn.timeout_ms = timeout_ms;
+}
 void dcc_ws_message_deinit(dcc_ws_message_t *message) {
     if (message == NULL) {
         return;

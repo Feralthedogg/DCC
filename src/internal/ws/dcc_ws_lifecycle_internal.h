@@ -13,6 +13,7 @@ extern "C" {
 
 dcc_status_t dcc_ws_connect(dcc_ws_t **out, const char *url, int timeout_ms);
 dcc_status_t dcc_ws_retain(dcc_ws_t *ws);
+void dcc_ws_set_timeout_ms(dcc_ws_t *ws, int timeout_ms);
 intptr_t dcc_ws_fd(const dcc_ws_t *ws);
 uint16_t dcc_ws_last_close_code(const dcc_ws_t *ws);
 const char *dcc_ws_last_close_reason(const dcc_ws_t *ws);

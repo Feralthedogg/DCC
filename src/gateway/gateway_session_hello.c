@@ -2,9 +2,25 @@
 #include "internal/gateway/dcc_gateway_session_receive_internal.h"
 #include "internal/ws/dcc_ws.h"
 
+#include <limits.h>
+#include <stdint.h>
 #include <string.h>
 
 static _Thread_local dcc_json_gateway_payload_t dcc_gateway_hello_payload_scratch;
+
+static int dcc_gateway_read_timeout_for_heartbeat(uint32_t heartbeat_interval_ms) {
+    const uint64_t minimum_timeout_ms = UINT64_C(90000);
+    const uint64_t margin_ms = UINT64_C(15000);
+    uint64_t timeout_ms = (uint64_t)heartbeat_interval_ms * UINT64_C(2) + margin_ms;
+
+    if (timeout_ms < minimum_timeout_ms) {
+        timeout_ms = minimum_timeout_ms;
+    }
+    if (timeout_ms > (uint64_t)INT_MAX) {
+        return INT_MAX;
+    }
+    return (int)timeout_ms;
+}
 
 dcc_status_t dcc_gateway_read_hello(dcc_gateway_session_t *session) {
     dcc_ws_message_t message;
@@ -33,6 +49,10 @@ dcc_status_t dcc_gateway_read_hello(dcc_gateway_session_t *session) {
     }
 
     session->heartbeat_interval_ms = (uint32_t)payload->heartbeat_interval;
+    dcc_ws_set_timeout_ms(
+        session->ws,
+        dcc_gateway_read_timeout_for_heartbeat(session->heartbeat_interval_ms)
+    );
     dcc_ws_message_deinit(&message);
     return DCC_OK;
 }
