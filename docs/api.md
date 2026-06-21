@@ -16,17 +16,16 @@ simple value can stay readable as one expression.
 dcc_application_command_builder_t ping =
     DCC_SLASH_COMMAND("ping", "Latency check");
 
-dcc_component_v2_builder_t refresh =
-    DCC_V2_BUTTON_PRIMARY("Refresh", "status.refresh");
-dcc_component_v2_builder_t text =
-    DCC_V2_TEXT("# Runtime status");
-dcc_component_v2_builder_t section =
-    DCC_V2_SECTION(&text, 1, &refresh);
-dcc_component_v2_builder_t message_components[] = {
-    DCC_V2_CONTAINER_ACCENT(&section, 1, 0x5865F2),
-};
 dcc_message_builder_t message =
-    DCC_MESSAGE_COMPONENTS_V2(message_components, DCC_ARRAY_LEN(message_components));
+    DCC_MESSAGE_COMPONENTS_V2(
+        DCC_V2_CONTAINER_ACCENT(
+            0x5865F2,
+            DCC_V2_SECTION(
+                DCC_V2_BUTTON_PRIMARY("Refresh", "status.refresh"),
+                DCC_V2_TEXT("# Runtime status")
+            )
+        )
+    );
 ```
 
 The header covers client options, intent sets, messages, embeds, legacy
@@ -35,6 +34,11 @@ registration scope, component sessions, interaction flows, hot reload canary
 options, REST firewall options, and replay records. Components v2 message sugar
 sets `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2` and intentionally avoids mixing v2
 components with legacy `content` or `embeds`.
+
+Variadic sugar macros hide short-lived arrays with C compound literals, so
+message, embed, component, poll, select, and modal trees can be written inline.
+Use the `*_ARRAY` variants when the data already lives in an explicit array and
+you want to pass a pointer plus a count.
 
 ## Core Lifecycle
 

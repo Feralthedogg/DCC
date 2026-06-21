@@ -19,6 +19,9 @@
 #include <stdint.h>
 
 #define DCC_ARRAY_LEN(array_) (sizeof(array_) / sizeof((array_)[0]))
+#define DCC_SUGAR_ARRAY(type_, ...) ((type_[]){ __VA_ARGS__ })
+#define DCC_SUGAR_ARRAY_LEN(type_, ...) (sizeof((type_[]){ __VA_ARGS__ }) / sizeof(type_))
+#define DCC_SUGAR_PTR(type_, value_) (&DCC_SUGAR_ARRAY(type_, value_)[0])
 
 #ifndef DCC_MESSAGE_FLAG_SUPPRESS_EMBEDS
 #define DCC_MESSAGE_FLAG_SUPPRESS_EMBEDS UINT64_C(4)
@@ -126,12 +129,19 @@
         .url = (url_), \
         .icon_url = (icon_url_) \
     })
-#define DCC_EMBED_WITH_FIELDS(title_, description_, fields_, field_count_) \
+#define DCC_EMBED_WITH_FIELDS_ARRAY(title_, description_, fields_, field_count_) \
     ((dcc_embed_builder_t){ \
         .title = (title_), \
         .description = (description_), \
         .fields = (fields_), \
         .field_count = (field_count_) \
+    })
+#define DCC_EMBED_WITH_FIELDS(title_, description_, ...) \
+    ((dcc_embed_builder_t){ \
+        .title = (title_), \
+        .description = (description_), \
+        .fields = DCC_SUGAR_ARRAY(dcc_embed_field_t, __VA_ARGS__), \
+        .field_count = DCC_SUGAR_ARRAY_LEN(dcc_embed_field_t, __VA_ARGS__) \
     })
 
 #define DCC_MESSAGE_EMPTY() ((dcc_message_builder_t){0})
@@ -166,31 +176,55 @@
         .has_content = 1U, \
         .has_flags = 1U \
     })
-#define DCC_MESSAGE_EMBEDS(embeds_, embed_count_) \
+#define DCC_MESSAGE_EMBEDS_ARRAY(embeds_, embed_count_) \
     ((dcc_message_builder_t){ \
         .embeds = (embeds_), \
         .embeds_count = (embed_count_) \
     })
-#define DCC_MESSAGE_TEXT_EMBEDS(content_, embeds_, embed_count_) \
+#define DCC_MESSAGE_EMBEDS(...) \
+    ((dcc_message_builder_t){ \
+        .embeds = DCC_SUGAR_ARRAY(dcc_embed_builder_t, __VA_ARGS__), \
+        .embeds_count = DCC_SUGAR_ARRAY_LEN(dcc_embed_builder_t, __VA_ARGS__) \
+    })
+#define DCC_MESSAGE_TEXT_EMBEDS_ARRAY(content_, embeds_, embed_count_) \
     ((dcc_message_builder_t){ \
         .content = (content_), \
         .embeds = (embeds_), \
         .embeds_count = (embed_count_), \
         .has_content = 1U \
     })
-#define DCC_MESSAGE_COMPONENTS(components_, component_count_) \
+#define DCC_MESSAGE_TEXT_EMBEDS(content_, ...) \
+    ((dcc_message_builder_t){ \
+        .content = (content_), \
+        .embeds = DCC_SUGAR_ARRAY(dcc_embed_builder_t, __VA_ARGS__), \
+        .embeds_count = DCC_SUGAR_ARRAY_LEN(dcc_embed_builder_t, __VA_ARGS__), \
+        .has_content = 1U \
+    })
+#define DCC_MESSAGE_COMPONENTS_ARRAY(components_, component_count_) \
     ((dcc_message_builder_t){ \
         .components = (components_), \
         .components_count = (component_count_) \
+    })
+#define DCC_MESSAGE_COMPONENTS(...) \
+    ((dcc_message_builder_t){ \
+        .components = DCC_SUGAR_ARRAY(dcc_component_builder_t, __VA_ARGS__), \
+        .components_count = DCC_SUGAR_ARRAY_LEN(dcc_component_builder_t, __VA_ARGS__) \
     })
 #define DCC_MESSAGE_COMPONENTS_JSON(components_json_) \
     ((dcc_message_builder_t){ \
         .components_json = (components_json_) \
     })
-#define DCC_MESSAGE_COMPONENTS_V2(components_, component_count_) \
+#define DCC_MESSAGE_COMPONENTS_V2_ARRAY(components_, component_count_) \
     ((dcc_message_builder_t){ \
         .components_v2 = (components_), \
         .components_v2_count = (component_count_), \
+        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2, \
+        .has_flags = 1U \
+    })
+#define DCC_MESSAGE_COMPONENTS_V2(...) \
+    ((dcc_message_builder_t){ \
+        .components_v2 = DCC_SUGAR_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
+        .components_v2_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
         .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2, \
         .has_flags = 1U \
     })
@@ -206,10 +240,15 @@
         .allowed_mentions_json = (allowed_mentions_json_), \
         .has_content = 1U \
     })
-#define DCC_MESSAGE_STICKERS(sticker_ids_, sticker_count_) \
+#define DCC_MESSAGE_STICKERS_ARRAY(sticker_ids_, sticker_count_) \
     ((dcc_message_builder_t){ \
         .sticker_ids = (sticker_ids_), \
         .sticker_ids_count = (sticker_count_) \
+    })
+#define DCC_MESSAGE_STICKERS(...) \
+    ((dcc_message_builder_t){ \
+        .sticker_ids = DCC_SUGAR_ARRAY(dcc_snowflake_t, __VA_ARGS__), \
+        .sticker_ids_count = DCC_SUGAR_ARRAY_LEN(dcc_snowflake_t, __VA_ARGS__) \
     })
 #define DCC_POLL_MEDIA(text_) \
     ((dcc_poll_media_t){ \
@@ -225,12 +264,23 @@
     ((dcc_poll_answer_t){ \
         .media = DCC_POLL_MEDIA(text_) \
     })
-#define DCC_POLL(question_, answers_, answer_count_, duration_hours_) \
+#define DCC_POLL_ARRAY(question_, answers_, answer_count_, duration_hours_) \
     ((dcc_poll_builder_t){ \
         .size = sizeof(dcc_poll_builder_t), \
         .question = DCC_POLL_MEDIA(question_), \
         .answers = (answers_), \
         .answer_count = (answer_count_), \
+        .duration_hours = (duration_hours_), \
+        .layout_type = DCC_POLL_LAYOUT_DEFAULT, \
+        .has_duration = 1U, \
+        .has_layout_type = 1U \
+    })
+#define DCC_POLL(question_, duration_hours_, ...) \
+    ((dcc_poll_builder_t){ \
+        .size = sizeof(dcc_poll_builder_t), \
+        .question = DCC_POLL_MEDIA(question_), \
+        .answers = DCC_SUGAR_ARRAY(dcc_poll_answer_t, __VA_ARGS__), \
+        .answer_count = DCC_SUGAR_ARRAY_LEN(dcc_poll_answer_t, __VA_ARGS__), \
         .duration_hours = (duration_hours_), \
         .layout_type = DCC_POLL_LAYOUT_DEFAULT, \
         .has_duration = 1U, \
@@ -275,11 +325,17 @@
         .has_emoji = 1U \
     })
 
-#define DCC_ACTION_ROW(children_, child_count_) \
+#define DCC_ACTION_ROW_ARRAY(children_, child_count_) \
     ((dcc_component_builder_t){ \
         .type = DCC_COMPONENT_ACTION_ROW, \
         .children = (children_), \
         .children_count = (child_count_) \
+    })
+#define DCC_ACTION_ROW(...) \
+    ((dcc_component_builder_t){ \
+        .type = DCC_COMPONENT_ACTION_ROW, \
+        .children = DCC_SUGAR_ARRAY(dcc_component_builder_t, __VA_ARGS__), \
+        .children_count = DCC_SUGAR_ARRAY_LEN(dcc_component_builder_t, __VA_ARGS__) \
     })
 #define DCC_BUTTON_BUILDER(style_, label_, custom_id_) \
     ((dcc_component_builder_t){ \
@@ -313,12 +369,19 @@
         .has_style = 1U, \
         .has_sku_id = 1U \
     })
-#define DCC_STRING_SELECT_BUILDER(custom_id_, options_, option_count_) \
+#define DCC_STRING_SELECT_BUILDER_ARRAY(custom_id_, options_, option_count_) \
     ((dcc_component_builder_t){ \
         .type = DCC_COMPONENT_STRING_SELECT, \
         .custom_id = (custom_id_), \
         .options = (options_), \
         .options_count = (option_count_) \
+    })
+#define DCC_STRING_SELECT_BUILDER(custom_id_, ...) \
+    ((dcc_component_builder_t){ \
+        .type = DCC_COMPONENT_STRING_SELECT, \
+        .custom_id = (custom_id_), \
+        .options = DCC_SUGAR_ARRAY(dcc_select_option_t, __VA_ARGS__), \
+        .options_count = DCC_SUGAR_ARRAY_LEN(dcc_select_option_t, __VA_ARGS__) \
     })
 #define DCC_USER_SELECT_BUILDER(custom_id_) \
     ((dcc_component_builder_t){ \
@@ -386,30 +449,57 @@
         .has_button_style = 1U, \
         .has_sku_id = 1U \
     })
-#define DCC_V2_ACTION_ROW(children_, child_count_) \
+#define DCC_V2_ACTION_ROW_ARRAY(children_, child_count_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_ACTION_ROW, \
         .children = (children_), \
         .children_count = (child_count_) \
     })
-#define DCC_V2_SECTION(children_, child_count_, accessory_) \
+#define DCC_V2_ACTION_ROW(...) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_ACTION_ROW, \
+        .children = DCC_SUGAR_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
+        .children_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__) \
+    })
+#define DCC_V2_SECTION_ARRAY(children_, child_count_, accessory_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_SECTION, \
         .children = (children_), \
         .children_count = (child_count_), \
         .accessory = (accessory_) \
     })
-#define DCC_V2_CONTAINER(children_, child_count_) \
+#define DCC_V2_SECTION(accessory_, ...) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_SECTION, \
+        .children = DCC_SUGAR_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
+        .children_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
+        .accessory = DCC_SUGAR_PTR(dcc_component_v2_builder_t, accessory_) \
+    })
+#define DCC_V2_CONTAINER_ARRAY(children_, child_count_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_CONTAINER, \
         .children = (children_), \
         .children_count = (child_count_) \
     })
-#define DCC_V2_CONTAINER_ACCENT(children_, child_count_, accent_color_) \
+#define DCC_V2_CONTAINER(...) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_CONTAINER, \
+        .children = DCC_SUGAR_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
+        .children_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__) \
+    })
+#define DCC_V2_CONTAINER_ACCENT_ARRAY(children_, child_count_, accent_color_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_CONTAINER, \
         .children = (children_), \
         .children_count = (child_count_), \
+        .accent_color = (accent_color_), \
+        .has_accent_color = 1U \
+    })
+#define DCC_V2_CONTAINER_ACCENT(accent_color_, ...) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_CONTAINER, \
+        .children = DCC_SUGAR_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
+        .children_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
         .accent_color = (accent_color_), \
         .has_accent_color = 1U \
     })
@@ -437,22 +527,40 @@
         .spoiler = 1U, \
         .has_spoiler = 1U \
     })
-#define DCC_V2_MEDIA_GALLERY(media_, media_count_) \
+#define DCC_V2_MEDIA_GALLERY_ARRAY(media_, media_count_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_MEDIA_GALLERY, \
         .media = (media_), \
         .media_count = (media_count_) \
     })
+#define DCC_V2_MEDIA_GALLERY(...) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_MEDIA_GALLERY, \
+        .media = DCC_SUGAR_ARRAY(dcc_component_v2_media_t, __VA_ARGS__), \
+        .media_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_media_t, __VA_ARGS__) \
+    })
+#define DCC_V2_THUMBNAIL_ARRAY(media_) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_THUMBNAIL, \
+        .media = (media_), \
+        .media_count = 1U \
+    })
 #define DCC_V2_THUMBNAIL(media_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_THUMBNAIL, \
+        .media = DCC_SUGAR_PTR(dcc_component_v2_media_t, media_), \
+        .media_count = 1U \
+    })
+#define DCC_V2_FILE_ARRAY(media_) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_FILE, \
         .media = (media_), \
         .media_count = 1U \
     })
 #define DCC_V2_FILE(media_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_FILE, \
-        .media = (media_), \
+        .media = DCC_SUGAR_PTR(dcc_component_v2_media_t, media_), \
         .media_count = 1U \
     })
 #define DCC_V2_DEFAULT_USER(id_) \
@@ -470,12 +578,23 @@
         .id = (id_), \
         .type = DCC_COMPONENT_V2_SELECT_DEFAULT_CHANNEL \
     })
-#define DCC_V2_STRING_SELECT(custom_id_, options_, option_count_) \
+#define DCC_V2_DEFAULT_VALUES(...) \
+    DCC_SUGAR_ARRAY(dcc_component_v2_select_default_value_t, __VA_ARGS__)
+#define DCC_V2_CHANNEL_TYPES(...) \
+    DCC_SUGAR_ARRAY(uint32_t, __VA_ARGS__)
+#define DCC_V2_STRING_SELECT_ARRAY(custom_id_, options_, option_count_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_STRING_SELECT, \
         .custom_id = (custom_id_), \
         .options = (options_), \
         .options_count = (option_count_) \
+    })
+#define DCC_V2_STRING_SELECT(custom_id_, ...) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_STRING_SELECT, \
+        .custom_id = (custom_id_), \
+        .options = DCC_SUGAR_ARRAY(dcc_select_option_t, __VA_ARGS__), \
+        .options_count = DCC_SUGAR_ARRAY_LEN(dcc_select_option_t, __VA_ARGS__) \
     })
 #define DCC_V2_USER_SELECT(custom_id_) \
     ((dcc_component_v2_builder_t){ \
@@ -492,7 +611,7 @@
         .type = DCC_COMPONENT_V2_MENTIONABLE_SELECT, \
         .custom_id = (custom_id_) \
     })
-#define DCC_V2_CHANNEL_SELECT(custom_id_, default_values_, default_value_count_, channel_types_, channel_type_count_) \
+#define DCC_V2_CHANNEL_SELECT_ARRAY(custom_id_, default_values_, default_value_count_, channel_types_, channel_type_count_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_CHANNEL_SELECT, \
         .custom_id = (custom_id_), \
@@ -500,6 +619,15 @@
         .default_value_count = (default_value_count_), \
         .channel_types = (channel_types_), \
         .channel_type_count = (channel_type_count_) \
+    })
+#define DCC_V2_CHANNEL_SELECT(custom_id_, default_values_, channel_types_) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_CHANNEL_SELECT, \
+        .custom_id = (custom_id_), \
+        .default_values = (default_values_), \
+        .default_value_count = DCC_ARRAY_LEN(default_values_), \
+        .channel_types = (channel_types_), \
+        .channel_type_count = DCC_ARRAY_LEN(channel_types_) \
     })
 #define DCC_V2_TEXT_INPUT(custom_id_, label_, style_) \
     ((dcc_component_v2_builder_t){ \
@@ -509,11 +637,18 @@
         .text_input_style = (style_), \
         .has_text_input_style = 1U \
     })
-#define DCC_V2_LABEL(label_, component_) \
+#define DCC_V2_LABEL_ARRAY(label_, component_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_LABEL, \
         .label = (label_), \
         .children = (component_), \
+        .children_count = 1U \
+    })
+#define DCC_V2_LABEL(label_, component_) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_LABEL, \
+        .label = (label_), \
+        .children = DCC_SUGAR_PTR(dcc_component_v2_builder_t, component_), \
         .children_count = 1U \
     })
 #define DCC_V2_FILE_UPLOAD(custom_id_) \
@@ -521,19 +656,33 @@
         .type = DCC_COMPONENT_V2_FILE_UPLOAD, \
         .custom_id = (custom_id_) \
     })
-#define DCC_V2_RADIO_GROUP(custom_id_, options_, option_count_) \
+#define DCC_V2_RADIO_GROUP_ARRAY(custom_id_, options_, option_count_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_RADIO_GROUP, \
         .custom_id = (custom_id_), \
         .options = (options_), \
         .options_count = (option_count_) \
     })
-#define DCC_V2_CHECKBOX_GROUP(custom_id_, options_, option_count_) \
+#define DCC_V2_RADIO_GROUP(custom_id_, ...) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_RADIO_GROUP, \
+        .custom_id = (custom_id_), \
+        .options = DCC_SUGAR_ARRAY(dcc_select_option_t, __VA_ARGS__), \
+        .options_count = DCC_SUGAR_ARRAY_LEN(dcc_select_option_t, __VA_ARGS__) \
+    })
+#define DCC_V2_CHECKBOX_GROUP_ARRAY(custom_id_, options_, option_count_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_CHECKBOX_GROUP, \
         .custom_id = (custom_id_), \
         .options = (options_), \
         .options_count = (option_count_) \
+    })
+#define DCC_V2_CHECKBOX_GROUP(custom_id_, ...) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_CHECKBOX_GROUP, \
+        .custom_id = (custom_id_), \
+        .options = DCC_SUGAR_ARRAY(dcc_select_option_t, __VA_ARGS__), \
+        .options_count = DCC_SUGAR_ARRAY_LEN(dcc_select_option_t, __VA_ARGS__) \
     })
 #define DCC_V2_CHECKBOX(custom_id_, label_, checked_) \
     ((dcc_component_v2_builder_t){ \
@@ -544,7 +693,7 @@
         .has_checked = 1U \
     })
 
-#define DCC_MODAL_BUILDER(custom_id_, title_, components_, component_count_) \
+#define DCC_MODAL_BUILDER_ARRAY(custom_id_, title_, components_, component_count_) \
     ((dcc_modal_builder_t){ \
         .custom_id = (custom_id_), \
         .title = (title_), \
@@ -553,12 +702,30 @@
         .has_custom_id = 1U, \
         .has_title = 1U \
     })
-#define DCC_MODAL_V2_BUILDER(custom_id_, title_, components_, component_count_) \
+#define DCC_MODAL_BUILDER(custom_id_, title_, ...) \
+    ((dcc_modal_builder_t){ \
+        .custom_id = (custom_id_), \
+        .title = (title_), \
+        .components = DCC_SUGAR_ARRAY(dcc_component_builder_t, __VA_ARGS__), \
+        .components_count = DCC_SUGAR_ARRAY_LEN(dcc_component_builder_t, __VA_ARGS__), \
+        .has_custom_id = 1U, \
+        .has_title = 1U \
+    })
+#define DCC_MODAL_V2_BUILDER_ARRAY(custom_id_, title_, components_, component_count_) \
     ((dcc_modal_builder_t){ \
         .custom_id = (custom_id_), \
         .title = (title_), \
         .components_v2 = (components_), \
         .components_v2_count = (component_count_), \
+        .has_custom_id = 1U, \
+        .has_title = 1U \
+    })
+#define DCC_MODAL_V2_BUILDER(custom_id_, title_, ...) \
+    ((dcc_modal_builder_t){ \
+        .custom_id = (custom_id_), \
+        .title = (title_), \
+        .components_v2 = DCC_SUGAR_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
+        .components_v2_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
         .has_custom_id = 1U, \
         .has_title = 1U \
     })

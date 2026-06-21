@@ -45,6 +45,29 @@ dcc_message_builder_init(&message);
 dcc_message_builder_set_components_v2(&message, &container, 1);
 ```
 
+The same layout can be written with `<dcc/sugar.h>` without explicit component
+arrays:
+
+```c
+dcc_message_builder_t message =
+    DCC_MESSAGE_COMPONENTS_V2(
+        DCC_V2_CONTAINER_ACCENT(
+            0x5865F2,
+            DCC_V2_SECTION(
+                DCC_V2_BUTTON_PRIMARY("Refresh", "status.refresh"),
+                DCC_V2_TEXT("# Runtime status")
+            ),
+            DCC_V2_ACTION_ROW(
+                DCC_V2_BUTTON_SECONDARY("Details", "status.details"),
+                DCC_V2_BUTTON_DANGER("Close", "status.close")
+            )
+        )
+    );
+```
+
+The variadic sugar macros create block-scoped compound literal arrays. Use the
+matching `*_ARRAY` macro when you already have a persistent array and count.
+
 ## Media
 
 Media Gallery, Thumbnail, and File components use `dcc_component_v2_media_t`.
@@ -59,6 +82,15 @@ dcc_component_v2_media_t media[] = {
 
 dcc_component_v2_builder_t gallery;
 dcc_component_v2_builder_init_media_gallery(&gallery, media, 1);
+```
+
+With sugar:
+
+```c
+dcc_component_v2_builder_t gallery =
+    DCC_V2_MEDIA_GALLERY(
+        DCC_V2_MEDIA("attachment://graph.png", "Gateway latency graph")
+    );
 ```
 
 Add the matching attachment through the message builder:
@@ -116,6 +148,25 @@ dcc_modal_builder_init(&modal);
 dcc_modal_builder_set_custom_id(&modal, "config-modal");
 dcc_modal_builder_set_title(&modal, "Upload config");
 dcc_modal_builder_set_components_v2(&modal, &label, 1);
+```
+
+With sugar:
+
+```c
+dcc_component_v2_builder_t upload = DCC_V2_FILE_UPLOAD("config.upload");
+upload.min_values = 1;
+upload.max_values = 3;
+upload.required = 1;
+upload.has_min_values = 1;
+upload.has_max_values = 1;
+upload.has_required = 1;
+
+dcc_modal_builder_t modal =
+    DCC_MODAL_V2_BUILDER(
+        "config-modal",
+        "Upload config",
+        DCC_V2_LABEL("Config files", upload)
+    );
 ```
 
 Checkbox uses Discord's `default` JSON field for its initial checked state:
