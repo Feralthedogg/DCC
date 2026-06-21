@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 1.1.2
+    VERSION 1.2.0
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )
@@ -1135,6 +1135,7 @@ target_sources(dcc
         src/objects/objects_subscription.c
         src/objects/objects_thread_member_fields.c
         src/objects/objects.c
+        src/managed_message/managed_message.c
         src/replay/replay_json.c
         src/replay/replay_kind.c
         src/replay/replay_line.c
@@ -1228,6 +1229,7 @@ target_sources(dcc
         src/rest/rest_interaction_followup_message.c
         src/rest/rest_interaction_followup_multipart.c
         src/rest/rest_interaction_helpers.c
+        src/rest/rest_interaction_shortcuts.c
         src/rest/rest_interaction_original.c
         src/rest/rest_interaction_original_edit.c
         src/rest/rest_interaction_original_interaction.c
@@ -1238,6 +1240,7 @@ target_sources(dcc
         src/rest/rest_interaction_response_create.c
         src/rest/rest_interaction_response_wrappers.c
         src/rest/rest_intercept.c
+        src/rest/rest_response_helpers.c
         src/rest/firewall/rest_firewall_client.c
         src/rest/firewall/rest_firewall_options.c
         src/rest/firewall/rest_firewall_snapshot_json.c

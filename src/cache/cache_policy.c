@@ -1,4 +1,5 @@
 #include "internal/cache/dcc_cache_internal.h"
+#include "internal/client/dcc_client_guild_inference_internal.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -70,6 +71,7 @@ dcc_status_t dcc_cache_set_policy(dcc_client_t *client, const dcc_cache_policy_t
     dcc_cache_lock(&client->cache);
     client->cache_policy = next;
     dcc_cache_trim_locked(client);
+    dcc_client_channel_guild_inference_clear(client);
     dcc_cache_unlock(&client->cache);
     return DCC_OK;
 }

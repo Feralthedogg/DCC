@@ -1,4 +1,5 @@
 #include "internal/cache/dcc_cache_internal.h"
+#include "internal/client/dcc_client_guild_inference_internal.h"
 
 dcc_status_t dcc_cache_merge_channel(dcc_client_t *client, const dcc_channel_t *channel, uint64_t fields) {
     if (channel == NULL || channel->id == 0) {
@@ -21,6 +22,8 @@ dcc_status_t dcc_cache_merge_channel(dcc_client_t *client, const dcc_channel_t *
         dcc_cache_unlock(&client->cache);
         return DCC_ERR_NOMEM;
     }
+    dcc_snowflake_t merged_channel_id = copy->id;
+    dcc_snowflake_t merged_guild_id = copy->guild_id;
     status = dcc_cache_table_put(
         &client->cache.channels,
         channel->id,
@@ -33,6 +36,10 @@ dcc_status_t dcc_cache_merge_channel(dcc_client_t *client, const dcc_channel_t *
     dcc_cache_unlock(&client->cache);
     if (status != DCC_OK) {
         dcc_channel_free(copy);
+    } else if (merged_guild_id != 0U) {
+        dcc_client_channel_guild_inference_store(client, merged_channel_id, merged_guild_id);
+    } else {
+        dcc_client_channel_guild_inference_clear(client);
     }
     return status;
 }

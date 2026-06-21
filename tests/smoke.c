@@ -109,6 +109,19 @@ static int run_cache_smoke(dcc_client_t *client) {
         return 1;
     }
 
+    dcc_snowflake_t inferred_guild_id = 0;
+    if (dcc_cache_infer_guild_id_from_channel(client, 200, &inferred_guild_id) != DCC_OK ||
+        inferred_guild_id != 100 ||
+        dcc_client_infer_guild_id_from_channel(client, 200, &inferred_guild_id) != DCC_OK ||
+        inferred_guild_id != 100) {
+        fprintf(stderr, "channel guild inference failed\n");
+        return 1;
+    }
+    if (dcc_client_update_voice_state(client, 0, 200, 0, 0) != DCC_ERR_STATE) {
+        fprintf(stderr, "voice state auto guild inference did not reach gateway state validation\n");
+        return 1;
+    }
+
     dcc_cache_counts_t counts = {
         .size = sizeof(counts),
     };
@@ -128,6 +141,11 @@ static int run_cache_smoke(dcc_client_t *client) {
         dcc_cache_remove_role(client, 100, 300) ||
         dcc_cache_get_role(client, 100, 300) != NULL) {
         fprintf(stderr, "cache role remove failed\n");
+        return 1;
+    }
+    if (!dcc_cache_remove_channel(client, 200) ||
+        dcc_client_infer_guild_id_from_channel(client, 200, &inferred_guild_id) != DCC_ERR_NOT_FOUND) {
+        fprintf(stderr, "channel guild inference remove failed\n");
         return 1;
     }
 
@@ -250,12 +268,62 @@ static int run_cache_policy_smoke(dcc_client_t *client) {
     return 0;
 }
 
+static int run_rest_response_helper_smoke(void) {
+    const char response_body[] =
+        "{\"id\":\"1518234972190802092\",\"channel_id\":1518200161208238111}";
+    dcc_rest_response_t response = {
+        .size = sizeof(response),
+        .status = 200,
+        .error = DCC_OK,
+        .body = response_body,
+        .body_len = strlen(response_body),
+    };
+
+    dcc_snowflake_t snowflake = 0;
+    if (dcc_rest_response_message_id(&response, &snowflake) != DCC_OK ||
+        snowflake != 1518234972190802092ULL) {
+        fprintf(stderr, "message id response helper failed\n");
+        return 1;
+    }
+    if (dcc_rest_response_channel_id(&response, &snowflake) != DCC_OK ||
+        snowflake != 1518200161208238111ULL) {
+        fprintf(stderr, "channel id response helper failed\n");
+        return 1;
+    }
+    if (dcc_rest_response_snowflake_field(&response, "missing", &snowflake) != DCC_ERR_NOT_FOUND) {
+        fprintf(stderr, "missing snowflake field helper failed\n");
+        return 1;
+    }
+
+    const char nested_body[] = "{\"nested\":{\"id\":\"1\"},\"id\":\"2\"}";
+    response.body = nested_body;
+    response.body_len = strlen(nested_body);
+    if (dcc_rest_response_message_id(&response, &snowflake) != DCC_OK ||
+        snowflake != 2ULL) {
+        fprintf(stderr, "top-level snowflake helper failed\n");
+        return 1;
+    }
+
+    const char malformed_body[] = "{\"id\":\"12x\"}";
+    response.body = malformed_body;
+    response.body_len = strlen(malformed_body);
+    if (dcc_rest_response_message_id(&response, &snowflake) != DCC_ERR_JSON) {
+        fprintf(stderr, "malformed snowflake helper failed\n");
+        return 1;
+    }
+
+    return 0;
+}
+
 int main(void) {
     dcc_permission_t perms = DCC_PERMISSION_SEND_MESSAGES | DCC_PERMISSION_BYPASS_SLOWMODE;
     if (!dcc_permissions_has(perms, DCC_PERMISSION_BYPASS_SLOWMODE) ||
         dcc_permissions_can(perms, DCC_PERMISSION_BAN_MEMBERS) ||
         !dcc_permissions_can(DCC_PERMISSION_ADMINISTRATOR, DCC_PERMISSION_BAN_MEMBERS)) {
         fprintf(stderr, "permission helpers invalid\n");
+        return 1;
+    }
+    if (run_rest_response_helper_smoke() != 0) {
         return 1;
     }
 
@@ -267,6 +335,7 @@ int main(void) {
         .intents = DCC_INTENT_GUILDS,
         .shard_count = 1,
         .enable_cache = 1,
+        .infer_guild_id_from_channel = 1,
     };
 
     dcc_status_t st = dcc_client_create(&opts, &client);

@@ -37,7 +37,8 @@ void dcc_hot_reload_host_usage(FILE *stream, const char *argv0) {
         "  .env in the current directory is loaded without overriding exported values\n"
         "\n"
         "intent example:\n"
-        "  DCC_HOT_RELOAD_INTENTS=guilds,guild_messages,message_content\n",
+        "  DCC_HOT_RELOAD_INTENTS=guilds,guild_messages,message_content\n"
+        "  DCC_HOT_RELOAD_INTENTS=all\n",
         argv0,
         DCC_HOT_RELOAD_DEFAULT_WORKER
     );

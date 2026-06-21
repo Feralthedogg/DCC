@@ -312,6 +312,8 @@ EXPECTED_REST_GAP_LABELS = {
 }
 
 EXPECTED_INTERACTION_CONVENIENCE_LABELS = {
+    "direct interaction ephemeral text",
+    "direct interaction error embed",
     "interaction convenience autocomplete callback",
     "interaction convenience deferred message callback",
     "interaction convenience followup create",
@@ -340,6 +342,8 @@ INTERACTION_CONVENIENCE_REQUIRED_TOKENS = {
     '"type":8',
     '"type":6',
     '"type":5',
+    '"flags":64',
+    '"color":15548997',
     '"name_localizations":{"ko":"red-ko"}',
 }
 

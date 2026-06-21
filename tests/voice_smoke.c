@@ -38,6 +38,8 @@ int main(void) {
         .intents = DCC_INTENT_GUILDS,
         .shard_id = 7,
         .shard_count = 8,
+        .enable_cache = 1,
+        .infer_guild_id_from_channel = 1,
     };
 
     dcc_status_t st = dcc_client_create(&opts, &client);
@@ -388,27 +390,45 @@ int main(void) {
 
     dcc_status_t voice_connect_null = dcc_voice_client_connect(NULL, 1, 1, 0, 0, 0);
     dcc_status_t voice_connect_state = dcc_voice_client_connect(state.voice_client, 1, 1, 0, 0, 0);
+    dcc_channel_t inferred_channel = {
+        .id = 222,
+        .guild_id = 111,
+        .name = "voice",
+    };
+    if (dcc_cache_put_channel(client, &inferred_channel) != DCC_OK) {
+        fprintf(stderr, "voice inference channel cache put failed\n");
+        dcc_voice_client_destroy(state.voice_client);
+        dcc_client_destroy(client);
+        return 1;
+    }
+    dcc_status_t voice_connect_inferred = dcc_voice_client_connect(state.voice_client, 0, 222, 0, 0, 0);
     dcc_status_t voice_leave_null = dcc_voice_client_leave(NULL);
     dcc_status_t voice_leave_state = dcc_voice_client_leave(state.voice_client);
     dcc_status_t gateway_voice_null = dcc_client_update_voice_state(NULL, 1, 1, 0, 0);
     dcc_status_t gateway_voice_state =
         dcc_client_update_voice_state(dcc_voice_client_owner(state.voice_client), 1, 1, 0, 0);
+    dcc_status_t gateway_voice_inferred =
+        dcc_client_update_voice_state(dcc_voice_client_owner(state.voice_client), 0, 222, 0, 0);
     if (voice_connect_null != DCC_ERR_INVALID_ARG ||
         voice_connect_state != DCC_ERR_STATE ||
+        voice_connect_inferred != DCC_ERR_STATE ||
         voice_leave_null != DCC_ERR_INVALID_ARG ||
         voice_leave_state != DCC_ERR_STATE ||
         gateway_voice_null != DCC_ERR_INVALID_ARG ||
-        gateway_voice_state != DCC_ERR_STATE) {
+        gateway_voice_state != DCC_ERR_STATE ||
+        gateway_voice_inferred != DCC_ERR_STATE) {
         fprintf(
             stderr,
             "voice gateway state checks failed: connect_null=%s connect=%s leave_null=%s leave=%s "
-            "gateway_null=%s gateway=%s\n",
+            "gateway_null=%s gateway=%s connect_inferred=%s gateway_inferred=%s\n",
             dcc_status_string(voice_connect_null),
             dcc_status_string(voice_connect_state),
             dcc_status_string(voice_leave_null),
             dcc_status_string(voice_leave_state),
             dcc_status_string(gateway_voice_null),
-            dcc_status_string(gateway_voice_state)
+            dcc_status_string(gateway_voice_state),
+            dcc_status_string(voice_connect_inferred),
+            dcc_status_string(gateway_voice_inferred)
         );
         dcc_voice_client_destroy(state.voice_client);
         dcc_client_destroy(client);

@@ -148,7 +148,9 @@ to override that worker executable. The installed host defaults to the `guilds`
 intent for slash-command bots; pass `--guild <id>` for guild-only development
 command registration, pass `--global` to clear inherited guild scoping, and set
 `DCC_HOT_RELOAD_INTENTS` or pass `--intents` when
-a module needs message, presence, voice, or other Gateway events. It loads
+a module needs message, presence, voice, or other Gateway events; use
+`DCC_HOT_RELOAD_INTENTS=all` only when every supported intent is needed and
+privileged intents are enabled in the Developer Portal. It loads
 `.env` from the current directory without overriding exported variables, accepts
 `DISCORD_TOKEN` as a `BOT_TOKEN` fallback, and supports
 `dcc_hot_reload_host --check` for no-network config validation. `--check`

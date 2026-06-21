@@ -1,4 +1,5 @@
 #include "internal/client/dcc_client_state_internal.h"
+#include "internal/dcc_core_internal.h"
 #include "internal/gateway/dcc_gateway_lifecycle_internal.h"
 
 dcc_status_t dcc_client_gateway_start(dcc_client_t *client) {
@@ -35,7 +36,25 @@ dcc_status_t dcc_client_update_voice_state(
     uint8_t self_mute,
     uint8_t self_deaf
 ) {
+    if (client != NULL &&
+        guild_id == 0U &&
+        channel_id != 0U &&
+        client->infer_guild_id_from_channel != 0U) {
+        dcc_status_t status = dcc_client_infer_guild_id_from_channel(client, channel_id, &guild_id);
+        if (status != DCC_OK) {
+            dcc_set_error(client, "could not infer guild id from channel id");
+            return status;
+        }
+    }
     return dcc_gateway_send_voice_state_update(client, guild_id, channel_id, self_mute, self_deaf);
+}
+
+dcc_status_t dcc_client_infer_guild_id_from_channel(
+    const dcc_client_t *client,
+    dcc_snowflake_t channel_id,
+    dcc_snowflake_t *out_guild_id
+) {
+    return dcc_cache_infer_guild_id_from_channel(client, channel_id, out_guild_id);
 }
 
 dcc_status_t dcc_client_gateway_info(const dcc_client_t *client, dcc_gateway_info_t *out) {

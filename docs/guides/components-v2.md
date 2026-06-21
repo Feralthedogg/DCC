@@ -144,13 +144,13 @@ upload.has_max_values = 1;
 upload.has_required = 1;
 
 dcc_modal_builder_t modal =
-    DCC_MODAL_V2_BUILDER(
+    DCC_MODAL_V2(
         "config-modal",
         "Upload config",
         DCC_V2_LABEL("Config files", upload),
         DCC_V2_LABEL(
             "Apply immediately",
-            DCC_V2_CHECKBOX("config.accept", "Apply after submit", 1U)
+            DCC_MODAL_V2_CHECKBOX("config.accept", "Apply after submit", 1U)
         )
     );
 ```

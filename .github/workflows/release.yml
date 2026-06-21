@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example v1.1.2
+        description: Release version, for example v1.2.0
         required: false
-        default: v1.1.2
+        default: v1.2.0
         type: string
   push:
     tags:
@@ -280,6 +280,8 @@ jobs:
             echo
             echo "- DPP-inspired Discord C client surface with Gateway, REST, slash command, component, and interaction helpers."
             echo "- LLAM-backed runtime and networking path bundled into release archives."
+            echo "- Direct interaction reply helpers, stronger modal sugar, managed latest-message publishing, and REST response ID extraction."
+            echo "- Optional cached channel-to-guild inference for voice helpers and \`all\` Gateway intent selection in the hot reload host."
             echo "- Hot-reload isolated worker mode with last-good rollback support."
             echo "- Hardened hot-reload worker IPC with bounded reads/writes, payload caps, and bounded shutdown escalation."
             echo "- Combined DCC+LLAM source builds keep vendored LLAM tests isolated from DCC release checks by default."

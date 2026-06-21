@@ -10,7 +10,9 @@
 #include <dcc/embed.h>
 #include <dcc/hot_reload.h>
 #include <dcc/intents.h>
+#include <dcc/interaction_helpers.h>
 #include <dcc/interaction_flow.h>
+#include <dcc/managed_message.h>
 #include <dcc/message.h>
 #include <dcc/modal.h>
 #include <dcc/replay.h>
@@ -84,6 +86,15 @@
         .intents = (intents_), \
         .shard_id = (shard_id_), \
         .shard_count = (shard_count_) \
+    })
+
+#define DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE(token_, intents_) \
+    ((dcc_client_options_t){ \
+        .size = sizeof(dcc_client_options_t), \
+        .token = (token_), \
+        .intents = (intents_), \
+        .enable_cache = 1U, \
+        .infer_guild_id_from_channel = 1U \
     })
 
 #define DCC_EMBED_EMPTY() ((dcc_embed_builder_t){0})
@@ -233,6 +244,25 @@
         .components_v2_json = (components_json_), \
         .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2, \
         .has_flags = 1U \
+    })
+#define DCC_MANAGED_MESSAGE_OPTIONS(channel_id_, message_, load_, save_, storage_user_data_) \
+    ((dcc_managed_message_options_t){ \
+        .size = sizeof(dcc_managed_message_options_t), \
+        .channel_id = (channel_id_), \
+        .message = (message_), \
+        .load = (load_), \
+        .save = (save_), \
+        .storage_user_data = (storage_user_data_) \
+    })
+#define DCC_MANAGED_MESSAGE_KEEP_PREVIOUS_OPTIONS(channel_id_, message_, load_, save_, storage_user_data_) \
+    ((dcc_managed_message_options_t){ \
+        .size = sizeof(dcc_managed_message_options_t), \
+        .channel_id = (channel_id_), \
+        .message = (message_), \
+        .load = (load_), \
+        .save = (save_), \
+        .storage_user_data = (storage_user_data_), \
+        .keep_previous = 1U \
     })
 #define DCC_MESSAGE_ALLOWED_MENTIONS_JSON(content_, allowed_mentions_json_) \
     ((dcc_message_builder_t){ \
@@ -410,6 +440,27 @@
         .label = (label_), \
         .text_input_style = (style_), \
         .has_text_input_style = 1U \
+    })
+#define DCC_TEXT_INPUT_REQUIRED(custom_id_, label_, style_, required_) \
+    ((dcc_component_builder_t){ \
+        .type = DCC_COMPONENT_TEXT_INPUT, \
+        .custom_id = (custom_id_), \
+        .label = (label_), \
+        .text_input_style = (style_), \
+        .required = (required_), \
+        .has_text_input_style = 1U, \
+        .has_required = 1U \
+    })
+#define DCC_TEXT_INPUT_PLACEHOLDER(custom_id_, label_, style_, placeholder_, required_) \
+    ((dcc_component_builder_t){ \
+        .type = DCC_COMPONENT_TEXT_INPUT, \
+        .custom_id = (custom_id_), \
+        .label = (label_), \
+        .text_input_style = (style_), \
+        .placeholder = (placeholder_), \
+        .required = (required_), \
+        .has_text_input_style = 1U, \
+        .has_required = 1U \
     })
 
 #define DCC_V2_TEXT(content_) \
@@ -637,6 +688,27 @@
         .text_input_style = (style_), \
         .has_text_input_style = 1U \
     })
+#define DCC_V2_TEXT_INPUT_REQUIRED(custom_id_, label_, style_, required_) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_TEXT_INPUT, \
+        .custom_id = (custom_id_), \
+        .label = (label_), \
+        .text_input_style = (style_), \
+        .required = (required_), \
+        .has_text_input_style = 1U, \
+        .has_required = 1U \
+    })
+#define DCC_V2_TEXT_INPUT_PLACEHOLDER(custom_id_, label_, style_, placeholder_, required_) \
+    ((dcc_component_v2_builder_t){ \
+        .type = DCC_COMPONENT_V2_TEXT_INPUT, \
+        .custom_id = (custom_id_), \
+        .label = (label_), \
+        .text_input_style = (style_), \
+        .placeholder = (placeholder_), \
+        .required = (required_), \
+        .has_text_input_style = 1U, \
+        .has_required = 1U \
+    })
 #define DCC_V2_LABEL_ARRAY(label_, component_) \
     ((dcc_component_v2_builder_t){ \
         .type = DCC_COMPONENT_V2_LABEL, \
@@ -745,6 +817,26 @@
         .has_custom_id = 1U, \
         .has_title = 1U \
     })
+#define DCC_MODAL(custom_id_, title_, ...) DCC_MODAL_BUILDER((custom_id_), (title_), __VA_ARGS__)
+#define DCC_MODAL_V2(custom_id_, title_, ...) DCC_MODAL_V2_BUILDER((custom_id_), (title_), __VA_ARGS__)
+#define DCC_MODAL_TEXT_INPUT(custom_id_, label_, required_) \
+    DCC_TEXT_INPUT_REQUIRED((custom_id_), (label_), DCC_TEXT_INPUT_SHORT, (required_))
+#define DCC_MODAL_TEXT_INPUT_PLACEHOLDER(custom_id_, label_, placeholder_, required_) \
+    DCC_TEXT_INPUT_PLACEHOLDER((custom_id_), (label_), DCC_TEXT_INPUT_SHORT, (placeholder_), (required_))
+#define DCC_MODAL_PARAGRAPH_INPUT(custom_id_, label_, required_) \
+    DCC_TEXT_INPUT_REQUIRED((custom_id_), (label_), DCC_TEXT_INPUT_PARAGRAPH, (required_))
+#define DCC_MODAL_PARAGRAPH_INPUT_PLACEHOLDER(custom_id_, label_, placeholder_, required_) \
+    DCC_TEXT_INPUT_PLACEHOLDER((custom_id_), (label_), DCC_TEXT_INPUT_PARAGRAPH, (placeholder_), (required_))
+#define DCC_MODAL_V2_TEXT_INPUT(custom_id_, label_, required_) \
+    DCC_V2_TEXT_INPUT_REQUIRED((custom_id_), (label_), DCC_TEXT_INPUT_SHORT, (required_))
+#define DCC_MODAL_V2_TEXT_INPUT_PLACEHOLDER(custom_id_, label_, placeholder_, required_) \
+    DCC_V2_TEXT_INPUT_PLACEHOLDER((custom_id_), (label_), DCC_TEXT_INPUT_SHORT, (placeholder_), (required_))
+#define DCC_MODAL_V2_PARAGRAPH_INPUT(custom_id_, label_, required_) \
+    DCC_V2_TEXT_INPUT_REQUIRED((custom_id_), (label_), DCC_TEXT_INPUT_PARAGRAPH, (required_))
+#define DCC_MODAL_V2_PARAGRAPH_INPUT_PLACEHOLDER(custom_id_, label_, placeholder_, required_) \
+    DCC_V2_TEXT_INPUT_PLACEHOLDER((custom_id_), (label_), DCC_TEXT_INPUT_PARAGRAPH, (placeholder_), (required_))
+#define DCC_MODAL_V2_CHECKBOX(custom_id_, label_, checked_) \
+    DCC_V2_CHECKBOX((custom_id_), (label_), (checked_))
 
 #define DCC_SLASH_COMMAND(name_, description_) \
     ((dcc_application_command_builder_t){ \

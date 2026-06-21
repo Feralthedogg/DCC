@@ -31,12 +31,7 @@ static const dcc_hot_reload_host_intent_name_t dcc_hot_reload_host_intents[] = {
 };
 
 dcc_intents_t dcc_hot_reload_host_all_intents(void) {
-    dcc_intents_t all = 0;
-    size_t i;
-    for (i = 0; i < sizeof(dcc_hot_reload_host_intents) / sizeof(dcc_hot_reload_host_intents[0]); ++i) {
-        all |= dcc_hot_reload_host_intents[i].value;
-    }
-    return all;
+    return DCC_INTENTS_ALL;
 }
 
 int dcc_hot_reload_host_lookup_intent(const char *token, dcc_intents_t *out) {

@@ -54,6 +54,11 @@ DCC_API uint8_t dcc_cache_remove_guild(dcc_client_t *client, dcc_snowflake_t gui
 
 DCC_API dcc_status_t dcc_cache_put_channel(dcc_client_t *client, const dcc_channel_t *channel);
 DCC_API const dcc_channel_t *dcc_cache_get_channel(const dcc_client_t *client, dcc_snowflake_t channel_id);
+DCC_API dcc_status_t dcc_cache_infer_guild_id_from_channel(
+    const dcc_client_t *client,
+    dcc_snowflake_t channel_id,
+    dcc_snowflake_t *out_guild_id
+);
 DCC_API uint8_t dcc_cache_remove_channel(dcc_client_t *client, dcc_snowflake_t channel_id);
 
 DCC_API dcc_status_t dcc_cache_put_role(dcc_client_t *client, const dcc_role_t *role);

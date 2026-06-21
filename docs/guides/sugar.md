@@ -19,11 +19,29 @@ dcc_client_options_t options =
     DCC_CLIENT_OPTIONS(getenv("DISCORD_TOKEN"), DCC_INTENTS_DEFAULT);
 ```
 
+Use every currently supported Gateway intent with `DCC_INTENTS_ALL`. Discord
+still requires privileged intents to be enabled in the Developer Portal.
+
+```c
+dcc_client_options_t options =
+    DCC_CLIENT_OPTIONS(getenv("DISCORD_TOKEN"), DCC_INTENTS_ALL);
+```
+
 For sharded clients:
 
 ```c
 dcc_client_options_t options =
     DCC_CLIENT_SHARDED_OPTIONS(token, DCC_INTENTS_MESSAGES, shard_id, shard_count);
+```
+
+If you want voice helpers to infer `guild_id` from a cached channel ID, use the
+guild-inference client options. This enables the cache and the inference flag.
+
+```c
+dcc_client_options_t options =
+    DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE(token, DCC_INTENTS_ALL);
+
+dcc_voice_client_connect(voice, 0, voice_channel_id, 0, 0, 1);
 ```
 
 ## Commands
@@ -133,16 +151,40 @@ dcc_component_v2_builder_t channel_select =
 
 ```c
 dcc_modal_builder_t modal =
-    DCC_MODAL_V2_BUILDER(
+    DCC_MODAL_V2(
         "settings-modal",
         "Settings",
         DCC_V2_LABEL(
             "Display name",
-            DCC_V2_TEXT_INPUT("profile.name", "Name", DCC_TEXT_INPUT_SHORT)
+            DCC_MODAL_V2_TEXT_INPUT_PLACEHOLDER(
+                "profile.name",
+                "Name",
+                "Enter a display name",
+                1U
+            )
         ),
         DCC_V2_LABEL(
             "Apply immediately",
-            DCC_V2_CHECKBOX("settings.apply", "Apply after submit", 1U)
+            DCC_MODAL_V2_CHECKBOX("settings.apply", "Apply after submit", 1U)
+        )
+    );
+```
+
+Legacy modals can stay compact too. Text inputs must still be inside an action
+row because that is the Discord v1 modal shape.
+
+```c
+dcc_modal_builder_t modal =
+    DCC_MODAL(
+        "birthday-modal",
+        "Birthday",
+        DCC_ACTION_ROW(
+            DCC_MODAL_TEXT_INPUT_PLACEHOLDER(
+                "birthday",
+                "Birthday",
+                "YYYYMMDD",
+                1U
+            )
         )
     );
 ```
@@ -188,6 +230,33 @@ dcc_component_session_button_v2(
 
 ## Interaction Flows
 
+For one-shot replies, use the direct interaction helpers. They are thin wrappers
+over the REST callback API and avoid constructing a flow object.
+
+```c
+dcc_interaction_reply_ephemeral_text(
+    client,
+    interaction,
+    "Saved.",
+    NULL,
+    NULL
+);
+
+dcc_interaction_reply_error(
+    client,
+    interaction,
+    "Invalid birthday",
+    "Use YYYYMMDD and enter a real calendar date.",
+    NULL,
+    NULL
+);
+
+dcc_interaction_show_modal(client, interaction, &modal, NULL, NULL);
+```
+
+Use a flow when a handler may defer, edit the original response, or send
+followups.
+
 ```c
 dcc_interaction_flow_t flow =
     DCC_FLOW_AUTO_DEFER_EPHEMERAL(client, interaction, 1500U);
@@ -196,6 +265,71 @@ dcc_message_builder_t message =
     DCC_MESSAGE_EPHEMERAL("Working...");
 
 dcc_flow_reply(&flow, &message, NULL, NULL);
+```
+
+## Managed Latest Messages
+
+For announcement, registration, and schedule messages that should always remain
+the latest message in a channel, let DCC delete the previously saved message,
+post the new payload, parse the created message ID, and call your storage
+callback.
+
+```c
+static dcc_status_t load_registration_message(
+    dcc_managed_message_ref_t *out,
+    void *storage
+) {
+    return my_store_load_message_id(storage, "birthday.registration", out);
+}
+
+static dcc_status_t save_registration_message(
+    const dcc_managed_message_ref_t *ref,
+    void *storage
+) {
+    return my_store_save_message_id(storage, "birthday.registration", ref);
+}
+
+dcc_message_builder_t registration =
+    DCC_MESSAGE_COMPONENTS_V2(
+        DCC_V2_CONTAINER_ACCENT(
+            0x5865F2,
+            DCC_V2_TEXT("**다른 유저들의 생일이 궁금하시다면 아래 버튼을 눌러보세요!**"),
+            DCC_V2_ACTION_ROW(
+                DCC_V2_BUTTON_PRIMARY("🎊 유저 생일 스케줄", "birthday.schedule")
+            )
+        )
+    );
+
+dcc_managed_message_options_t options =
+    DCC_MANAGED_MESSAGE_OPTIONS(
+        birthday_channel_id,
+        &registration,
+        load_registration_message,
+        save_registration_message,
+        storage
+    );
+
+dcc_managed_message_publish_latest(client, &options, NULL, NULL);
+```
+
+## REST Response IDs
+
+When you use a raw REST callback and need the created resource ID, parse only
+the field you need:
+
+```c
+static void created_message(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    dcc_snowflake_t message_id = 0;
+    if (dcc_rest_response_message_id(response, &message_id) == DCC_OK) {
+        save_message_id(message_id);
+    }
+    (void)client;
+    (void)user_data;
+}
 ```
 
 ## Operations

@@ -34,6 +34,7 @@ typedef struct dcc_client_options {
     size_t cache_max_messages;
     size_t cache_max_voice_states;
     uint32_t gateway_max_concurrency;
+    uint32_t infer_guild_id_from_channel;
 } dcc_client_options_t;
 
 typedef struct dcc_runtime_stats {
@@ -69,6 +70,11 @@ DCC_API dcc_status_t dcc_client_update_voice_state(
     dcc_snowflake_t channel_id,
     uint8_t self_mute,
     uint8_t self_deaf
+);
+DCC_API dcc_status_t dcc_client_infer_guild_id_from_channel(
+    const dcc_client_t *client,
+    dcc_snowflake_t channel_id,
+    dcc_snowflake_t *out_guild_id
 );
 
 DCC_API dcc_status_t dcc_client_runtime_stats(dcc_client_t *client, dcc_runtime_stats_t *out);

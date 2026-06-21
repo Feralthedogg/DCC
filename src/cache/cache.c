@@ -1,4 +1,5 @@
 #include "internal/cache/dcc_cache_internal.h"
+#include "internal/client/dcc_client_guild_inference_internal.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -41,6 +42,7 @@ void dcc_cache_clear(dcc_client_t *client) {
     dcc_cache_table_clear(&client->cache.messages, dcc_cache_free_message_value);
     dcc_cache_table_clear(&client->cache.voice_states, dcc_cache_free_voice_state_value);
     client->cache.sequence = 0;
+    dcc_client_channel_guild_inference_clear(client);
     dcc_cache_unlock(&client->cache);
 }
 

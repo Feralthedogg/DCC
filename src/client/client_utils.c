@@ -59,6 +59,8 @@ const char *dcc_status_string(dcc_status_t status) {
             return "invalid state";
         case DCC_ERR_TIMEOUT:
             return "timeout";
+        case DCC_ERR_NOT_FOUND:
+            return "not found";
         default:
             return "unknown error";
     }

@@ -34,6 +34,8 @@ dcc_status_t dcc_client_create(const dcc_client_options_t *options, dcc_client_t
     client->shard_count = DCC_OPTION_HAS(shard_count) && options->shard_count != 0 ? options->shard_count : 1;
     client->rest_concurrency = DCC_OPTION_HAS(rest_concurrency) && options->rest_concurrency != 0 ? options->rest_concurrency : 4;
     client->enable_cache = DCC_OPTION_HAS(enable_cache) ? options->enable_cache : 0;
+    client->infer_guild_id_from_channel =
+        DCC_OPTION_HAS(infer_guild_id_from_channel) ? options->infer_guild_id_from_channel : 0;
     client->cache_policy.size = sizeof(client->cache_policy);
     client->cache_policy.max_guilds = DCC_OPTION_HAS(cache_max_guilds) ? options->cache_max_guilds : 0;
     client->cache_policy.max_channels = DCC_OPTION_HAS(cache_max_channels) ? options->cache_max_channels : 0;
@@ -52,6 +54,8 @@ dcc_status_t dcc_client_create(const dcc_client_options_t *options, dcc_client_t
     client->log_fn = DCC_OPTION_HAS(log_fn) ? options->log_fn : NULL;
     client->log_user_data = DCC_OPTION_HAS(log_user_data) ? options->log_user_data : NULL;
 #undef DCC_OPTION_HAS
+    atomic_init(&client->inferred_channel_id, 0U);
+    atomic_init(&client->inferred_guild_id, 0U);
     atomic_init(&client->started, false);
     atomic_init(&client->stopping, false);
     atomic_init(&client->gateway_task_running, false);

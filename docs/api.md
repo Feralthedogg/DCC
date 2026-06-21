@@ -30,10 +30,11 @@ dcc_message_builder_t message =
 
 The header covers client options, intent sets, messages, embeds, legacy
 components, Components v2, modals, slash/user/message commands, command
-registration scope, component sessions, interaction flows, hot reload canary
-options, REST firewall options, and replay records. Components v2 message sugar
-sets `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2` and intentionally avoids mixing v2
-components with legacy `content` or `embeds`.
+registration scope, component sessions, direct interaction replies,
+interaction flows, managed latest-message publishing, hot reload canary options,
+REST firewall options, typed REST response ID extraction, and replay records.
+Components v2 message sugar sets `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2` and
+intentionally avoids mixing v2 components with legacy `content` or `embeds`.
 
 Variadic sugar macros hide short-lived arrays with C compound literals, so
 message, embed, component, poll, select, and modal trees can be written inline.
@@ -141,7 +142,11 @@ and calls out explicit APIs only where that extra control matters.
   `dcc/objects/clone/` for base objects, resources, gateway update objects,
   interactions, and generic gateway data.
 - `cache.h`: optional client-owned cache for guilds, channels, roles, members,
-  users, messages, and voice states.
+  users, messages, and voice states. `dcc_cache_infer_guild_id_from_channel()`
+  and `dcc_client_infer_guild_id_from_channel()` resolve a cached channel ID to
+  its guild ID without REST. Set `infer_guild_id_from_channel` in
+  `dcc_client_options_t`, or use `DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE()`,
+  when voice helpers should fill `guild_id` automatically from `channel_id`.
 
 Gateway event accessors return borrowed callback views unless the API name says
 `wait` and returns an owned pointer. Use `dcc_*_clone()` when an object must
@@ -170,7 +175,10 @@ interaction pointer for `SOCKET_CLOSE`. Use
 
 - `rest.h`: low-level `dcc_rest_request()` plus DPP 10.1.5-mapped typed REST
   wrappers, params structs, multipart helpers, pagination helpers, and direct
-  interaction response/followup helpers.
+  interaction response/followup helpers. `dcc_rest_response_message_id()`,
+  `dcc_rest_response_channel_id()`, and
+  `dcc_rest_response_snowflake_field()` extract snowflake fields from callback
+  bodies without constructing a JSON DOM.
 - `rest/core.h`: compatibility aggregate for low-level REST core helpers.
   Focused subheaders under `dcc/rest/core/` separate method names, direct
   request helpers, async queue controls, and future-based request helpers.
@@ -209,6 +217,14 @@ interaction pointer for `SOCKET_CLOSE`. Use
   followup message operations.
   Followup declarations split further under `dcc/rest/interactions/followups/`
   for token-based helpers and `dcc_interaction_t` convenience helpers.
+- `interaction_helpers.h`: application-level shortcuts for the common initial
+  interaction responses: text, ephemeral text, colored embed success/error,
+  defer, ephemeral defer, message update, and modal display. These are thin
+  wrappers over the typed REST interaction response functions.
+- `managed_message.h`: storage-agnostic latest-message publishing. Callers
+  provide load/save callbacks for a message reference, and DCC deletes the
+  previous message, posts the new message, parses the created message ID, and
+  saves the new reference.
 - `rest/application_commands.h`: compatibility aggregate for application command
   REST helpers. Focused subheaders under `dcc/rest/application_commands/`
   separate application emojis, default-global create/bulk/delete-all

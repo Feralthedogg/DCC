@@ -10,11 +10,15 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define DCC_MESSAGE_FLAG_SUPPRESS_EMBEDS UINT64_C(4)
+#define DCC_MESSAGE_FLAG_EPHEMERAL UINT64_C(64)
+#define DCC_MESSAGE_FLAG_LOADING UINT64_C(128)
+#define DCC_MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS UINT64_C(4096)
+#define DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 UINT64_C(32768)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 (1ULL << 15)
 
 typedef enum dcc_poll_layout_type {
     DCC_POLL_LAYOUT_DEFAULT = 1

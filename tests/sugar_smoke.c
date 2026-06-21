@@ -117,6 +117,25 @@ static int run_sugar_component_v2_smoke(void) {
 }
 
 static int run_sugar_modal_smoke(void) {
+    dcc_component_builder_t birthday_row =
+        DCC_ACTION_ROW(DCC_MODAL_TEXT_INPUT_PLACEHOLDER("birthday", "Birthday", "YYYYMMDD", 1U));
+    dcc_modal_builder_t birthday_modal =
+        DCC_MODAL("birthday-modal", "Birthday", birthday_row);
+
+    char *json = NULL;
+    if (dcc_modal_builder_build_json(&birthday_modal, &json) != DCC_OK) {
+        fprintf(stderr, "failed to serialize sugar legacy modal alias\n");
+        return 1;
+    }
+    int failed =
+        require_contains(json, "\"custom_id\":\"birthday-modal\"") ||
+        require_contains(json, "\"placeholder\":\"YYYYMMDD\"") ||
+        require_contains(json, "\"required\":true");
+    dcc_modal_builder_json_free(json);
+    if (failed) {
+        return 1;
+    }
+
     dcc_component_v2_builder_t upload = DCC_V2_FILE_UPLOAD("upload.config");
     upload.min_values = 1U;
     upload.max_values = 2U;
@@ -126,19 +145,27 @@ static int run_sugar_modal_smoke(void) {
     upload.has_required = 1U;
 
     dcc_component_v2_builder_t label = DCC_V2_LABEL("Config files", upload);
+    dcc_component_v2_builder_t birthday = DCC_V2_LABEL(
+        "Birthday",
+        DCC_MODAL_V2_TEXT_INPUT_PLACEHOLDER("birthday", "Birthday", "YYYYMMDD", 1U)
+    );
+    dcc_component_v2_builder_t private_age =
+        DCC_MODAL_V2_CHECKBOX("hide_age", "Hide age", 0U);
     dcc_modal_builder_t modal =
-        DCC_MODAL_V2_BUILDER("upload-modal", "Upload config", label);
+        DCC_MODAL_V2("upload-modal", "Upload config", label, birthday, private_age);
 
-    char *json = NULL;
+    json = NULL;
     if (dcc_modal_builder_build_json(&modal, &json) != DCC_OK) {
         fprintf(stderr, "failed to serialize sugar component v2 modal\n");
         return 1;
     }
-    int failed =
+    failed =
         require_contains(json, "\"type\":9") ||
         require_contains(json, "\"custom_id\":\"upload-modal\"") ||
         require_contains(json, "\"components\":[{\"type\":18") ||
-        require_contains(json, "\"component\":{\"type\":19");
+        require_contains(json, "\"component\":{\"type\":19") ||
+        require_contains(json, "\"placeholder\":\"YYYYMMDD\"") ||
+        require_contains(json, "\"type\":23");
     dcc_modal_builder_json_free(json);
     return failed;
 }
@@ -211,6 +238,8 @@ static int run_sugar_options_smoke(void) {
     dcc_client_options_t client = DCC_CLIENT_OPTIONS("token", DCC_INTENTS_DEFAULT);
     dcc_client_options_t sharded_client =
         DCC_CLIENT_SHARDED_OPTIONS("token", DCC_INTENTS_MESSAGES, 1U, 2U);
+    dcc_client_options_t inferred_client =
+        DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE("token", DCC_INTENTS_ALL);
     dcc_command_registry_options_t registry =
         DCC_COMMAND_REGISTRY_OPTIONS_GUILD_DRY_RUN(123ULL);
     dcc_command_registry_options_t registry_delete_stale =
@@ -279,11 +308,21 @@ static int run_sugar_options_smoke(void) {
             DCC_SELECT_OPTION("Logs", "logs"),
             DCC_SELECT_OPTION("Metrics", "metrics")
         );
+    dcc_message_builder_t managed_message = DCC_MESSAGE_TEXT("managed");
+    dcc_managed_message_options_t managed =
+        DCC_MANAGED_MESSAGE_OPTIONS(333ULL, &managed_message, NULL, NULL, NULL);
+    dcc_managed_message_options_t managed_keep =
+        DCC_MANAGED_MESSAGE_KEEP_PREVIOUS_OPTIONS(444ULL, &managed_message, NULL, NULL, NULL);
 
     if (client.size != sizeof(client) ||
         client.intents != DCC_INTENT_GUILDS ||
         sharded_client.shard_id != 1U ||
         sharded_client.shard_count != 2U ||
+        inferred_client.enable_cache != 1U ||
+        inferred_client.infer_guild_id_from_channel != 1U ||
+        (inferred_client.intents & DCC_INTENT_MESSAGE_CONTENT) == 0U ||
+        (inferred_client.intents & DCC_INTENT_GUILD_PRESENCES) == 0U ||
+        (inferred_client.intents & DCC_INTENT_DIRECT_MESSAGE_POLLS) == 0U ||
         registry.guild_id != 123ULL ||
         registry.dry_run != 1U ||
         registry_delete_stale.delete_stale != 1U ||
@@ -317,7 +356,10 @@ static int run_sugar_options_smoke(void) {
         channel_select.default_value_count != 1U ||
         channel_select.channel_type_count != 2U ||
         radio.options_count != 2U ||
-        checkbox_group.options_count != 2U) {
+        checkbox_group.options_count != 2U ||
+        managed.channel_id != 333ULL ||
+        managed.message != &managed_message ||
+        managed_keep.keep_previous != 1U) {
         fprintf(stderr, "sugar option macro field mismatch\n");
         return 1;
     }

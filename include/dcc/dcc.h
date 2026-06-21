@@ -16,8 +16,10 @@
 #include <dcc/export.h>
 #include <dcc/hot_reload.h>
 #include <dcc/intents.h>
+#include <dcc/interaction_helpers.h>
 #include <dcc/interaction_flow.h>
 #include <dcc/interaction_server.h>
+#include <dcc/managed_message.h>
 #include <dcc/message.h>
 #include <dcc/modal.h>
 #include <dcc/objects.h>

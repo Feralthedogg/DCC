@@ -45,6 +45,17 @@ dcc_status_t dcc_voice_client_connect(
     if (voice_client == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
+    if (guild_id == 0U &&
+        channel_id != 0U &&
+        voice_client->client != NULL &&
+        voice_client->client->infer_guild_id_from_channel != 0U) {
+        dcc_status_t infer_status =
+            dcc_client_infer_guild_id_from_channel(voice_client->client, channel_id, &guild_id);
+        if (infer_status != DCC_OK) {
+            dcc_set_error(voice_client->client, "could not infer guild id from voice channel id");
+            return infer_status;
+        }
+    }
 
     dcc_status_t status =
         dcc_voice_client_start_session(voice_client, guild_id, channel_id, self_mute, self_deaf, enable_dave);

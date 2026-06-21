@@ -150,7 +150,9 @@ Hot-reload validation notes:
   host defaults to `guilds`; use `--guild <id>` for guild-only slash-command
   development registration, `--global` to clear inherited guild scoping, and
   `DCC_HOT_RELOAD_INTENTS` or `--intents` for
-  non-slash-command Gateway events. It loads `.env`, accepts `DISCORD_TOKEN` as
+  non-slash-command Gateway events. `DCC_HOT_RELOAD_INTENTS=all` enables every
+  supported intent; use it only when privileged intents are allowed for the bot.
+  It loads `.env`, accepts `DISCORD_TOKEN` as
   a `BOT_TOKEN` fallback, and supports `dcc_hot_reload_host --check` before
   opening a Gateway session. `--check` confirms token presence, module
   readability, worker executable/PATH resolution, and health sidecar settings.

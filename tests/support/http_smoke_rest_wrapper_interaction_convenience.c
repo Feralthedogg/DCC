@@ -191,6 +191,36 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
     );
 
     EXPECT_INTERACTION_CONVENIENCE(
+        "direct interaction ephemeral text",
+        "POST",
+        "/interactions/558/tok%2Fen/callback",
+        "{\"type\":4,\"data\":{\"content\":\"Saved\",\"flags\":64}}",
+        dcc_interaction_reply_ephemeral_text(
+            client,
+            &interaction,
+            "Saved",
+            rest_cb,
+            &seen
+        )
+    );
+
+    EXPECT_INTERACTION_CONVENIENCE(
+        "direct interaction error embed",
+        "POST",
+        "/interactions/558/tok%2Fen/callback",
+        "{\"type\":4,\"data\":{\"flags\":64,\"embeds\":[{\"title\":\"Invalid\","
+        "\"description\":\"Use YYYYMMDD\",\"color\":15548997}]}}",
+        dcc_interaction_reply_error(
+            client,
+            &interaction,
+            "Invalid",
+            "Use YYYYMMDD",
+            rest_cb,
+            &seen
+        )
+    );
+
+    EXPECT_INTERACTION_CONVENIENCE(
         "interaction convenience modal callback",
         "POST",
         "/interactions/558/tok%2Fen/callback",
