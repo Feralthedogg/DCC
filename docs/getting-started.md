@@ -7,21 +7,21 @@ refreshes LLAM through LLAM's latest release installer.
 ## Install Release
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
 ```
 
 For system-wide installs use a system prefix:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
   sudo sh -s -- --prefix /usr/local
 ```
 
 Upgrade an existing prefix with:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local" --force
 ```
 

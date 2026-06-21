@@ -1,6 +1,9 @@
 :root {
   --dcc-accent: #67e8f9;
   --dcc-accent-strong: #818cf8;
+  --dcc-blue: #5865f2;
+  --dcc-terminal: #0b1020;
+  --dcc-terminal-border: rgba(103, 232, 249, 0.35);
 }
 
 .md-header,
@@ -19,16 +22,127 @@
   padding: 2.2rem 0 1.2rem;
 }
 
+.md-typeset .dcc-hero-download {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.3rem;
+  padding: 2.4rem 0 1.6rem;
+}
+
+.md-typeset .dcc-hero-copy {
+  min-width: 0;
+  max-width: 780px;
+}
+
+.md-typeset .dcc-eyebrow {
+  margin: 0 0 0.65rem;
+  color: var(--dcc-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
 .md-typeset .dcc-hero h1 {
   margin: 0;
   max-width: 980px;
-  font-size: clamp(2.1rem, 5vw, 4rem);
-  line-height: 1.02;
+  font-size: 2.55rem;
+  line-height: 1.08;
 }
 
 .md-typeset .dcc-hero p {
   max-width: 760px;
   font-size: 1.08rem;
+}
+
+.md-typeset .dcc-download-panel {
+  border: 1px solid var(--dcc-terminal-border);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(88, 101, 242, 0.16), transparent 42%),
+    var(--dcc-terminal);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.26);
+  color: #e5e7eb;
+  overflow: hidden;
+  max-width: 820px;
+}
+
+.md-typeset .dcc-download-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.82rem;
+}
+
+.md-typeset .dcc-download-head span:first-child {
+  font-weight: 700;
+}
+
+.md-typeset .dcc-download-head span:last-child {
+  color: #9ca3af;
+}
+
+.md-typeset .dcc-command-box {
+  padding: 1.05rem 1rem;
+}
+
+.md-typeset .dcc-prompt {
+  color: var(--dcc-accent);
+  font-weight: 700;
+  line-height: 1.55;
+  margin-right: 0.65rem;
+}
+
+.md-typeset .dcc-command-box code,
+.md-typeset .dcc-windows-command code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: #f9fafb;
+  font-size: 0.74rem;
+  line-height: 1.55;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.md-typeset .dcc-command-box code > span,
+.md-typeset .dcc-windows-command code > span {
+  display: block;
+}
+
+.md-typeset .dcc-platform-row {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  padding: 0 1rem 1rem;
+}
+
+.md-typeset .dcc-platform-row span {
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  border-radius: 999px;
+  padding: 0.22rem 0.55rem;
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.md-typeset .dcc-windows-command {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.9rem 1rem 1rem;
+}
+
+.md-typeset .dcc-windows-command > span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #9ca3af;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .md-typeset .dcc-card-grid {
@@ -56,4 +170,19 @@
 
 .md-typeset code {
   border-radius: 4px;
+}
+
+@media screen and (max-width: 600px) {
+  .md-typeset .dcc-hero h1 {
+    font-size: 2rem;
+  }
+
+  .md-typeset .dcc-command-box {
+    gap: 0.55rem;
+    padding: 0.9rem;
+  }
+
+  .md-typeset .dcc-windows-command {
+    padding: 0.85rem 0.9rem 0.95rem;
+  }
 }

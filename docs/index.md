@@ -1,11 +1,35 @@
-<section class="dcc-hero">
-  <h1>DCC is a Discord C runtime for production bots.</h1>
-  <p>
-    DCC combines a DPP-inspired Discord API surface with LLAM-backed networking,
-    command reconciliation, stateful components, hot-reload isolation, replay
-    testing, and operational guard rails.
-  </p>
+<section class="dcc-hero dcc-hero-download">
+  <div class="dcc-hero-copy">
+    <p class="dcc-eyebrow">Discord C Client runtime</p>
+    <h1>DCC is a production Discord runtime for C.</h1>
+    <p>
+      A DPP-inspired API surface with LLAM-backed networking, command
+      reconciliation, stateful components, hot-reload isolation, replay testing,
+      and operational guard rails.
+    </p>
+  </div>
+
+  <div class="dcc-download-panel" aria-label="Install DCC">
+    <div class="dcc-download-head">
+      <span>Install DCC</span>
+      <span>latest release</span>
+    </div>
+    <div class="dcc-command-box">
+      <code><span><span class="dcc-prompt">$</span>curl -fsSL</span><span>https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh</span><span>| sh -s -- --prefix "$HOME/.local"</span></code>
+    </div>
+    <div class="dcc-platform-row">
+      <span>macOS</span>
+      <span>Linux</span>
+      <span>BSD</span>
+    </div>
+    <div class="dcc-windows-command">
+      <span>Windows PowerShell</span>
+      <code><span>irm https://github.com/Feralthedogg/DCC/releases/latest/download/install.ps1</span><span>| iex</span></code>
+    </div>
+  </div>
 </section>
+
+## Minimal Runtime Shape
 
 ```c
 #include <dcc/sugar.h>
@@ -47,14 +71,21 @@ int main(void) {
 
 ## Install
 
+The release installer detects the current platform, installs DCC, and refreshes
+LLAM through LLAM's latest release installer.
+
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
 ```
 
-DCC release archives include a compatible LLAM runtime. The installer also
-refreshes LLAM through LLAM's latest release installer, so release users do not
-need a neighboring LLAM checkout.
+Use a system prefix when the target machine expects globally installed CMake
+packages:
+
+```sh
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
+  sudo sh -s -- --prefix /usr/local
+```
 
 ## Build From Source
 

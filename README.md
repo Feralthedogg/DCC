@@ -14,7 +14,7 @@ https://Feralthedogg.github.io/DCC/
 Install the latest release:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install.sh |
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
 ```
 
