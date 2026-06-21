@@ -39,7 +39,7 @@ typedef struct chaos_state {
     chaos_gateway_server_t *server;
     atomic_uint ready_count;
     atomic_uint resumed_count;
-    atomic_uint close_4000;
+    atomic_uint close_1000;
     atomic_uint close_4009;
     atomic_uint monitor_done;
     atomic_uint bad;
@@ -369,7 +369,7 @@ static int serve_connection(chaos_gateway_server_t *server, int fd, unsigned att
                 return -1;
             }
             gateway_frame_settle();
-            if (write_close_frame(fd, 4000, "chaos transient close") != 0) {
+            if (write_close_frame(fd, 1000, "chaos normal close") != 0) {
                 return -1;
             }
             drain_client_close(fd);
@@ -440,7 +440,7 @@ static void *chaos_monitor_main(void *arg) {
         }
         if (atomic_load(&state->ready_count) == 2U &&
             atomic_load(&state->resumed_count) == 2U &&
-            atomic_load(&state->close_4000) == 1U &&
+            atomic_load(&state->close_1000) == 1U &&
             atomic_load(&state->close_4009) == 1U) {
             (void)dcc_client_stop(state->client);
             return NULL;
@@ -485,8 +485,8 @@ static void on_socket_close(dcc_client_t *client, const dcc_event_t *event, void
         atomic_store(&state->bad, 1U);
         return;
     }
-    if (close_event->code == 4000) {
-        atomic_fetch_add(&state->close_4000, 1U);
+    if (close_event->code == 1000) {
+        atomic_fetch_add(&state->close_1000, 1U);
     } else if (close_event->code == 4009) {
         atomic_fetch_add(&state->close_4009, 1U);
     }
@@ -536,7 +536,7 @@ int main(void) {
     state.server = &server;
     atomic_init(&state.ready_count, 0U);
     atomic_init(&state.resumed_count, 0U);
-    atomic_init(&state.close_4000, 0U);
+    atomic_init(&state.close_1000, 0U);
     atomic_init(&state.close_4009, 0U);
     atomic_init(&state.monitor_done, 0U);
     atomic_init(&state.bad, 0U);
@@ -571,7 +571,7 @@ int main(void) {
         atomic_load(&state.bad) == 0U &&
         atomic_load(&state.ready_count) == 2U &&
         atomic_load(&state.resumed_count) == 2U &&
-        atomic_load(&state.close_4000) == 1U &&
+        atomic_load(&state.close_1000) == 1U &&
         atomic_load(&state.close_4009) == 1U &&
         atomic_load(&server.bad) == 0U &&
         atomic_load(&server.accepts) == CHAOS_CONNECTIONS &&
@@ -582,12 +582,12 @@ int main(void) {
         fprintf(
             stderr,
             "gateway chaos smoke failed: status=%s bad=%u ready=%u resumed=%u "
-            "close4000=%u close4009=%u server_bad=%u accepts=%u identifies=%u resumes=%u last=%s\n",
+            "close1000=%u close4009=%u server_bad=%u accepts=%u identifies=%u resumes=%u last=%s\n",
             dcc_status_string(status),
             atomic_load(&state.bad),
             atomic_load(&state.ready_count),
             atomic_load(&state.resumed_count),
-            atomic_load(&state.close_4000),
+            atomic_load(&state.close_1000),
             atomic_load(&state.close_4009),
             atomic_load(&server.bad),
             atomic_load(&server.accepts),

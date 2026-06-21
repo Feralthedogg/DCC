@@ -137,6 +137,36 @@ static int write_server_text_frame(int client, const char *text) {
     return 0;
 }
 
+static int write_server_fragmented_text_frame(int client, const char *first, const char *second) {
+    size_t first_len = strlen(first);
+    size_t second_len = strlen(second);
+    if (first_len >= 126U || second_len >= 126U) {
+        return -1;
+    }
+
+    unsigned char first_header[2] = {
+        0x01U,
+        (unsigned char)first_len,
+    };
+    unsigned char second_header[2] = {
+        0x80U,
+        (unsigned char)second_len,
+    };
+    if (write(client, first_header, sizeof(first_header)) != (ssize_t)sizeof(first_header)) {
+        return -1;
+    }
+    if (write(client, first, first_len) != (ssize_t)first_len) {
+        return -1;
+    }
+    if (write(client, second_header, sizeof(second_header)) != (ssize_t)sizeof(second_header)) {
+        return -1;
+    }
+    if (write(client, second, second_len) != (ssize_t)second_len) {
+        return -1;
+    }
+    return 0;
+}
+
 static int write_server_close_frame(int client, uint16_t code) {
     unsigned char frame[4] = {
         0x88U,
@@ -185,7 +215,7 @@ static void *ws_server_main(void *arg) {
 
     char client_text[128];
     if (read_client_text_frame(client, client_text, sizeof(client_text)) == 0 && strcmp(client_text, "hello") == 0) {
-        (void)write_server_text_frame(client, "world");
+        (void)write_server_fragmented_text_frame(client, "wo", "rld");
         (void)write_server_close_frame(client, 4004);
     }
 

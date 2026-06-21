@@ -30,8 +30,9 @@ dcc_status_t dcc_gateway_session_receive_loop(dcc_gateway_session_t *session) {
         }
         if (status == DCC_ERR_CANCELED) {
             uint16_t close_code = dcc_ws_last_close_code(session->ws);
-            (void)dcc_gateway_emit_socket_close(session, close_code, dcc_ws_last_close_reason(session->ws));
-            session->next = dcc_gateway_next_for_close(session, close_code);
+            const char *close_reason = dcc_ws_last_close_reason(session->ws);
+            (void)dcc_gateway_emit_socket_close(session, close_code, close_reason);
+            session->next = dcc_gateway_next_for_close(session, close_code, close_reason);
             break;
         }
         if (status != DCC_OK && dcc_gateway_reconnect_requested(client)) {

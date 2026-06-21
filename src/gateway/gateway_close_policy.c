@@ -4,16 +4,28 @@
 
 #include <stdio.h>
 
-dcc_gateway_next_t dcc_gateway_next_for_close(dcc_gateway_session_t *session, uint16_t code) {
+dcc_gateway_next_t dcc_gateway_next_for_close(
+    dcc_gateway_session_t *session,
+    uint16_t code,
+    const char *reason
+) {
     dcc_client_t *client = session->client;
-    char message[128];
+    char message[256];
 
     if (code == 0) {
         dcc_set_error(client, "gateway transport closed without close code");
         return dcc_gateway_can_resume(client) ? DCC_GATEWAY_NEXT_RECONNECT_RESUME : DCC_GATEWAY_NEXT_RECONNECT_IDENTIFY;
     }
 
-    int n = snprintf(message, sizeof(message), "gateway websocket closed with code %u", (unsigned)code);
+    int n = reason != NULL && reason[0] != '\0'
+        ? snprintf(
+              message,
+              sizeof(message),
+              "gateway websocket closed with code %u: %s",
+              (unsigned)code,
+              reason
+          )
+        : snprintf(message, sizeof(message), "gateway websocket closed with code %u", (unsigned)code);
     if (n > 0 && (size_t)n < sizeof(message)) {
         dcc_set_error(client, message);
         dcc_emit_log(client, DCC_LOG_WARN, message);
@@ -22,8 +34,9 @@ dcc_gateway_next_t dcc_gateway_next_for_close(dcc_gateway_session_t *session, ui
     switch (code) {
         case 1000:
         case 1001:
-            dcc_gateway_clear_resume(client);
-            return DCC_GATEWAY_NEXT_RECONNECT_IDENTIFY;
+            return dcc_gateway_can_resume(client)
+                ? DCC_GATEWAY_NEXT_RECONNECT_RESUME
+                : DCC_GATEWAY_NEXT_RECONNECT_IDENTIFY;
         case 4007:
         case 4009:
             dcc_gateway_clear_resume(client);
