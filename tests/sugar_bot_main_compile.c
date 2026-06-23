@@ -60,6 +60,16 @@ DCC_SIMPLE_BOT_MAIN(
 )
 #undef main
 
+#define main dcc_bot_main_compile_simple_command_builder_value
+DCC_SIMPLE_BOT_MAIN(
+    "main.compile.simple.command.builder.value",
+    DCC_LISTEN_COMMAND_BUILDER_VALUE(
+        DCC_SLASH_COMMAND_DEFAULT_PERMISSIONS("builder-value", "Reply from a command builder", 0ULL),
+        bot_main_ping
+    )
+)
+#undef main
+
 #define main dcc_bot_main_compile_simple_token
 DCC_SIMPLE_BOT_MAIN_TOKEN(
     "DCC_MAIN_TOKEN",

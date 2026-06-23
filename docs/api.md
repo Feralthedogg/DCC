@@ -86,11 +86,12 @@ setup helpers including `DCC_DEFINE_PUBLIC_FEATURE`, `DCC_DECLARE_FEATURE`,
 `DCC_DEFINE_COG`, `DCC_DEFINE_PUBLIC_COG`, `DCC_DECLARE_COG`, `DCC_COG_MODULE`,
 `DCC_LOAD_COG`, route/event/task
 aliases including `DCC_ON_*` and direct `DCC_APP_ON_*` registration helpers,
-bot definition aliases such as `DCC_BOT()`, `DCC_BOT_ROUTES()`,
-`DCC_GUILD_BOT_ROUTES()`, `DCC_BOT_LISTENERS()`, `DCC_GUILD_BOT()`,
+bot definition aliases such as `DCC_SIMPLE_BOT()`, `DCC_BOT()`,
+`DCC_BOT_LISTENERS()`, `DCC_BOT_ROUTES()`, `DCC_GUILD_BOT()`, and
+`DCC_GUILD_BOT_ROUTES()`, run helpers such as `DCC_RUN_SIMPLE_BOT()`,
 `DCC_RUN_BOT()`, and `DCC_RUN_BOT_ROUTES()` plus `_TOKEN`/`_ENV` variants for
 custom token environment names, and one-file entrypoint aliases such as
-`DCC_BOT_ROUTES_MAIN()`, `DCC_BOT_MAIN()`, and
+`DCC_SIMPLE_BOT_MAIN()`, `DCC_BOT_ROUTES_MAIN()`, `DCC_BOT_MAIN()`, and
 `DCC_GUILD_BOT_ROUTES_MAIN()`,
 Cog/app context menu routes including `DCC_COG_CONTEXT_MENUS()`,
 `DCC_ON_USER_CONTEXT_MENU()`, `DCC_ON_MESSAGE_CONTEXT_MENU()`,
@@ -145,7 +146,8 @@ app option presets and auto-defer aliases such as `DCC_APP_OPTIONS_DEV()`,
 `DCC_APP_AUTO_DEFER_PRIVATE()`, and `DCC_APP_OPTIONS_AUTO_DEFER_PRIVATE_DEFAULT()`,
 command builder aliases such as `DCC_CMD()`, `DCC_CMD_OPTIONS()`,
 `DCC_CMD_TREE()`, `DCC_CMD_SUBGROUP()`, `DCC_CMD_SUB()`,
-route-table command schema registration through `DCC_ROUTE_COMMAND_SCHEMA()`,
+listener-table command schema registration through `DCC_LISTEN_COMMAND_SCHEMA()`
+and the compatible `DCC_ROUTE_COMMAND_SCHEMA()`,
 and grouped-subcommand path helpers such as `DCC_SUB_PATH()` and
 `DCC_SUBCOMMAND_ROUTE_IN_DATA()`,
 slash argument aliases, modal field aliases, select value aliases such as
@@ -453,20 +455,20 @@ and calls out explicit APIs only where that extra control matters.
   `DCC_DECORATE_SELECT_NS_PARAMS_DATA_GUARDED()` expose typed descriptors
   through `DCC_TYPED_ROUTE(handler_name)` for the matching
   `DCC_COG_*_ROUTES` list.
-- `sugar/listeners.h`: discord.js-style route table sugar.
-  `DCC_ROUTE_COMMAND()`, `DCC_ROUTE_BUTTON_NS()`,
-  `DCC_ROUTE_READY_ONCE()`, typed gateway event aliases such as
-  `DCC_ROUTE_MEMBER_JOIN()`, `DCC_ROUTE_PREFIX_COMMAND()`,
-  `DCC_ROUTE_TASK_DAILY_KST()`, `DCC_ROUTE_COMMAND_SCHEMA()`,
-  `DCC_ROUTE_COMMAND_PARAMS()`, `DCC_ROUTE_COMMAND_FN_DATA_GUARDED()`,
-  `DCC_ROUTE_MODAL_PARAMS_DATA()`,
-  `DCC_ROUTE_BUTTON_NS_PREFIX_PARAMS_DATA_GUARDED()`,
-  `DCC_ROUTE_SELECT_NS_PARAMS_DATA()`, and decorated-handler aliases such as
-  `DCC_ROUTE_DECORATED_COMMAND()`, `DCC_ROUTE_DECORATED_BUTTON()`, and
-  `DCC_ROUTE_DECORATED_TYPED_COMMAND()` build a `DCC_ROUTES(...)` table for
-  `DCC_BOT_ROUTES()`, `DCC_BOT_ROUTES_MAIN()`,
-  `DCC_ROUTES_REGISTER(app, ...)`, or `DCC_DEFINE_ROUTES()` plus
-  `DCC_ROUTES_MODULE(...)`. The older `DCC_LISTEN_*` names remain compatible.
+- `sugar/listeners.h`: discord.js-style listener table sugar.
+  `DCC_LISTEN_SLASH()`, `DCC_LISTEN_BUTTON_NS()`,
+  `DCC_LISTEN_READY_ONCE()`, typed gateway event aliases such as
+  `DCC_LISTEN_MEMBER_JOIN()`, `DCC_LISTEN_PREFIX_COMMAND()`,
+  `DCC_LISTEN_TASK_DAILY_KST()`, `DCC_LISTEN_COMMAND_SCHEMA()`,
+  `DCC_LISTEN_COMMAND_BUILDER_VALUE()`, `DCC_LISTEN_COMMAND_PARAMS()`,
+  `DCC_LISTEN_COMMAND_FN_DATA_GUARDED()`, `DCC_LISTEN_MODAL_PARAMS_DATA()`,
+  `DCC_LISTEN_BUTTON_NS_PREFIX_PARAMS_DATA_GUARDED()`,
+  `DCC_LISTEN_SELECT_NS_PARAMS_DATA()`, and decorated-handler aliases such as
+  `DCC_LISTEN_DECORATED_COMMAND()`, `DCC_LISTEN_DECORATED_BUTTON()`, and
+  `DCC_LISTEN_DECORATED_TYPED_COMMAND()` build a `DCC_LISTENERS(...)` table for
+  `DCC_SIMPLE_BOT()`, `DCC_SIMPLE_BOT_MAIN()`,
+  `DCC_LISTENERS_REGISTER(app, ...)`, or `DCC_DEFINE_LISTENERS()` plus
+  `DCC_LISTENERS_MODULE(...)`. The older `DCC_ROUTE_*` names remain compatible.
 - `sugar/messages.h`: focused message-builder literals such as
   `DCC_MESSAGE_TEXT()`, `DCC_MESSAGE_EMBEDS()`,
   `DCC_MESSAGE_COMPONENTS()`, and `DCC_MESSAGE_COMPONENTS_V2()`.

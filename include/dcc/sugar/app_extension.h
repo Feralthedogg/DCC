@@ -262,11 +262,23 @@
 #define DCC_COMMAND_BUILDER_DATA(builder_, handler_, user_data_) \
     DCC_SLASH_BUILDER_DATA((builder_), (handler_), (user_data_))
 
+#define DCC_COMMAND_BUILDER_VALUE(builder_, handler_) \
+    DCC_SLASH_BUILDER_VALUE((builder_), (handler_))
+
+#define DCC_COMMAND_BUILDER_VALUE_DATA(builder_, handler_, user_data_) \
+    DCC_SLASH_BUILDER_VALUE_DATA((builder_), (handler_), (user_data_))
+
 #define DCC_COMMAND_BUILDER_POLICY(builder_, handler_, policy_) \
     DCC_SLASH_BUILDER_POLICY((builder_), (handler_), (policy_))
 
 #define DCC_COMMAND_BUILDER_DATA_POLICY(builder_, handler_, user_data_, policy_) \
     DCC_SLASH_BUILDER_DATA_POLICY((builder_), (handler_), (user_data_), (policy_))
+
+#define DCC_COMMAND_BUILDER_VALUE_POLICY(builder_, handler_, policy_) \
+    DCC_SLASH_BUILDER_VALUE_POLICY((builder_), (handler_), (policy_))
+
+#define DCC_COMMAND_BUILDER_VALUE_DATA_POLICY(builder_, handler_, user_data_, policy_) \
+    DCC_SLASH_BUILDER_VALUE_DATA_POLICY((builder_), (handler_), (user_data_), (policy_))
 
 #define DCC_ON_SLASH(name_, description_, handler_) \
     DCC_SLASH((name_), (description_), (handler_))

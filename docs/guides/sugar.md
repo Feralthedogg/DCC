@@ -109,7 +109,7 @@ DCC_SLASH_FN(play_tictactoe) {
 
 DCC_SIMPLE_BOT_MAIN(
     "games",
-    DCC_LISTEN_SLASH_BUILDER(
+    DCC_LISTEN_COMMAND_BUILDER_VALUE(
         DCC_SLASH_COMMAND_DM("tictactoe", "Start a Tic Tac Toe game", 1U),
         play_tictactoe
     )
@@ -329,36 +329,37 @@ DCC_TASK_FN(refresh_cache) {
 }
 
 dcc_app_definition_t bot =
-    DCC_BOT_ROUTES(
+    DCC_SIMPLE_BOT(
         "mybot",
-        DCC_ROUTE_COMMAND("ping", "Reply with pong", ping),
-        DCC_ROUTE_BUTTON_NS("status", "refresh", refresh),
-        DCC_ROUTE_READY_ONCE(on_ready),
-        DCC_ROUTE_MEMBER_JOIN(on_member_join),
-        DCC_ROUTE_TASK_DAILY_KST("09:00", refresh_cache)
+        DCC_LISTEN_SLASH("ping", "Reply with pong", ping),
+        DCC_LISTEN_BUTTON_NS("status", "refresh", refresh),
+        DCC_LISTEN_READY_ONCE(on_ready),
+        DCC_LISTEN_MEMBER_JOIN(on_member_join),
+        DCC_LISTEN_TASK_DAILY_KST("09:00", refresh_cache)
     );
 ```
 
-`DCC_BOT_ROUTES()` is the route-table-first form for one-file bots. It is
-`DCC_BOT()` plus `DCC_APP_ROUTES(...)`, so it includes command auto-sync,
+`DCC_SIMPLE_BOT()` is the listener-list-first form for one-file bots. It is
+`DCC_BOT()` plus `DCC_APP_LISTENERS(...)`, so it includes command auto-sync,
 ephemeral auto-defer after 1500ms, and default error replies. Use
-`DCC_ROUTES(...)` when you need a standalone route list, or
-`DCC_ROUTES_REGISTER(app, ...)` for one-off setup code. `DCC_SIMPLE_BOT()` and
-`DCC_BOT_LISTENERS()` remain compatible listener-list names.
+`DCC_LISTENERS(...)` when you need a standalone listener list, or
+`DCC_LISTENERS_REGISTER(app, ...)` for one-off setup code. The older
+`DCC_BOT_ROUTES()`, `DCC_ROUTE_*`, and `DCC_ROUTES(...)` names remain
+compatible aliases for descriptor-heavy code.
 
-For reusable feature files, `DCC_DEFINE_ROUTES()` plus `DCC_ROUTES_MODULE()`
-registers a route table without exposing the lower-level listener naming. Typed
-routes created by decorators can be registered in the same list with
-`DCC_ROUTE_DECORATED_TYPED_COMMAND(handler)`,
-`DCC_ROUTE_DECORATED_TYPED_MODAL(handler)`,
-`DCC_ROUTE_DECORATED_TYPED_BUTTON(handler)`, and
-`DCC_ROUTE_DECORATED_TYPED_SELECT(handler)`. For single-source params routes,
-prefer route-first forms such as `DCC_ROUTE_COMMAND_PARAMS()`,
-`DCC_ROUTE_MODAL_PARAMS()`, `DCC_ROUTE_BUTTON_NS_PREFIX_PARAMS()`, and
-`DCC_ROUTE_SELECT_NS_PARAMS()`. Typed Gateway handlers created with
-`DCC_MEMBER_JOIN_FN()`, `DCC_MESSAGE_CREATE_FN()`, `DCC_ROLE_UPDATE_FN()`,
-and the other event handler macros can be registered with matching route aliases
-such as `DCC_ROUTE_MEMBER_JOIN()`.
+For reusable feature files, `DCC_DEFINE_LISTENERS()` plus
+`DCC_LISTENERS_MODULE()` registers a listener table. Typed routes created by
+decorators can be registered in the same list with
+`DCC_LISTEN_DECORATED_TYPED_COMMAND(handler)`,
+`DCC_LISTEN_DECORATED_TYPED_MODAL(handler)`,
+`DCC_LISTEN_DECORATED_TYPED_BUTTON(handler)`, and
+`DCC_LISTEN_DECORATED_TYPED_SELECT(handler)`. For single-source params routes,
+prefer listener-first forms such as `DCC_LISTEN_COMMAND_PARAMS()`,
+`DCC_LISTEN_MODAL_PARAMS()`, `DCC_LISTEN_BUTTON_NS_PREFIX_PARAMS()`, and
+`DCC_LISTEN_SELECT_NS_PARAMS()`. Typed Gateway handlers created with
+`DCC_MEMBER_JOIN_FN()`, `DCC_MESSAGE_CREATE_FN()`, `DCC_ROLE_UPDATE_FN()`, and
+the other event handler macros can be registered with matching listener aliases
+such as `DCC_LISTEN_MEMBER_JOIN()`.
 
 Decorated handlers can also be registered without repeating their metadata:
 
@@ -373,18 +374,18 @@ DCC_DECORATE_BUTTON_NS(refresh, "status", "refresh") {
     (void)DCC_UPDATE(ctx, DCC_MESSAGE_TEXT("Refreshed."));
 }
 
-DCC_BOT_ROUTES_MAIN(
+DCC_SIMPLE_BOT_MAIN(
     "mybot",
-    DCC_ROUTE_DECORATED_COMMAND(ping),
-    DCC_ROUTE_DECORATED_BUTTON(refresh)
+    DCC_LISTEN_DECORATED_COMMAND(ping),
+    DCC_LISTEN_DECORATED_BUTTON(refresh)
 )
 ```
 
-Use the matching decorated route aliases for the route kind:
-`DCC_ROUTE_DECORATED_COMMAND()`, `DCC_ROUTE_DECORATED_COMPONENT()`,
-`DCC_ROUTE_DECORATED_EVENT()`, `DCC_ROUTE_DECORATED_PREFIX_COMMAND()`,
-`DCC_ROUTE_DECORATED_TASK()`, and typed forms such as
-`DCC_ROUTE_DECORATED_TYPED_COMMAND()`. The older `DCC_LISTEN_DECORATED_*`
+Use the matching decorated listener aliases for the route kind:
+`DCC_LISTEN_DECORATED_COMMAND()`, `DCC_LISTEN_DECORATED_COMPONENT()`,
+`DCC_LISTEN_DECORATED_EVENT()`, `DCC_LISTEN_DECORATED_PREFIX_COMMAND()`,
+`DCC_LISTEN_DECORATED_TASK()`, and typed forms such as
+`DCC_LISTEN_DECORATED_TYPED_COMMAND()`. The older `DCC_ROUTE_DECORATED_*`
 names are equivalent.
 
 For a one-file bot, let DCC generate `main()` from the listener list directly.
@@ -394,24 +395,24 @@ the `_ENV` variants skip `.env` loading and read only the current process
 environment:
 
 ```c
-DCC_BOT_ROUTES_MAIN(
+DCC_SIMPLE_BOT_MAIN(
     "mybot",
-    DCC_ROUTE_COMMAND("ping", "Reply with pong", ping),
-    DCC_ROUTE_READY_ONCE(on_ready)
+    DCC_LISTEN_SLASH("ping", "Reply with pong", ping),
+    DCC_LISTEN_READY_ONCE(on_ready)
 )
 
-DCC_BOT_ROUTES_MAIN_TOKEN(
+DCC_SIMPLE_BOT_MAIN_TOKEN(
     "MY_BOT_TOKEN",
     "mybot",
-    DCC_ROUTE_COMMAND("ping", "Reply with pong", ping),
-    DCC_ROUTE_READY_ONCE(on_ready)
+    DCC_LISTEN_SLASH("ping", "Reply with pong", ping),
+    DCC_LISTEN_READY_ONCE(on_ready)
 )
 
-DCC_BOT_ROUTES_MAIN_ENV(
+DCC_SIMPLE_BOT_MAIN_ENV(
     "MY_BOT_TOKEN",
     "mybot",
-    DCC_ROUTE_COMMAND("ping", "Reply with pong", ping),
-    DCC_ROUTE_READY_ONCE(on_ready)
+    DCC_LISTEN_SLASH("ping", "Reply with pong", ping),
+    DCC_LISTEN_READY_ONCE(on_ready)
 )
 ```
 
@@ -1325,13 +1326,13 @@ command options and struct field bindings for commands that do. Common parameter
 `BOOL`, `USER`, `MEMBER`, `ROLE`, `CHANNEL`, `CHANNEL_TYPES`, and
 `ATTACHMENT`.
 
-For route-table apps, use the same single-source params list directly in the
+For listener-table apps, use the same single-source params list directly in the
 bot definition:
 
 ```c
-DCC_BOT_ROUTES_MAIN(
+DCC_SIMPLE_BOT_MAIN(
     "searchbot",
-    DCC_ROUTE_COMMAND_PARAMS_GUARDED(
+    DCC_LISTEN_COMMAND_PARAMS_GUARDED(
         "search",
         "Search members",
         search_args_t,
@@ -1342,10 +1343,11 @@ DCC_BOT_ROUTES_MAIN(
 )
 ```
 
-`DCC_ROUTE_COMMAND_FN()` and `DCC_ROUTE_COMMAND_FN_DATA_GUARDED()` use the
+`DCC_LISTEN_COMMAND_FN()` and `DCC_LISTEN_COMMAND_FN_DATA_GUARDED()` use the
 handler function name as the slash command name, which keeps small commands
 close to the discord.py decorator style while still generating the Discord
-schema and typed bindings in C.
+schema and typed bindings in C. The `DCC_ROUTE_COMMAND_FN*` names remain
+compatible aliases.
 
 Use `DCC_COMMAND_PARAMS("search", "Search members", search_args_t, SEARCH_PARAMS)`
 when you only need the Discord command schema, for example to place the command
@@ -1535,13 +1537,13 @@ registered elsewhere and you already have a full path. `DCC_FEATURE_SUBCOMMAND_R
 `DCC_APP_SUBCOMMAND_ROUTES` keep these routes declarative inside features and app
 definitions.
 
-For route-table bots, use the matching route aliases directly inside
-`DCC_BOT_ROUTES()` or `DCC_BOT_ROUTES_MAIN()`:
+For listener-table bots, use the matching listener aliases directly inside
+`DCC_SIMPLE_BOT()` or `DCC_SIMPLE_BOT_MAIN()`:
 
 ```c
-DCC_BOT_ROUTES_MAIN(
+DCC_SIMPLE_BOT_MAIN(
     "adminbot",
-    DCC_ROUTE_COMMAND_SCHEMA(
+    DCC_LISTEN_COMMAND_SCHEMA(
         DCC_CMD_TREE(
             "admin",
             "Admin tools",
@@ -1557,7 +1559,7 @@ DCC_BOT_ROUTES_MAIN(
             )
         )
     ),
-    DCC_ROUTE_SUBCOMMAND_IN_PARAMS_DATA_GUARDED(
+    DCC_LISTEN_SUBCOMMAND_IN_PARAMS_DATA_GUARDED(
         "admin",
         "moderation",
         "ban",
@@ -1571,15 +1573,16 @@ DCC_BOT_ROUTES_MAIN(
 )
 ```
 
-`DCC_ROUTE_COMMAND_SCHEMA()` registers a command tree without adding a handler.
-Put it beside `DCC_ROUTE_SUBCOMMAND_*` routes when you want the route table to
-be the single source for both Discord command registration and runtime routing.
+`DCC_LISTEN_COMMAND_SCHEMA()` registers a command tree without adding a handler.
+Put it beside `DCC_LISTEN_SUBCOMMAND_*` routes when you want the listener table
+to be the single source for both Discord command registration and runtime
+routing.
 
-Use `DCC_ROUTE_SUBCOMMAND_PARAMS()` when you already have a full path such as
-`"moderation/ban"`, `DCC_ROUTE_SUBCOMMAND_IN_PARAMS()` when the group and
-subcommand are separate string literals, and `DCC_ROUTE_SUBCOMMAND_IN_FN()`
+Use `DCC_LISTEN_SUBCOMMAND_PARAMS()` when you already have a full path such as
+`"moderation/ban"`, `DCC_LISTEN_SUBCOMMAND_IN_PARAMS()` when the group and
+subcommand are separate string literals, and `DCC_LISTEN_SUBCOMMAND_IN_FN()`
 when the handler function name should become the subcommand name. Subcommand
-autocomplete has the same shape through the `DCC_ROUTE_AUTOCOMPLETE_*` aliases.
+autocomplete has the same shape through the `DCC_LISTEN_AUTOCOMPLETE_*` aliases.
 
 Typed autocomplete uses the same option binding shape. The handler receives the
 currently focused query through the bound struct and can answer with inline

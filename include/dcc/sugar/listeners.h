@@ -347,6 +347,14 @@ static inline dcc_status_t dcc_sugar_listeners_register(
     DCC_LISTEN_SLASH_ROUTE( \
         DCC_SLASH_BUILDER_VALUE_DATA_POLICY((builder_), (handler_), (user_data_), (policy_)) \
     )
+#define DCC_LISTEN_COMMAND_BUILDER_VALUE(builder_, handler_) \
+    DCC_LISTEN_SLASH_BUILDER((builder_), (handler_))
+#define DCC_LISTEN_COMMAND_BUILDER_VALUE_DATA(builder_, handler_, user_data_) \
+    DCC_LISTEN_SLASH_BUILDER_DATA((builder_), (handler_), (user_data_))
+#define DCC_LISTEN_COMMAND_BUILDER_VALUE_POLICY(builder_, handler_, policy_) \
+    DCC_LISTEN_SLASH_BUILDER_POLICY((builder_), (handler_), (policy_))
+#define DCC_LISTEN_COMMAND_BUILDER_VALUE_DATA_POLICY(builder_, handler_, user_data_, policy_) \
+    DCC_LISTEN_SLASH_BUILDER_DATA_POLICY((builder_), (handler_), (user_data_), (policy_))
 #define DCC_LISTEN_SLASH(name_, description_, handler_) \
     DCC_LISTEN_SLASH_ROUTE(DCC_ON_SLASH((name_), (description_), (handler_)))
 #define DCC_LISTEN_SLASH_DATA(name_, description_, handler_, user_data_) \
@@ -1341,6 +1349,14 @@ static inline dcc_status_t dcc_sugar_listeners_register(
     DCC_LISTEN_SLASH_GUARDED((name_), (description_), (handler_), __VA_ARGS__)
 #define DCC_ROUTE_COMMAND_DATA_GUARDED(name_, description_, handler_, user_data_, ...) \
     DCC_LISTEN_SLASH_DATA_GUARDED((name_), (description_), (handler_), (user_data_), __VA_ARGS__)
+#define DCC_ROUTE_COMMAND_BUILDER_VALUE(builder_, handler_) \
+    DCC_LISTEN_COMMAND_BUILDER_VALUE((builder_), (handler_))
+#define DCC_ROUTE_COMMAND_BUILDER_VALUE_DATA(builder_, handler_, user_data_) \
+    DCC_LISTEN_COMMAND_BUILDER_VALUE_DATA((builder_), (handler_), (user_data_))
+#define DCC_ROUTE_COMMAND_BUILDER_VALUE_POLICY(builder_, handler_, policy_) \
+    DCC_LISTEN_COMMAND_BUILDER_VALUE_POLICY((builder_), (handler_), (policy_))
+#define DCC_ROUTE_COMMAND_BUILDER_VALUE_DATA_POLICY(builder_, handler_, user_data_, policy_) \
+    DCC_LISTEN_COMMAND_BUILDER_VALUE_DATA_POLICY((builder_), (handler_), (user_data_), (policy_))
 #define DCC_ROUTE_SLASH(name_, description_, handler_) DCC_LISTEN_SLASH((name_), (description_), (handler_))
 #define DCC_ROUTE_SLASH_DATA(name_, description_, handler_, user_data_) \
     DCC_LISTEN_SLASH_DATA((name_), (description_), (handler_), (user_data_))
