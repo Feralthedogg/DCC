@@ -45,7 +45,7 @@ static dcc_status_t isolated_event_result_smoke(const char *label, const char *m
         .size = sizeof(options),
         .backend = DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER,
         .worker_path = DCC_HOT_RELOAD_INVALID_READY_WORKER,
-        .worker_health_timeout_ms = strcmp(marker, "hung-event") == 0 ? 100U : 500U,
+        .worker_health_timeout_ms = strcmp(marker, "hung-event") == 0 ? 1000U : 500U,
         .worker_drain_timeout_ms = 25,
     };
     dcc_hot_reload_health_snapshot_t restored = {
