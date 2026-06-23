@@ -23,6 +23,22 @@ static void focused_message_id_cb(
     (void)user_data;
 }
 
+static void focused_message_thread_cb(
+    dcc_app_t *app,
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t message_id,
+    dcc_snowflake_t thread_id,
+    dcc_status_t status,
+    void *user_data
+) {
+    (void)app;
+    (void)response;
+    (void)message_id;
+    (void)thread_id;
+    (void)status;
+    (void)user_data;
+}
+
 static int check_message_literals(void) {
     dcc_message_builder_t text = DCC_MESSAGE_TEXT("hello");
     dcc_message_builder_t v2 = DCC_MESSAGE_COMPONENTS_V2(focused_text_component());
@@ -60,18 +76,56 @@ static int check_null_app_action_aliases(void) {
         DCC_APP_SEND_CB(NULL, 333ULL, DCC_MESSAGE_TEXT("send"), NULL, NULL) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_ID(NULL, 333ULL, DCC_MESSAGE_TEXT("send"), focused_message_id_cb, NULL) ==
             DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_THREAD(NULL, 333ULL, DCC_MESSAGE_TEXT("send"), "thread") == DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_THREAD_CB(
+            NULL,
+            333ULL,
+            DCC_MESSAGE_TEXT("send"),
+            "thread",
+            focused_message_thread_cb,
+            NULL
+        ) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_THREAD_PARAMS(
+            NULL,
+            333ULL,
+            DCC_MESSAGE_TEXT("send"),
+            &thread_params,
+            focused_message_thread_cb,
+            NULL
+        ) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_TEXT(NULL, 333ULL, "send") == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_TEXT_CB(NULL, 333ULL, "send", NULL, NULL) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_TEXT_ID(NULL, 333ULL, "send", focused_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_TEXT_THREAD(NULL, 333ULL, "send", "thread") == DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_TEXT_THREAD_CB(NULL, 333ULL, "send", "thread", focused_message_thread_cb, NULL) ==
             DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_V2(NULL, 333ULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_V2_CB(NULL, 333ULL, NULL, NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_V2_ID(NULL, 333ULL, focused_message_id_cb, NULL, focused_text_component()) ==
             DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_V2_THREAD(NULL, 333ULL, "thread", focused_text_component()) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_V2_THREAD_CB(
+            NULL,
+            333ULL,
+            "thread",
+            focused_message_thread_cb,
+            NULL,
+            focused_text_component()
+        ) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_EPHEMERAL_V2(NULL, 333ULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_UI(NULL, 333ULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_UI_ID(NULL, 333ULL, focused_message_id_cb, NULL, focused_text_component()) ==
             DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_UI_THREAD(NULL, 333ULL, "thread", focused_text_component()) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_UI_THREAD_CB(
+            NULL,
+            333ULL,
+            "thread",
+            focused_message_thread_cb,
+            NULL,
+            focused_text_component()
+        ) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_EPHEMERAL_UI(NULL, 333ULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_APP_GET_CHANNEL(NULL, 333ULL) == DCC_ERR_INVALID_ARG &&
         DCC_APP_GET_CHANNEL_CB(NULL, 333ULL, NULL, NULL) == DCC_ERR_INVALID_ARG &&
@@ -87,16 +141,55 @@ static int check_null_app_action_aliases(void) {
         DCC_CHANNEL_SEND(NULL, 333ULL, DCC_MESSAGE_TEXT("send")) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_SEND_ID(NULL, 333ULL, DCC_MESSAGE_TEXT("send"), focused_message_id_cb, NULL) ==
             DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_SEND_THREAD(NULL, 333ULL, DCC_MESSAGE_TEXT("send"), "thread") == DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_SEND_THREAD_CB(
+            NULL,
+            333ULL,
+            DCC_MESSAGE_TEXT("send"),
+            "thread",
+            focused_message_thread_cb,
+            NULL
+        ) == DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_SEND_THREAD_PARAMS(
+            NULL,
+            333ULL,
+            DCC_MESSAGE_TEXT("send"),
+            &thread_params,
+            focused_message_thread_cb,
+            NULL
+        ) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_SEND_TEXT(NULL, 333ULL, "send") == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_SEND_TEXT_ID(NULL, 333ULL, "send", focused_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_SEND_TEXT_THREAD(NULL, 333ULL, "send", "thread") == DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_SEND_TEXT_THREAD_CB(NULL, 333ULL, "send", "thread", focused_message_thread_cb, NULL) ==
             DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_SEND_SAFE(NULL, 333ULL, "@everyone safe") == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_SEND_V2(NULL, 333ULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_SEND_V2_ID(NULL, 333ULL, focused_message_id_cb, NULL, focused_text_component()) ==
             DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_SEND_V2_THREAD(NULL, 333ULL, "thread", focused_text_component()) ==
+            DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_SEND_V2_THREAD_CB(
+            NULL,
+            333ULL,
+            "thread",
+            focused_message_thread_cb,
+            NULL,
+            focused_text_component()
+        ) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_SEND_UI(NULL, 333ULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_SEND_UI_ID(NULL, 333ULL, focused_message_id_cb, NULL, focused_text_component()) ==
             DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_SEND_UI_THREAD(NULL, 333ULL, "thread", focused_text_component()) == DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_SEND_UI_THREAD_CB(
+            NULL,
+            333ULL,
+            "thread",
+            focused_message_thread_cb,
+            NULL,
+            focused_text_component()
+        ) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_FETCH(NULL, 333ULL) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_GET(NULL, 333ULL) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_EDIT(NULL, 333ULL, "{\"name\":\"general\"}") == DCC_ERR_INVALID_ARG &&

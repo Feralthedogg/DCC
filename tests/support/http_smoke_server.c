@@ -13,7 +13,8 @@
 
 static void *http_server_main(void *arg) {
     http_server_t *server = (http_server_t *)arg;
-    int request_total = server->chunked == 2 || server->chunked == 4 || server->chunked == 5 ? 2 : 1;
+    int request_total =
+        server->chunked == 2 || server->chunked == 4 || server->chunked == 5 || server->chunked == 7 ? 2 : 1;
 
     for (int request_index = 0; request_index < request_total; ++request_index) {
         int client = accept(server->fd, NULL, NULL);
@@ -147,6 +148,24 @@ static void *http_server_main(void *arg) {
                 "\r\n"
                 "{\"message\":\"unauthorized\"}";
             (void)write(client, response, sizeof(response) - 1);
+        } else if (server->chunked == 7 && request_index == 0) {
+            const char response[] =
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: application/json\r\n"
+                "Content-Length: 12\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "{\"id\":\"500\"}";
+            (void)write(client, response, sizeof(response) - 1);
+        } else if (server->chunked == 7) {
+            const char response[] =
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: application/json\r\n"
+                "Content-Length: 12\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "{\"id\":\"900\"}";
+            (void)write(client, response, sizeof(response) - 1);
         } else {
             const char response[] =
                 "HTTP/1.1 200 OK\r\n"
@@ -221,6 +240,10 @@ int start_direct_message_server(http_server_t *server, pthread_t *thread) {
 
 int start_async_retry_queue_server(http_server_t *server, pthread_t *thread) {
     return start_server_mode(server, thread, 5);
+}
+
+int start_message_thread_server(http_server_t *server, pthread_t *thread) {
+    return start_server_mode(server, thread, 7);
 }
 
 uint64_t test_now_ms(void) {

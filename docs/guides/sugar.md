@@ -3456,6 +3456,7 @@ current interaction channel, message, or author:
 
 ```c
 DCC_CTX_SEND_TEXT(ctx, "hello");
+DCC_CTX_SEND_UI_THREAD(ctx, "rolling paper", DCC_UI_TEXT("birthday post"));
 DCC_CTX_REPLY_TEXT(ctx, "done");
 
 DCC_CTX_THREAD_FROM_MESSAGE(ctx, "rolling paper");
@@ -3475,6 +3476,7 @@ an interaction handler or when the target channel/message is explicit:
 DCC_CHANNEL_SEND_TEXT(app, channel_id, "hello");
 DCC_CHANNEL_SEND_SAFE(app, channel_id, "@everyone safe announcement");
 DCC_CHANNEL_SEND(app, channel_id, DCC_MESSAGE_SUCCESS("Saved."));
+DCC_CHANNEL_SEND_UI_THREAD(app, channel_id, "rolling paper", DCC_UI_TEXT("posted with a thread"));
 DCC_CHANNEL_FETCH(app, channel_id);
 DCC_CHANNEL_TYPING(app, channel_id);
 DCC_CHANNEL_EDIT_PARAMS(app, &channel_params);
@@ -3509,6 +3511,8 @@ DCC_APP_SEND_SAFE(app, channel_id, "@everyone safe announcement");
 DCC_APP_SEND(app, channel_id, DCC_MESSAGE_SUCCESS("Saved."));
 DCC_APP_SEND_TEXT_ID(app, channel_id, "saved", on_message_created, state);
 DCC_APP_SEND_UI_ID(app, channel_id, on_message_created, state, DCC_UI_TEXT("saved"));
+DCC_APP_SEND_TEXT_THREAD(app, channel_id, "posted", "support thread");
+DCC_APP_SEND_UI_THREAD(app, channel_id, "support thread", DCC_UI_TEXT("posted"));
 DCC_APP_EDIT_MESSAGE(app, channel_id, message_id, DCC_MESSAGE_TEXT("updated"));
 DCC_APP_DELETE_MESSAGE(app, channel_id, message_id);
 
@@ -3670,6 +3674,39 @@ static void on_message_created(
 
 DCC_APP_SEND_TEXT_ID(app, channel_id, "posted", on_message_created, NULL);
 DCC_CTX_SEND_UI_ID(ctx, on_message_created, NULL, DCC_UI_TEXT("posted"));
+```
+
+If the next action is always opening a thread under the message, use the
+send-thread helpers instead of manually parsing the message ID and issuing a
+second request:
+
+```c
+static void on_post_thread(
+    dcc_app_t *app,
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t message_id,
+    dcc_snowflake_t thread_id,
+    dcc_status_t status,
+    void *user_data
+) {
+    if (status == DCC_OK) {
+        save_rolling_paper(message_id, thread_id);
+    }
+    (void)app;
+    (void)response;
+    (void)user_data;
+}
+
+DCC_APP_SEND_UI_THREAD_CB(
+    app,
+    channel_id,
+    "rolling paper",
+    on_post_thread,
+    NULL,
+    DCC_UI_TEXT("birthday message")
+);
+
+DCC_SEND_TEXT_THREAD(ctx, "posted from this channel", "discussion");
 ```
 
 When you use a raw REST callback and need values from the created resource,

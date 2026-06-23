@@ -61,6 +61,9 @@ int main(void) {
     if (run_public_rest_async_retry_queue_smoke() != 0) {
         return 1;
     }
+    if (run_public_rest_app_send_thread_smoke() != 0) {
+        return 1;
+    }
     if (run_public_rest_rate_limit_smoke() != 0) {
         return 1;
     }

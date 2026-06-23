@@ -755,6 +755,20 @@ DCC_API dcc_status_t dcc_ctx_send_with_id(
     dcc_app_message_id_cb cb,
     void *user_data
 );
+DCC_API dcc_status_t dcc_ctx_send_with_thread(
+    dcc_ctx_t *ctx,
+    const dcc_message_builder_t *message,
+    const dcc_thread_params_t *thread,
+    dcc_app_message_thread_cb cb,
+    void *user_data
+);
+DCC_API dcc_status_t dcc_ctx_send_with_thread_name(
+    dcc_ctx_t *ctx,
+    const dcc_message_builder_t *message,
+    const char *thread_name,
+    dcc_app_message_thread_cb cb,
+    void *user_data
+);
 DCC_API dcc_status_t dcc_ctx_send_text(
     dcc_ctx_t *ctx,
     const char *content,
@@ -765,6 +779,13 @@ DCC_API dcc_status_t dcc_ctx_send_text_with_id(
     dcc_ctx_t *ctx,
     const char *content,
     dcc_app_message_id_cb cb,
+    void *user_data
+);
+DCC_API dcc_status_t dcc_ctx_send_text_with_thread(
+    dcc_ctx_t *ctx,
+    const char *content,
+    const char *thread_name,
+    dcc_app_message_thread_cb cb,
     void *user_data
 );
 DCC_API dcc_status_t dcc_app_get_channel_webhooks(

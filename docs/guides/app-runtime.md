@@ -1044,6 +1044,7 @@ shape while still using the same DCC request pipeline:
 ```c
 DCC_CHANNEL_SEND_TEXT(app, channel_id, "posted from the app");
 DCC_CHANNEL_SEND_UI(app, channel_id, DCC_UI_TEXT("posted as Components v2"));
+DCC_CHANNEL_SEND_UI_THREAD(app, channel_id, "support thread", DCC_UI_TEXT("posted with a thread"));
 DCC_CHANNEL_FETCH(app, channel_id);
 DCC_CHANNEL_TYPING(app, channel_id);
 DCC_CHANNEL_EDIT_PARAMS(app, &channel_params);
@@ -1071,6 +1072,8 @@ DCC_THREAD_LOCK(app, thread_id);
 
 DCC_APP_SEND_TEXT(app, channel_id, "posted from the app");
 DCC_APP_SEND_V2(app, channel_id, DCC_V2_TEXT("posted as Components v2"));
+DCC_APP_SEND_TEXT_THREAD(app, channel_id, "posted", "support thread");
+DCC_APP_SEND_UI_THREAD(app, channel_id, "support thread", DCC_UI_TEXT("posted as Components v2"));
 DCC_APP_EDIT_TEXT(app, channel_id, message_id, "edited");
 DCC_APP_EDIT_V2(app, channel_id, message_id, DCC_V2_TEXT("edited as Components v2"));
 DCC_APP_DELETE_MESSAGE(app, channel_id, message_id);

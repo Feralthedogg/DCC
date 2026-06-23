@@ -239,6 +239,116 @@ int run_public_rest_future_smoke(void) {
     return 0;
 }
 
+typedef struct app_send_thread_seen {
+    int called;
+    dcc_snowflake_t message_id;
+    dcc_snowflake_t thread_id;
+    dcc_status_t status;
+    uint16_t response_status;
+} app_send_thread_seen_t;
+
+static void app_send_thread_cb(
+    dcc_app_t *app,
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t message_id,
+    dcc_snowflake_t thread_id,
+    dcc_status_t status,
+    void *user_data
+) {
+    app_send_thread_seen_t *seen = (app_send_thread_seen_t *)user_data;
+    if (seen != NULL) {
+        seen->called++;
+        seen->message_id = message_id;
+        seen->thread_id = thread_id;
+        seen->status = status;
+        seen->response_status = response != NULL ? response->status : 0U;
+    }
+    (void)dcc_app_stop(app);
+}
+
+int run_public_rest_app_send_thread_smoke(void) {
+    http_server_t server;
+    pthread_t server_thread;
+    if (start_message_thread_server(&server, &server_thread) != 0) {
+        fprintf(stderr, "failed to start app send-thread server: %s\n", strerror(errno));
+        return 1;
+    }
+    set_api_base_for_server(&server);
+
+    dcc_app_options_t opts;
+    dcc_app_options_init(&opts);
+    opts.client.token = "";
+    opts.client.intents = DCC_INTENT_GUILDS;
+    opts.client.rest_concurrency = 1;
+
+    dcc_app_t *app = NULL;
+    dcc_status_t st = dcc_app_create(&opts, &app);
+    if (st == DCC_OK) {
+        st = dcc_app_start(app);
+    }
+
+    app_send_thread_seen_t seen;
+    memset(&seen, 0, sizeof(seen));
+    if (st == DCC_OK) {
+        st = dcc_app_send_text_with_thread(
+            app,
+            222ULL,
+            "posted",
+            "support thread",
+            app_send_thread_cb,
+            &seen
+        );
+    }
+    if (st == DCC_OK) {
+        st = dcc_app_wait(app);
+    } else if (app != NULL) {
+        (void)dcc_app_stop(app);
+        close(server.fd);
+        server.fd = -1;
+    }
+
+    (void)pthread_join(server_thread, NULL);
+    if (server.fd >= 0) {
+        close(server.fd);
+    }
+    (void)unsetenv("DCC_DISCORD_API_BASE");
+    dcc_app_destroy(app);
+
+    if (st != DCC_OK ||
+        seen.called != 1 ||
+        seen.status != DCC_OK ||
+        seen.response_status != 200U ||
+        seen.message_id != 500ULL ||
+        seen.thread_id != 900ULL ||
+        server.request_count != 2U ||
+        strcmp(server.methods[0], "POST") != 0 ||
+        strcmp(server.paths[0], "/channels/222/messages") != 0 ||
+        strstr(server.bodies[0], "\"content\":\"posted\"") == NULL ||
+        strcmp(server.methods[1], "POST") != 0 ||
+        strcmp(server.paths[1], "/channels/222/messages/500/threads") != 0 ||
+        strstr(server.bodies[1], "\"name\":\"support thread\"") == NULL) {
+        fprintf(stderr,
+                "app send-thread failed: st=%s called=%d status=%s response=%u ids=%llu/%llu "
+                "requests=%u first=%s %s body=%s second=%s %s body=%s\n",
+                dcc_status_string(st),
+                seen.called,
+                dcc_status_string(seen.status),
+                seen.response_status,
+                (unsigned long long)seen.message_id,
+                (unsigned long long)seen.thread_id,
+                server.request_count,
+                server.methods[0],
+                server.paths[0],
+                server.bodies[0],
+                server.methods[1],
+                server.paths[1],
+                server.bodies[1]);
+        return 1;
+    }
+
+    return 0;
+}
+
 int run_public_rest_async_priority_smoke(void) {
     http_server_t low;
     http_server_t normal;

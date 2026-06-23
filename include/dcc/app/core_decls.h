@@ -37,6 +37,14 @@ typedef void (*dcc_app_message_id_cb)(
     dcc_status_t status,
     void *user_data
 );
+typedef void (*dcc_app_message_thread_cb)(
+    dcc_app_t *app,
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t message_id,
+    dcc_snowflake_t thread_id,
+    dcc_status_t status,
+    void *user_data
+);
 typedef void (*dcc_app_infer_guild_cb)(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,

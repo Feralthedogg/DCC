@@ -76,6 +76,22 @@ DCC_API dcc_status_t dcc_app_send_with_id(
     dcc_app_message_id_cb cb,
     void *user_data
 );
+DCC_API dcc_status_t dcc_app_send_with_thread(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    const dcc_message_builder_t *message,
+    const dcc_thread_params_t *thread,
+    dcc_app_message_thread_cb cb,
+    void *user_data
+);
+DCC_API dcc_status_t dcc_app_send_with_thread_name(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    const dcc_message_builder_t *message,
+    const char *thread_name,
+    dcc_app_message_thread_cb cb,
+    void *user_data
+);
 DCC_API dcc_status_t dcc_app_send_text(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
@@ -88,6 +104,14 @@ DCC_API dcc_status_t dcc_app_send_text_with_id(
     dcc_snowflake_t channel_id,
     const char *content,
     dcc_app_message_id_cb cb,
+    void *user_data
+);
+DCC_API dcc_status_t dcc_app_send_text_with_thread(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    const char *content,
+    const char *thread_name,
+    dcc_app_message_thread_cb cb,
     void *user_data
 );
 DCC_API dcc_status_t dcc_app_send_json(

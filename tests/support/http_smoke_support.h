@@ -96,6 +96,7 @@ int run_public_rest_async_route_serial_smoke(void);
 int run_public_rest_async_control_smoke(void);
 int run_public_rest_async_active_cancel_smoke(void);
 int run_public_rest_async_retry_queue_smoke(void);
+int run_public_rest_app_send_thread_smoke(void);
 int run_public_rest_rate_limit_smoke(void);
 int run_public_rest_direct_message_smoke(void);
 int run_public_rest_gap_smoke(void);

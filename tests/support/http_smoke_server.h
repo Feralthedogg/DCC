@@ -34,6 +34,7 @@ int start_rate_limited_server(http_server_t *server, pthread_t *thread);
 int start_bucket_empty_server(http_server_t *server, pthread_t *thread);
 int start_direct_message_server(http_server_t *server, pthread_t *thread);
 int start_async_retry_queue_server(http_server_t *server, pthread_t *thread);
+int start_message_thread_server(http_server_t *server, pthread_t *thread);
 
 uint64_t test_now_ms(void);
 void set_api_base_for_server(const http_server_t *server);

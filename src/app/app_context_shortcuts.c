@@ -26,6 +26,42 @@ dcc_status_t dcc_ctx_send_with_id(
     return dcc_app_send_with_id(ctx->app, dcc_ctx_channel_id(ctx), message, cb, user_data);
 }
 
+dcc_status_t dcc_ctx_send_with_thread(
+    dcc_ctx_t *ctx,
+    const dcc_message_builder_t *message,
+    const dcc_thread_params_t *thread,
+    dcc_app_message_thread_cb cb,
+    void *user_data
+) {
+    if (ctx == NULL || message == NULL || thread == NULL || ctx->app == NULL ||
+        dcc_ctx_channel_id(ctx) == 0U) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    return dcc_app_send_with_thread(ctx->app, dcc_ctx_channel_id(ctx), message, thread, cb, user_data);
+}
+
+dcc_status_t dcc_ctx_send_with_thread_name(
+    dcc_ctx_t *ctx,
+    const dcc_message_builder_t *message,
+    const char *thread_name,
+    dcc_app_message_thread_cb cb,
+    void *user_data
+) {
+    if (ctx == NULL || message == NULL || thread_name == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    return dcc_ctx_send_with_thread(
+        ctx,
+        message,
+        &((dcc_thread_params_t[]){ {
+            .size = sizeof(dcc_thread_params_t),
+            .name = thread_name
+        } })[0],
+        cb,
+        user_data
+    );
+}
+
 dcc_status_t dcc_ctx_send_text(
     dcc_ctx_t *ctx,
     const char *content,
@@ -56,6 +92,23 @@ dcc_status_t dcc_ctx_send_text_with_id(
         .has_content = 1U,
     };
     return dcc_ctx_send_with_id(ctx, &message, cb, user_data);
+}
+
+dcc_status_t dcc_ctx_send_text_with_thread(
+    dcc_ctx_t *ctx,
+    const char *content,
+    const char *thread_name,
+    dcc_app_message_thread_cb cb,
+    void *user_data
+) {
+    if (ctx == NULL || content == NULL || thread_name == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_message_builder_t message = {
+        .content = content,
+        .has_content = 1U,
+    };
+    return dcc_ctx_send_with_thread_name(ctx, &message, thread_name, cb, user_data);
 }
 
 dcc_status_t dcc_ctx_ok(
