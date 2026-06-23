@@ -24,17 +24,6 @@ typedef struct hot_reload_health_sidecar {
     dcc_interaction_server_t *server;
 } hot_reload_health_sidecar_t;
 
-static int hot_reload_setenv(const char *name, const char *value, int overwrite) {
-#if defined(_WIN32)
-    if (!overwrite && getenv(name) != NULL) {
-        return 0;
-    }
-    return _putenv_s(name, value);
-#else
-    return setenv(name, value, overwrite);
-#endif
-}
-
 static long hot_reload_process_id(void) {
 #if defined(_WIN32)
     return (long)_getpid();
@@ -77,58 +66,19 @@ static int hot_reload_parse_args(int argc, char **argv, hot_reload_host_args_t *
 }
 
 static const char *hot_reload_env_string(const char *name, const char *fallback) {
-    const char *value = getenv(name);
-    return value != NULL && value[0] != '\0' ? value : fallback;
+    const char *value = fallback;
+    return DCC_ENV_STRING_OR(name, fallback, &value) == DCC_OK ? value : fallback;
 }
 
 static uint16_t hot_reload_env_u16(const char *name, uint16_t fallback) {
-    const char *value = getenv(name);
-    if (value == NULL || value[0] == '\0') {
-        return fallback;
-    }
-
-    char *end = NULL;
-    unsigned long parsed = strtoul(value, &end, 10);
-    if (end == value || *end != '\0' || parsed > 65535UL) {
+    uint32_t parsed = fallback;
+    if (DCC_ENV_U32_RANGE_OR(name, fallback, 0U, 65535U, &parsed) != DCC_OK) {
+        const char *value = "";
+        (void)DCC_ENV_STRING_OR(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %u\n", name, value, (unsigned)fallback);
         return fallback;
     }
     return (uint16_t)parsed;
-}
-
-static void hot_reload_load_env_file(const char *path) {
-    FILE *file = fopen(path, "r");
-    if (file == NULL) {
-        return;
-    }
-
-    char line[512];
-    while (fgets(line, sizeof(line), file) != NULL) {
-        char *cursor = line;
-        while (*cursor == ' ' || *cursor == '\t') {
-            cursor++;
-        }
-        if (*cursor == '#' || *cursor == '\0' || *cursor == '\n' || *cursor == '\r') {
-            continue;
-        }
-
-        char *eq = strchr(cursor, '=');
-        if (eq == NULL) {
-            continue;
-        }
-        *eq = '\0';
-
-        char *key = cursor;
-        char *value = eq + 1;
-        key[strcspn(key, " \t\r\n")] = '\0';
-        value[strcspn(value, "\r\n")] = '\0';
-
-        if (key[0] != '\0' && getenv(key) == NULL) {
-            hot_reload_setenv(key, value, 0);
-        }
-    }
-
-    fclose(file);
 }
 
 static dcc_status_t hot_reload_health_sidecar_start(
@@ -199,17 +149,18 @@ int main(int argc, char **argv) {
         return arg_status > 0 ? 0 : 1;
     }
 
-    hot_reload_load_env_file(".env");
-    hot_reload_load_env_file("../../.env");
+    (void)dcc_app_load_env_file(".env", 0U);
+    (void)dcc_app_load_env_file("../../.env", 0U);
 
     const char *module_path = args.module_path;
     const char *worker_path = args.worker_path;
-    const char *token = getenv("BOT_TOKEN");
-    if (token == NULL || token[0] == '\0') {
-        token = getenv("DISCORD_TOKEN");
-    }
-    if (token == NULL || token[0] == '\0') {
-        fprintf(stderr, "BOT_TOKEN or DISCORD_TOKEN environment variable not set (put it in .env or export it)\n");
+    const char *token = NULL;
+    if (DCC_ENV_TOKEN(&token) != DCC_OK) {
+        fprintf(
+            stderr,
+            "DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN environment variable not set "
+            "(put it in .env or export it)\n"
+        );
         return 1;
     }
 

@@ -8,8 +8,8 @@ the parent process, and the module `.so` is loaded only by
 
 ## Run
 
-Put `BOT_TOKEN=...` or `DISCORD_TOKEN=...` in this directory's `.env`, the
-repository root `.env`, or export it in your shell.
+Put `DCC_TOKEN=...`, `BOT_TOKEN=...`, or `DISCORD_TOKEN=...` in this
+directory's `.env`, the repository root `.env`, or export it in your shell.
 
 ```sh
 make
