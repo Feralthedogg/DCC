@@ -38,9 +38,17 @@ option(DCC_LLAM_USE_SUBDIRECTORY "Build LLAM from source through add_subdirector
 option(DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS "Keep LLAM tests enabled when LLAM is added as a subdirectory" OFF)
 option(DCC_BUNDLE_LLAM "Install LLAM runtime files with DCC packages when LLAM is built as a subdirectory" ON)
 option(DCC_WITH_OPUS "Build the optional libopus voice codec backend when libopus is available" ON)
+set(DCC_LLAM_REQUIRED_VERSION "2.1.0" CACHE STRING "Minimum LLAM runtime version required by DCC")
 set(DCC_LLAM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../LLAM" CACHE PATH "Path to the LLAM runtime source tree")
 set(DCC_LLAM_LIBRARY "${DCC_LLAM_ROOT}/libllam_runtime.a" CACHE FILEPATH "Path to a prebuilt LLAM static library")
 set(DCC_OPUS_ROOT "" CACHE PATH "Path to a libopus installation")
+
+if(NOT DCC_LLAM_REQUIRED_VERSION MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
+    message(FATAL_ERROR "DCC_LLAM_REQUIRED_VERSION must be a numeric x.y.z version: ${DCC_LLAM_REQUIRED_VERSION}")
+endif()
+set(DCC_LLAM_REQUIRED_VERSION_MAJOR "${CMAKE_MATCH_1}")
+set(DCC_LLAM_REQUIRED_VERSION_MINOR "${CMAKE_MATCH_2}")
+set(DCC_LLAM_REQUIRED_VERSION_PATCH "${CMAKE_MATCH_3}")
 
 set(DCC_SYSTEM_IS_BSD FALSE)
 if(CMAKE_SYSTEM_NAME MATCHES "^(FreeBSD|OpenBSD|NetBSD|DragonFly)$")
@@ -95,11 +103,63 @@ function(dcc_target_link_llam_platform target)
     endif()
 endfunction()
 
+function(dcc_llam_header_define_u32 header define out_var)
+    file(
+        STRINGS "${header}"
+        DCC_LLAM_DEFINE_LINE
+        REGEX "^#define[ \t]+${define}[ \t]+[0-9]+U?"
+    )
+    if(NOT DCC_LLAM_DEFINE_LINE)
+        message(FATAL_ERROR "LLAM header ${header} does not define ${define}")
+    endif()
+    list(GET DCC_LLAM_DEFINE_LINE 0 DCC_LLAM_DEFINE_LINE)
+    string(
+        REGEX REPLACE "^#define[ \t]+${define}[ \t]+([0-9]+)U?.*$" "\\1"
+        DCC_LLAM_DEFINE_VALUE
+        "${DCC_LLAM_DEFINE_LINE}"
+    )
+    set("${out_var}" "${DCC_LLAM_DEFINE_VALUE}" PARENT_SCOPE)
+endfunction()
+
+function(dcc_validate_llam_header header)
+    if(NOT EXISTS "${header}")
+        message(FATAL_ERROR "LLAM runtime header not found: ${header}")
+    endif()
+
+    dcc_llam_header_define_u32("${header}" LLAM_VERSION_MAJOR DCC_LLAM_DETECTED_MAJOR)
+    dcc_llam_header_define_u32("${header}" LLAM_VERSION_MINOR DCC_LLAM_DETECTED_MINOR)
+    dcc_llam_header_define_u32("${header}" LLAM_VERSION_PATCH DCC_LLAM_DETECTED_PATCH)
+    dcc_llam_header_define_u32("${header}" LLAM_ABI_VERSION_MAJOR DCC_LLAM_DETECTED_ABI_MAJOR)
+    dcc_llam_header_define_u32("${header}" LLAM_ABI_VERSION_MINOR DCC_LLAM_DETECTED_ABI_MINOR)
+
+    set(DCC_LLAM_DETECTED_VERSION
+        "${DCC_LLAM_DETECTED_MAJOR}.${DCC_LLAM_DETECTED_MINOR}.${DCC_LLAM_DETECTED_PATCH}"
+    )
+    if(DCC_LLAM_DETECTED_VERSION VERSION_LESS DCC_LLAM_REQUIRED_VERSION)
+        message(FATAL_ERROR
+            "DCC requires LLAM ${DCC_LLAM_REQUIRED_VERSION} or newer; "
+            "found ${DCC_LLAM_DETECTED_VERSION} at ${header}"
+        )
+    endif()
+    if(NOT DCC_LLAM_DETECTED_ABI_MAJOR EQUAL DCC_LLAM_REQUIRED_VERSION_MAJOR)
+        message(FATAL_ERROR
+            "DCC requires LLAM ABI major ${DCC_LLAM_REQUIRED_VERSION_MAJOR}; "
+            "found ABI ${DCC_LLAM_DETECTED_ABI_MAJOR}.${DCC_LLAM_DETECTED_ABI_MINOR} at ${header}"
+        )
+    endif()
+
+    message(STATUS
+        "DCC using LLAM ${DCC_LLAM_DETECTED_VERSION} "
+        "(ABI ${DCC_LLAM_DETECTED_ABI_MAJOR}.${DCC_LLAM_DETECTED_ABI_MINOR})"
+    )
+endfunction()
+
 if(NOT TARGET llam::runtime)
     if(DCC_LLAM_USE_SUBDIRECTORY)
         if(NOT EXISTS "${DCC_LLAM_ROOT}/CMakeLists.txt")
             message(FATAL_ERROR "DCC_LLAM_ROOT does not point to a LLAM source tree: ${DCC_LLAM_ROOT}")
         endif()
+        dcc_validate_llam_header("${DCC_LLAM_ROOT}/include/llam/runtime.h")
         add_subdirectory("${DCC_LLAM_ROOT}" "${CMAKE_CURRENT_BINARY_DIR}/_deps/llam" EXCLUDE_FROM_ALL)
         set(DCC_LLAM_CTEST_IGNORE_FILE "${CMAKE_CURRENT_BINARY_DIR}/dcc_llam_ctest_ignore.cmake")
         if(DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS AND EXISTS "${DCC_LLAM_CTEST_IGNORE_FILE}")
@@ -147,6 +207,7 @@ if(NOT TARGET llam::runtime)
         if(NOT EXISTS "${DCC_LLAM_ROOT}/include/llam/runtime.h")
             message(FATAL_ERROR "DCC_LLAM_ROOT does not contain LLAM headers: ${DCC_LLAM_ROOT}")
         endif()
+        dcc_validate_llam_header("${DCC_LLAM_ROOT}/include/llam/runtime.h")
 
         add_library(llam_runtime_prebuilt STATIC IMPORTED GLOBAL)
         add_library(llam::runtime ALIAS llam_runtime_prebuilt)
