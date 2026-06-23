@@ -2140,10 +2140,14 @@ entrypoints and module setup functions where the definition is applied
 immediately. If a definition must live beyond the current block, declare normal C
 arrays and assign the pointer/count fields explicitly.
 
-Use `DCC_CTX_BIND_OPTIONS()` and `DCC_CTX_BIND_FORM()` when binding into local
-variables is clearer for tiny handlers. The validation macros are optional
-sugar over `dcc_ctx_validate_fields()`: use the explicit
-`dcc_ctx_field_validator_t` array when validators are generated dynamically.
+Inside void handlers, prefer `DCC_CTX_BIND_OPTIONS_OR_REPLY()` and
+`DCC_CTX_BIND_FORM_OR_REPLY()` when binding into local variables is clearer for
+tiny handlers. They send the default friendly validation response and return
+from the handler on bad input. Use `DCC_CTX_BIND_OPTIONS()` and
+`DCC_CTX_BIND_FORM()` when a handler needs custom status handling. The
+validation macros are optional sugar over `dcc_ctx_validate_fields()`: use the
+explicit `dcc_ctx_field_validator_t` array when validators are generated
+dynamically.
 
 Register component handlers as a small View when a message has several related
 buttons, selects, or modals:

@@ -1197,18 +1197,13 @@ static void on_rank(dcc_ctx_t *ctx, void *user_data) {
 
     rank_args_t args = {0};
 
-    dcc_status_t status =
-        DCC_CTX_BIND_OPTION_FIELDS(
-            ctx,
-            &args,
-            DCC_ARG_REQUIRED_STRING(rank_args_t, name, "name"),
-            DCC_ARG_INT(rank_args_t, limit, "limit", 10),
-            DCC_ARG_BOOL(rank_args_t, public_result, "public", 0U)
+    DCC_CTX_BIND_OPTION_FIELDS_OR_REPLY(
+        ctx,
+        &args,
+        DCC_ARG_REQUIRED_STRING(rank_args_t, name, "name"),
+        DCC_ARG_INT(rank_args_t, limit, "limit", 10),
+        DCC_ARG_BOOL(rank_args_t, public_result, "public", 0U)
     );
-    if (status != DCC_OK) {
-        DCC_REPLY_VALIDATION_ERROR(ctx, status);
-        return;
-    }
 
     DCC_CTX_VALIDATE_OR_REPLY(
         ctx,
@@ -1252,17 +1247,12 @@ static void on_profile_modal(dcc_ctx_t *ctx, void *user_data) {
 
     profile_form_t form = {0};
 
-    dcc_status_t status =
-        DCC_CTX_BIND_FORM_FIELDS(
-            ctx,
-            &form,
-            DCC_CTX_FORM_FIELD_REQUIRED_STRING(profile_form_t, birthday, "birthday"),
-            DCC_CTX_FORM_FIELD_BOOL(profile_form_t, public_age, "public_age", 1U)
+    DCC_CTX_BIND_FORM_FIELDS_OR_REPLY(
+        ctx,
+        &form,
+        DCC_CTX_FORM_FIELD_REQUIRED_STRING(profile_form_t, birthday, "birthday"),
+        DCC_CTX_FORM_FIELD_BOOL(profile_form_t, public_age, "public_age", 1U)
     );
-    if (status != DCC_OK) {
-        DCC_REPLY_VALIDATION_ERROR(ctx, status);
-        return;
-    }
 
     DCC_CTX_VALIDATE_OR_REPLY(
         ctx,
