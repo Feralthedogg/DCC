@@ -718,6 +718,14 @@
 #define DCC_CTX_UPDATE_UI(ctx_, ...) DCC_CTX_UPDATE_V2((ctx_), __VA_ARGS__)
 #define DCC_CTX_FOLLOWUP_UI(ctx_, ...) DCC_CTX_FOLLOWUP_V2((ctx_), __VA_ARGS__)
 #define DCC_CTX_SEND_UI(ctx_, ...) DCC_CTX_SEND_V2((ctx_), __VA_ARGS__)
+#define DCC_SEND_UI_WITH_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
+#define DCC_SEND_UI_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_UI_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
+#define DCC_CTX_SEND_UI_WITH_ID(ctx_, cb_, user_data_, ...) \
+    DCC_CTX_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
+#define DCC_CTX_SEND_UI_ID(ctx_, cb_, user_data_, ...) \
+    DCC_CTX_SEND_UI_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
 
 #define DCC_MODAL_BUILDER_ARRAY(custom_id_, title_, components_, component_count_) \
     ((dcc_modal_builder_t){ \

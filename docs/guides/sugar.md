@@ -3507,6 +3507,8 @@ DCC_THREAD_UNLOCK(app, thread_id);
 DCC_APP_SEND_TEXT(app, channel_id, "hello");
 DCC_APP_SEND_SAFE(app, channel_id, "@everyone safe announcement");
 DCC_APP_SEND(app, channel_id, DCC_MESSAGE_SUCCESS("Saved."));
+DCC_APP_SEND_TEXT_ID(app, channel_id, "saved", on_message_created, state);
+DCC_APP_SEND_UI_ID(app, channel_id, on_message_created, state, DCC_UI_TEXT("saved"));
 DCC_APP_EDIT_MESSAGE(app, channel_id, message_id, DCC_MESSAGE_TEXT("updated"));
 DCC_APP_DELETE_MESSAGE(app, channel_id, message_id);
 
@@ -3650,6 +3652,30 @@ last_key = DCC_APP_STORE_U64_OR(app, "birthday.last_kst_day", 0U);
 ```
 
 ## REST Response Fields
+
+For the common “send a message, then store or thread its id” flow, prefer the
+typed send-ID helpers. They keep the raw REST response available but pass the
+created `message_id` as a parsed snowflake:
+
+```c
+static void on_message_created(
+    dcc_app_t *app,
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t message_id,
+    dcc_status_t status,
+    void *user_data
+) {
+    if (status == DCC_OK) {
+        save_message_id(message_id);
+    }
+    (void)app;
+    (void)response;
+    (void)user_data;
+}
+
+DCC_APP_SEND_TEXT_ID(app, channel_id, "posted", on_message_created, NULL);
+DCC_CTX_SEND_UI_ID(ctx, on_message_created, NULL, DCC_UI_TEXT("posted"));
+```
 
 When you use a raw REST callback and need values from the created resource,
 parse only the fields you need:

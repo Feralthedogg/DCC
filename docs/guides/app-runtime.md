@@ -857,6 +857,34 @@ DCC_APP_SEND(app, channel_id, DCC_MESSAGE_MENTION_USERS("hi <@123>", 123ULL));
 DCC_APP_SEND(app, channel_id, DCC_MESSAGE_SUCCESS("Saved."));
 ```
 
+When the next step needs the created message id, use the ID callback variants
+instead of parsing the REST body in every handler:
+
+```c
+typedef struct ticket_post_state {
+    dcc_snowflake_t channel_id;
+} ticket_post_state_t;
+
+static void posted(
+    dcc_app_t *app,
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t message_id,
+    dcc_status_t status,
+    void *user_data
+) {
+    ticket_post_state_t *state = user_data;
+    if (status == DCC_OK) {
+        DCC_MESSAGE_THREAD(app, state->channel_id, message_id, "support thread");
+    }
+    (void)response;
+}
+
+ticket_post_state_t *state = get_ticket_post_state();
+state->channel_id = channel_id;
+DCC_APP_SEND_TEXT_ID(app, channel_id, "ticket opened", posted, state);
+DCC_CTX_SEND_UI_ID(ctx, posted, state, DCC_UI_TEXT("ticket opened"));
+```
+
 Format helpers cover Discord mention, custom emoji, and relative-time markup:
 
 ```c

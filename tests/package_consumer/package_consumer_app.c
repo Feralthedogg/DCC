@@ -85,6 +85,20 @@ static void dcc_package_consumer_app_message_command_handler(
     (void)user_data;
 }
 
+static void dcc_package_consumer_app_message_id_cb(
+    dcc_app_t *app,
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t message_id,
+    dcc_status_t status,
+    void *user_data
+) {
+    (void)app;
+    (void)response;
+    (void)message_id;
+    (void)status;
+    (void)user_data;
+}
+
 DCC_PREFIX_COMMAND_FN(dcc_package_consumer_prefix_command_alias) {
     (void)app;
     (void)message;
@@ -1694,7 +1708,11 @@ int dcc_package_consumer_check_app_api(void) {
         ns_params_typed_select.user_data == &app_state &&
         DCC_APP_REGISTER_SELECT(app, ns_params_typed_select) == DCC_OK &&
         dcc_app_send(NULL, 1U, NULL, NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_app_send_with_id(NULL, 1U, &managed_message, dcc_package_consumer_app_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
         dcc_app_send_text(app, 0U, "hello", NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_app_send_text_with_id(app, 0U, "hello", dcc_package_consumer_app_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
         dcc_app_send_json(app, 0U, "{}", NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_edit_message(app, 0U, 1U, &managed_message, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_edit_message_text(app, 0U, 1U, "hello", NULL, NULL) == DCC_ERR_INVALID_ARG &&
@@ -1771,8 +1789,14 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_FLOW_REPLY_TEXT(NULL, "package flow") == DCC_ERR_INVALID_ARG &&
         strcmp(DCC_FLOW_STATE_NAME(NULL), "failed") == 0 &&
         DCC_APP_SEND(NULL, 1U, DCC_MESSAGE_TEXT("hello")) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_ID(NULL, 1U, DCC_MESSAGE_TEXT("hello"), dcc_package_consumer_app_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_V2(NULL, 1U, DCC_V2_TEXT("hello")) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_V2_ID(NULL, 1U, dcc_package_consumer_app_message_id_cb, NULL, DCC_V2_TEXT("hello")) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_UI(NULL, 1U, DCC_UI_TEXT("hello")) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_SEND_UI_ID(NULL, 1U, dcc_package_consumer_app_message_id_cb, NULL, DCC_UI_TEXT("hello")) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_V2_CB(NULL, 1U, NULL, NULL, DCC_V2_TEXT("hello")) == DCC_ERR_INVALID_ARG &&
         DCC_INFER_GUILD_FROM_CHANNEL(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_infer_guild_id_from_channel(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
@@ -2414,7 +2438,11 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_PARSE_DATE_YYYYMMDD("20010229", &parsed_date) == DCC_ERR_INVALID_ARG &&
         DCC_PARSE_DATE_MMDD("1301", &parsed_date) == DCC_ERR_INVALID_ARG &&
         dcc_ctx_send(NULL, NULL, NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_ctx_send_with_id(NULL, &managed_message, dcc_package_consumer_app_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
         dcc_ctx_send_text(NULL, "hello", NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_ctx_send_text_with_id(NULL, "hello", dcc_package_consumer_app_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
         dcc_ctx_add_member_role(NULL, 1U, 2U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_ctx_remove_member_role(NULL, 1U, 2U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_ctx_add_author_role(NULL, 2U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
@@ -2517,11 +2545,23 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_DELETE_ORIGINAL(NULL) == DCC_ERR_INVALID_ARG &&
         DCC_CTX_DELETE_ORIGINAL(NULL) == DCC_ERR_INVALID_ARG &&
         DCC_SEND(NULL, DCC_MESSAGE_TEXT("send")) == DCC_ERR_INVALID_ARG &&
+        DCC_SEND_ID(NULL, DCC_MESSAGE_TEXT("send"), dcc_package_consumer_app_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_CTX_SEND(NULL, DCC_MESSAGE_TEXT("send")) == DCC_ERR_INVALID_ARG &&
+        DCC_CTX_SEND_ID(NULL, DCC_MESSAGE_TEXT("send"), dcc_package_consumer_app_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_CTX_SEND_TEXT(NULL, "send") == DCC_ERR_INVALID_ARG &&
+        DCC_CTX_SEND_TEXT_ID(NULL, "send", dcc_package_consumer_app_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_SEND_V2(NULL, DCC_V2_TEXT("send")) == DCC_ERR_INVALID_ARG &&
+        DCC_SEND_V2_ID(NULL, dcc_package_consumer_app_message_id_cb, NULL, DCC_V2_TEXT("send")) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_CTX_SEND_V2(NULL, DCC_V2_TEXT("send")) == DCC_ERR_INVALID_ARG &&
+        DCC_CTX_SEND_V2_ID(NULL, dcc_package_consumer_app_message_id_cb, NULL, DCC_V2_TEXT("send")) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_CTX_SEND_UI(NULL, DCC_UI_TEXT("send")) == DCC_ERR_INVALID_ARG &&
+        DCC_CTX_SEND_UI_ID(NULL, dcc_package_consumer_app_message_id_cb, NULL, DCC_UI_TEXT("send")) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_SHOW_MODAL_V2(
             NULL,
             "package.modal.v2",

@@ -318,8 +318,20 @@
 #define DCC_SEND_CB(ctx_, message_, cb_, user_data_) \
     dcc_ctx_send((ctx_), &((dcc_message_builder_t[]){ (message_) })[0], (cb_), (user_data_))
 
+#define DCC_SEND_WITH_ID(ctx_, message_, cb_, user_data_) \
+    dcc_ctx_send_with_id((ctx_), &((dcc_message_builder_t[]){ (message_) })[0], (cb_), (user_data_))
+
+#define DCC_SEND_ID(ctx_, message_, cb_, user_data_) \
+    DCC_SEND_WITH_ID((ctx_), (message_), (cb_), (user_data_))
+
 #define DCC_SEND_TEXT(ctx_, content_) \
     dcc_ctx_send_text((ctx_), (content_), NULL, NULL)
+
+#define DCC_SEND_TEXT_WITH_ID(ctx_, content_, cb_, user_data_) \
+    dcc_ctx_send_text_with_id((ctx_), (content_), (cb_), (user_data_))
+
+#define DCC_SEND_TEXT_ID(ctx_, content_, cb_, user_data_) \
+    DCC_SEND_TEXT_WITH_ID((ctx_), (content_), (cb_), (user_data_))
 
 #define DCC_SHOW_MODAL(ctx_, modal_) \
     dcc_ctx_show_modal((ctx_), &((dcc_modal_builder_t[]){ (modal_) })[0], NULL, NULL)
@@ -479,7 +491,19 @@
 #define DCC_SEND_COMPONENTS_V2(ctx_, ...) \
     DCC_SEND((ctx_), DCC_MESSAGE_COMPONENTS_V2(__VA_ARGS__))
 #define DCC_SEND_V2(ctx_, ...) DCC_SEND_COMPONENTS_V2((ctx_), __VA_ARGS__)
+#define DCC_SEND_V2_WITH_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_WITH_ID((ctx_), DCC_MESSAGE_COMPONENTS_V2(__VA_ARGS__), (cb_), (user_data_))
+#define DCC_SEND_V2_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
 #define DCC_CTX_SEND_V2(ctx_, ...) DCC_SEND_V2((ctx_), __VA_ARGS__)
+#define DCC_CTX_SEND_V2_WITH_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
+#define DCC_CTX_SEND_V2_ID(ctx_, cb_, user_data_, ...) \
+    DCC_CTX_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
+#define DCC_SEND_UI_WITH_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
+#define DCC_SEND_UI_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_UI_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
 #define DCC_REPLY_UI(ctx_, ...) DCC_REPLY_V2((ctx_), __VA_ARGS__)
 #define DCC_RESPOND_UI(ctx_, ...) DCC_RESPOND_V2((ctx_), __VA_ARGS__)
 #define DCC_RESPOND_UI_CB(ctx_, cb_, user_data_, ...) \
@@ -526,6 +550,10 @@
 #define DCC_CTX_UPDATE_UI(ctx_, ...) DCC_CTX_UPDATE_V2((ctx_), __VA_ARGS__)
 #define DCC_CTX_FOLLOWUP_UI(ctx_, ...) DCC_CTX_FOLLOWUP_V2((ctx_), __VA_ARGS__)
 #define DCC_CTX_SEND_UI(ctx_, ...) DCC_CTX_SEND_V2((ctx_), __VA_ARGS__)
+#define DCC_CTX_SEND_UI_WITH_ID(ctx_, cb_, user_data_, ...) \
+    DCC_CTX_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
+#define DCC_CTX_SEND_UI_ID(ctx_, cb_, user_data_, ...) \
+    DCC_CTX_SEND_UI_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
 
 #define DCC_RESPOND(ctx_, message_) DCC_REPLY((ctx_), (message_))
 #define DCC_RESPOND_CB(ctx_, message_, cb_, user_data_) \
@@ -841,7 +869,15 @@
 #define DCC_CTX_FOLLOWUP_PRIVATE(ctx_, content_) DCC_FOLLOWUP_PRIVATE((ctx_), (content_))
 #define DCC_CTX_FOLLOWUP_SILENT(ctx_, content_) DCC_FOLLOWUP_SILENT((ctx_), (content_))
 #define DCC_CTX_SEND(ctx_, message_) DCC_SEND((ctx_), (message_))
+#define DCC_CTX_SEND_WITH_ID(ctx_, message_, cb_, user_data_) \
+    DCC_SEND_WITH_ID((ctx_), (message_), (cb_), (user_data_))
+#define DCC_CTX_SEND_ID(ctx_, message_, cb_, user_data_) \
+    DCC_CTX_SEND_WITH_ID((ctx_), (message_), (cb_), (user_data_))
 #define DCC_CTX_SEND_TEXT(ctx_, content_) DCC_SEND_TEXT((ctx_), (content_))
+#define DCC_CTX_SEND_TEXT_WITH_ID(ctx_, content_, cb_, user_data_) \
+    DCC_SEND_TEXT_WITH_ID((ctx_), (content_), (cb_), (user_data_))
+#define DCC_CTX_SEND_TEXT_ID(ctx_, content_, cb_, user_data_) \
+    DCC_CTX_SEND_TEXT_WITH_ID((ctx_), (content_), (cb_), (user_data_))
 #define DCC_CTX_SHOW_MODAL(ctx_, modal_) DCC_SHOW_MODAL((ctx_), (modal_))
 #define DCC_CTX_SHOW_MODAL_FLOW(ctx_, flow_) DCC_SHOW_MODAL_FLOW((ctx_), (flow_))
 #define DCC_CTX_REPLY_AUTOCOMPLETE(ctx_, autocomplete_) DCC_REPLY_AUTOCOMPLETE((ctx_), (autocomplete_))

@@ -10,6 +10,20 @@ static dcc_component_v2_builder_t focused_text_component(void) {
     };
 }
 
+static void focused_message_id_cb(
+    dcc_app_t *app,
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t message_id,
+    dcc_status_t status,
+    void *user_data
+) {
+    (void)app;
+    (void)response;
+    (void)message_id;
+    (void)status;
+    (void)user_data;
+}
+
 static int check_modal_literals(void) {
     dcc_modal_builder_t modal =
         DCC_MODAL_V2("profile.edit", "Edit profile", DCC_MODAL_V2_FIELD_TEXT("name", "Name"));
@@ -59,7 +73,14 @@ static int check_null_context_aliases(void) {
         DCC_CTX_FOLLOWUP_V2(NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_CTX_FOLLOWUP_V2_CB(NULL, NULL, NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_CTX_FOLLOWUP_EPHEMERAL_V2(NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
+        DCC_SEND_ID(NULL, DCC_MESSAGE_TEXT("send"), focused_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
+        DCC_SEND_TEXT_ID(NULL, "send", focused_message_id_cb, NULL) == DCC_ERR_INVALID_ARG &&
         DCC_CTX_SEND_V2(NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
+        DCC_SEND_V2_ID(NULL, focused_message_id_cb, NULL, focused_text_component()) ==
+            DCC_ERR_INVALID_ARG &&
+        DCC_SEND_UI_ID(NULL, focused_message_id_cb, NULL, focused_text_component()) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_REPLY_UI(NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_RESPOND_UI(NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_RESPOND_OR_EDIT_UI(NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
@@ -74,6 +95,14 @@ static int check_null_context_aliases(void) {
         DCC_CTX_UPDATE_UI(NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_CTX_FOLLOWUP_UI(NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
         DCC_CTX_SEND_UI(NULL, focused_text_component()) == DCC_ERR_INVALID_ARG &&
+        DCC_CTX_SEND_ID(NULL, DCC_MESSAGE_TEXT("send"), focused_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
+        DCC_CTX_SEND_TEXT_ID(NULL, "send", focused_message_id_cb, NULL) ==
+            DCC_ERR_INVALID_ARG &&
+        DCC_CTX_SEND_V2_ID(NULL, focused_message_id_cb, NULL, focused_text_component()) ==
+            DCC_ERR_INVALID_ARG &&
+        DCC_CTX_SEND_UI_ID(NULL, focused_message_id_cb, NULL, focused_text_component()) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_SHOW_MODAL_V2(NULL, "profile.edit", "Edit profile", DCC_MODAL_V2_FIELD_TEXT("name", "Name")) ==
             DCC_ERR_INVALID_ARG &&
         DCC_SHOW_MODAL_V2_CB(

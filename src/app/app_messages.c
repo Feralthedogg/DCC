@@ -2,14 +2,54 @@
 
 #include <dcc/managed_message.h>
 #include <dcc/rest/messages/create.h>
+#include <dcc/rest/response_helpers.h>
 
 #include <stdlib.h>
+
+typedef struct dcc_app_message_id_state {
+    dcc_app_t *app;
+    dcc_app_message_id_cb cb;
+    void *user_data;
+} dcc_app_message_id_state_t;
 
 typedef struct dcc_app_managed_message_store_publish {
     dcc_store_managed_message_binding_t binding;
     dcc_managed_message_publish_cb cb;
     void *user_data;
 } dcc_app_managed_message_store_publish_t;
+
+static dcc_status_t dcc_app_message_id_status(
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t *out_message_id
+) {
+    if (response == NULL || out_message_id == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (response->error != DCC_OK) {
+        return response->error;
+    }
+    if (response->status < 200U || response->status >= 300U) {
+        return DCC_ERR_DISCORD;
+    }
+    return dcc_rest_response_message_id(response, out_message_id);
+}
+
+static void dcc_app_send_message_id_cb(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    (void)client;
+    dcc_app_message_id_state_t *state = (dcc_app_message_id_state_t *)user_data;
+    if (state == NULL) {
+        return;
+    }
+
+    dcc_snowflake_t message_id = 0U;
+    dcc_status_t status = dcc_app_message_id_status(response, &message_id);
+    state->cb(state->app, response, message_id, status, state->user_data);
+    free(state);
+}
 
 static void dcc_app_managed_message_store_publish_cb(
     dcc_client_t *client,
@@ -48,6 +88,36 @@ dcc_status_t dcc_app_send(
     );
 }
 
+dcc_status_t dcc_app_send_with_id(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    const dcc_message_builder_t *message,
+    dcc_app_message_id_cb cb,
+    void *user_data
+) {
+    if (app == NULL || channel_id == 0U || message == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (cb == NULL) {
+        return dcc_app_send(app, channel_id, message, NULL, NULL);
+    }
+
+    dcc_app_message_id_state_t *state =
+        (dcc_app_message_id_state_t *)calloc(1U, sizeof(*state));
+    if (state == NULL) {
+        return DCC_ERR_NOMEM;
+    }
+    state->app = app;
+    state->cb = cb;
+    state->user_data = user_data;
+
+    dcc_status_t status = dcc_app_send(app, channel_id, message, dcc_app_send_message_id_cb, state);
+    if (status != DCC_OK) {
+        free(state);
+    }
+    return status;
+}
+
 dcc_status_t dcc_app_send_text(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
@@ -63,6 +133,23 @@ dcc_status_t dcc_app_send_text(
         .has_content = 1U,
     };
     return dcc_app_send(app, channel_id, &message, cb, user_data);
+}
+
+dcc_status_t dcc_app_send_text_with_id(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    const char *content,
+    dcc_app_message_id_cb cb,
+    void *user_data
+) {
+    if (content == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_message_builder_t message = {
+        .content = content,
+        .has_content = 1U,
+    };
+    return dcc_app_send_with_id(app, channel_id, &message, cb, user_data);
 }
 
 dcc_status_t dcc_app_send_json(

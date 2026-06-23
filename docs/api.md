@@ -481,12 +481,13 @@ and calls out explicit APIs only where that extra control matters.
   `DCC_MESSAGE_COMPONENTS()`, and `DCC_MESSAGE_COMPONENTS_V2()`.
 - `sugar/app_actions.h`: focused app, channel, message, thread, and member
   action shortcuts such as `DCC_APP_SEND_TEXT()`,
+  `DCC_APP_SEND_TEXT_ID()`, `DCC_APP_SEND_UI_ID()`,
   `DCC_CHANNEL_SEND_SAFE()`, `DCC_MESSAGE_THREAD()`,
   `DCC_THREAD_LOCK()`, and `DCC_MEMBER_ADD_ROLE()`.
 - `sugar/context.h`: focused interaction-context shortcuts, including option
   access, target/resource helpers, display-name and mention helpers, guards,
-  `DCC_CTX_REPLY_UI()`, `DCC_CTX_UPDATE_UI()`, `DCC_CTX_SEND_UI()`, and
-  `DCC_CTX_SHOW_MODAL_V2()`.
+  `DCC_CTX_REPLY_UI()`, `DCC_CTX_UPDATE_UI()`, `DCC_CTX_SEND_UI()`,
+  `DCC_CTX_SEND_UI_ID()`, and `DCC_CTX_SHOW_MODAL_V2()`.
 
 Gateway event accessors return borrowed callback views unless the API name says
 `wait` and returns an owned pointer. Use `dcc_*_clone()` when an object must
@@ -520,7 +521,10 @@ interaction pointer for `SOCKET_CLOSE`. Use
   `dcc_rest_response_u64_field()`, `dcc_rest_response_i64_field()`,
   `dcc_rest_response_bool_field()`, and `dcc_rest_response_string_field()`
   extract top-level primitive fields from callback bodies without constructing
-  a JSON DOM.
+  a JSON DOM. For created channel messages, `dcc_app_send_with_id()`,
+  `dcc_app_send_text_with_id()`, `dcc_ctx_send_with_id()`, and
+  `dcc_ctx_send_text_with_id()` wrap the REST callback and pass the created
+  `message_id` directly.
 - `rest/core.h`: compatibility aggregate for low-level REST core helpers.
   Focused subheaders under `dcc/rest/core/` separate method names, direct
   request helpers, async queue controls, and future-based request helpers.

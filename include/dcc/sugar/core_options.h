@@ -547,7 +547,15 @@
 #define DCC_SEND_COMPONENTS_V2(ctx_, ...) \
     DCC_SEND((ctx_), DCC_MESSAGE_COMPONENTS_V2(__VA_ARGS__))
 #define DCC_SEND_V2(ctx_, ...) DCC_SEND_COMPONENTS_V2((ctx_), __VA_ARGS__)
+#define DCC_SEND_V2_WITH_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_WITH_ID((ctx_), DCC_MESSAGE_COMPONENTS_V2(__VA_ARGS__), (cb_), (user_data_))
+#define DCC_SEND_V2_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
 #define DCC_CTX_SEND_V2(ctx_, ...) DCC_SEND_V2((ctx_), __VA_ARGS__)
+#define DCC_CTX_SEND_V2_WITH_ID(ctx_, cb_, user_data_, ...) \
+    DCC_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
+#define DCC_CTX_SEND_V2_ID(ctx_, cb_, user_data_, ...) \
+    DCC_CTX_SEND_V2_WITH_ID((ctx_), (cb_), (user_data_), __VA_ARGS__)
 #define DCC_MANAGED_MESSAGE_OPTIONS(channel_id_, message_, load_, save_, storage_user_data_) \
     ((dcc_managed_message_options_t){ \
         .size = sizeof(dcc_managed_message_options_t), \
