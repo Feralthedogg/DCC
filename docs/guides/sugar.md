@@ -554,8 +554,11 @@ syntax. Use `DCC_ENV_TOKEN(&token)` for DCC's standard token fallback
 `DCC_ENV_TOKEN_NAMED("CUSTOM_TOKEN", &token)` when a deployment uses a custom
 token variable. Use `DCC_ENV_CHANNEL("NAME", &id)`, `DCC_ENV_ROLE(...)`,
 `DCC_ENV_USER(...)`, `DCC_ENV_BOOL(...)`, `DCC_ENV_U64(...)`,
-`DCC_ENV_U32_RANGE_OR(...)`, and the matching `_OR` forms when a one-off read
-is cleaner than a schema.
+`DCC_ENV_U32_RANGE_OR(...)`, `DCC_ENV_INTENTS(...)`, and the matching `_OR`
+forms when a one-off read is cleaner than a schema. Intent env values accept
+numeric masks, `0x...` masks, presets such as `all`, `none`, `default`,
+`messages`, `message_content`, `privileged`, and `unprivileged`, or small
+compositions such as `guilds,message_content,voice`.
 
 ```c
 (void)dcc_app_load_dotenv();
@@ -569,6 +572,12 @@ if (DCC_ENV_TOKEN(&token) != DCC_OK) {
 uint32_t shard_count = 1U;
 if (DCC_ENV_U32_RANGE_OR("DCC_SHARDS", 1U, 1U, 1024U, &shard_count) != DCC_OK) {
     fprintf(stderr, "DCC_SHARDS must be between 1 and 1024\n");
+    return 1;
+}
+
+dcc_intents_t intents = DCC_INTENTS_DEFAULT;
+if (DCC_ENV_INTENTS_OR("DCC_INTENTS", DCC_INTENTS_DEFAULT, &intents) != DCC_OK) {
+    fprintf(stderr, "DCC_INTENTS must be a mask or preset list\n");
     return 1;
 }
 ```

@@ -75,6 +75,12 @@
 #define DCC_ENV_GUILD_OR(name_, fallback_, out_) \
     dcc_app_env_get_guild_or((name_), (fallback_), (out_))
 
+#define DCC_ENV_INTENTS(name_, out_) \
+    dcc_app_env_get_intents((name_), (out_))
+
+#define DCC_ENV_INTENTS_OR(name_, fallback_, out_) \
+    dcc_app_env_get_intents_or((name_), (fallback_), (out_))
+
 #define DCC_CONFIG(...) \
     dcc_app_env_bind( \
         (dcc_app_env_binding_t[]){ __VA_ARGS__ }, \
@@ -382,6 +388,43 @@
         .out = (out_), \
         .has_fallback = 1U, \
         .fallback_snowflake = (fallback_) \
+    })
+
+#define DCC_CONFIG_INTENTS(name_, out_) \
+    ((dcc_app_env_binding_t){ \
+        .size = sizeof(dcc_app_env_binding_t), \
+        .name = (name_), \
+        .type = DCC_APP_ENV_BIND_INTENTS, \
+        .out = (out_), \
+        .required = 1U \
+    })
+
+#define DCC_CONFIG_INTENTS_DESCRIBED(name_, description_, out_) \
+    ((dcc_app_env_binding_t){ \
+        .size = sizeof(dcc_app_env_binding_t), \
+        .name = (name_), \
+        .description = (description_), \
+        .type = DCC_APP_ENV_BIND_INTENTS, \
+        .out = (out_), \
+        .required = 1U \
+    })
+
+#define DCC_CONFIG_INTENTS_OPTIONAL(name_, out_) \
+    ((dcc_app_env_binding_t){ \
+        .size = sizeof(dcc_app_env_binding_t), \
+        .name = (name_), \
+        .type = DCC_APP_ENV_BIND_INTENTS, \
+        .out = (out_) \
+    })
+
+#define DCC_CONFIG_INTENTS_DEFAULT(name_, fallback_, out_) \
+    ((dcc_app_env_binding_t){ \
+        .size = sizeof(dcc_app_env_binding_t), \
+        .name = (name_), \
+        .type = DCC_APP_ENV_BIND_INTENTS, \
+        .out = (out_), \
+        .has_fallback = 1U, \
+        .fallback_intents = (fallback_) \
     })
 
 #endif

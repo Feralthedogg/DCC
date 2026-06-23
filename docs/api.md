@@ -244,9 +244,9 @@ friendly status aliases such as `DCC_REPLY_OK()`, `DCC_CTX_WARN()`,
 poll message helpers such as `DCC_POLL_YES_NO()` and `DCC_MESSAGE_TEXT_POLL()`,
 hot reload canary options, REST firewall options, typed REST response ID extraction, and replay records.
 It also includes typed env/config helpers such as `DCC_ENV_TOKEN`,
-`DCC_CONFIG_CHANNEL`, `DCC_CONFIG_BOOL_DEFAULT`, `DCC_ENV_U32_RANGE_OR`, and
-one-off `DCC_ENV_CHANNEL` reads, so application startup code does not need
-scattered `getenv()` parsing.
+`DCC_CONFIG_CHANNEL`, `DCC_CONFIG_BOOL_DEFAULT`, `DCC_CONFIG_INTENTS_DEFAULT`,
+`DCC_ENV_U32_RANGE_OR`, `DCC_ENV_INTENTS_OR`, and one-off `DCC_ENV_CHANNEL`
+reads, so application startup code does not need scattered `getenv()` parsing.
 Channel, role, and user config helpers accept raw IDs or the matching Discord
 mention while guild and generic snowflake helpers stay raw-ID only.
 Guard sugar includes `DCC_GUARDS(...)`/`DCC_POLICY(...)` with

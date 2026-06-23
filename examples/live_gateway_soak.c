@@ -5,7 +5,6 @@
 #include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 typedef struct soak_state {
@@ -48,27 +47,24 @@ static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value,
     return parsed;
 }
 
-static uint64_t env_u64(const char *name, uint64_t fallback) {
-    const char *value = getenv(name);
-    if (value == NULL || value[0] == '\0') {
-        return fallback;
-    }
+static const char *env_token(void) {
+    const char *token = NULL;
+    return DCC_ENV_TOKEN(&token) == DCC_OK ? token : NULL;
+}
 
-    char *end = NULL;
-    unsigned long long parsed = strtoull(value, &end, 0);
-    if (end == value || *end != '\0') {
-        fprintf(stderr, "ignoring invalid %s=%s, using %llu\n",
+static dcc_intents_t env_intents(const char *name, dcc_intents_t fallback) {
+    dcc_intents_t parsed = fallback;
+    if (DCC_ENV_INTENTS_OR(name, fallback, &parsed) != DCC_OK) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
+        fprintf(stderr,
+                "ignoring invalid %s=%s, using %llu\n",
                 name,
                 value,
                 (unsigned long long)fallback);
         return fallback;
     }
-    return (uint64_t)parsed;
-}
-
-static const char *env_token(void) {
-    const char *token = NULL;
-    return DCC_ENV_TOKEN(&token) == DCC_OK ? token : NULL;
+    return parsed;
 }
 
 static void print_gateway_info(dcc_cluster_t *cluster) {
@@ -374,7 +370,7 @@ int main(void) {
         .size = sizeof(opts),
         .client_options = DCC_CLIENT_OPTIONS(
             token,
-            (dcc_intents_t)env_u64("DCC_SOAK_INTENTS", DCC_INTENTS_DEFAULT)
+            env_intents("DCC_SOAK_INTENTS", DCC_INTENTS_DEFAULT)
         ),
         .shard_count = shard_count,
         .first_shard_id = first_shard,

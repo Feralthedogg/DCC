@@ -283,6 +283,187 @@ static dcc_status_t dcc_app_env_parse_i64_strict(const char *value, int64_t *out
     return DCC_OK;
 }
 
+static int dcc_app_env_intent_char_equal(char a, char b) {
+    if (a >= 'A' && a <= 'Z') {
+        a = (char)(a - 'A' + 'a');
+    }
+    if (b >= 'A' && b <= 'Z') {
+        b = (char)(b - 'A' + 'a');
+    }
+    if (a == '-' || a == '.' || a == ' ') {
+        a = '_';
+    }
+    if (b == '-' || b == '.' || b == ' ') {
+        b = '_';
+    }
+    return a == b;
+}
+
+static int dcc_app_env_intent_token_eq(const char *start, size_t len, const char *literal) {
+    if (start == NULL || literal == NULL) {
+        return 0;
+    }
+    for (size_t i = 0U; i < len; ++i) {
+        if (literal[i] == '\0' || !dcc_app_env_intent_char_equal(start[i], literal[i])) {
+            return 0;
+        }
+    }
+    return literal[len] == '\0';
+}
+
+static dcc_status_t dcc_app_env_parse_intents_number(
+    const char *start,
+    size_t len,
+    dcc_intents_t *out
+) {
+    if (start == NULL || out == NULL || len == 0U || len >= 64U || start[0] == '-' || start[0] == '+') {
+        return DCC_ERR_INVALID_ARG;
+    }
+
+    char buf[64];
+    memcpy(buf, start, len);
+    buf[len] = '\0';
+
+    errno = 0;
+    char *end = NULL;
+    unsigned long long parsed = strtoull(buf, &end, 0);
+    if (end == buf || end == NULL || *end != '\0' || errno == ERANGE || parsed > UINT64_MAX) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out = (dcc_intents_t)parsed;
+    return DCC_OK;
+}
+
+static dcc_status_t dcc_app_env_parse_intents_token(
+    const char *start,
+    size_t len,
+    dcc_intents_t *out
+) {
+    if (start == NULL || out == NULL || len == 0U) {
+        return DCC_ERR_INVALID_ARG;
+    }
+
+    if (start[0] >= '0' && start[0] <= '9') {
+        return dcc_app_env_parse_intents_number(start, len, out);
+    }
+
+    if (dcc_app_env_intent_token_eq(start, len, "all")) {
+        *out = DCC_INTENTS_ALL;
+    } else if (dcc_app_env_intent_token_eq(start, len, "none")) {
+        *out = DCC_INTENTS_NONE;
+    } else if (dcc_app_env_intent_token_eq(start, len, "default") ||
+               dcc_app_env_intent_token_eq(start, len, "guilds")) {
+        *out = DCC_INTENTS_DEFAULT;
+    } else if (dcc_app_env_intent_token_eq(start, len, "messages")) {
+        *out = DCC_INTENTS_MESSAGES;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_messages")) {
+        *out = DCC_INTENTS_GUILD_MESSAGES;
+    } else if (dcc_app_env_intent_token_eq(start, len, "direct_messages")) {
+        *out = DCC_INTENTS_DIRECT_MESSAGES;
+    } else if (dcc_app_env_intent_token_eq(start, len, "message_reactions")) {
+        *out = DCC_INTENTS_MESSAGE_REACTIONS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "message_typing")) {
+        *out = DCC_INTENTS_MESSAGE_TYPING;
+    } else if (dcc_app_env_intent_token_eq(start, len, "message_polls")) {
+        *out = DCC_INTENTS_MESSAGE_POLLS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "message_content")) {
+        *out = DCC_INTENTS_MESSAGES | DCC_INTENT_MESSAGE_CONTENT;
+    } else if (dcc_app_env_intent_token_eq(start, len, "privileged")) {
+        *out = DCC_INTENTS_PRIVILEGED;
+    } else if (dcc_app_env_intent_token_eq(start, len, "unprivileged")) {
+        *out = DCC_INTENTS_UNPRIVILEGED;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_members")) {
+        *out = DCC_INTENT_GUILD_MEMBERS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_moderation") ||
+               dcc_app_env_intent_token_eq(start, len, "moderation")) {
+        *out = DCC_INTENT_GUILD_MODERATION;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_expressions") ||
+               dcc_app_env_intent_token_eq(start, len, "expressions")) {
+        *out = DCC_INTENT_GUILD_EXPRESSIONS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_integrations") ||
+               dcc_app_env_intent_token_eq(start, len, "integrations")) {
+        *out = DCC_INTENT_GUILD_INTEGRATIONS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_webhooks") ||
+               dcc_app_env_intent_token_eq(start, len, "webhooks")) {
+        *out = DCC_INTENT_GUILD_WEBHOOKS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_invites") ||
+               dcc_app_env_intent_token_eq(start, len, "invites")) {
+        *out = DCC_INTENT_GUILD_INVITES;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_voice_states") ||
+               dcc_app_env_intent_token_eq(start, len, "voice_states") ||
+               dcc_app_env_intent_token_eq(start, len, "voice")) {
+        *out = DCC_INTENT_GUILD_VOICE_STATES;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_presences") ||
+               dcc_app_env_intent_token_eq(start, len, "presences")) {
+        *out = DCC_INTENT_GUILD_PRESENCES;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_message_reactions")) {
+        *out = DCC_INTENT_GUILD_MESSAGE_REACTIONS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_message_typing")) {
+        *out = DCC_INTENT_GUILD_MESSAGE_TYPING;
+    } else if (dcc_app_env_intent_token_eq(start, len, "direct_message_reactions")) {
+        *out = DCC_INTENT_DIRECT_MESSAGE_REACTIONS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "direct_message_typing")) {
+        *out = DCC_INTENT_DIRECT_MESSAGE_TYPING;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_scheduled_events") ||
+               dcc_app_env_intent_token_eq(start, len, "scheduled_events")) {
+        *out = DCC_INTENT_GUILD_SCHEDULED_EVENTS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "auto_moderation_configuration")) {
+        *out = DCC_INTENT_AUTO_MODERATION_CONFIGURATION;
+    } else if (dcc_app_env_intent_token_eq(start, len, "auto_moderation_execution")) {
+        *out = DCC_INTENT_AUTO_MODERATION_EXECUTION;
+    } else if (dcc_app_env_intent_token_eq(start, len, "guild_message_polls")) {
+        *out = DCC_INTENT_GUILD_MESSAGE_POLLS;
+    } else if (dcc_app_env_intent_token_eq(start, len, "direct_message_polls")) {
+        *out = DCC_INTENT_DIRECT_MESSAGE_POLLS;
+    } else {
+        return DCC_ERR_INVALID_ARG;
+    }
+    return DCC_OK;
+}
+
+static int dcc_app_env_intents_separator(char ch) {
+    return ch == ',' || ch == '|' || ch == '+';
+}
+
+static dcc_status_t dcc_app_env_parse_intents_strict(const char *value, dcc_intents_t *out) {
+    if (value == NULL || out == NULL || value[0] == '\0') {
+        return DCC_ERR_INVALID_ARG;
+    }
+
+    dcc_intents_t parsed = 0U;
+    const char *cursor = value;
+    while (*cursor != '\0') {
+        while (*cursor == ' ' || *cursor == '\t' || *cursor == '\r' || *cursor == '\n') {
+            ++cursor;
+        }
+
+        const char *start = cursor;
+        while (*cursor != '\0' && !dcc_app_env_intents_separator(*cursor)) {
+            ++cursor;
+        }
+
+        const char *end = cursor;
+        while (end > start &&
+               (end[-1] == ' ' || end[-1] == '\t' || end[-1] == '\r' || end[-1] == '\n')) {
+            --end;
+        }
+
+        dcc_intents_t token = 0U;
+        dcc_status_t status = dcc_app_env_parse_intents_token(start, (size_t)(end - start), &token);
+        if (status != DCC_OK) {
+            return status;
+        }
+        parsed |= token;
+
+        if (*cursor != '\0') {
+            ++cursor;
+        }
+    }
+
+    *out = parsed;
+    return DCC_OK;
+}
+
 dcc_status_t dcc_app_env_get_string(const char *name, const char **out) {
     return dcc_app_env_lookup(name, out);
 }
@@ -585,6 +766,28 @@ dcc_status_t dcc_app_env_get_guild_or(
     return dcc_app_env_get_snowflake_or(name, fallback, out);
 }
 
+dcc_status_t dcc_app_env_get_intents(const char *name, dcc_intents_t *out) {
+    const char *value = NULL;
+    dcc_status_t status = dcc_app_env_lookup(name, &value);
+    return status == DCC_OK ? dcc_app_env_parse_intents_strict(value, out) : status;
+}
+
+dcc_status_t dcc_app_env_get_intents_or(
+    const char *name,
+    dcc_intents_t fallback,
+    dcc_intents_t *out
+) {
+    if (name == NULL || name[0] == '\0' || out == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    const char *value = getenv(name);
+    if (dcc_app_env_missing(value)) {
+        *out = fallback;
+        return DCC_OK;
+    }
+    return dcc_app_env_parse_intents_strict(value, out);
+}
+
 static dcc_status_t dcc_app_env_assign_fallback(const dcc_app_env_binding_t *binding) {
     switch (binding->type) {
         case DCC_APP_ENV_BIND_STRING:
@@ -605,6 +808,9 @@ static dcc_status_t dcc_app_env_assign_fallback(const dcc_app_env_binding_t *bin
         case DCC_APP_ENV_BIND_USER:
         case DCC_APP_ENV_BIND_GUILD:
             *(dcc_snowflake_t *)binding->out = binding->fallback_snowflake;
+            return DCC_OK;
+        case DCC_APP_ENV_BIND_INTENTS:
+            *(dcc_intents_t *)binding->out = binding->fallback_intents;
             return DCC_OK;
         default:
             return DCC_ERR_INVALID_ARG;
@@ -635,6 +841,8 @@ static dcc_status_t dcc_app_env_assign_value(
             return dcc_app_env_parse_user(value, (dcc_snowflake_t *)binding->out);
         case DCC_APP_ENV_BIND_GUILD:
             return dcc_app_env_parse_snowflake_strict(value, (dcc_snowflake_t *)binding->out);
+        case DCC_APP_ENV_BIND_INTENTS:
+            return dcc_app_env_parse_intents_strict(value, (dcc_intents_t *)binding->out);
         default:
             return DCC_ERR_INVALID_ARG;
     }
@@ -655,6 +863,11 @@ dcc_status_t dcc_app_env_bind(const dcc_app_env_binding_t *bindings, size_t coun
             binding->name == NULL ||
             binding->name[0] == '\0' ||
             binding->out == NULL) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        if (binding->type == DCC_APP_ENV_BIND_INTENTS &&
+            binding->size < offsetof(dcc_app_env_binding_t, fallback_intents) +
+                sizeof(binding->fallback_intents)) {
             return DCC_ERR_INVALID_ARG;
         }
 
@@ -693,31 +906,6 @@ dcc_status_t dcc_app_env_bind(const dcc_app_env_binding_t *bindings, size_t coun
     return DCC_OK;
 }
 
-static dcc_intents_t dcc_app_env_intents(const char *value, dcc_intents_t fallback) {
-    if (value == NULL || value[0] == '\0') {
-        return fallback;
-    }
-    if (dcc_app_env_streq(value, "all")) {
-        return DCC_INTENTS_ALL;
-    }
-    if (dcc_app_env_streq(value, "none")) {
-        return DCC_INTENTS_NONE;
-    }
-    if (dcc_app_env_streq(value, "default") || dcc_app_env_streq(value, "guilds")) {
-        return DCC_INTENTS_DEFAULT;
-    }
-    if (dcc_app_env_streq(value, "messages")) {
-        return DCC_INTENTS_MESSAGES;
-    }
-    if (dcc_app_env_streq(value, "guild_messages")) {
-        return DCC_INTENTS_GUILD_MESSAGES;
-    }
-    if (dcc_app_env_streq(value, "message_content")) {
-        return DCC_INTENTS_MESSAGES | DCC_INTENT_MESSAGE_CONTENT;
-    }
-    return (dcc_intents_t)dcc_app_env_u64(value, fallback);
-}
-
 dcc_status_t dcc_app_options_from_env(dcc_app_options_t *options, const char *token_env) {
     if (options == NULL) {
         return DCC_ERR_INVALID_ARG;
@@ -730,7 +918,10 @@ dcc_status_t dcc_app_options_from_env(dcc_app_options_t *options, const char *to
         return status;
     }
     options->client.token = token;
-    options->client.intents = dcc_app_env_intents(getenv("DCC_INTENTS"), DCC_INTENTS_DEFAULT);
+    status = dcc_app_env_get_intents_or("DCC_INTENTS", DCC_INTENTS_DEFAULT, &options->client.intents);
+    if (status != DCC_OK) {
+        return status;
+    }
     options->client.enable_cache = dcc_app_env_bool(getenv("DCC_ENABLE_CACHE"), options->client.enable_cache);
     options->client.infer_guild_id_from_channel =
         dcc_app_env_bool(getenv("DCC_INFER_GUILD_FROM_CHANNEL"), options->client.infer_guild_id_from_channel);

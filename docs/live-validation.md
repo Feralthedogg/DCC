@@ -19,6 +19,9 @@ DCC_SOAK_FIRST_SHARD=0
 DCC_SOAK_MAX_CONCURRENCY=1
 ```
 
+Set `DCC_SOAK_INTENTS` to a numeric mask, `0x...`, or the same presets accepted
+by `DCC_ENV_INTENTS_OR`, for example `all` or `guilds,message_content`.
+
 For a live planned rollout example, run `dcc_cluster_rollout` with the same
 token and shard-window environment. Set `DCC_CLUSTER_PRINT_JSON=1` to print
 fixed-buffer cluster-status JSON, including recovery-plan, rolling-operation,

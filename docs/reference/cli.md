@@ -58,6 +58,8 @@ errors. The app template reads `DCC_TOKEN` or `DISCORD_TOKEN`,
 `DCC_INTENTS`, `DCC_AUTO_DEFER_MS`, `DCC_AUTO_DEFER_EPHEMERAL`, and
 `DCC_STORE_FILE`, and `DCC_COMMAND_GUILD_ID` after loading `.env`, then binds
 feature config with `DCC_CONFIG(...)` before running through `DCC_RUN_APP_ENV(...)`.
+`DCC_INTENTS` can be `all`, `default`, `messages`, `guilds,message_content`,
+or a decimal/hex mask.
 The default template includes `BOT_DEBUG=false` as a typed boolean config example.
 Add more typed config fields with `dcc_new_app add config PATH FIELD_NAME TYPE
 ENV_NAME`; it updates `src/config.h`, the `DCC_CONFIG(...)` binding list, and

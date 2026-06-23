@@ -329,12 +329,14 @@ int dcc_package_consumer_check_app_api(void) {
     uint64_t env_u64_out = 0U;
     int64_t env_i64_out = 0;
     dcc_snowflake_t env_channel_out = 0U;
+    dcc_intents_t env_intents_out = 0U;
     dcc_app_env_binding_t env_bindings[] = {
         DCC_CONFIG_STRING("DCC_PACKAGE_STRING", &env_string_out),
         DCC_CONFIG_BOOL_DEFAULT("DCC_PACKAGE_BOOL", 1U, &env_bool_out),
         DCC_CONFIG_U64_DEFAULT("DCC_PACKAGE_U64", 64U, &env_u64_out),
         DCC_CONFIG_I64_DEFAULT("DCC_PACKAGE_I64", -64, &env_i64_out),
-        DCC_CONFIG_CHANNEL("DCC_PACKAGE_CHANNEL", &env_channel_out)
+        DCC_CONFIG_CHANNEL("DCC_PACKAGE_CHANNEL", &env_channel_out),
+        DCC_CONFIG_INTENTS_DEFAULT("DCC_PACKAGE_INTENTS", DCC_INTENTS_DEFAULT, &env_intents_out)
     };
     dcc_status_t (*env_get_token_fn)(const char *, const char **) =
         dcc_app_env_get_token;
@@ -352,6 +354,8 @@ int dcc_package_consumer_check_app_api(void) {
         dcc_app_env_get_i64;
     dcc_status_t (*env_get_snowflake_fn)(const char *, dcc_snowflake_t *) =
         dcc_app_env_get_snowflake;
+    dcc_status_t (*env_get_intents_fn)(const char *, dcc_intents_t *) =
+        dcc_app_env_get_intents;
     dcc_status_t (*env_bind_fn)(const dcc_app_env_binding_t *, size_t) =
         dcc_app_env_bind;
 
@@ -1527,6 +1531,8 @@ int dcc_package_consumer_check_app_api(void) {
         env_bindings[2].fallback_u64 == 64U &&
         env_bindings[3].fallback_i64 == -64 &&
         env_bindings[4].type == DCC_APP_ENV_BIND_CHANNEL &&
+        env_bindings[5].type == DCC_APP_ENV_BIND_INTENTS &&
+        env_bindings[5].fallback_intents == DCC_INTENTS_DEFAULT &&
         env_get_token_fn != NULL &&
         env_get_string_fn != NULL &&
         env_get_bool_fn != NULL &&
@@ -1535,6 +1541,7 @@ int dcc_package_consumer_check_app_api(void) {
         env_get_u32_range_or_fn != NULL &&
         env_get_i64_fn != NULL &&
         env_get_snowflake_fn != NULL &&
+        env_get_intents_fn != NULL &&
         env_bind_fn != NULL &&
         dcc_app_validate_env_requirements(NULL, 0U) == DCC_OK &&
         dcc_app_validate_definition_env(NULL) == DCC_ERR_INVALID_ARG &&

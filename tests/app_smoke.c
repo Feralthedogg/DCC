@@ -982,6 +982,9 @@ static int app_smoke_check_dotenv(void) {
             "DCC_STORE_FILE=dcc_app_smoke_store.kv\n"
             "DCC_APP_SMOKE_U32=42\n"
             "DCC_APP_SMOKE_U32_BAD=999\n"
+            "DCC_APP_SMOKE_INTENTS=guilds,message_content+voice\n"
+            "DCC_APP_SMOKE_INTENTS_HEX=0x201\n"
+            "DCC_APP_SMOKE_INTENTS_BAD=wat\n"
         )) {
         (void)remove(first_path);
         (void)remove(second_path);
@@ -1005,6 +1008,14 @@ static int app_smoke_check_dotenv(void) {
     uint32_t direct_u32_or = 0U;
     uint32_t range_u32 = 0U;
     uint32_t missing_range_u32 = 0U;
+    dcc_intents_t direct_intents = 0U;
+    dcc_intents_t hex_intents = 0U;
+    dcc_intents_t missing_intents = 0U;
+    dcc_intents_t bound_intents = 0U;
+    dcc_app_env_binding_t intents_binding =
+        DCC_CONFIG_INTENTS_DEFAULT("DCC_APP_SMOKE_INTENTS", DCC_INTENTS_DEFAULT, &bound_intents);
+    dcc_intents_t expected_intents =
+        DCC_INTENTS_MESSAGES | DCC_INTENT_MESSAGE_CONTENT | DCC_INTENT_GUILD_VOICE_STATES;
     ok = ok &&
         dcc_app_load_env_file(app_path, 1U) == DCC_OK &&
         dcc_app_env_get_token("DCC_APP_SMOKE_TOKEN", &resolved_token) == DCC_OK &&
@@ -1021,6 +1032,15 @@ static int app_smoke_check_dotenv(void) {
         range_u32 == 42U &&
         DCC_ENV_U32_RANGE_OR("DCC_APP_SMOKE_MISSING_U32_RANGE", 77U, 1U, 100U, &missing_range_u32) == DCC_OK &&
         missing_range_u32 == 77U &&
+        DCC_ENV_INTENTS("DCC_APP_SMOKE_INTENTS", &direct_intents) == DCC_OK &&
+        direct_intents == expected_intents &&
+        DCC_ENV_INTENTS("DCC_APP_SMOKE_INTENTS_HEX", &hex_intents) == DCC_OK &&
+        hex_intents == (DCC_INTENT_GUILDS | DCC_INTENT_GUILD_MESSAGES) &&
+        DCC_ENV_INTENTS_OR("DCC_APP_SMOKE_MISSING_INTENTS", DCC_INTENT_GUILDS, &missing_intents) == DCC_OK &&
+        missing_intents == DCC_INTENT_GUILDS &&
+        DCC_ENV_INTENTS("DCC_APP_SMOKE_INTENTS_BAD", &direct_intents) == DCC_ERR_INVALID_ARG &&
+        dcc_app_env_bind(&intents_binding, 1U) == DCC_OK &&
+        bound_intents == expected_intents &&
         dcc_app_env_get_u32_range("DCC_APP_SMOKE_U32_BAD", 1U, 100U, &range_u32) ==
             DCC_ERR_INVALID_ARG &&
         dcc_app_options_from_env(&env_options, "DCC_APP_SMOKE_TOKEN") == DCC_OK &&

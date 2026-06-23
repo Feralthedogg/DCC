@@ -87,6 +87,9 @@ to do those steps manually.
 `DCC_AUTO_DEFER_EPHEMERAL`, `DCC_STORE_FILE`, `DCC_APP_STORE_FILE`,
 `DCC_ENABLE_CACHE`, and
 `DCC_INFER_GUILD_FROM_CHANNEL`.
+`DCC_INTENTS` accepts a decimal mask, a `0x...` mask, `all`, `none`,
+`default`, `messages`, `message_content`, `privileged`, `unprivileged`, or a
+comma/pipe/plus separated composition such as `guilds,message_content,voice`.
 
 When a handler needs small persistent state from `DCC_STORE_FILE`, prefer the
 context-first helpers:
@@ -132,7 +135,8 @@ REST calls. Channel, role, and user config accepts either raw IDs or the
 matching Discord mention copied from the client; guild and generic snowflake
 config stays raw-ID only. For one-off reads, use `DCC_ENV_TOKEN`,
 `DCC_ENV_CHANNEL`, `DCC_ENV_ROLE`, `DCC_ENV_USER`, `DCC_ENV_BOOL`,
-`DCC_ENV_U64`, `DCC_ENV_U32_RANGE_OR`, or their `_OR` / named-token forms.
+`DCC_ENV_U64`, `DCC_ENV_U32_RANGE_OR`, `DCC_ENV_INTENTS_OR`, or their `_OR` /
+named-token forms.
 
 ## Response State
 

@@ -3,6 +3,7 @@
 
 #include <dcc/error.h>
 #include <dcc/export.h>
+#include <dcc/intents.h>
 #include <dcc/snowflake.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -26,7 +27,8 @@ typedef enum dcc_app_env_bind_type {
     DCC_APP_ENV_BIND_CHANNEL,
     DCC_APP_ENV_BIND_ROLE,
     DCC_APP_ENV_BIND_USER,
-    DCC_APP_ENV_BIND_GUILD
+    DCC_APP_ENV_BIND_GUILD,
+    DCC_APP_ENV_BIND_INTENTS
 } dcc_app_env_bind_type_t;
 
 typedef struct dcc_app_env_binding {
@@ -42,6 +44,7 @@ typedef struct dcc_app_env_binding {
     uint64_t fallback_u64;
     int64_t fallback_i64;
     dcc_snowflake_t fallback_snowflake;
+    dcc_intents_t fallback_intents;
 } dcc_app_env_binding_t;
 
 DCC_API dcc_status_t dcc_app_load_env_file(const char *path, uint8_t overwrite);
@@ -119,6 +122,12 @@ DCC_API dcc_status_t dcc_app_env_get_guild_or(
     const char *name,
     dcc_snowflake_t fallback,
     dcc_snowflake_t *out
+);
+DCC_API dcc_status_t dcc_app_env_get_intents(const char *name, dcc_intents_t *out);
+DCC_API dcc_status_t dcc_app_env_get_intents_or(
+    const char *name,
+    dcc_intents_t fallback,
+    dcc_intents_t *out
 );
 DCC_API dcc_status_t dcc_app_env_bind(const dcc_app_env_binding_t *bindings, size_t count);
 DCC_API dcc_status_t dcc_app_validate_env_requirements(
