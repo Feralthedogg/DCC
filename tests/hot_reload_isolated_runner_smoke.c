@@ -1,5 +1,7 @@
 #include <dcc/dcc.h>
 
+#include "internal/hot_reload/dcc_hot_reload_run_internal.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,10 +38,66 @@ static int expect_status(const char *name, dcc_status_t got, dcc_status_t expect
     return 0;
 }
 
+static int expect_token(const char *name, const dcc_hot_reload_run_options_t *options, const char *expected) {
+    dcc_client_options_t client_options;
+    dcc_status_t status = dcc_hot_reload_run_resolve_client_options(options, &client_options);
+    if (status != DCC_OK) {
+        fprintf(stderr, "%s: resolve failed: %s\n", name, dcc_status_string(status));
+        return -1;
+    }
+    if (client_options.token == NULL || strcmp(client_options.token, expected) != 0) {
+        fprintf(
+            stderr,
+            "%s: got token %s, expected %s\n",
+            name,
+            client_options.token != NULL ? client_options.token : "(null)",
+            expected
+        );
+        return -1;
+    }
+    return 0;
+}
+
 int main(void) {
+    dcc_hot_reload_run_options_t env_options;
+
     test_unsetenv("DCC_HOT_RELOAD_WORKER");
     test_unsetenv("DCC_BOT_MODULE");
+    test_unsetenv("DCC_TOKEN");
     test_unsetenv("BOT_TOKEN");
+    test_unsetenv("DISCORD_TOKEN");
+
+    memset(&env_options, 0, sizeof(env_options));
+    env_options.size = sizeof(env_options);
+
+    if (test_setenv("DCC_TOKEN", "dcc-token") != 0 ||
+        test_setenv("BOT_TOKEN", "bot-token") != 0 ||
+        test_setenv("DISCORD_TOKEN", "discord-token") != 0) {
+        perror("setenv token");
+        return 1;
+    }
+    if (expect_token("resolver prefers DCC_TOKEN", &env_options, "dcc-token") != 0) {
+        return 1;
+    }
+
+    test_unsetenv("DCC_TOKEN");
+    if (expect_token("resolver falls back to BOT_TOKEN", &env_options, "bot-token") != 0) {
+        return 1;
+    }
+
+    test_unsetenv("BOT_TOKEN");
+    if (expect_token("resolver falls back to DISCORD_TOKEN", &env_options, "discord-token") != 0) {
+        return 1;
+    }
+
+    test_unsetenv("DISCORD_TOKEN");
+    if (expect_status(
+            "resolver rejects missing token",
+            dcc_hot_reload_run_resolve_client_options(&env_options, &(dcc_client_options_t){0}),
+            DCC_ERR_INVALID_ARG
+        ) != 0) {
+        return 1;
+    }
 
     if (expect_status(
             "env isolated runner uses default worker before token validation",

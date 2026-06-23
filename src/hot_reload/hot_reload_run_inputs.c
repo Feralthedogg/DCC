@@ -1,5 +1,7 @@
 #include "internal/hot_reload/dcc_hot_reload_internal.h"
 
+#include <dcc/app/env.h>
+
 #include <stddef.h>
 #include <string.h>
 
@@ -25,7 +27,10 @@ dcc_status_t dcc_hot_reload_run_resolve_client_options(
     }
     out->size = sizeof(*out);
     if (out->token == NULL || out->token[0] == '\0') {
-        out->token = dcc_hot_reload_env_nonempty("BOT_TOKEN");
+        const char *token = NULL;
+        if (dcc_app_env_get_token(NULL, &token) == DCC_OK) {
+            out->token = token;
+        }
     }
     return out->token == NULL || out->token[0] == '\0' ? DCC_ERR_INVALID_ARG : DCC_OK;
 }

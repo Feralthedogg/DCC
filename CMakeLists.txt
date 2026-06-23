@@ -2341,6 +2341,7 @@ if(DCC_BUILD_TESTS)
     add_test(NAME dcc_hot_reload_canary_integration_smoke COMMAND dcc_hot_reload_canary_integration_smoke)
 
     add_executable(dcc_hot_reload_isolated_runner_smoke tests/hot_reload_isolated_runner_smoke.c)
+    dcc_target_use_private_headers(dcc_hot_reload_isolated_runner_smoke)
     target_link_libraries(dcc_hot_reload_isolated_runner_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_hot_reload_isolated_runner_smoke)
     add_test(NAME dcc_hot_reload_isolated_runner_smoke COMMAND dcc_hot_reload_isolated_runner_smoke)
