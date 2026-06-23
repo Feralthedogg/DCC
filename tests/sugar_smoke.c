@@ -3575,6 +3575,12 @@ static int run_sugar_options_smoke(void) {
         managed.message != &managed_message ||
         managed_keep.keep_previous != 1U ||
         DCC_APP_PUBLISH_LATEST(NULL, &managed, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_APP_PUBLISH_LATEST_STORE_TEXT(NULL, "latest", 333ULL, "latest", NULL, NULL) !=
+            DCC_ERR_INVALID_ARG ||
+        DCC_APP_PUBLISH_LATEST_STORE_V2(NULL, "latest", 333ULL, NULL, NULL, DCC_V2_TEXT("latest")) !=
+            DCC_ERR_INVALID_ARG ||
+        DCC_APP_PUBLISH_LATEST_STORE_UI(NULL, "latest", 333ULL, NULL, NULL, DCC_UI_TEXT("latest")) !=
+            DCC_ERR_INVALID_ARG ||
         DCC_PUBLISH_LATEST(NULL, &managed, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_SEND(NULL, 333ULL, DCC_MESSAGE_TEXT("send")) != DCC_ERR_INVALID_ARG ||
         DCC_APP_SEND_TEXT(NULL, 333ULL, "send") != DCC_ERR_INVALID_ARG ||

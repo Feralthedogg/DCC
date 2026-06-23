@@ -1741,6 +1741,13 @@ int dcc_package_consumer_check_app_api(void) {
             DCC_ERR_STATE &&
         DCC_APP_PUBLISH_LATEST(NULL, &managed, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         DCC_APP_PUBLISH_LATEST_STORE(app, "latest", 123U, &managed_message, NULL, NULL) == DCC_ERR_STATE &&
+        DCC_APP_PUBLISH_LATEST_STORE_BUILDER(app, "latest", 123U, DCC_MESSAGE_TEXT("latest"), NULL, NULL) ==
+            DCC_ERR_STATE &&
+        DCC_APP_PUBLISH_LATEST_STORE_TEXT(app, "latest", 123U, "latest", NULL, NULL) == DCC_ERR_STATE &&
+        DCC_APP_PUBLISH_LATEST_STORE_V2(app, "latest", 123U, NULL, NULL, DCC_V2_TEXT("latest")) ==
+            DCC_ERR_STATE &&
+        DCC_APP_PUBLISH_LATEST_STORE_UI(app, "latest", 123U, NULL, NULL, DCC_UI_TEXT("latest")) ==
+            DCC_ERR_STATE &&
         dcc_app_store(NULL) == NULL &&
         dcc_app_store_open_file(NULL, "package-state.kv") == DCC_ERR_INVALID_ARG &&
         dcc_store_init(NULL, NULL) == DCC_ERR_INVALID_ARG &&

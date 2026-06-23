@@ -611,6 +611,35 @@
     dcc_app_managed_message_publish_latest((app_), (options_), (cb_), (user_data_))
 #define DCC_APP_PUBLISH_LATEST_STORE(app_, key_, channel_id_, message_, cb_, user_data_) \
     dcc_app_managed_message_publish_latest_store((app_), (key_), (channel_id_), (message_), (cb_), (user_data_))
+#define DCC_APP_PUBLISH_LATEST_STORE_BUILDER(app_, key_, channel_id_, message_, cb_, user_data_) \
+    DCC_APP_PUBLISH_LATEST_STORE( \
+        (app_), \
+        (key_), \
+        (channel_id_), \
+        DCC_SUGAR_PTR(dcc_message_builder_t, (message_)), \
+        (cb_), \
+        (user_data_) \
+    )
+#define DCC_APP_PUBLISH_LATEST_STORE_TEXT(app_, key_, channel_id_, content_, cb_, user_data_) \
+    DCC_APP_PUBLISH_LATEST_STORE_BUILDER( \
+        (app_), \
+        (key_), \
+        (channel_id_), \
+        DCC_MESSAGE_TEXT((content_)), \
+        (cb_), \
+        (user_data_) \
+    )
+#define DCC_APP_PUBLISH_LATEST_STORE_V2(app_, key_, channel_id_, cb_, user_data_, ...) \
+    DCC_APP_PUBLISH_LATEST_STORE_BUILDER( \
+        (app_), \
+        (key_), \
+        (channel_id_), \
+        DCC_MESSAGE_COMPONENTS_V2(__VA_ARGS__), \
+        (cb_), \
+        (user_data_) \
+    )
+#define DCC_APP_PUBLISH_LATEST_STORE_UI(app_, key_, channel_id_, cb_, user_data_, ...) \
+    DCC_APP_PUBLISH_LATEST_STORE_V2((app_), (key_), (channel_id_), (cb_), (user_data_), __VA_ARGS__)
 #define DCC_PUBLISH_LATEST(client_, options_, cb_, user_data_) \
     dcc_managed_message_publish_latest((client_), (options_), (cb_), (user_data_))
 #define DCC_APP_ON_READY(app_, handler_) dcc_app_on_ready((app_), (handler_), NULL)

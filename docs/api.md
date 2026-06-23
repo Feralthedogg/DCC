@@ -240,7 +240,7 @@ permission helpers such as `DCC_PERMISSIONS()`, `DCC_PERMISSION_TEXT_RICH`,
 one-call app run helpers, interaction flows, `DCC_CTX_STORE_*` app-store sugar,
 `DCC_CTX_REQUIRE_STORE()` handler guards,
 friendly status aliases such as `DCC_REPLY_OK()`, `DCC_CTX_WARN()`,
-`DCC_MESSAGE_INFO()`, `DCC_APP_PUBLISH_LATEST_STORE()` managed panels,
+`DCC_MESSAGE_INFO()`, `DCC_APP_PUBLISH_LATEST_STORE_UI()` managed panels,
 poll message helpers such as `DCC_POLL_YES_NO()` and `DCC_MESSAGE_TEXT_POLL()`,
 hot reload canary options, REST firewall options, typed REST response ID extraction, and replay records.
 It also includes typed env/config helpers such as `DCC_ENV_TOKEN`,

@@ -1161,7 +1161,15 @@ dcc_new_app add scheduled-latest . profile daily_status status_channel --daily-k
 ```
 
 ```c
-DCC_APP_PUBLISH_LATEST_STORE(app, "status.latest", channel_id, &message, NULL, NULL);
+DCC_APP_PUBLISH_LATEST_STORE_TEXT(app, "status.latest", channel_id, "service online", NULL, NULL);
+DCC_APP_PUBLISH_LATEST_STORE_UI(
+    app,
+    "status.panel",
+    channel_id,
+    NULL,
+    NULL,
+    DCC_UI_TEXT("**service online**")
+);
 ```
 
 Inside an interaction handler, `DCC_SEND_TEXT()` posts to the interaction

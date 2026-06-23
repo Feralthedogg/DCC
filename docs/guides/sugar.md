@@ -3623,24 +3623,19 @@ dcc_new_app add scheduled-latest . birthday daily_registration birthday_channel 
 ```
 
 ```c
-dcc_message_builder_t registration =
-    DCC_MESSAGE_COMPONENTS_V2(
-        DCC_V2_CONTAINER_ACCENT(
-            0x5865F2,
-            DCC_V2_TEXT("**다른 유저들의 생일이 궁금하시다면 아래 버튼을 눌러보세요!**"),
-            DCC_V2_ACTION_ROW(
-                DCC_V2_BUTTON_PRIMARY("🎊 유저 생일 스케줄", "birthday.schedule")
-            )
-        )
-    );
-
-DCC_APP_PUBLISH_LATEST_STORE(
+DCC_APP_PUBLISH_LATEST_STORE_UI(
     app,
     "birthday.registration.message",
     birthday_channel_id,
-    &registration,
     NULL,
-    NULL
+    NULL,
+    DCC_UI_CARD_ACCENT(
+        0x5865F2,
+        DCC_UI_TEXT("**다른 유저들의 생일이 궁금하시다면 아래 버튼을 눌러보세요!**"),
+        DCC_UI_ROW(
+            DCC_UI_PRIMARY("🎊 유저 생일 스케줄", "birthday.schedule")
+        )
+    )
 );
 ```
 
