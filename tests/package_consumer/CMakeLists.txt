@@ -11,6 +11,7 @@ find_package(dcc CONFIG REQUIRED)
 add_executable(dcc_package_consumer
     main.c
     package_consumer_app.c
+    package_consumer_app_messages.c
     package_consumer_cluster.c
     package_consumer_hot_reload.c
     package_consumer_interaction.c
