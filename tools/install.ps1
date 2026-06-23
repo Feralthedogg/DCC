@@ -24,10 +24,6 @@ if ([string]::IsNullOrWhiteSpace($Target)) {
 if ([string]::IsNullOrWhiteSpace($LlamVersion)) {
     $LlamVersion = "2.1.0"
 }
-if ([string]::IsNullOrWhiteSpace($LlamInstallerUrl)) {
-    $LlamInstallerUrl = "https://raw.githubusercontent.com/Feralthedogg/LLAM/main/scripts/install.ps1"
-}
-
 function Assert-ReleaseComponent {
     param(
         [string]$Name,
@@ -133,15 +129,19 @@ function Install-LatestLlam {
     }
     $resolved = $resolved -replace '^v', ''
     Assert-ReleaseComponent "LLAM version" $resolved
+    $installerUrl = $LlamInstallerUrl
+    if ([string]::IsNullOrWhiteSpace($installerUrl)) {
+        $installerUrl = "https://github.com/Feralthedogg/LLAM/releases/download/v$resolved/install.ps1"
+    }
 
     if ($DryRun) {
-        Write-Host "download $LlamInstallerUrl"
+        Write-Host "download $installerUrl"
         Write-Host "install LLAM $resolved into $Prefix"
         return
     }
 
     $installer = Join-Path $script:TempDir "llam-install.ps1"
-    Invoke-WebRequest -Uri $LlamInstallerUrl -OutFile $installer -UseBasicParsing
+    Invoke-WebRequest -Uri $installerUrl -OutFile $installer -UseBasicParsing
     & $installer -Prefix $Prefix -Version $resolved -Target $Target -Force
 }
 

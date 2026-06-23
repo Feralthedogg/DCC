@@ -7,7 +7,7 @@ target="${DCC_INSTALL_TARGET:-}"
 base_url="${DCC_INSTALL_BASE_URL:-}"
 llam_mode="${DCC_INSTALL_LLAM:-latest}"
 llam_version="${DCC_INSTALL_LLAM_VERSION:-2.1.0}"
-llam_installer_url="${DCC_LLAM_INSTALLER_URL:-https://raw.githubusercontent.com/Feralthedogg/LLAM/main/scripts/install.sh}"
+llam_installer_url="${DCC_LLAM_INSTALLER_URL:-}"
 dry_run=0
 force=0
 
@@ -265,15 +265,16 @@ install_latest_llam() {
     fi
     resolved_llam_version=${resolved_llam_version#v}
     validate_component "LLAM version" "$resolved_llam_version"
+    resolved_llam_installer_url=${llam_installer_url:-https://github.com/Feralthedogg/LLAM/releases/download/v$resolved_llam_version/install.sh}
 
     if [ "$dry_run" -eq 1 ]; then
-        echo "download $llam_installer_url"
+        echo "download $resolved_llam_installer_url"
         echo "install LLAM $resolved_llam_version into $prefix"
         return 0
     fi
 
     installer="$tmp_dir/llam-install.sh"
-    download_file "$llam_installer_url" "$installer"
+    download_file "$resolved_llam_installer_url" "$installer"
     sh "$installer" \
         --prefix "$prefix" \
         --version "$resolved_llam_version" \
