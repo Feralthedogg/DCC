@@ -66,12 +66,13 @@ DCC follows LLAM's platform backend split:
 | FreeBSD | kqueue | none |
 | OpenBSD | kqueue | none |
 | NetBSD | kqueue | `librt` |
-| DragonFlyBSD | kqueue | none, experimental CI target |
+| DragonFlyBSD | kqueue | none, experimental source target |
 | Windows | IOCP / Win32 | `ws2_32`, `mswsock`, `synchronization`, `advapi32` |
 
-FreeBSD, OpenBSD, and NetBSD x86_64 packages are built by the release workflow.
-DragonFlyBSD is kept as an experimental source/package-script target because
-public package mirrors and VM availability are less stable.
+FreeBSD, OpenBSD, and NetBSD x86_64 packages are built by the release workflow
+and covered by the automatic BSD smoke gate. DragonFlyBSD is kept as an
+experimental source/package-script target because public package mirrors and VM
+availability are less stable.
 
 ## Package Build
 

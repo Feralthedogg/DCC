@@ -9,9 +9,9 @@ out DCC and LLAM side by side, builds with CMake, runs CTest, validates CPack,
 installs the package, and builds an installed-package consumer.
 
 `.github/workflows/bsd.yml` runs BSD smoke gates through VM-backed GitHub
-Actions jobs. FreeBSD, OpenBSD, and NetBSD are hard gates; DragonFlyBSD is kept
-as an experimental allowed-failure target because public package mirrors and VM
-availability are less stable.
+Actions jobs. FreeBSD, OpenBSD, and NetBSD are hard gates. DragonFlyBSD remains
+an experimental source-level target, but it is not part of the automatic main
+BSD gate because public package mirrors and VM availability are less stable.
 
 ## Docs
 

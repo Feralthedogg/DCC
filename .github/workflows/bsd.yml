@@ -11,14 +11,13 @@ on:
 
 concurrency:
   group: bsd-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 jobs:
   smoke:
     name: ${{ matrix.name }}
     runs-on: ubuntu-24.04
     timeout-minutes: 35
-    continue-on-error: ${{ matrix.os == 'dragonflybsd' }}
     defaults:
       run:
         shell: cpa.sh {0}
@@ -41,11 +40,6 @@ jobs:
             version: '10.1'
             arch: x86-64
             package_target: netbsd-x86_64
-          - name: dragonflybsd-x86_64-experimental
-            os: dragonflybsd
-            version: '6.4.2'
-            arch: x86-64
-            package_target: dragonflybsd-x86_64
 
     steps:
       - name: Checkout DCC
@@ -87,33 +81,9 @@ jobs:
               sleep "$delay_seconds"
             done
           }
-          configure_dragonfly_pkg_repo() {
-            sudo mkdir -p /usr/local/etc/pkg/repos
-            sudo tee /usr/local/etc/pkg/repos/dcc-auto.conf >/dev/null <<'EOF'
-          AUTO: {
-            url             : "http://mirror-master.dragonflybsd.org/dports/${ABI}/LATEST"
-            mirror_type     : NONE
-            enabled         : yes
-          }
-          Avalon: {
-            enabled         : no
-          }
-          EOF
-          }
           case "$(uname -s)" in
             FreeBSD)
               retry sudo pkg install -y cmake openssl pkgconf
-              ;;
-            DragonFly)
-              configure_dragonfly_pkg_repo
-              if ! retry sudo pkg update -f; then
-                echo "DragonFlyBSD pkg repository unavailable; skipping this infrastructure-gated job." | tee "$skip_file"
-                exit 0
-              fi
-              if ! retry sudo pkg install -y cmake openssl pkgconf; then
-                echo "DragonFlyBSD pkg install unavailable; skipping this infrastructure-gated job." | tee "$skip_file"
-                exit 0
-              fi
               ;;
             OpenBSD)
               sudo sh -c 'echo https://cdn.openbsd.org/pub/OpenBSD > /etc/installurl'
@@ -135,7 +105,7 @@ jobs:
           fi
           openssl_arg=""
           case "$(uname -s)" in
-            FreeBSD|DragonFly) openssl_arg="-DOPENSSL_ROOT_DIR=/usr/local" ;;
+            FreeBSD) openssl_arg="-DOPENSSL_ROOT_DIR=/usr/local" ;;
             NetBSD) openssl_arg="-DOPENSSL_ROOT_DIR=/usr/pkg" ;;
           esac
           # shellcheck disable=SC2086
@@ -168,7 +138,7 @@ jobs:
           fi
           extra_args="-DDCC_WITH_OPUS=OFF -DDCC_BUILD_EXAMPLES=OFF -DDCC_BUILD_TOOLS=OFF -DDCC_BUILD_TESTS=OFF"
           case "$(uname -s)" in
-            FreeBSD|DragonFly) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/local" ;;
+            FreeBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/local" ;;
             NetBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/pkg" ;;
           esac
           DCC_RELEASE_VERSION=ci \
