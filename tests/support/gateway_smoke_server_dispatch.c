@@ -8,9 +8,12 @@
 #include <string.h>
 #include <unistd.h>
 
-static void gateway_server_wait_for_heartbeat_before_close(gateway_server_t *server, int client) {
+static int gateway_server_wait_for_heartbeat_before_close(gateway_server_t *server, int client) {
     if (server == NULL || server->saw_heartbeat) {
-        return;
+        return 0;
+    }
+    if (write_text_frame(client, "{\"op\":1,\"d\":null}") != 0) {
+        return -1;
     }
     for (unsigned i = 0; i < 80U && !server->saw_heartbeat; ++i) {
         char frame[512];
@@ -18,10 +21,11 @@ static void gateway_server_wait_for_heartbeat_before_close(gateway_server_t *ser
             strstr(frame, "\"op\":1") != NULL) {
             server->saw_heartbeat = 1;
             (void)write_text_frame(client, "{\"op\":11,\"d\":null}");
-            return;
+            return 0;
         }
         usleep(1000);
     }
+    return server->saw_heartbeat ? 0 : -1;
 }
 
 int gateway_server_write_extra_dispatches(gateway_server_t *server, int client, unsigned seq) {
@@ -157,7 +161,9 @@ int gateway_server_write_extra_dispatches(gateway_server_t *server, int client, 
     ) != 0) {
         return -1;
     }
-    gateway_server_wait_for_heartbeat_before_close(server, client);
+    if (gateway_server_wait_for_heartbeat_before_close(server, client) != 0) {
+        return -1;
+    }
     if (write_close_frame(client, 4000, "gateway smoke close") != 0) {
         return -1;
     }
