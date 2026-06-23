@@ -8,9 +8,9 @@ void dcc_command_sync_usage(FILE *stream, const char *argv0) {
         "options:\n"
         "  -c, --commands FILE       local Discord application command JSON array\n"
         "      --remote FILE         remote command JSON array fixture; avoids REST fetch\n"
-        "  -a, --application-id ID   Discord application id; env DCC_APPLICATION_ID is accepted\n"
+        "  -a, --application-id ID   Discord application id; env DCC_APPLICATION_ID or DISCORD_APPLICATION_ID\n"
         "  -g, --guild ID            reconcile a single guild command scope\n"
-        "      --global              reconcile global commands; this is the default\n"
+        "      --global              reconcile global commands; overrides env guild scope\n"
         "      --delete-stale        delete remote commands missing from local JSON\n"
         "      --plan                print the create/update/delete/noop plan; default action\n"
         "      --apply               apply the plan through Discord REST\n"
@@ -20,7 +20,7 @@ void dcc_command_sync_usage(FILE *stream, const char *argv0) {
         "  -h, --help                show this help\n"
         "\n"
         "notes:\n"
-        "  The default scope is global. Use --guild only when you want guild-scoped commands.\n"
+        "  The default scope is global. DCC_COMMAND_GUILD_ID and DCC_COMMAND_SYNC_GUILD_ID are accepted.\n"
         "  Global command changes can take time to propagate across Discord.\n",
         argv0
     );

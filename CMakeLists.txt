@@ -2599,11 +2599,40 @@ if(DCC_BUILD_TESTS)
             PASS_REGULAR_EXPRESSION "check=ok local_commands=3 remote_commands=3 scope=guild"
         )
 
+        add_test(NAME dcc_command_sync_env_guild_scope
+            COMMAND ${CMAKE_COMMAND} -E env
+                "DCC_COMMAND_GUILD_ID=123456789012345678"
+                --unset=DCC_COMMAND_SYNC_GUILD_ID
+                "$<TARGET_FILE:dcc_command_sync>"
+                    --commands "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/command_registry_local.json"
+                    --remote "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/command_registry_remote.json"
+                    --check
+        )
+        set_tests_properties(dcc_command_sync_env_guild_scope PROPERTIES
+            PASS_REGULAR_EXPRESSION "check=ok local_commands=3 remote_commands=3 scope=guild"
+        )
+
+        add_test(NAME dcc_command_sync_global_overrides_env_guild
+            COMMAND ${CMAKE_COMMAND} -E env
+                "DCC_COMMAND_GUILD_ID=123456789012345678"
+                "DCC_COMMAND_SYNC_GUILD_ID=876543210987654321"
+                "$<TARGET_FILE:dcc_command_sync>"
+                    --commands "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/command_registry_local.json"
+                    --remote "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/command_registry_remote.json"
+                    --global
+                    --check
+        )
+        set_tests_properties(dcc_command_sync_global_overrides_env_guild PROPERTIES
+            PASS_REGULAR_EXPRESSION "check=ok local_commands=3 remote_commands=3 scope=global"
+        )
+
         add_test(NAME dcc_command_sync_dcc_token_env
             COMMAND ${CMAKE_COMMAND} -E env
                 DCC_TOKEN=test-token
                 --unset=BOT_TOKEN
                 --unset=DISCORD_TOKEN
+                --unset=DCC_COMMAND_GUILD_ID
+                --unset=DCC_COMMAND_SYNC_GUILD_ID
                 "$<TARGET_FILE:dcc_command_sync>"
                     --commands "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/command_registry_local.json"
                     --remote "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/command_registry_remote.json"

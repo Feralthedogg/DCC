@@ -15,6 +15,7 @@ typedef struct dcc_command_sync_options {
     const char *token;
     dcc_snowflake_t application_id;
     dcc_snowflake_t guild_id;
+    int guild_scope_set;
     int delete_stale;
     int dry_run;
     int apply;

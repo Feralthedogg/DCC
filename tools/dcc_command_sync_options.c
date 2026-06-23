@@ -61,6 +61,7 @@ static int dcc_command_sync_parse_value_option(
             fprintf(stderr, "invalid guild id: %s\n", value);
             return -1;
         }
+        options->guild_scope_set = 1;
         return 0;
     }
     if (strcmp(arg, "--token") == 0) {
@@ -95,10 +96,12 @@ static void dcc_command_sync_apply_env(dcc_command_sync_options_t *options) {
             options->application_id = application_id;
         }
     }
-    if (options->guild_id == 0) {
+    if (!options->guild_scope_set && options->guild_id == 0) {
         dcc_snowflake_t guild_id = 0;
-        if (dcc_app_env_get_guild("DCC_COMMAND_SYNC_GUILD_ID", &guild_id) == DCC_OK) {
+        if (dcc_app_env_get_guild("DCC_COMMAND_GUILD_ID", &guild_id) == DCC_OK ||
+            dcc_app_env_get_guild("DCC_COMMAND_SYNC_GUILD_ID", &guild_id) == DCC_OK) {
             options->guild_id = guild_id;
+            options->guild_scope_set = 1;
         }
     }
 }
@@ -123,6 +126,7 @@ int dcc_command_sync_parse_options(
         }
         if (strcmp(arg, "--global") == 0) {
             options->guild_id = 0;
+            options->guild_scope_set = 1;
         } else if (strcmp(arg, "--delete-stale") == 0) {
             options->delete_stale = 1;
         } else if (strcmp(arg, "--dry-run") == 0) {
