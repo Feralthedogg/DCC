@@ -5,7 +5,7 @@
 
 #define DCC_VERSION_MAJOR 1
 #define DCC_VERSION_MINOR 3
-#define DCC_VERSION_PATCH 5
+#define DCC_VERSION_PATCH 0
 
 #ifdef __cplusplus
 extern "C" {

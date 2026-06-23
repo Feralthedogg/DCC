@@ -34,15 +34,15 @@ artifacts are published from this workflow.
 Automatic release:
 
 ```sh
-git tag v1.3.5
-git push origin v1.3.5
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 Manual release:
 
 1. Open `Actions -> Release`.
 2. Run workflow.
-3. Optionally set a release version such as `v1.3.5`.
+3. Optionally set a release version such as `v1.3.0`.
 
 Artifacts are placed under `target/dist/` locally and uploaded as workflow
 artifacts before the publish job creates the GitHub Release.
