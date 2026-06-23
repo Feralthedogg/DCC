@@ -337,6 +337,16 @@ static inline dcc_status_t dcc_sugar_listeners_register(
     DCC_LISTEN_COMMAND_SCHEMA(command_)
 #define DCC_LISTEN_SCHEMA(command_) \
     DCC_LISTEN_COMMAND_SCHEMA(command_)
+#define DCC_LISTEN_SLASH_BUILDER(builder_, handler_) \
+    DCC_LISTEN_SLASH_ROUTE(DCC_SLASH_BUILDER_VALUE((builder_), (handler_)))
+#define DCC_LISTEN_SLASH_BUILDER_DATA(builder_, handler_, user_data_) \
+    DCC_LISTEN_SLASH_ROUTE(DCC_SLASH_BUILDER_VALUE_DATA((builder_), (handler_), (user_data_)))
+#define DCC_LISTEN_SLASH_BUILDER_POLICY(builder_, handler_, policy_) \
+    DCC_LISTEN_SLASH_ROUTE(DCC_SLASH_BUILDER_VALUE_POLICY((builder_), (handler_), (policy_)))
+#define DCC_LISTEN_SLASH_BUILDER_DATA_POLICY(builder_, handler_, user_data_, policy_) \
+    DCC_LISTEN_SLASH_ROUTE( \
+        DCC_SLASH_BUILDER_VALUE_DATA_POLICY((builder_), (handler_), (user_data_), (policy_)) \
+    )
 #define DCC_LISTEN_SLASH(name_, description_, handler_) \
     DCC_LISTEN_SLASH_ROUTE(DCC_ON_SLASH((name_), (description_), (handler_)))
 #define DCC_LISTEN_SLASH_DATA(name_, description_, handler_, user_data_) \

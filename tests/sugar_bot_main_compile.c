@@ -50,6 +50,16 @@ DCC_SIMPLE_BOT_MAIN(
 )
 #undef main
 
+#define main dcc_bot_main_compile_simple_builder
+DCC_SIMPLE_BOT_MAIN(
+    "main.compile.simple.builder",
+    DCC_LISTEN_SLASH_BUILDER(
+        DCC_SLASH_COMMAND_DM("builder", "Reply from a custom builder", 1U),
+        bot_main_ping
+    )
+)
+#undef main
+
 #define main dcc_bot_main_compile_simple_token
 DCC_SIMPLE_BOT_MAIN_TOKEN(
     "DCC_MAIN_TOKEN",

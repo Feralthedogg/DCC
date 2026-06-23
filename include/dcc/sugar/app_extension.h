@@ -221,11 +221,28 @@
 #define DCC_SLASH_BUILDER_DATA(builder_, handler_, user_data_) \
     DCC_EXTENSION_SLASH_BUILDER((builder_), (handler_), (user_data_))
 
+#define DCC_SLASH_BUILDER_VALUE(builder_, handler_) \
+    DCC_SLASH_BUILDER(&((dcc_application_command_builder_t[]){ (builder_) })[0], (handler_))
+
+#define DCC_SLASH_BUILDER_VALUE_DATA(builder_, handler_, user_data_) \
+    DCC_SLASH_BUILDER_DATA(&((dcc_application_command_builder_t[]){ (builder_) })[0], (handler_), (user_data_))
+
 #define DCC_SLASH_BUILDER_POLICY(builder_, handler_, policy_) \
     DCC_EXTENSION_SLASH_BUILDER_POLICY((builder_), (handler_), NULL, (policy_))
 
 #define DCC_SLASH_BUILDER_DATA_POLICY(builder_, handler_, user_data_, policy_) \
     DCC_EXTENSION_SLASH_BUILDER_POLICY((builder_), (handler_), (user_data_), (policy_))
+
+#define DCC_SLASH_BUILDER_VALUE_POLICY(builder_, handler_, policy_) \
+    DCC_SLASH_BUILDER_POLICY(&((dcc_application_command_builder_t[]){ (builder_) })[0], (handler_), (policy_))
+
+#define DCC_SLASH_BUILDER_VALUE_DATA_POLICY(builder_, handler_, user_data_, policy_) \
+    DCC_SLASH_BUILDER_DATA_POLICY( \
+        &((dcc_application_command_builder_t[]){ (builder_) })[0], \
+        (handler_), \
+        (user_data_), \
+        (policy_) \
+    )
 
 #define DCC_COMMAND(name_, description_, handler_) \
     DCC_SLASH((name_), (description_), (handler_))

@@ -1748,8 +1748,6 @@ if(DCC_BUILD_EXAMPLES)
     add_executable(dcc_discord_game
         examples/discord_game.c
         examples/discord_game_ai.c
-        examples/discord_game_command.c
-        examples/discord_game_env.c
         examples/discord_game_gateway.c
         examples/discord_game_interactions.c
     )

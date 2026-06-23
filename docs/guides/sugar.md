@@ -96,6 +96,26 @@ DCC_APP_ON_BUTTON_NS_FN(app, "status", refresh);
 DCC_APP_ON_MODAL_NS_FN(app, "profile", edit);
 ```
 
+When a command needs builder-only metadata such as DM availability, default
+permissions, or NSFW flags, use the builder-value listener form. It accepts the
+normal command builder by value, so application code does not need to spell out
+compound-literal pointer lifetimes:
+
+```c
+DCC_SLASH_FN(play_tictactoe) {
+    (void)user_data;
+    (void)DCC_REPLY_TEXT(ctx, "Starting a game.");
+}
+
+DCC_SIMPLE_BOT_MAIN(
+    "games",
+    DCC_LISTEN_SLASH_BUILDER(
+        DCC_SLASH_COMMAND_DM("tictactoe", "Start a Tic Tac Toe game", 1U),
+        play_tictactoe
+    )
+)
+```
+
 When you want the route metadata to live directly beside the handler, use the
 decorator-style helpers. They create a static route descriptor and then declare
 the handler with the right signature. Add that descriptor to a feature with

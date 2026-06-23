@@ -4,24 +4,14 @@
 #include <dcc/sugar.h>
 #include <dcc/rest/interactions.h>
 
-#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define GAME_COMMAND_NAME "tictactoe"
 #define GAME_CUSTOM_ID_PREFIX "ttt:"
 #define GAME_BOARD_LEN 9
 #define GAME_CUSTOM_ID_LEN 15
-
-typedef struct discord_game_state {
-    dcc_snowflake_t guild_id;
-    int command_registration_attempted;
-} discord_game_state_t;
-
-void load_env(void);
-dcc_snowflake_t parse_snowflake_env(const char *name);
 
 char winner_for_board(const char board[GAME_BOARD_LEN + 1]);
 int board_full(const char board[GAME_BOARD_LEN + 1]);
@@ -42,12 +32,11 @@ dcc_status_t respond_game(
     int game_over
 );
 void rest_response_log_cb(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data);
-void on_game_command(dcc_client_t *client, const dcc_event_t *event, void *user_data);
-void on_game_button(dcc_client_t *client, const dcc_event_t *event, void *user_data);
+void on_game_command(dcc_ctx_t *ctx, void *user_data);
+void on_game_button(dcc_ctx_t *ctx, void *user_data);
 
-void register_game_command(dcc_client_t *client, dcc_snowflake_t application_id, dcc_snowflake_t guild_id);
-void on_ready(dcc_client_t *client, const dcc_event_t *event, void *user_data);
-void on_log(dcc_client_t *client, const dcc_event_t *event, void *user_data);
-void on_socket_close(dcc_client_t *client, const dcc_event_t *event, void *user_data);
+void on_ready(dcc_app_t *app, const dcc_ready_event_t *ready, void *user_data);
+void on_log(dcc_app_t *app, const dcc_event_t *event, void *user_data);
+void on_socket_close(dcc_app_t *app, const dcc_event_t *event, void *user_data);
 
 #endif

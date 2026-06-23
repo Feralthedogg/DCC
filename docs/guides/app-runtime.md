@@ -58,9 +58,7 @@ dcc_new_app add preset mybot profile flow --guild-only
 ```c
 #include <dcc/sugar.h>
 
-#include <stdlib.h>
-
-DCC_HANDLER(ping) {
+DCC_SLASH_FN(ping) {
     (void)user_data;
     (void)DCC_REPLY_TEXT(ctx, "pong");
 }
@@ -71,14 +69,14 @@ DCC_READY_FN(on_ready) {
     (void)user_data;
 }
 
-DCC_BOT_ROUTES_MAIN(
+DCC_SIMPLE_BOT_MAIN(
     "ping-bot",
-    DCC_ROUTE_COMMAND("ping", "Reply with pong", ping),
-    DCC_ROUTE_READY_ONCE(on_ready)
+    DCC_LISTEN_SLASH("ping", "Reply with pong", ping),
+    DCC_LISTEN_READY_ONCE(on_ready)
 )
 ```
 
-`DCC_BOT_ROUTES_MAIN()` creates `main()`, reads `.env` when it exists, creates
+`DCC_SIMPLE_BOT_MAIN()` creates `main()`, reads `.env` when it exists, creates
 the app from environment variables, runs it, and destroys it before returning.
 Use `DCC_RUN_SIMPLE_BOT()` when you want to keep your own `main()`.
 `dcc_app_load_dotenv()` reads `.env` into the process environment when you want

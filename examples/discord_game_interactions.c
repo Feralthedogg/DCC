@@ -161,9 +161,10 @@ dcc_status_t respond_game(
     );
 }
 
-void on_game_command(dcc_client_t *client, const dcc_event_t *event, void *user_data) {
+DCC_PUBLIC_SLASH_FN(on_game_command) {
     (void)user_data;
-    const dcc_interaction_t *interaction = dcc_event_interaction(event);
+    dcc_client_t *client = DCC_CTX_CLIENT(ctx);
+    const dcc_interaction_t *interaction = DCC_CTX_INTERACTION(ctx);
     if (interaction == NULL) {
         return;
     }
@@ -182,9 +183,10 @@ void on_game_command(dcc_client_t *client, const dcc_event_t *event, void *user_
     }
 }
 
-void on_game_button(dcc_client_t *client, const dcc_event_t *event, void *user_data) {
+DCC_PUBLIC_BUTTON_FN(on_game_button) {
     (void)user_data;
-    const dcc_interaction_t *interaction = dcc_event_interaction(event);
+    dcc_client_t *client = DCC_CTX_CLIENT(ctx);
+    const dcc_interaction_t *interaction = DCC_CTX_INTERACTION(ctx);
     if (interaction == NULL || interaction->custom_id == NULL) {
         return;
     }
