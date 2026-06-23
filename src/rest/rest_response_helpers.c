@@ -191,3 +191,10 @@ dcc_status_t dcc_rest_response_channel_id(
 ) {
     return dcc_rest_response_snowflake_field(response, "channel_id", out_channel_id);
 }
+
+dcc_status_t dcc_rest_response_guild_id(
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t *out_guild_id
+) {
+    return dcc_rest_response_snowflake_field(response, "guild_id", out_guild_id);
+}

@@ -105,6 +105,31 @@ typedef struct app_smoke_typed_select_args {
     size_t value_count;
 } app_smoke_typed_select_args_t;
 
+typedef struct app_smoke_infer_guild_state {
+    unsigned called;
+    dcc_snowflake_t channel_id;
+    dcc_snowflake_t guild_id;
+    dcc_status_t status;
+} app_smoke_infer_guild_state_t;
+
+static void app_smoke_infer_guild_cb(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    dcc_snowflake_t guild_id,
+    dcc_status_t status,
+    void *user_data
+) {
+    (void)app;
+    app_smoke_infer_guild_state_t *state = (app_smoke_infer_guild_state_t *)user_data;
+    if (state == NULL) {
+        return;
+    }
+    state->called++;
+    state->channel_id = channel_id;
+    state->guild_id = guild_id;
+    state->status = status;
+}
+
 static dcc_status_t middleware(dcc_ctx_t *ctx, void *user_data) {
     app_smoke_state_t *state = (app_smoke_state_t *)user_data;
     state->middleware_count++;
@@ -1181,6 +1206,18 @@ int main(void) {
     }
     if (status != DCC_OK) {
         fprintf(stderr, "cache channel setup failed: %s\n", dcc_status_string(status));
+        dcc_app_destroy(app);
+        return 1;
+    }
+    app_smoke_infer_guild_state_t infer_state;
+    memset(&infer_state, 0, sizeof(infer_state));
+    status = DCC_INFER_GUILD_FROM_CHANNEL(app, command_channel.id, app_smoke_infer_guild_cb, &infer_state);
+    if (status != DCC_OK ||
+        infer_state.called != 1U ||
+        infer_state.status != DCC_OK ||
+        infer_state.channel_id != command_channel.id ||
+        infer_state.guild_id != command_channel.guild_id) {
+        fprintf(stderr, "app guild inference cache hit failed: %s\n", dcc_status_string(status));
         dcc_app_destroy(app);
         return 1;
     }

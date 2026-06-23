@@ -90,6 +90,10 @@ to do those steps manually.
 `DCC_INTENTS` accepts a decimal mask, a `0x...` mask, `all`, `none`,
 `default`, `messages`, `message_content`, `privileged`, `unprivileged`, or a
 comma/pipe/plus separated composition such as `guilds,message_content,voice`.
+When only a channel ID is configured, enable `DCC_INFER_GUILD_FROM_CHANNEL`
+and call `DCC_INFER_GUILD_FROM_CHANNEL(app, channel_id, on_guild, user_data)`.
+DCC uses the channel cache first and falls back to Get Channel when the mapping
+is missing.
 
 When a handler needs small persistent state from `DCC_STORE_FILE`, prefer the
 context-first helpers:

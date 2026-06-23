@@ -423,10 +423,13 @@ and calls out explicit APIs only where that extra control matters.
 - `cache.h`: optional client-owned cache for guilds, channels, roles, members,
   users, messages, and voice states. `dcc_cache_infer_guild_id_from_channel()`
   and `dcc_client_infer_guild_id_from_channel()` resolve a cached channel ID to
-  its guild ID without REST. Set `infer_guild_id_from_channel` in
+  its guild ID without REST. `dcc_app_infer_guild_id_from_channel()` first uses
+  that cache, then falls back to Get Channel and stores the returned `guild_id`
+  for the next lookup. Set `infer_guild_id_from_channel` in
   `dcc_client_options_t`, or use `DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE()`
   / `DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE_ALL()`, when voice helpers should
-  fill `guild_id` automatically from `channel_id`.
+  fill `guild_id` automatically from `channel_id`. Sugar exposes
+  `DCC_INFER_GUILD_FROM_CHANNEL(app, channel_id, cb, user_data)`.
 - `message_link.h`: checked Discord message-link formatting and parsing.
   `dcc_message_link_parse()` accepts normal, canary, ptb, path-only, and DM
   `@me` links and returns a typed `dcc_message_link_t`; sugar aliases expose

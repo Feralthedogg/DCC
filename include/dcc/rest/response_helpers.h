@@ -20,6 +20,10 @@ DCC_API dcc_status_t dcc_rest_response_channel_id(
     const dcc_rest_response_t *response,
     dcc_snowflake_t *out_channel_id
 );
+DCC_API dcc_status_t dcc_rest_response_guild_id(
+    const dcc_rest_response_t *response,
+    dcc_snowflake_t *out_guild_id
+);
 
 #ifdef __cplusplus
 }

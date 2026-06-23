@@ -1774,6 +1774,8 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_APP_SEND_V2(NULL, 1U, DCC_V2_TEXT("hello")) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_UI(NULL, 1U, DCC_UI_TEXT("hello")) == DCC_ERR_INVALID_ARG &&
         DCC_APP_SEND_V2_CB(NULL, 1U, NULL, NULL, DCC_V2_TEXT("hello")) == DCC_ERR_INVALID_ARG &&
+        DCC_INFER_GUILD_FROM_CHANNEL(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_app_infer_guild_id_from_channel(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_get_channel(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_get_guild_channels(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_create_guild_channel(NULL, 1U, "{\"name\":\"general\"}", NULL, NULL) == DCC_ERR_INVALID_ARG &&

@@ -270,7 +270,8 @@ static int run_cache_policy_smoke(dcc_client_t *client) {
 
 static int run_rest_response_helper_smoke(void) {
     const char response_body[] =
-        "{\"id\":\"1518234972190802092\",\"channel_id\":1518200161208238111}";
+        "{\"id\":\"1518234972190802092\",\"channel_id\":1518200161208238111,"
+        "\"guild_id\":\"1182756143693578320\"}";
     dcc_rest_response_t response = {
         .size = sizeof(response),
         .status = 200,
@@ -288,6 +289,11 @@ static int run_rest_response_helper_smoke(void) {
     if (dcc_rest_response_channel_id(&response, &snowflake) != DCC_OK ||
         snowflake != 1518200161208238111ULL) {
         fprintf(stderr, "channel id response helper failed\n");
+        return 1;
+    }
+    if (dcc_rest_response_guild_id(&response, &snowflake) != DCC_OK ||
+        snowflake != 1182756143693578320ULL) {
+        fprintf(stderr, "guild id response helper failed\n");
         return 1;
     }
     if (dcc_rest_response_snowflake_field(&response, "missing", &snowflake) != DCC_ERR_NOT_FOUND) {

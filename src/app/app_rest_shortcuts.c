@@ -36,6 +36,7 @@
 #include <dcc/rest/resources/users.h>
 #include <dcc/rest/resources/voice_states.h>
 #include <dcc/rest/roles.h>
+#include <dcc/rest/response_helpers.h>
 #include <dcc/rest/threads/create.h>
 #include <dcc/rest/threads/lifecycle.h>
 #include <dcc/rest/webhooks/execute.h>
@@ -47,7 +48,38 @@
 #include <dcc/rest/webhooks/messages/edit.h>
 #include <dcc/rest/webhooks/messages/fetch.h>
 
+#include "internal/client/dcc_client_guild_inference_internal.h"
+
 #include <stdio.h>
+#include <stdlib.h>
+
+typedef struct dcc_app_infer_guild_state {
+    dcc_app_t *app;
+    dcc_snowflake_t channel_id;
+    dcc_app_infer_guild_cb cb;
+    void *user_data;
+} dcc_app_infer_guild_state_t;
+
+static void dcc_app_infer_guild_id_from_channel_rest_cb(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    dcc_app_infer_guild_state_t *state = (dcc_app_infer_guild_state_t *)user_data;
+    if (state == NULL) {
+        return;
+    }
+
+    dcc_snowflake_t guild_id = 0U;
+    dcc_status_t status = response != NULL
+        ? dcc_rest_response_guild_id(response, &guild_id)
+        : DCC_ERR_INVALID_ARG;
+    if (status == DCC_OK && guild_id != 0U) {
+        dcc_client_channel_guild_inference_store(client, state->channel_id, guild_id);
+    }
+    state->cb(state->app, state->channel_id, guild_id, status, state->user_data);
+    free(state);
+}
 
 dcc_status_t dcc_app_get_channel(
     dcc_app_t *app,
@@ -59,6 +91,46 @@ dcc_status_t dcc_app_get_channel(
         return DCC_ERR_INVALID_ARG;
     }
     return dcc_rest_get_channel(dcc_app_client(app), channel_id, cb, user_data);
+}
+
+dcc_status_t dcc_app_infer_guild_id_from_channel(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    dcc_app_infer_guild_cb cb,
+    void *user_data
+) {
+    if (app == NULL || channel_id == 0U || cb == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+
+    dcc_client_t *client = dcc_app_client(app);
+    dcc_snowflake_t guild_id = 0U;
+    dcc_status_t status = dcc_client_infer_guild_id_from_channel(client, channel_id, &guild_id);
+    if (status == DCC_OK) {
+        cb(app, channel_id, guild_id, DCC_OK, user_data);
+        return DCC_OK;
+    }
+
+    dcc_app_infer_guild_state_t *state =
+        (dcc_app_infer_guild_state_t *)malloc(sizeof(*state));
+    if (state == NULL) {
+        return DCC_ERR_NOMEM;
+    }
+    state->app = app;
+    state->channel_id = channel_id;
+    state->cb = cb;
+    state->user_data = user_data;
+
+    status = dcc_rest_get_channel(
+        client,
+        channel_id,
+        dcc_app_infer_guild_id_from_channel_rest_cb,
+        state
+    );
+    if (status != DCC_OK) {
+        free(state);
+    }
+    return status;
 }
 
 dcc_status_t dcc_app_get_guild_channels(

@@ -30,6 +30,13 @@ typedef void (*dcc_app_message_command_fn)(
     const dcc_event_t *event,
     void *user_data
 );
+typedef void (*dcc_app_infer_guild_cb)(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    dcc_snowflake_t guild_id,
+    dcc_status_t status,
+    void *user_data
+);
 typedef void (*dcc_app_task_fn)(dcc_app_t *app, void *user_data);
 typedef void (*dcc_app_cleanup_fn)(void *user_data);
 typedef dcc_status_t (*dcc_app_module_setup_fn)(dcc_app_t *app, void *user_data);
@@ -748,4 +755,3 @@ DCC_API dcc_status_t dcc_app_select_typed(
     dcc_app_t *app,
     const dcc_app_typed_component_t *component
 );
-

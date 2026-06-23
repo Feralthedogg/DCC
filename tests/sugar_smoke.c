@@ -3578,6 +3578,7 @@ static int run_sugar_options_smoke(void) {
         DCC_PUBLISH_LATEST(NULL, &managed, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_SEND(NULL, 333ULL, DCC_MESSAGE_TEXT("send")) != DCC_ERR_INVALID_ARG ||
         DCC_APP_SEND_TEXT(NULL, 333ULL, "send") != DCC_ERR_INVALID_ARG ||
+        DCC_INFER_GUILD_FROM_CHANNEL(NULL, 333ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_get_channel(NULL, 333ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_get_guild_channels(NULL, 222ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_create_guild_channel(NULL, 222ULL, "{\"name\":\"general\"}", NULL, NULL) !=

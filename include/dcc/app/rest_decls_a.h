@@ -89,6 +89,12 @@ DCC_API dcc_status_t dcc_app_get_channel(
     dcc_rest_cb cb,
     void *user_data
 );
+DCC_API dcc_status_t dcc_app_infer_guild_id_from_channel(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    dcc_app_infer_guild_cb cb,
+    void *user_data
+);
 DCC_API dcc_status_t dcc_app_get_guild_channels(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,

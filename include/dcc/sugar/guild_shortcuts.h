@@ -1,4 +1,9 @@
 /* Included by <dcc/sugar.h>. */
+#define DCC_APP_INFER_GUILD_FROM_CHANNEL(app_, channel_id_, cb_, user_data_) \
+    dcc_app_infer_guild_id_from_channel((app_), (channel_id_), (cb_), (user_data_))
+#define DCC_INFER_GUILD_FROM_CHANNEL(app_, channel_id_, cb_, user_data_) \
+    DCC_APP_INFER_GUILD_FROM_CHANNEL((app_), (channel_id_), (cb_), (user_data_))
+
 #define DCC_APP_ADD_MEMBER_ROLE(app_, guild_id_, user_id_, role_id_) \
     dcc_app_add_member_role((app_), (guild_id_), (user_id_), (role_id_), NULL, NULL)
 #define DCC_APP_ADD_MEMBER_ROLE_CB(app_, guild_id_, user_id_, role_id_, cb_, user_data_) \
