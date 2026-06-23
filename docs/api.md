@@ -516,9 +516,11 @@ interaction pointer for `SOCKET_CLOSE`. Use
 - `rest.h`: low-level `dcc_rest_request()` plus DPP 10.1.5-mapped typed REST
   wrappers, params structs, multipart helpers, pagination helpers, and direct
   interaction response/followup helpers. `dcc_rest_response_message_id()`,
-  `dcc_rest_response_channel_id()`, and
-  `dcc_rest_response_snowflake_field()` extract snowflake fields from callback
-  bodies without constructing a JSON DOM.
+  `dcc_rest_response_channel_id()`, `dcc_rest_response_snowflake_field()`,
+  `dcc_rest_response_u64_field()`, `dcc_rest_response_i64_field()`,
+  `dcc_rest_response_bool_field()`, and `dcc_rest_response_string_field()`
+  extract top-level primitive fields from callback bodies without constructing
+  a JSON DOM.
 - `rest/core.h`: compatibility aggregate for low-level REST core helpers.
   Focused subheaders under `dcc/rest/core/` separate method names, direct
   request helpers, async queue controls, and future-based request helpers.

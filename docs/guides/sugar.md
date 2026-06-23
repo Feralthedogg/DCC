@@ -3649,10 +3649,10 @@ DCC_APP_STORE_SET_U64(app, "birthday.last_kst_day", today_key);
 last_key = DCC_APP_STORE_U64_OR(app, "birthday.last_kst_day", 0U);
 ```
 
-## REST Response IDs
+## REST Response Fields
 
-When you use a raw REST callback and need the created resource ID, parse only
-the field you need:
+When you use a raw REST callback and need values from the created resource,
+parse only the fields you need:
 
 ```c
 static void created_message(
@@ -3661,8 +3661,15 @@ static void created_message(
     void *user_data
 ) {
     dcc_snowflake_t message_id = 0;
+    char channel_name[128];
+    int nsfw = 0;
+
     if (dcc_rest_response_message_id(response, &message_id) == DCC_OK) {
         save_message_id(message_id);
+    }
+    if (dcc_rest_response_string_field(response, "name", channel_name, sizeof(channel_name)) == DCC_OK &&
+        dcc_rest_response_bool_field(response, "nsfw", &nsfw) == DCC_OK) {
+        save_channel_snapshot(channel_name, nsfw);
     }
     (void)client;
     (void)user_data;
