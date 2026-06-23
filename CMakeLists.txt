@@ -2371,7 +2371,7 @@ if(DCC_BUILD_TESTS)
         set(DCC_HOT_RELOAD_HOST_ENV_DIR "${CMAKE_CURRENT_BINARY_DIR}/hot_reload_host_env")
         file(GENERATE
             OUTPUT "${DCC_HOT_RELOAD_HOST_ENV_DIR}/$<CONFIG>/.env"
-            CONTENT "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>\nDCC_HOT_RELOAD_WORKER=$<TARGET_FILE:dcc_hot_reload_worker>\nDISCORD_TOKEN=fixture-token\nDCC_HOT_RELOAD_INTENTS=guilds,guild_messages\n"
+            CONTENT "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>\nDCC_HOT_RELOAD_WORKER=$<TARGET_FILE:dcc_hot_reload_worker>\nDCC_TOKEN=fixture-token\nDCC_HOT_RELOAD_INTENTS=guilds,guild_messages\n"
         )
 
         add_test(NAME dcc_hot_reload_host_help COMMAND dcc_hot_reload_host --help)
@@ -2417,6 +2417,7 @@ if(DCC_BUILD_TESTS)
 
         add_test(NAME dcc_hot_reload_host_check_missing
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 --unset=DISCORD_TOKEN
                 --unset=DCC_BOT_MODULE
@@ -2428,8 +2429,23 @@ if(DCC_BUILD_TESTS)
             WILL_FAIL TRUE
         )
 
+        add_test(NAME dcc_hot_reload_host_check_dcc_token_env
+            COMMAND ${CMAKE_COMMAND} -E env
+                "DCC_TOKEN=test-token"
+                --unset=BOT_TOKEN
+                --unset=DISCORD_TOKEN
+                "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>"
+                "DCC_HOT_RELOAD_WORKER=$<TARGET_FILE:dcc_hot_reload_worker>"
+                "DCC_HOT_RELOAD_INTENTS=guilds,guild_messages"
+                "$<TARGET_FILE:dcc_hot_reload_host>" --check
+        )
+        set_tests_properties(dcc_hot_reload_host_check_dcc_token_env PROPERTIES
+            PASS_REGULAR_EXPRESSION "token=set"
+        )
+
         add_test(NAME dcc_hot_reload_host_check_ok
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 "DISCORD_TOKEN=test-token"
                 "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>"
@@ -2443,6 +2459,7 @@ if(DCC_BUILD_TESTS)
 
         add_test(NAME dcc_hot_reload_host_check_health_sidecar
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 "DISCORD_TOKEN=test-token"
                 "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>"
@@ -2456,6 +2473,7 @@ if(DCC_BUILD_TESTS)
 
         add_test(NAME dcc_hot_reload_host_check_tuning
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 "DISCORD_TOKEN=test-token"
                 "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>"
@@ -2471,6 +2489,7 @@ if(DCC_BUILD_TESTS)
 
         add_test(NAME dcc_hot_reload_host_check_guild_scope
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 "DISCORD_TOKEN=test-token"
                 "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>"
@@ -2484,6 +2503,7 @@ if(DCC_BUILD_TESTS)
 
         add_test(NAME dcc_hot_reload_host_check_global_scope
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 "DISCORD_TOKEN=test-token"
                 "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>"
@@ -2497,6 +2517,7 @@ if(DCC_BUILD_TESTS)
 
         add_test(NAME dcc_hot_reload_host_check_invalid_guild_env
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 "DISCORD_TOKEN=test-token"
                 "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>"
@@ -2510,6 +2531,7 @@ if(DCC_BUILD_TESTS)
 
         add_test(NAME dcc_hot_reload_host_check_missing_module_file
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 "DISCORD_TOKEN=test-token"
                 "DCC_BOT_MODULE=${CMAKE_CURRENT_BINARY_DIR}/missing-hot-reload-module.so"
@@ -2522,6 +2544,7 @@ if(DCC_BUILD_TESTS)
 
         add_test(NAME dcc_hot_reload_host_check_missing_worker_file
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 "DISCORD_TOKEN=test-token"
                 "DCC_BOT_MODULE=$<TARGET_FILE:dcc_hot_reload_isolated_module>"
@@ -2534,6 +2557,7 @@ if(DCC_BUILD_TESTS)
 
         add_test(NAME dcc_hot_reload_host_check_dotenv
             COMMAND ${CMAKE_COMMAND} -E env
+                --unset=DCC_TOKEN
                 --unset=BOT_TOKEN
                 --unset=DISCORD_TOKEN
                 --unset=DCC_BOT_MODULE
