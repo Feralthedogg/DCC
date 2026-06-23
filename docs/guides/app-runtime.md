@@ -1582,6 +1582,33 @@ static void on_profile_submit(dcc_ctx_t *ctx, void *user_data) {
 }
 ```
 
+For larger handlers, bind directly into a request struct and let DCC handle the
+bad-input reply:
+
+```c
+typedef struct profile_args {
+    const char *display_name;
+    uint8_t visible;
+} profile_args_t;
+
+static void on_profile_submit(dcc_ctx_t *ctx, void *user_data) {
+    (void)user_data;
+
+    profile_args_t args = {0};
+    DCC_CTX_BIND_FORM_FIELDS_OR_REPLY(
+        ctx,
+        &args,
+        DCC_CTX_FORM_FIELD_REQUIRED_STRING(profile_args_t, display_name, "display_name"),
+        DCC_CTX_FORM_FIELD_BOOL(profile_args_t, visible, "visible", 1U)
+    );
+
+    DCC_REPLY_DONE(ctx, "Profile saved.");
+}
+```
+
+The matching option helpers are `DCC_CTX_BIND_OPTIONS_OR_REPLY()` for local
+variables and `DCC_CTX_BIND_OPTION_FIELDS_OR_REPLY()` for structs.
+
 For simple handler-local checks, `DCC_CTX_REQUIRE_*` sends an ephemeral message
 and returns from the current void handler. `DCC_REQUIRE_*` remains available as
 the shorter alias:

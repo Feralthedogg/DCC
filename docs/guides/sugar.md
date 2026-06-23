@@ -1628,8 +1628,9 @@ error message, which matches Discord's autocomplete interaction contract.
 
 Inside command handlers, bind options straight into a small request struct when
 the handler has more than one or two inputs. Use
-`DCC_CTX_VALIDATE_OR_REPLY()` when invalid input should immediately return a
-friendly ephemeral embed response from the handler:
+`DCC_CTX_BIND_OPTION_FIELDS_OR_REPLY()` and `DCC_CTX_VALIDATE_OR_REPLY()` when
+missing or invalid input should immediately return a friendly ephemeral embed
+response from the handler:
 
 ```c
 typedef struct search_args {
@@ -1643,18 +1644,13 @@ static void on_search(dcc_ctx_t *ctx, void *user_data) {
 
     search_args_t args = {0};
 
-    dcc_status_t status =
-        DCC_CTX_BIND_OPTION_FIELDS(
-            ctx,
-            &args,
-            DCC_ARG_REQUIRED_STRING(search_args_t, name, "name"),
-            DCC_ARG_INT(search_args_t, limit, "limit", 10),
-            DCC_ARG_BOOL(search_args_t, include_bots, "include_bots", 0U)
+    DCC_CTX_BIND_OPTION_FIELDS_OR_REPLY(
+        ctx,
+        &args,
+        DCC_ARG_REQUIRED_STRING(search_args_t, name, "name"),
+        DCC_ARG_INT(search_args_t, limit, "limit", 10),
+        DCC_ARG_BOOL(search_args_t, include_bots, "include_bots", 0U)
     );
-    if (status != DCC_OK) {
-        DCC_REPLY_VALIDATION_ERROR(ctx, status);
-        return;
-    }
 
     DCC_CTX_VALIDATE_OR_REPLY(
         ctx,
@@ -1668,6 +1664,12 @@ static void on_search(dcc_ctx_t *ctx, void *user_data) {
     /* args.name, args.limit, and args.include_bots are ready. */
 }
 ```
+
+The same bind-or-reply pattern is available for local variables and modal form
+fields: `DCC_CTX_BIND_OPTIONS_OR_REPLY()`, `DCC_CTX_BIND_FORM_OR_REPLY()`, and
+`DCC_CTX_BIND_FORM_FIELDS_OR_REPLY()`. The shorter aliases
+`DCC_BIND_OPTIONS_OR_REPLY()`, `DCC_BIND_OPTION_FIELDS_OR_REPLY()`,
+`DCC_BIND_FORM_OR_REPLY()`, and `DCC_BIND_FORM_FIELDS_OR_REPLY()` are equivalent.
 
 Use `DCC_CTX_TRY(ctx, expression)` for handler-local calls that return
 `dcc_status_t`. On failure it routes the status through the app's `on_error`

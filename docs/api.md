@@ -169,6 +169,9 @@ required select value helpers such as `DCC_REQUIRED_SELECT_FIRST()`,
 `DCC_REQUIRED_SELECT_VALUES()`, and `DCC_CTX_REQUIRE_SELECT_FIRST()`,
 variadic role checks such as `DCC_CTX_HAS_ANY_ROLE_IDS()` and
 `DCC_CTX_REQUIRE_ANY_ROLE_IDS()`,
+handler-local bind exits such as `DCC_CTX_BIND_OPTIONS_OR_REPLY()`,
+`DCC_CTX_BIND_OPTION_FIELDS_OR_REPLY()`, `DCC_CTX_BIND_FORM_OR_REPLY()`, and
+`DCC_CTX_BIND_FORM_FIELDS_OR_REPLY()`,
 handler-local `DCC_CTX_VALIDATE_OR_REPLY()` validation exits,
 handler-local status guards such as `DCC_CTX_TRY()` and `DCC_CTX_TRY_MSG()`,
 strict `DCC_PARSE_DATE*` and `DCC_PARSE_BIRTHDAY()` helpers,

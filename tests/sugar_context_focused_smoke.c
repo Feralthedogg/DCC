@@ -1,4 +1,5 @@
 #include <dcc/sugar/context.h>
+#include <dcc/sugar/context_binding.h>
 
 #include <stdio.h>
 
@@ -96,12 +97,92 @@ static int check_null_context_aliases(void) {
     return ok ? 0 : 1;
 }
 
+typedef struct focused_bind_args {
+    const char *query;
+    int64_t limit;
+    uint8_t visible;
+    const char **values;
+    size_t value_count;
+} focused_bind_args_t;
+
+static void check_bind_options_or_reply_null(dcc_ctx_t *ctx) {
+    const char *query = NULL;
+    int64_t limit = 0;
+
+    DCC_CTX_BIND_OPTIONS_OR_REPLY(
+        ctx,
+        DCC_CTX_OPTION_REQUIRED_STRING("query", &query),
+        DCC_CTX_OPTION_INT("limit", &limit, 10)
+    );
+
+    (void)query;
+    (void)limit;
+}
+
+static void check_bind_option_fields_or_reply_null(dcc_ctx_t *ctx) {
+    focused_bind_args_t args;
+
+    DCC_BIND_OPTION_FIELDS_OR_REPLY(
+        ctx,
+        &args,
+        DCC_CTX_OPTION_FIELD_REQUIRED_STRING(focused_bind_args_t, query, "query"),
+        DCC_CTX_OPTION_FIELD_INT(focused_bind_args_t, limit, "limit", 10)
+    );
+
+    (void)args;
+}
+
+static void check_bind_form_or_reply_null(dcc_ctx_t *ctx) {
+    const char *query = NULL;
+    uint8_t visible = 0U;
+
+    DCC_CTX_BIND_FORM_OR_REPLY(
+        ctx,
+        DCC_CTX_FORM_REQUIRED_STRING("query", &query),
+        DCC_CTX_FORM_BOOL("visible", &visible, 1U)
+    );
+
+    (void)query;
+    (void)visible;
+}
+
+static void check_bind_form_fields_or_reply_null(dcc_ctx_t *ctx) {
+    focused_bind_args_t args;
+
+    DCC_BIND_FORM_FIELDS_OR_REPLY(
+        ctx,
+        &args,
+        DCC_CTX_FORM_FIELD_REQUIRED_STRING(focused_bind_args_t, query, "query"),
+        DCC_CTX_FORM_FIELD_BOOL(focused_bind_args_t, visible, "visible", 1U),
+        DCC_CTX_FORM_FIELD_REQUIRED_VALUES(
+            focused_bind_args_t,
+            values,
+            value_count,
+            "choices"
+        )
+    );
+
+    (void)args;
+}
+
+static int check_bind_or_reply_aliases(void) {
+    check_bind_options_or_reply_null(NULL);
+    check_bind_option_fields_or_reply_null(NULL);
+    check_bind_form_or_reply_null(NULL);
+    check_bind_form_fields_or_reply_null(NULL);
+    return 0;
+}
+
 int main(void) {
     if (check_modal_literals() != 0) {
         return 1;
     }
     if (check_null_context_aliases() != 0) {
         fprintf(stderr, "focused context sugar aliases failed\n");
+        return 1;
+    }
+    if (check_bind_or_reply_aliases() != 0) {
+        fprintf(stderr, "bind-or-reply aliases failed\n");
         return 1;
     }
     return 0;

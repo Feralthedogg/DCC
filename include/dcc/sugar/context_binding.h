@@ -129,6 +129,14 @@
         (dcc_ctx_option_binding_t[]){ __VA_ARGS__ }, \
         sizeof((dcc_ctx_option_binding_t[]){ __VA_ARGS__ }) / sizeof(dcc_ctx_option_binding_t) \
     )
+#define DCC_CTX_BIND_OPTIONS_OR_REPLY(ctx_, ...) \
+    do { \
+        dcc_status_t dcc_ctx_bind_status_ = DCC_CTX_BIND_OPTIONS((ctx_), __VA_ARGS__); \
+        if (dcc_ctx_bind_status_ != DCC_OK) { \
+            (void)dcc_ctx_reply_validation_error((ctx_), dcc_ctx_bind_status_, NULL, NULL); \
+            return; \
+        } \
+    } while (0)
 
 #define DCC_CTX_OPTION_FIELD_STRING(type_, field_, name_, fallback_) \
     ((dcc_ctx_option_field_binding_t){ \
@@ -257,6 +265,15 @@
         sizeof((dcc_ctx_option_field_binding_t[]){ __VA_ARGS__ }) / \
             sizeof(dcc_ctx_option_field_binding_t) \
     )
+#define DCC_CTX_BIND_OPTION_FIELDS_OR_REPLY(ctx_, base_, ...) \
+    do { \
+        dcc_status_t dcc_ctx_bind_status_ = \
+            DCC_CTX_BIND_OPTION_FIELDS((ctx_), (base_), __VA_ARGS__); \
+        if (dcc_ctx_bind_status_ != DCC_OK) { \
+            (void)dcc_ctx_reply_validation_error((ctx_), dcc_ctx_bind_status_, NULL, NULL); \
+            return; \
+        } \
+    } while (0)
 
 #define DCC_CTX_FORM_STRING(custom_id_, out_, fallback_) \
     ((dcc_ctx_form_binding_t){ \
@@ -315,6 +332,14 @@
         (dcc_ctx_form_binding_t[]){ __VA_ARGS__ }, \
         sizeof((dcc_ctx_form_binding_t[]){ __VA_ARGS__ }) / sizeof(dcc_ctx_form_binding_t) \
     )
+#define DCC_CTX_BIND_FORM_OR_REPLY(ctx_, ...) \
+    do { \
+        dcc_status_t dcc_ctx_bind_status_ = DCC_CTX_BIND_FORM((ctx_), __VA_ARGS__); \
+        if (dcc_ctx_bind_status_ != DCC_OK) { \
+            (void)dcc_ctx_reply_validation_error((ctx_), dcc_ctx_bind_status_, NULL, NULL); \
+            return; \
+        } \
+    } while (0)
 
 #define DCC_CTX_FORM_FIELD_STRING(type_, field_, custom_id_, fallback_) \
     ((dcc_ctx_form_field_binding_t){ \
@@ -377,5 +402,23 @@
         sizeof((dcc_ctx_form_field_binding_t[]){ __VA_ARGS__ }) / \
             sizeof(dcc_ctx_form_field_binding_t) \
     )
+#define DCC_CTX_BIND_FORM_FIELDS_OR_REPLY(ctx_, base_, ...) \
+    do { \
+        dcc_status_t dcc_ctx_bind_status_ = \
+            DCC_CTX_BIND_FORM_FIELDS((ctx_), (base_), __VA_ARGS__); \
+        if (dcc_ctx_bind_status_ != DCC_OK) { \
+            (void)dcc_ctx_reply_validation_error((ctx_), dcc_ctx_bind_status_, NULL, NULL); \
+            return; \
+        } \
+    } while (0)
+
+#define DCC_BIND_OPTIONS_OR_REPLY(ctx_, ...) \
+    DCC_CTX_BIND_OPTIONS_OR_REPLY((ctx_), __VA_ARGS__)
+#define DCC_BIND_OPTION_FIELDS_OR_REPLY(ctx_, base_, ...) \
+    DCC_CTX_BIND_OPTION_FIELDS_OR_REPLY((ctx_), (base_), __VA_ARGS__)
+#define DCC_BIND_FORM_OR_REPLY(ctx_, ...) \
+    DCC_CTX_BIND_FORM_OR_REPLY((ctx_), __VA_ARGS__)
+#define DCC_BIND_FORM_FIELDS_OR_REPLY(ctx_, base_, ...) \
+    DCC_CTX_BIND_FORM_FIELDS_OR_REPLY((ctx_), (base_), __VA_ARGS__)
 
 #endif
