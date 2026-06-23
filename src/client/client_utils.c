@@ -30,7 +30,7 @@ char *dcc_strdup(const char *value) {
 }
 
 const char *dcc_version_string(void) {
-    return "1.3.4";
+    return "1.3.5";
 }
 
 const char *dcc_status_string(dcc_status_t status) {
