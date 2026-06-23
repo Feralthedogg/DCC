@@ -206,9 +206,9 @@ DCC_SLASH_FN(ping) {
     (void)DCC_REPLY_TEXT(ctx, "pong");
 }
 
-DCC_BOT_ROUTES_MAIN(
+DCC_SIMPLE_BOT_MAIN(
     "minimal",
-    DCC_ROUTE_COMMAND("ping", "Reply with pong", ping)
+    DCC_LISTEN_SLASH("ping", "Reply with pong", ping)
 )
 ```
 

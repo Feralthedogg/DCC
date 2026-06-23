@@ -29,6 +29,8 @@ curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install
 
 The release archive includes bundled LLAM package files, and the installer
 refreshes LLAM from the latest LLAM release installer by default.
+DCC's CI and release workflows currently build the bundled runtime from the
+LLAM `v2.1.0` release tag.
 
 ## Development Build
 

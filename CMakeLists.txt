@@ -3516,26 +3516,39 @@ if(DCC_LLAM_USE_SUBDIRECTORY AND DCC_BUNDLE_LLAM)
     if(EXISTS "${DCC_LLAM_ROOT}/CMakeLists.txt")
         file(
             STRINGS "${DCC_LLAM_ROOT}/CMakeLists.txt"
-            DCC_BUNDLED_LLAM_MAJOR_LINE
-            REGEX "^set\\(LLAM_ABI_VERSION_MAJOR [0-9]+\\)"
+            DCC_BUNDLED_LLAM_PROJECT_LINE
+            REGEX "^project\\(llam[ \t]+VERSION[ \t]+[0-9][0-9A-Za-z.+-]*"
         )
-        file(
-            STRINGS "${DCC_LLAM_ROOT}/CMakeLists.txt"
-            DCC_BUNDLED_LLAM_MINOR_LINE
-            REGEX "^set\\(LLAM_ABI_VERSION_MINOR [0-9]+\\)"
-        )
-        if(DCC_BUNDLED_LLAM_MAJOR_LINE AND DCC_BUNDLED_LLAM_MINOR_LINE)
+        if(DCC_BUNDLED_LLAM_PROJECT_LINE)
             string(
-                REGEX REPLACE "^set\\(LLAM_ABI_VERSION_MAJOR ([0-9]+)\\)$" "\\1"
-                DCC_BUNDLED_LLAM_VERSION_MAJOR
-                "${DCC_BUNDLED_LLAM_MAJOR_LINE}"
+                REGEX REPLACE "^project\\(llam[ \t]+VERSION[ \t]+([^ \t\\)]+).*$" "\\1"
+                DCC_BUNDLED_LLAM_VERSION
+                "${DCC_BUNDLED_LLAM_PROJECT_LINE}"
             )
-            string(
-                REGEX REPLACE "^set\\(LLAM_ABI_VERSION_MINOR ([0-9]+)\\)$" "\\1"
-                DCC_BUNDLED_LLAM_VERSION_MINOR
-                "${DCC_BUNDLED_LLAM_MINOR_LINE}"
+        else()
+            file(
+                STRINGS "${DCC_LLAM_ROOT}/CMakeLists.txt"
+                DCC_BUNDLED_LLAM_MAJOR_LINE
+                REGEX "^set\\(LLAM_ABI_VERSION_MAJOR [0-9]+\\)"
             )
-            set(DCC_BUNDLED_LLAM_VERSION "${DCC_BUNDLED_LLAM_VERSION_MAJOR}.${DCC_BUNDLED_LLAM_VERSION_MINOR}.0")
+            file(
+                STRINGS "${DCC_LLAM_ROOT}/CMakeLists.txt"
+                DCC_BUNDLED_LLAM_MINOR_LINE
+                REGEX "^set\\(LLAM_ABI_VERSION_MINOR [0-9]+\\)"
+            )
+            if(DCC_BUNDLED_LLAM_MAJOR_LINE AND DCC_BUNDLED_LLAM_MINOR_LINE)
+                string(
+                    REGEX REPLACE "^set\\(LLAM_ABI_VERSION_MAJOR ([0-9]+)\\)$" "\\1"
+                    DCC_BUNDLED_LLAM_VERSION_MAJOR
+                    "${DCC_BUNDLED_LLAM_MAJOR_LINE}"
+                )
+                string(
+                    REGEX REPLACE "^set\\(LLAM_ABI_VERSION_MINOR ([0-9]+)\\)$" "\\1"
+                    DCC_BUNDLED_LLAM_VERSION_MINOR
+                    "${DCC_BUNDLED_LLAM_MINOR_LINE}"
+                )
+                set(DCC_BUNDLED_LLAM_VERSION "${DCC_BUNDLED_LLAM_VERSION_MAJOR}.${DCC_BUNDLED_LLAM_VERSION_MINOR}.0")
+            endif()
         endif()
     endif()
     set(DCC_BUNDLED_LLAM_PC_PRIVATE_LIBS "-pthread")
