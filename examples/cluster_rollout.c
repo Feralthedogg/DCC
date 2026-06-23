@@ -4,7 +4,6 @@
 #include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 typedef struct rollout_state {
@@ -22,15 +21,14 @@ typedef struct rollout_state {
 } rollout_state_t;
 
 static int env_bool(const char *name, int fallback) {
-    const char *value = getenv(name);
-    if (value == NULL || value[0] == '\0') {
+    uint8_t parsed = fallback ? 1U : 0U;
+    if (DCC_ENV_BOOL_OR(name, parsed, &parsed) != DCC_OK) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
+        fprintf(stderr, "ignoring invalid %s=%s, using %d\n", name, value, fallback ? 1 : 0);
         return fallback;
     }
-    return strcmp(value, "0") != 0 &&
-        strcmp(value, "false") != 0 &&
-        strcmp(value, "FALSE") != 0 &&
-        strcmp(value, "no") != 0 &&
-        strcmp(value, "NO") != 0;
+    return parsed ? 1 : 0;
 }
 
 static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value, uint32_t max_value) {

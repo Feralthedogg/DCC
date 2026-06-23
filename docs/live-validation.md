@@ -41,6 +41,11 @@ DCC_VOICE_USER_ID=... \
 ./build/dcc_live_voice_probe
 ```
 
+`DCC_VOICE_GUILD_ID` is a raw guild ID. `DCC_VOICE_CHANNEL_ID` and
+`DCC_VOICE_USER_ID` also accept copied Discord mentions such as `<#channel>`
+and `<@user>`, matching the public `DCC_ENV_CHANNEL_OR` and `DCC_ENV_USER_OR`
+sugar helpers.
+
 The probe starts one Gateway session with `GUILDS` and `GUILD_VOICE_STATES`,
 uses `dcc_voice_client_connect_and_wait_until_ready()` to arm the descriptor
 waiter before sending Gateway Opcode 4, waits for the `VOICE_STATE_UPDATE` plus

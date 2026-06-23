@@ -3,19 +3,17 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 static int env_bool(const char *name, int fallback) {
-    const char *value = getenv(name);
-    if (value == NULL || value[0] == '\0') {
+    uint8_t parsed = fallback ? 1U : 0U;
+    if (DCC_ENV_BOOL_OR(name, parsed, &parsed) != DCC_OK) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
+        fprintf(stderr, "ignoring invalid %s=%s, using %d\n", name, value, fallback ? 1 : 0);
         return fallback;
     }
-    return strcmp(value, "0") != 0 &&
-        strcmp(value, "false") != 0 &&
-        strcmp(value, "FALSE") != 0 &&
-        strcmp(value, "no") != 0 &&
-        strcmp(value, "NO") != 0;
+    return parsed ? 1 : 0;
 }
 
 static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value, uint32_t max_value) {
@@ -29,22 +27,49 @@ static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value,
     return parsed;
 }
 
-static uint64_t env_u64(const char *name, uint64_t fallback) {
-    const char *value = getenv(name);
-    if (value == NULL || value[0] == '\0') {
-        return fallback;
-    }
-
-    char *end = NULL;
-    unsigned long long parsed = strtoull(value, &end, 10);
-    if (end == value || *end != '\0') {
-        fprintf(stderr, "ignoring invalid %s=%s, using %llu\n",
+static dcc_snowflake_t env_guild(const char *name, dcc_snowflake_t fallback) {
+    dcc_snowflake_t parsed = fallback;
+    if (DCC_ENV_GUILD_OR(name, fallback, &parsed) != DCC_OK) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
+        fprintf(stderr,
+                "ignoring invalid %s=%s, using %llu\n",
                 name,
                 value,
                 (unsigned long long)fallback);
         return fallback;
     }
-    return (uint64_t)parsed;
+    return parsed;
+}
+
+static dcc_snowflake_t env_channel(const char *name, dcc_snowflake_t fallback) {
+    dcc_snowflake_t parsed = fallback;
+    if (DCC_ENV_CHANNEL_OR(name, fallback, &parsed) != DCC_OK) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
+        fprintf(stderr,
+                "ignoring invalid %s=%s, using %llu\n",
+                name,
+                value,
+                (unsigned long long)fallback);
+        return fallback;
+    }
+    return parsed;
+}
+
+static dcc_snowflake_t env_user(const char *name, dcc_snowflake_t fallback) {
+    dcc_snowflake_t parsed = fallback;
+    if (DCC_ENV_USER_OR(name, fallback, &parsed) != DCC_OK) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
+        fprintf(stderr,
+                "ignoring invalid %s=%s, using %llu\n",
+                name,
+                value,
+                (unsigned long long)fallback);
+        return fallback;
+    }
+    return parsed;
 }
 
 static const char *env_token(void) {
@@ -59,9 +84,9 @@ static int require_live_config(
     dcc_snowflake_t *out_user_id
 ) {
     const char *token = env_token();
-    dcc_snowflake_t guild_id = env_u64("DCC_VOICE_GUILD_ID", 0);
-    dcc_snowflake_t channel_id = env_u64("DCC_VOICE_CHANNEL_ID", 0);
-    dcc_snowflake_t user_id = env_u64("DCC_VOICE_USER_ID", 0);
+    dcc_snowflake_t guild_id = env_guild("DCC_VOICE_GUILD_ID", 0);
+    dcc_snowflake_t channel_id = env_channel("DCC_VOICE_CHANNEL_ID", 0);
+    dcc_snowflake_t user_id = env_user("DCC_VOICE_USER_ID", 0);
 
     if (token == NULL || token[0] == '\0' || guild_id == 0 || channel_id == 0 || user_id == 0) {
         fprintf(
