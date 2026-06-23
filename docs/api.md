@@ -143,7 +143,9 @@ respond aliases such as `DCC_RESPOND_TEXT()`, `DCC_RESPOND_PRIVATE()`,
 private defer/embed/flow aliases such as `DCC_DEFER_PRIVATE()`,
 `DCC_REPLY_PRIVATE_EMBED()`, and `DCC_FLOW_DEFER_PRIVATE()`,
 app option presets and auto-defer aliases such as `DCC_APP_OPTIONS_DEV()`,
-`DCC_APP_AUTO_DEFER_PRIVATE()`, and `DCC_APP_OPTIONS_AUTO_DEFER_PRIVATE_DEFAULT()`,
+`DCC_APP_OPTIONS_DEV_ALL()`, `DCC_APP_OPTIONS_DEV_GUILD_ALL()`,
+`DCC_CLIENT_OPTIONS_ALL()`, `DCC_APP_AUTO_DEFER_PRIVATE()`, and
+`DCC_APP_OPTIONS_AUTO_DEFER_PRIVATE_DEFAULT()`,
 command builder aliases such as `DCC_CMD()`, `DCC_CMD_OPTIONS()`,
 `DCC_CMD_TREE()`, `DCC_CMD_SUBGROUP()`, `DCC_CMD_SUB()`,
 listener-table command schema registration through `DCC_LISTEN_COMMAND_SCHEMA()`
@@ -421,8 +423,9 @@ and calls out explicit APIs only where that extra control matters.
   users, messages, and voice states. `dcc_cache_infer_guild_id_from_channel()`
   and `dcc_client_infer_guild_id_from_channel()` resolve a cached channel ID to
   its guild ID without REST. Set `infer_guild_id_from_channel` in
-  `dcc_client_options_t`, or use `DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE()`,
-  when voice helpers should fill `guild_id` automatically from `channel_id`.
+  `dcc_client_options_t`, or use `DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE()`
+  / `DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE_ALL()`, when voice helpers should
+  fill `guild_id` automatically from `channel_id`.
 - `message_link.h`: checked Discord message-link formatting and parsing.
   `dcc_message_link_parse()` accepts normal, canary, ptb, path-only, and DM
   `@me` links and returns a typed `dcc_message_link_t`; sugar aliases expose

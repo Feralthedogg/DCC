@@ -30,11 +30,17 @@
         .command_registry = DCC_COMMAND_REGISTRY_OPTIONS_GLOBAL() \
     })
 
+#define DCC_APP_OPTIONS_PRESET_BOT_ALL(token_) \
+    DCC_APP_OPTIONS_PRESET_BOT_INTENTS((token_), DCC_INTENTS_ALL)
+
 #define DCC_APP_OPTIONS_BOT(token_) \
     DCC_APP_OPTIONS_PRESET_BOT((token_))
 
 #define DCC_APP_OPTIONS_BOT_INTENTS(token_, intents_) \
     DCC_APP_OPTIONS_PRESET_BOT_INTENTS((token_), (intents_))
+
+#define DCC_APP_OPTIONS_BOT_ALL(token_) \
+    DCC_APP_OPTIONS_PRESET_BOT_ALL((token_))
 
 #define DCC_APP_OPTIONS_PRESET_DEV(token_) \
     ((dcc_app_options_t){ \
@@ -58,11 +64,17 @@
         .command_sync_on_ready = 1U \
     })
 
+#define DCC_APP_OPTIONS_PRESET_DEV_ALL(token_) \
+    DCC_APP_OPTIONS_PRESET_DEV_INTENTS((token_), DCC_INTENTS_ALL)
+
 #define DCC_APP_OPTIONS_DEV(token_) \
     DCC_APP_OPTIONS_PRESET_DEV((token_))
 
 #define DCC_APP_OPTIONS_DEV_INTENTS(token_, intents_) \
     DCC_APP_OPTIONS_PRESET_DEV_INTENTS((token_), (intents_))
+
+#define DCC_APP_OPTIONS_DEV_ALL(token_) \
+    DCC_APP_OPTIONS_PRESET_DEV_ALL((token_))
 
 #define DCC_APP_OPTIONS_PRESET_DEV_GUILD(token_, guild_id_) \
     ((dcc_app_options_t){ \
@@ -86,10 +98,16 @@
         .command_sync_on_ready = 1U \
     })
 
+#define DCC_APP_OPTIONS_PRESET_DEV_GUILD_ALL(token_, guild_id_) \
+    DCC_APP_OPTIONS_PRESET_DEV_GUILD_INTENTS((token_), DCC_INTENTS_ALL, (guild_id_))
+
 #define DCC_APP_OPTIONS_DEV_GUILD(token_, guild_id_) \
     DCC_APP_OPTIONS_PRESET_DEV_GUILD((token_), (guild_id_))
 
 #define DCC_APP_OPTIONS_DEV_GUILD_INTENTS(token_, intents_, guild_id_) \
     DCC_APP_OPTIONS_PRESET_DEV_GUILD_INTENTS((token_), (intents_), (guild_id_))
+
+#define DCC_APP_OPTIONS_DEV_GUILD_ALL(token_, guild_id_) \
+    DCC_APP_OPTIONS_PRESET_DEV_GUILD_ALL((token_), (guild_id_))
 
 #endif

@@ -1364,14 +1364,25 @@ static int run_sugar_array_compat_smoke(void) {
 
 static int run_sugar_options_smoke(void) {
     dcc_client_options_t client = DCC_CLIENT_OPTIONS("token", DCC_INTENTS_DEFAULT);
+    dcc_client_options_t client_all = DCC_CLIENT_OPTIONS_ALL("token");
     dcc_client_options_t sharded_client =
         DCC_CLIENT_SHARDED_OPTIONS("token", DCC_INTENTS_MESSAGES, 1U, 2U);
+    dcc_client_options_t sharded_client_all =
+        DCC_CLIENT_SHARDED_OPTIONS_ALL("token", 1U, 2U);
     dcc_client_options_t inferred_client =
         DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE("token", DCC_INTENTS_ALL);
+    dcc_client_options_t inferred_client_all =
+        DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE_ALL("token");
+    dcc_app_options_t app_options_all =
+        DCC_APP_OPTIONS_ALL("token");
     dcc_app_options_t app_options =
         DCC_APP_OPTIONS_WITH_GUILD_INFERENCE("token", DCC_INTENTS_ALL);
+    dcc_app_options_t app_options_inferred_all =
+        DCC_APP_OPTIONS_WITH_GUILD_INFERENCE_ALL("token");
     dcc_app_options_t guild_app_options =
         DCC_APP_OPTIONS_GUILD("token", DCC_INTENTS_DEFAULT, 999ULL);
+    dcc_app_options_t guild_app_options_all =
+        DCC_APP_OPTIONS_GUILD_ALL("token", 999ULL);
     dcc_app_options_t auto_defer_app_options =
         DCC_APP_OPTIONS_AUTO_DEFER_EPHEMERAL("token", DCC_INTENTS_DEFAULT, 1500U);
     dcc_app_options_t auto_defer_default_app_options =
@@ -1382,10 +1393,16 @@ static int run_sugar_options_smoke(void) {
         DCC_APP_OPTIONS_AUTO_DEFER_PRIVATE_DEFAULT("token", DCC_INTENTS_DEFAULT);
     dcc_app_options_t bot_alias_options =
         DCC_APP_OPTIONS_BOT("token");
+    dcc_app_options_t bot_all_alias_options =
+        DCC_APP_OPTIONS_BOT_ALL("token");
     dcc_app_options_t dev_alias_options =
         DCC_APP_OPTIONS_DEV("token");
+    dcc_app_options_t dev_all_alias_options =
+        DCC_APP_OPTIONS_DEV_ALL("token");
     dcc_app_options_t dev_guild_alias_options =
         DCC_APP_OPTIONS_DEV_GUILD("token", 999ULL);
+    dcc_app_options_t dev_guild_all_alias_options =
+        DCC_APP_OPTIONS_DEV_GUILD_ALL("token", 999ULL);
     dcc_app_command_sync_options_t command_sync =
         DCC_APP_COMMAND_SYNC(123456789ULL);
     dcc_app_command_sync_options_t command_sync_auto =
@@ -2746,17 +2763,31 @@ static int run_sugar_options_smoke(void) {
 
     if (client.size != sizeof(client) ||
         client.intents != DCC_INTENT_GUILDS ||
+        client_all.intents != DCC_INTENTS_ALL ||
         sharded_client.shard_id != 1U ||
         sharded_client.shard_count != 2U ||
+        sharded_client_all.intents != DCC_INTENTS_ALL ||
+        sharded_client_all.shard_id != 1U ||
+        sharded_client_all.shard_count != 2U ||
         inferred_client.enable_cache != 1U ||
         inferred_client.infer_guild_id_from_channel != 1U ||
         (inferred_client.intents & DCC_INTENT_MESSAGE_CONTENT) == 0U ||
         (inferred_client.intents & DCC_INTENT_GUILD_PRESENCES) == 0U ||
         (inferred_client.intents & DCC_INTENT_DIRECT_MESSAGE_POLLS) == 0U ||
+        inferred_client_all.enable_cache != 1U ||
+        inferred_client_all.infer_guild_id_from_channel != 1U ||
+        inferred_client_all.intents != DCC_INTENTS_ALL ||
+        app_options_all.client.intents != DCC_INTENTS_ALL ||
+        app_options_all.command_registry.guild_id != 0U ||
         app_options.client.enable_cache != 1U ||
         app_options.client.infer_guild_id_from_channel != 1U ||
         app_options.command_registry.guild_id != 0U ||
+        app_options_inferred_all.client.enable_cache != 1U ||
+        app_options_inferred_all.client.infer_guild_id_from_channel != 1U ||
+        app_options_inferred_all.client.intents != DCC_INTENTS_ALL ||
         guild_app_options.command_registry.guild_id != 999ULL ||
+        guild_app_options_all.client.intents != DCC_INTENTS_ALL ||
+        guild_app_options_all.command_registry.guild_id != 999ULL ||
         auto_defer_app_options.auto_defer_after_ms != 1500U ||
         auto_defer_app_options.auto_defer_ephemeral != 1U ||
         auto_defer_default_app_options.auto_defer_after_ms != 1500U ||
@@ -2767,12 +2798,22 @@ static int run_sugar_options_smoke(void) {
         auto_defer_private_default_app_options.auto_defer_ephemeral != 1U ||
         bot_alias_options.client.enable_cache != 1U ||
         bot_alias_options.client.infer_guild_id_from_channel != 1U ||
+        bot_all_alias_options.client.intents != DCC_INTENTS_ALL ||
+        bot_all_alias_options.client.enable_cache != 1U ||
+        bot_all_alias_options.client.infer_guild_id_from_channel != 1U ||
         dev_alias_options.auto_defer_after_ms != 1500U ||
         dev_alias_options.auto_defer_ephemeral != 1U ||
         dev_alias_options.command_sync_on_ready != 1U ||
+        dev_all_alias_options.client.intents != DCC_INTENTS_ALL ||
+        dev_all_alias_options.client.enable_cache != 1U ||
+        dev_all_alias_options.command_sync_on_ready != 1U ||
         dev_guild_alias_options.command_registry.guild_id != 999ULL ||
         dev_guild_alias_options.command_sync.command_registry.guild_id != 999ULL ||
         dev_guild_alias_options.auto_defer_ephemeral != 1U ||
+        dev_guild_all_alias_options.client.intents != DCC_INTENTS_ALL ||
+        dev_guild_all_alias_options.command_registry.guild_id != 999ULL ||
+        dev_guild_all_alias_options.command_sync.command_registry.guild_id != 999ULL ||
+        dev_guild_all_alias_options.command_sync_on_ready != 1U ||
         command_sync.application_id != 123456789ULL ||
         command_sync.apply != 1U ||
         command_sync.once != 1U ||

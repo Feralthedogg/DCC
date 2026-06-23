@@ -422,17 +422,22 @@ For descriptor-heavy apps, `DCC_BOT_MAIN()` mirrors `DCC_RUN_BOT()` and accepts
 
 ## Client Options
 
+`DCC_SIMPLE_BOT_MAIN()` and `DCC_RUN_BOT()` already load `.env`, `DCC_TOKEN`,
+and `DISCORD_TOKEN`. Use explicit option values when you are building a custom
+`main()` or embedding DCC inside another runtime.
+
 ```c
 dcc_client_options_t options =
-    DCC_CLIENT_OPTIONS(getenv("DISCORD_TOKEN"), DCC_INTENTS_DEFAULT);
+    DCC_CLIENT_OPTIONS(token, DCC_INTENTS_DEFAULT);
 ```
 
 Use every currently supported Gateway intent with `DCC_INTENTS_ALL`. Discord
-still requires privileged intents to be enabled in the Developer Portal.
+still requires privileged intents to be enabled in the Developer Portal. For
+the common "turn everything on" case, use the `_ALL` aliases:
 
 ```c
 dcc_client_options_t options =
-    DCC_CLIENT_OPTIONS(getenv("DISCORD_TOKEN"), DCC_INTENTS_ALL);
+    DCC_CLIENT_OPTIONS_ALL(token);
 ```
 
 For sharded clients:
@@ -440,6 +445,9 @@ For sharded clients:
 ```c
 dcc_client_options_t options =
     DCC_CLIENT_SHARDED_OPTIONS(token, DCC_INTENTS_MESSAGES, shard_id, shard_count);
+
+dcc_client_options_t all_intents =
+    DCC_CLIENT_SHARDED_OPTIONS_ALL(token, shard_id, shard_count);
 ```
 
 If you want voice helpers to infer `guild_id` from a cached channel ID, use the
@@ -448,6 +456,9 @@ guild-inference client options. This enables the cache and the inference flag.
 ```c
 dcc_client_options_t options =
     DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE(token, DCC_INTENTS_ALL);
+
+dcc_client_options_t all_intents =
+    DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE_ALL(token);
 
 dcc_voice_client_connect(voice, 0, voice_channel_id, 0, 0, 1);
 ```
@@ -619,9 +630,12 @@ dcc_new_app add error-handler . bot_error friendly
 When you want explicit options instead of environment loading:
 
 ```c
-dcc_app_options_t options =
-    DCC_APP_OPTIONS(getenv("DISCORD_TOKEN"), DCC_INTENTS_DEFAULT);
+dcc_app_options_t options = DCC_APP_OPTIONS_DEV(token);
 ```
+
+Use `DCC_APP_OPTIONS_DEV_ALL(token)` when a development bot needs every Gateway
+intent, or the lower-level `DCC_APP_OPTIONS_ALL(token)` when you do not want
+the dev preset's auto-defer and command-sync defaults.
 
 If the app needs small persistent state, let the app own a file-backed store:
 
@@ -643,6 +657,12 @@ Use guild command scope explicitly for fast development syncs:
 ```c
 dcc_app_options_t options =
     DCC_APP_OPTIONS_GUILD(token, DCC_INTENTS_DEFAULT, guild_id);
+
+dcc_app_options_t dev_options =
+    DCC_APP_OPTIONS_DEV_GUILD(token, guild_id);
+
+dcc_app_options_t all_intents =
+    DCC_APP_OPTIONS_DEV_GUILD_ALL(token, guild_id);
 ```
 
 Add app-level auto-defer when handlers may take longer than the interaction

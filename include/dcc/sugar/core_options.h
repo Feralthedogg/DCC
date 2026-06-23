@@ -58,6 +58,9 @@
         .intents = (intents_) \
     })
 
+#define DCC_CLIENT_OPTIONS_ALL(token_) \
+    DCC_CLIENT_OPTIONS((token_), DCC_INTENTS_ALL)
+
 #define DCC_CLIENT_SHARDED_OPTIONS(token_, intents_, shard_id_, shard_count_) \
     ((dcc_client_options_t){ \
         .size = sizeof(dcc_client_options_t), \
@@ -66,6 +69,9 @@
         .shard_id = (shard_id_), \
         .shard_count = (shard_count_) \
     })
+
+#define DCC_CLIENT_SHARDED_OPTIONS_ALL(token_, shard_id_, shard_count_) \
+    DCC_CLIENT_SHARDED_OPTIONS((token_), DCC_INTENTS_ALL, (shard_id_), (shard_count_))
 
 #define DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE(token_, intents_) \
     ((dcc_client_options_t){ \
@@ -76,12 +82,18 @@
         .infer_guild_id_from_channel = 1U \
     })
 
+#define DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE_ALL(token_) \
+    DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE((token_), DCC_INTENTS_ALL)
+
 #define DCC_APP_OPTIONS(token_, intents_) \
     ((dcc_app_options_t){ \
         .size = sizeof(dcc_app_options_t), \
         .client = DCC_CLIENT_OPTIONS((token_), (intents_)), \
         .command_registry = DCC_COMMAND_REGISTRY_OPTIONS_GLOBAL() \
     })
+
+#define DCC_APP_OPTIONS_ALL(token_) \
+    DCC_APP_OPTIONS((token_), DCC_INTENTS_ALL)
 
 #define DCC_APP_OPTIONS_GUILD(token_, intents_, guild_id_) \
     ((dcc_app_options_t){ \
@@ -90,12 +102,18 @@
         .command_registry = DCC_COMMAND_REGISTRY_OPTIONS_GUILD(guild_id_) \
     })
 
+#define DCC_APP_OPTIONS_GUILD_ALL(token_, guild_id_) \
+    DCC_APP_OPTIONS_GUILD((token_), DCC_INTENTS_ALL, (guild_id_))
+
 #define DCC_APP_OPTIONS_WITH_GUILD_INFERENCE(token_, intents_) \
     ((dcc_app_options_t){ \
         .size = sizeof(dcc_app_options_t), \
         .client = DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE((token_), (intents_)), \
         .command_registry = DCC_COMMAND_REGISTRY_OPTIONS_GLOBAL() \
     })
+
+#define DCC_APP_OPTIONS_WITH_GUILD_INFERENCE_ALL(token_) \
+    DCC_APP_OPTIONS_WITH_GUILD_INFERENCE((token_), DCC_INTENTS_ALL)
 
 #include <dcc/sugar/app_options.h>
 
