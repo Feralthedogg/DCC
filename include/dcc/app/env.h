@@ -65,6 +65,25 @@ DCC_API dcc_status_t dcc_app_env_get_u64_or(
     uint64_t fallback,
     uint64_t *out
 );
+DCC_API dcc_status_t dcc_app_env_get_u32(const char *name, uint32_t *out);
+DCC_API dcc_status_t dcc_app_env_get_u32_or(
+    const char *name,
+    uint32_t fallback,
+    uint32_t *out
+);
+DCC_API dcc_status_t dcc_app_env_get_u32_range(
+    const char *name,
+    uint32_t min_value,
+    uint32_t max_value,
+    uint32_t *out
+);
+DCC_API dcc_status_t dcc_app_env_get_u32_range_or(
+    const char *name,
+    uint32_t fallback,
+    uint32_t min_value,
+    uint32_t max_value,
+    uint32_t *out
+);
 DCC_API dcc_status_t dcc_app_env_get_i64(const char *name, int64_t *out);
 DCC_API dcc_status_t dcc_app_env_get_i64_or(
     const char *name,

@@ -27,6 +27,18 @@
 #define DCC_ENV_U64_OR(name_, fallback_, out_) \
     dcc_app_env_get_u64_or((name_), (fallback_), (out_))
 
+#define DCC_ENV_U32(name_, out_) \
+    dcc_app_env_get_u32((name_), (out_))
+
+#define DCC_ENV_U32_OR(name_, fallback_, out_) \
+    dcc_app_env_get_u32_or((name_), (fallback_), (out_))
+
+#define DCC_ENV_U32_RANGE(name_, min_value_, max_value_, out_) \
+    dcc_app_env_get_u32_range((name_), (min_value_), (max_value_), (out_))
+
+#define DCC_ENV_U32_RANGE_OR(name_, fallback_, min_value_, max_value_, out_) \
+    dcc_app_env_get_u32_range_or((name_), (fallback_), (min_value_), (max_value_), (out_))
+
 #define DCC_ENV_I64(name_, out_) \
     dcc_app_env_get_i64((name_), (out_))
 

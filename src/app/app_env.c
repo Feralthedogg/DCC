@@ -344,6 +344,97 @@ dcc_status_t dcc_app_env_get_u64_or(
     return dcc_app_env_parse_u64_strict(value, out);
 }
 
+static dcc_status_t dcc_app_env_range_u32(
+    uint32_t value,
+    uint32_t min_value,
+    uint32_t max_value,
+    uint32_t *out
+) {
+    if (out == NULL || min_value > max_value || value < min_value || value > max_value) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out = value;
+    return DCC_OK;
+}
+
+dcc_status_t dcc_app_env_get_u32(const char *name, uint32_t *out) {
+    if (out == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    uint64_t parsed = 0U;
+    dcc_status_t status = dcc_app_env_get_u64(name, &parsed);
+    if (status != DCC_OK) {
+        return status;
+    }
+    if (parsed > UINT32_MAX) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out = (uint32_t)parsed;
+    return DCC_OK;
+}
+
+dcc_status_t dcc_app_env_get_u32_or(
+    const char *name,
+    uint32_t fallback,
+    uint32_t *out
+) {
+    if (out == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    uint64_t parsed = fallback;
+    dcc_status_t status = dcc_app_env_get_u64_or(name, fallback, &parsed);
+    if (status != DCC_OK) {
+        return status;
+    }
+    if (parsed > UINT32_MAX) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out = (uint32_t)parsed;
+    return DCC_OK;
+}
+
+dcc_status_t dcc_app_env_get_u32_range(
+    const char *name,
+    uint32_t min_value,
+    uint32_t max_value,
+    uint32_t *out
+) {
+    uint32_t parsed = 0U;
+    dcc_status_t status = dcc_app_env_get_u32(name, &parsed);
+    if (status != DCC_OK) {
+        return status;
+    }
+    return dcc_app_env_range_u32(parsed, min_value, max_value, out);
+}
+
+dcc_status_t dcc_app_env_get_u32_range_or(
+    const char *name,
+    uint32_t fallback,
+    uint32_t min_value,
+    uint32_t max_value,
+    uint32_t *out
+) {
+    if (name == NULL || name[0] == '\0') {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_status_t status = dcc_app_env_range_u32(fallback, min_value, max_value, out);
+    if (status != DCC_OK) {
+        return status;
+    }
+
+    const char *value = getenv(name);
+    if (dcc_app_env_missing(value)) {
+        return DCC_OK;
+    }
+
+    uint32_t parsed = 0U;
+    status = dcc_app_env_get_u32(name, &parsed);
+    if (status != DCC_OK) {
+        return status;
+    }
+    return dcc_app_env_range_u32(parsed, min_value, max_value, out);
+}
+
 dcc_status_t dcc_app_env_get_i64(const char *name, int64_t *out) {
     const char *value = NULL;
     dcc_status_t status = dcc_app_env_lookup(name, &value);

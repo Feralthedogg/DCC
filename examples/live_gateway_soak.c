@@ -39,19 +39,14 @@ static int env_bool(const char *name, int fallback) {
 }
 
 static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value, uint32_t max_value) {
-    const char *value = getenv(name);
-    if (value == NULL || value[0] == '\0') {
-        return fallback;
-    }
-
-    char *end = NULL;
-    unsigned long parsed = strtoul(value, &end, 10);
-    if (end == value || *end != '\0' || parsed < (unsigned long)min_value ||
-        parsed > (unsigned long)max_value) {
+    uint32_t parsed = fallback;
+    if (DCC_ENV_U32_RANGE_OR(name, fallback, min_value, max_value, &parsed) != DCC_OK) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %u\n", name, value, (unsigned)fallback);
         return fallback;
     }
-    return (uint32_t)parsed;
+    return parsed;
 }
 
 static uint64_t env_u64(const char *name, uint64_t fallback) {

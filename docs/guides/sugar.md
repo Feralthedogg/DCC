@@ -553,8 +553,9 @@ syntax. Use `DCC_ENV_TOKEN(&token)` for DCC's standard token fallback
 (`DCC_TOKEN`, `BOT_TOKEN`, then `DISCORD_TOKEN`), or
 `DCC_ENV_TOKEN_NAMED("CUSTOM_TOKEN", &token)` when a deployment uses a custom
 token variable. Use `DCC_ENV_CHANNEL("NAME", &id)`, `DCC_ENV_ROLE(...)`,
-`DCC_ENV_USER(...)`, `DCC_ENV_BOOL(...)`, `DCC_ENV_U64(...)`, and the matching
-`_OR` forms when a one-off read is cleaner than a schema.
+`DCC_ENV_USER(...)`, `DCC_ENV_BOOL(...)`, `DCC_ENV_U64(...)`,
+`DCC_ENV_U32_RANGE_OR(...)`, and the matching `_OR` forms when a one-off read
+is cleaner than a schema.
 
 ```c
 (void)dcc_app_load_dotenv();
@@ -562,6 +563,12 @@ token variable. Use `DCC_ENV_CHANNEL("NAME", &id)`, `DCC_ENV_ROLE(...)`,
 const char *token = NULL;
 if (DCC_ENV_TOKEN(&token) != DCC_OK) {
     fprintf(stderr, "set DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN\n");
+    return 1;
+}
+
+uint32_t shard_count = 1U;
+if (DCC_ENV_U32_RANGE_OR("DCC_SHARDS", 1U, 1U, 1024U, &shard_count) != DCC_OK) {
+    fprintf(stderr, "DCC_SHARDS must be between 1 and 1024\n");
     return 1;
 }
 ```

@@ -132,7 +132,7 @@ REST calls. Channel, role, and user config accepts either raw IDs or the
 matching Discord mention copied from the client; guild and generic snowflake
 config stays raw-ID only. For one-off reads, use `DCC_ENV_TOKEN`,
 `DCC_ENV_CHANNEL`, `DCC_ENV_ROLE`, `DCC_ENV_USER`, `DCC_ENV_BOOL`,
-`DCC_ENV_U64`, or their `_OR` / named-token forms.
+`DCC_ENV_U64`, `DCC_ENV_U32_RANGE_OR`, or their `_OR` / named-token forms.
 
 ## Response State
 

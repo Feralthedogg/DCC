@@ -980,6 +980,8 @@ static int app_smoke_check_dotenv(void) {
             "DCC_AUTO_DEFER_MS=1750\n"
             "DCC_AUTO_DEFER_EPHEMERAL=true\n"
             "DCC_STORE_FILE=dcc_app_smoke_store.kv\n"
+            "DCC_APP_SMOKE_U32=42\n"
+            "DCC_APP_SMOKE_U32_BAD=999\n"
         )) {
         (void)remove(first_path);
         (void)remove(second_path);
@@ -999,6 +1001,10 @@ static int app_smoke_check_dotenv(void) {
     dcc_app_options_t env_options;
     const char *resolved_token = NULL;
     const char *resolved_sugar_token = NULL;
+    uint32_t direct_u32 = 0U;
+    uint32_t direct_u32_or = 0U;
+    uint32_t range_u32 = 0U;
+    uint32_t missing_range_u32 = 0U;
     ok = ok &&
         dcc_app_load_env_file(app_path, 1U) == DCC_OK &&
         dcc_app_env_get_token("DCC_APP_SMOKE_TOKEN", &resolved_token) == DCC_OK &&
@@ -1007,6 +1013,16 @@ static int app_smoke_check_dotenv(void) {
         DCC_ENV_TOKEN_NAMED("DCC_APP_SMOKE_TOKEN", &resolved_sugar_token) == DCC_OK &&
         resolved_sugar_token != NULL &&
         strcmp(resolved_sugar_token, "token") == 0 &&
+        dcc_app_env_get_u32("DCC_APP_SMOKE_U32", &direct_u32) == DCC_OK &&
+        direct_u32 == 42U &&
+        DCC_ENV_U32_OR("DCC_APP_SMOKE_MISSING_U32", 55U, &direct_u32_or) == DCC_OK &&
+        direct_u32_or == 55U &&
+        DCC_ENV_U32_RANGE("DCC_APP_SMOKE_U32", 1U, 100U, &range_u32) == DCC_OK &&
+        range_u32 == 42U &&
+        DCC_ENV_U32_RANGE_OR("DCC_APP_SMOKE_MISSING_U32_RANGE", 77U, 1U, 100U, &missing_range_u32) == DCC_OK &&
+        missing_range_u32 == 77U &&
+        dcc_app_env_get_u32_range("DCC_APP_SMOKE_U32_BAD", 1U, 100U, &range_u32) ==
+            DCC_ERR_INVALID_ARG &&
         dcc_app_options_from_env(&env_options, "DCC_APP_SMOKE_TOKEN") == DCC_OK &&
         env_options.client.token != NULL &&
         strcmp(env_options.client.token, "token") == 0 &&

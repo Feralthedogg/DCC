@@ -344,6 +344,10 @@ int dcc_package_consumer_check_app_api(void) {
         dcc_app_env_get_bool;
     dcc_status_t (*env_get_u64_fn)(const char *, uint64_t *) =
         dcc_app_env_get_u64;
+    dcc_status_t (*env_get_u32_fn)(const char *, uint32_t *) =
+        dcc_app_env_get_u32;
+    dcc_status_t (*env_get_u32_range_or_fn)(const char *, uint32_t, uint32_t, uint32_t, uint32_t *) =
+        dcc_app_env_get_u32_range_or;
     dcc_status_t (*env_get_i64_fn)(const char *, int64_t *) =
         dcc_app_env_get_i64;
     dcc_status_t (*env_get_snowflake_fn)(const char *, dcc_snowflake_t *) =
@@ -1527,6 +1531,8 @@ int dcc_package_consumer_check_app_api(void) {
         env_get_string_fn != NULL &&
         env_get_bool_fn != NULL &&
         env_get_u64_fn != NULL &&
+        env_get_u32_fn != NULL &&
+        env_get_u32_range_or_fn != NULL &&
         env_get_i64_fn != NULL &&
         env_get_snowflake_fn != NULL &&
         env_bind_fn != NULL &&
