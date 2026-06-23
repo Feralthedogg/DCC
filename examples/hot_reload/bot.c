@@ -1,9 +1,7 @@
 #include <dcc/sugar.h>
 #include <dcc/rest/interactions.h>
 
-#include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define HOT_RELOAD_TEST_COMMAND_NAME "테스트"
@@ -25,21 +23,20 @@ typedef struct hot_reload_test_state {
     int command_registration_attempted;
 } hot_reload_test_state_t;
 
-static dcc_snowflake_t parse_snowflake_env(const char *name) {
-    const char *value = getenv(name);
+static dcc_snowflake_t parse_guild_env(const char *name) {
+    dcc_snowflake_t parsed = 0;
+    dcc_status_t status = DCC_ENV_GUILD_OR(name, 0U, &parsed);
+    if (status == DCC_OK) {
+        return parsed;
+    }
+
+    const char *value = "";
+    (void)DCC_ENV_STRING_OR(name, "", &value);
     if (value == NULL || value[0] == '\0') {
         return 0;
     }
-
-    errno = 0;
-    char *end = NULL;
-    unsigned long long parsed = strtoull(value, &end, 10);
-    if (errno != 0 || end == value || *end != '\0') {
-        fprintf(stderr, "%s must be a numeric Discord snowflake; ignoring it\n", name);
-        return 0;
-    }
-
-    return (dcc_snowflake_t)parsed;
+    fprintf(stderr, "%s must be a Discord guild snowflake or mention; ignoring it\n", name);
+    return 0;
 }
 
 static void on_command_registered(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data) {
@@ -229,7 +226,7 @@ static dcc_status_t hot_reload_test_load(dcc_bot_module_ctx_t *ctx, void *user_d
     }
 
     state->generation = dcc_bot_module_generation(ctx);
-    state->guild_id = parse_snowflake_env("DCC_HOT_RELOAD_GUILD_ID");
+    state->guild_id = parse_guild_env("DCC_HOT_RELOAD_GUILD_ID");
     state->command_registration_attempted = 0;
 
     printf(
