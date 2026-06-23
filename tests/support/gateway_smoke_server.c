@@ -444,7 +444,7 @@ static int gateway_server_second_connection(gateway_server_t *server, int client
     ) != 0) {
         return -1;
     }
-    return gateway_server_write_extra_dispatches(client, 37U);
+    return gateway_server_write_extra_dispatches(server, client, 37U);
 }
 
 static void *gateway_server_main(void *arg) {

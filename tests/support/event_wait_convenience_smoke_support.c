@@ -72,6 +72,16 @@ void *event_wait_convenience_client_wait_thread_main(void *arg) {
     return NULL;
 }
 
+int event_wait_convenience_dispatch_gateway_ready(dcc_client_t *client) {
+    dcc_event_t event;
+    memset(&event, 0, sizeof(event));
+    event.type = DCC_EVENT_READY;
+    event.raw.type = DCC_EVENT_READY;
+    event.raw.name = "READY";
+    event.data.ready.session_id = "";
+    return dcc_event_bus_dispatch(&client->events, client, &event) == DCC_OK ? 0 : -1;
+}
+
 int event_wait_convenience_dispatch_slash_command(dcc_client_t *client) {
     dcc_event_t event;
     memset(&event, 0, sizeof(event));

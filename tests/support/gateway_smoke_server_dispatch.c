@@ -5,8 +5,26 @@
 #include "gateway_smoke_ws.h"
 
 #include <stddef.h>
+#include <string.h>
+#include <unistd.h>
 
-int gateway_server_write_extra_dispatches(int client, unsigned seq) {
+static void gateway_server_wait_for_heartbeat_before_close(gateway_server_t *server, int client) {
+    if (server == NULL || server->saw_heartbeat) {
+        return;
+    }
+    for (unsigned i = 0; i < 80U && !server->saw_heartbeat; ++i) {
+        char frame[512];
+        if (read_text_frame_timeout(client, frame, sizeof(frame), 25U) == 0 &&
+            strstr(frame, "\"op\":1") != NULL) {
+            server->saw_heartbeat = 1;
+            (void)write_text_frame(client, "{\"op\":11,\"d\":null}");
+            return;
+        }
+        usleep(1000);
+    }
+}
+
+int gateway_server_write_extra_dispatches(gateway_server_t *server, int client, unsigned seq) {
     static const struct {
         const char *name;
         const char *payload;
@@ -139,6 +157,7 @@ int gateway_server_write_extra_dispatches(int client, unsigned seq) {
     ) != 0) {
         return -1;
     }
+    gateway_server_wait_for_heartbeat_before_close(server, client);
     if (write_close_frame(client, 4000, "gateway smoke close") != 0) {
         return -1;
     }

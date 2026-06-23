@@ -16,7 +16,7 @@ typedef struct gateway_server {
 
 int start_server(gateway_server_t *server, pthread_t *thread);
 int gateway_server_write_core_dispatches(int client);
-int gateway_server_write_extra_dispatches(int client, unsigned seq);
+int gateway_server_write_extra_dispatches(gateway_server_t *server, int client, unsigned seq);
 
 #endif
 

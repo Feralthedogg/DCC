@@ -14,6 +14,36 @@ int main(void) {
 #include <string.h>
 #include <unistd.h>
 
+static int event_wait_convenience_dispatch_ready_burst(dcc_client_t *client) {
+    for (unsigned i = 0; i < 25U; ++i) {
+        if (event_wait_convenience_dispatch_gateway_ready(client) != 0) {
+            return -1;
+        }
+        usleep(2000);
+    }
+    return 0;
+}
+
+static int event_wait_convenience_dispatch_slash_burst(dcc_client_t *client) {
+    for (unsigned i = 0; i < 25U; ++i) {
+        if (event_wait_convenience_dispatch_slash_command(client) != 0) {
+            return -1;
+        }
+        usleep(2000);
+    }
+    return 0;
+}
+
+static int event_wait_convenience_dispatch_close_burst(dcc_client_t *client) {
+    for (unsigned i = 0; i < 25U; ++i) {
+        if (event_wait_convenience_dispatch_socket_close(client) != 0) {
+            return -1;
+        }
+        usleep(2000);
+    }
+    return 0;
+}
+
 int main(void) {
     dcc_client_t *client = NULL;
     dcc_client_options_t options = {
@@ -92,7 +122,15 @@ int main(void) {
         return 1;
     }
 
-    usleep(10000);
+    if (event_wait_convenience_dispatch_ready_burst(client) != 0) {
+        fprintf(stderr, "gateway ready dispatch failed\n");
+        (void)dcc_client_stop(client);
+        (void)pthread_join(ready_thread, NULL);
+        (void)pthread_join(ready_or_close_thread, NULL);
+        (void)pthread_join(admission_ready_thread, NULL);
+        dcc_client_destroy(client);
+        return 1;
+    }
 
     dcc_client_wait_thread_state_t wait_state = {
         .client = client,
@@ -161,8 +199,7 @@ int main(void) {
         dcc_client_destroy(client);
         return 1;
     }
-    usleep(10000);
-    if (event_wait_convenience_dispatch_slash_command(client) != 0) {
+    if (event_wait_convenience_dispatch_slash_burst(client) != 0) {
         fprintf(stderr, "slash command dispatch failed\n");
         (void)dcc_client_stop(client);
         (void)pthread_join(interaction_thread, NULL);
@@ -209,8 +246,7 @@ int main(void) {
         dcc_client_destroy(client);
         return 1;
     }
-    usleep(10000);
-    if (event_wait_convenience_dispatch_slash_command(client) != 0) {
+    if (event_wait_convenience_dispatch_slash_burst(client) != 0) {
         fprintf(stderr, "slash command admission dispatch failed\n");
         (void)dcc_client_stop(client);
         (void)pthread_join(interaction_thread, NULL);
@@ -257,8 +293,7 @@ int main(void) {
         dcc_client_destroy(client);
         return 1;
     }
-    usleep(10000);
-    if (event_wait_convenience_dispatch_slash_command(client) != 0) {
+    if (event_wait_convenience_dispatch_slash_burst(client) != 0) {
         fprintf(stderr, "slash command owned dispatch failed\n");
         (void)dcc_client_stop(client);
         (void)pthread_join(interaction_thread, NULL);
@@ -306,8 +341,7 @@ int main(void) {
         dcc_client_destroy(client);
         return 1;
     }
-    usleep(10000);
-    if (event_wait_convenience_dispatch_slash_command(client) != 0) {
+    if (event_wait_convenience_dispatch_slash_burst(client) != 0) {
         fprintf(stderr, "slash command admission owned dispatch failed\n");
         (void)dcc_client_stop(client);
         (void)pthread_join(interaction_thread, NULL);
@@ -413,8 +447,7 @@ int main(void) {
         dcc_client_destroy(client);
         return 1;
     }
-    usleep(10000);
-    if (event_wait_convenience_dispatch_socket_close(client) != 0) {
+    if (event_wait_convenience_dispatch_close_burst(client) != 0) {
         fprintf(stderr, "socket close dispatch failed\n");
         (void)dcc_client_stop(client);
         (void)pthread_join(interaction_thread, NULL);
