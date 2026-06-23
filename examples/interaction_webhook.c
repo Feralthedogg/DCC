@@ -1,10 +1,10 @@
 #include <dcc/dcc.h>
+#include <dcc/sugar.h>
 
 #include <errno.h>
 #include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #if !defined(_WIN32)
@@ -146,26 +146,21 @@ static void webhook_signal_stop(pthread_t thread, int thread_started) {
 #endif
 
 static int env_bool(const char *name, int fallback) {
-    const char *value = getenv(name);
-    if (value == NULL || value[0] == '\0') {
+    uint8_t parsed = fallback ? 1U : 0U;
+    if (DCC_ENV_BOOL_OR(name, parsed, &parsed) != DCC_OK) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
+        fprintf(stderr, "ignoring invalid %s=%s, using %d\n", name, value, fallback ? 1 : 0);
         return fallback;
     }
-    return strcmp(value, "0") != 0 &&
-        strcmp(value, "false") != 0 &&
-        strcmp(value, "FALSE") != 0 &&
-        strcmp(value, "no") != 0 &&
-        strcmp(value, "NO") != 0;
+    return parsed ? 1 : 0;
 }
 
 static uint16_t env_u16(const char *name, uint16_t fallback) {
-    const char *value = getenv(name);
-    if (value == NULL || value[0] == '\0') {
-        return fallback;
-    }
-
-    char *end = NULL;
-    unsigned long parsed = strtoul(value, &end, 10);
-    if (end == value || *end != '\0' || parsed > 65535UL) {
+    uint32_t parsed = fallback;
+    if (DCC_ENV_U32_RANGE_OR(name, fallback, 0U, 65535U, &parsed) != DCC_OK) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %u\n", name, value, (unsigned)fallback);
         return fallback;
     }
@@ -173,15 +168,12 @@ static uint16_t env_u16(const char *name, uint16_t fallback) {
 }
 
 static size_t env_size(const char *name, size_t fallback, size_t min_value, size_t max_value) {
-    const char *value = getenv(name);
-    if (value == NULL || value[0] == '\0') {
-        return fallback;
-    }
-
-    char *end = NULL;
-    unsigned long parsed = strtoul(value, &end, 10);
-    if (end == value || *end != '\0' || parsed < (unsigned long)min_value ||
-        parsed > (unsigned long)max_value) {
+    uint64_t parsed = fallback;
+    if (DCC_ENV_U64_OR(name, fallback, &parsed) != DCC_OK ||
+        parsed < (uint64_t)min_value ||
+        parsed > (uint64_t)max_value) {
+        const char *value = NULL;
+        (void)DCC_ENV_STRING_OR(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %zu\n", name, value, fallback);
         return fallback;
     }
@@ -189,8 +181,8 @@ static size_t env_size(const char *name, size_t fallback, size_t min_value, size
 }
 
 static const char *env_string(const char *name, const char *fallback) {
-    const char *value = getenv(name);
-    return value != NULL && value[0] != '\0' ? value : fallback;
+    const char *value = fallback;
+    return DCC_ENV_STRING_OR(name, fallback, &value) == DCC_OK ? value : fallback;
 }
 
 static void webhook_usage(FILE *stream, const char *argv0) {
@@ -230,7 +222,7 @@ static int webhook_parse_args(int argc, char **argv, int *check_only) {
 }
 
 static void webhook_config_load(webhook_config_t *config) {
-    config->public_key = getenv("DISCORD_PUBLIC_KEY");
+    config->public_key = env_string("DISCORD_PUBLIC_KEY", NULL);
     config->address = env_string("DCC_INTERACTION_ADDRESS", "127.0.0.1");
     config->interaction_path = env_string("DCC_INTERACTION_PATH", "/interactions");
     config->port = env_u16("DCC_INTERACTION_PORT", 8080U);
