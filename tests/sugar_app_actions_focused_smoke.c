@@ -1,4 +1,4 @@
-#include <dcc/sugar/app_actions.h>
+#include <dcc/sugar.h>
 
 #include <stdio.h>
 

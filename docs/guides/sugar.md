@@ -3528,9 +3528,10 @@ DCC_APP_ADD_MEMBER_ROLE(app, guild_id, user_id, role_id);
 DCC_APP_REMOVE_MEMBER_ROLE(app, guild_id, user_id, role_id);
 ```
 
-Small feature modules can include `<dcc/sugar/app_actions.h>` for common app,
-channel, message, thread, and member shortcuts without pulling in the full
-umbrella sugar header. That header also includes `<dcc/sugar/messages.h>`, so
+`<dcc/sugar.h>` exposes the same common app, channel, message, thread, and
+member shortcuts. Small feature modules can include `<dcc/sugar/app_actions.h>`
+when they want only that focused subset without pulling in the full umbrella
+sugar header. That focused header also includes `<dcc/sugar/messages.h>`, so
 `DCC_MESSAGE_TEXT()` and `DCC_MESSAGE_COMPONENTS_V2()` are available for direct
 sends and edits.
 
