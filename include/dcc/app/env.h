@@ -46,6 +46,7 @@ typedef struct dcc_app_env_binding {
 
 DCC_API dcc_status_t dcc_app_load_env_file(const char *path, uint8_t overwrite);
 DCC_API dcc_status_t dcc_app_load_dotenv(void);
+DCC_API dcc_status_t dcc_app_env_get_token(const char *preferred_env, const char **out);
 DCC_API dcc_status_t dcc_app_env_get_string(const char *name, const char **out);
 DCC_API dcc_status_t dcc_app_env_get_string_or(
     const char *name,

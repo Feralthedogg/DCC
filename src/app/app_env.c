@@ -188,6 +188,33 @@ static int dcc_app_env_missing(const char *value) {
     return value == NULL || value[0] == '\0';
 }
 
+dcc_status_t dcc_app_env_get_token(const char *preferred_env, const char **out) {
+    if (out == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+
+    *out = NULL;
+    const char *token = NULL;
+    if (preferred_env != NULL && preferred_env[0] != '\0') {
+        token = getenv(preferred_env);
+    }
+    if (dcc_app_env_missing(token)) {
+        token = getenv("DCC_TOKEN");
+    }
+    if (dcc_app_env_missing(token)) {
+        token = getenv("BOT_TOKEN");
+    }
+    if (dcc_app_env_missing(token)) {
+        token = getenv("DISCORD_TOKEN");
+    }
+    if (dcc_app_env_missing(token)) {
+        return DCC_ERR_NOT_FOUND;
+    }
+
+    *out = token;
+    return DCC_OK;
+}
+
 static dcc_status_t dcc_app_env_lookup(const char *name, const char **out) {
     if (name == NULL || name[0] == '\0' || out == NULL) {
         return DCC_ERR_INVALID_ARG;
@@ -607,17 +634,9 @@ dcc_status_t dcc_app_options_from_env(dcc_app_options_t *options, const char *to
 
     dcc_app_options_init(options);
     const char *token = NULL;
-    if (token_env != NULL && token_env[0] != '\0') {
-        token = getenv(token_env);
-    }
-    if (token == NULL || token[0] == '\0') {
-        token = getenv("DCC_TOKEN");
-    }
-    if (token == NULL || token[0] == '\0') {
-        token = getenv("DISCORD_TOKEN");
-    }
-    if (token == NULL || token[0] == '\0') {
-        return DCC_ERR_NOT_FOUND;
+    dcc_status_t status = dcc_app_env_get_token(token_env, &token);
+    if (status != DCC_OK) {
+        return status;
     }
     options->client.token = token;
     options->client.intents = dcc_app_env_intents(getenv("DCC_INTENTS"), DCC_INTENTS_DEFAULT);
@@ -644,7 +663,6 @@ dcc_status_t dcc_app_options_from_env(dcc_app_options_t *options, const char *to
     if (guild_id == 0U) {
         guild_id = (dcc_snowflake_t)dcc_app_env_u64(getenv("DCC_COMMAND_SYNC_GUILD_ID"), 0U);
     }
-    dcc_status_t status;
     if (guild_id != 0U) {
         status = dcc_command_registry_options_set_guild(&options->command_registry, guild_id);
     } else {

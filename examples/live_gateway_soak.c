@@ -73,11 +73,8 @@ static uint64_t env_u64(const char *name, uint64_t fallback) {
 }
 
 static const char *env_token(void) {
-    const char *token = getenv("BOT_TOKEN");
-    if (token == NULL || token[0] == '\0') {
-        token = getenv("DISCORD_TOKEN");
-    }
-    return token;
+    const char *token = NULL;
+    return DCC_ENV_TOKEN(&token) == DCC_OK ? token : NULL;
 }
 
 static void print_gateway_info(dcc_cluster_t *cluster) {
@@ -342,9 +339,11 @@ static int register_handlers(dcc_cluster_t *cluster, soak_state_t *state) {
 }
 
 int main(void) {
+    (void)dcc_app_load_dotenv();
+
     const char *token = env_token();
     if (token == NULL || token[0] == '\0') {
-        fprintf(stderr, "set BOT_TOKEN or DISCORD_TOKEN to run the live gateway soak example\n");
+        fprintf(stderr, "set DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN to run the live gateway soak example\n");
         return 0;
     }
 

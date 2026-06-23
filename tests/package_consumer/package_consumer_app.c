@@ -336,6 +336,8 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_CONFIG_I64_DEFAULT("DCC_PACKAGE_I64", -64, &env_i64_out),
         DCC_CONFIG_CHANNEL("DCC_PACKAGE_CHANNEL", &env_channel_out)
     };
+    dcc_status_t (*env_get_token_fn)(const char *, const char **) =
+        dcc_app_env_get_token;
     dcc_status_t (*env_get_string_fn)(const char *, const char **) =
         dcc_app_env_get_string;
     dcc_status_t (*env_get_bool_fn)(const char *, uint8_t *) =
@@ -1521,6 +1523,7 @@ int dcc_package_consumer_check_app_api(void) {
         env_bindings[2].fallback_u64 == 64U &&
         env_bindings[3].fallback_i64 == -64 &&
         env_bindings[4].type == DCC_APP_ENV_BIND_CHANNEL &&
+        env_get_token_fn != NULL &&
         env_get_string_fn != NULL &&
         env_get_bool_fn != NULL &&
         env_get_u64_fn != NULL &&

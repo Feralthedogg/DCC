@@ -53,11 +53,8 @@ static uint64_t env_u64(const char *name, uint64_t fallback) {
 }
 
 static const char *env_token(void) {
-    const char *token = getenv("BOT_TOKEN");
-    if (token == NULL || token[0] == '\0') {
-        token = getenv("DISCORD_TOKEN");
-    }
-    return token;
+    const char *token = NULL;
+    return DCC_ENV_TOKEN(&token) == DCC_OK ? token : NULL;
 }
 
 static int require_live_config(
@@ -74,7 +71,8 @@ static int require_live_config(
     if (token == NULL || token[0] == '\0' || guild_id == 0 || channel_id == 0 || user_id == 0) {
         fprintf(
             stderr,
-            "set BOT_TOKEN, DCC_VOICE_GUILD_ID, DCC_VOICE_CHANNEL_ID, and "
+            "set DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN plus "
+            "DCC_VOICE_GUILD_ID, DCC_VOICE_CHANNEL_ID, and "
             "DCC_VOICE_USER_ID to run the live voice probe\n"
         );
         return 0;
@@ -151,6 +149,8 @@ static void stop_client(dcc_client_t *client, int started) {
 }
 
 int main(void) {
+    (void)dcc_app_load_dotenv();
+
     const char *token = NULL;
     dcc_snowflake_t guild_id = 0;
     dcc_snowflake_t channel_id = 0;

@@ -81,7 +81,7 @@ the app from environment variables, runs it, and destroys it before returning.
 Use `DCC_RUN_SIMPLE_BOT()` when you want to keep your own `main()`.
 `dcc_app_load_dotenv()` reads `.env` into the process environment when you want
 to do those steps manually.
-`dcc_app_options_from_env()` then reads `DCC_TOKEN` or `DISCORD_TOKEN`,
+`dcc_app_options_from_env()` then reads `DCC_TOKEN`, `BOT_TOKEN`, or `DISCORD_TOKEN`,
 `DCC_APPLICATION_ID`, `DCC_INTENTS`, `DCC_COMMAND_GUILD_ID`,
 `DCC_COMMAND_SYNC`, `DCC_COMMAND_SYNC_DELETE_STALE`, `DCC_AUTO_DEFER_MS`,
 `DCC_AUTO_DEFER_EPHEMERAL`, `DCC_STORE_FILE`, `DCC_APP_STORE_FILE`,
@@ -130,9 +130,9 @@ dcc_status_t status =
 The typed helpers reject malformed IDs and numbers before the app starts doing
 REST calls. Channel, role, and user config accepts either raw IDs or the
 matching Discord mention copied from the client; guild and generic snowflake
-config stays raw-ID only. For one-off reads, use `DCC_ENV_CHANNEL`,
-`DCC_ENV_ROLE`, `DCC_ENV_USER`, `DCC_ENV_BOOL`, `DCC_ENV_U64`, or their `_OR`
-default-value forms.
+config stays raw-ID only. For one-off reads, use `DCC_ENV_TOKEN`,
+`DCC_ENV_CHANNEL`, `DCC_ENV_ROLE`, `DCC_ENV_USER`, `DCC_ENV_BOOL`,
+`DCC_ENV_U64`, or their `_OR` / named-token forms.
 
 ## Response State
 

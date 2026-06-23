@@ -3,6 +3,12 @@
 
 #include <dcc/app.h>
 
+#define DCC_ENV_TOKEN(out_) \
+    dcc_app_env_get_token(NULL, (out_))
+
+#define DCC_ENV_TOKEN_NAMED(name_, out_) \
+    dcc_app_env_get_token((name_), (out_))
+
 #define DCC_ENV_STRING(name_, out_) \
     dcc_app_env_get_string((name_), (out_))
 

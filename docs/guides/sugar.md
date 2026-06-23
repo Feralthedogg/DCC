@@ -389,7 +389,8 @@ Use the matching decorated listener aliases for the route kind:
 names are equivalent.
 
 For a one-file bot, let DCC generate `main()` from the listener list directly.
-The default form loads `.env` and reads `DCC_TOKEN` or `DISCORD_TOKEN`. The
+The default form loads `.env` and reads `DCC_TOKEN`, `BOT_TOKEN`, or
+`DISCORD_TOKEN`. The
 `_TOKEN` variants load `.env` and read the token environment variable you name;
 the `_ENV` variants skip `.env` loading and read only the current process
 environment:
@@ -464,7 +465,7 @@ dcc_voice_client_connect(voice, 0, voice_channel_id, 0, 0, 1);
 ```
 
 For application code, the shortest executable shape is `DCC_RUN_BOT(...)`.
-It reads `.env` when present, reads `DCC_TOKEN` or `DISCORD_TOKEN`, applies
+It reads `.env` when present, reads `DCC_TOKEN`, `BOT_TOKEN`, or `DISCORD_TOKEN`, applies
 runtime options such as `DCC_STORE_FILE`, runs the app, and destroys it before
 returning. `DCC_BOT(...)` includes `DCC_APP_DEV_MODE()` by default.
 
@@ -548,9 +549,22 @@ raw Discord ID or the matching copied Discord mention (`<#channel>`,
 `<@&role>`, `<@user>`). Mismatched mention types are rejected, so putting a role
 mention in a channel setting still fails early. `DCC_CONFIG_GUILD` and
 `DCC_CONFIG_SNOWFLAKE` stay raw-ID only because Discord has no guild mention
-syntax. Use `DCC_ENV_CHANNEL("NAME", &id)`, `DCC_ENV_ROLE(...)`,
+syntax. Use `DCC_ENV_TOKEN(&token)` for DCC's standard token fallback
+(`DCC_TOKEN`, `BOT_TOKEN`, then `DISCORD_TOKEN`), or
+`DCC_ENV_TOKEN_NAMED("CUSTOM_TOKEN", &token)` when a deployment uses a custom
+token variable. Use `DCC_ENV_CHANNEL("NAME", &id)`, `DCC_ENV_ROLE(...)`,
 `DCC_ENV_USER(...)`, `DCC_ENV_BOOL(...)`, `DCC_ENV_U64(...)`, and the matching
 `_OR` forms when a one-off read is cleaner than a schema.
+
+```c
+(void)dcc_app_load_dotenv();
+
+const char *token = NULL;
+if (DCC_ENV_TOKEN(&token) != DCC_OK) {
+    fprintf(stderr, "set DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN\n");
+    return 1;
+}
+```
 
 If you prefer configuring a runtime object directly, use the `DCC_APP_ON_*`
 aliases. They call the same `dcc_app_*` registration functions but read closer

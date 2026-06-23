@@ -56,11 +56,8 @@ static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value,
 }
 
 static const char *env_token(void) {
-    const char *token = getenv("BOT_TOKEN");
-    if (token == NULL || token[0] == '\0') {
-        token = getenv("DISCORD_TOKEN");
-    }
-    return token;
+    const char *token = NULL;
+    return DCC_ENV_TOKEN(&token) == DCC_OK ? token : NULL;
 }
 
 static void print_status_json(dcc_cluster_t *cluster, const char *label) {
@@ -205,9 +202,11 @@ static void on_ready(dcc_client_t *client, const dcc_event_t *event, void *user_
 }
 
 int main(void) {
+    (void)dcc_app_load_dotenv();
+
     const char *token = env_token();
     if (token == NULL || token[0] == '\0') {
-        fprintf(stderr, "set BOT_TOKEN or DISCORD_TOKEN to run the cluster rollout example\n");
+        fprintf(stderr, "set DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN to run the cluster rollout example\n");
         return 0;
     }
 

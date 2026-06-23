@@ -997,8 +997,16 @@ static int app_smoke_check_dotenv(void) {
         strcmp(getenv("DCC_APP_SMOKE_ENV"), "new value") == 0;
 
     dcc_app_options_t env_options;
+    const char *resolved_token = NULL;
+    const char *resolved_sugar_token = NULL;
     ok = ok &&
         dcc_app_load_env_file(app_path, 1U) == DCC_OK &&
+        dcc_app_env_get_token("DCC_APP_SMOKE_TOKEN", &resolved_token) == DCC_OK &&
+        resolved_token != NULL &&
+        strcmp(resolved_token, "token") == 0 &&
+        DCC_ENV_TOKEN_NAMED("DCC_APP_SMOKE_TOKEN", &resolved_sugar_token) == DCC_OK &&
+        resolved_sugar_token != NULL &&
+        strcmp(resolved_sugar_token, "token") == 0 &&
         dcc_app_options_from_env(&env_options, "DCC_APP_SMOKE_TOKEN") == DCC_OK &&
         env_options.client.token != NULL &&
         strcmp(env_options.client.token, "token") == 0 &&
