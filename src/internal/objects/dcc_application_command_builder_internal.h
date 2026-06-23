@@ -31,6 +31,14 @@ dcc_status_t dcc_command_json_append_u64_string(
     dcc_application_command_json_buffer_t *buffer,
     uint64_t value
 );
+dcc_status_t dcc_command_json_append_i64(
+    dcc_application_command_json_buffer_t *buffer,
+    int64_t value
+);
+dcc_status_t dcc_command_json_append_double(
+    dcc_application_command_json_buffer_t *buffer,
+    double value
+);
 dcc_status_t dcc_command_json_append_escaped_string(
     dcc_application_command_json_buffer_t *buffer,
     const char *value
@@ -61,6 +69,11 @@ dcc_status_t dcc_application_command_builder_append_payload_json(
     const dcc_application_command_builder_t *builder,
     dcc_application_command_json_buffer_t *buffer,
     int *first
+);
+dcc_status_t dcc_application_command_option_builder_append_array_json(
+    const dcc_application_command_option_builder_t *options,
+    size_t option_count,
+    dcc_application_command_json_buffer_t *buffer
 );
 dcc_status_t dcc_application_command_builder_append_json(
     const dcc_application_command_builder_t *builder,

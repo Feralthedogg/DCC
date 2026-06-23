@@ -9,6 +9,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define DCC_GATEWAY_INFO_HAS_SESSION_STATE 1
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,6 +55,15 @@ typedef struct dcc_gateway_info {
     uint32_t total_identifies;
     uint64_t reset_after_ms;
     uint64_t reset_at_ms;
+    const char *session_id;
+    uint64_t seq;
+    uint32_t identify_delay_ms;
+    dcc_status_t last_status;
+    uint8_t has_seq;
+    uint8_t can_resume;
+    uint8_t task_running;
+    uint8_t reconnect_requested;
+    uint8_t reconnect_resume;
 } dcc_gateway_info_t;
 
 DCC_API dcc_status_t dcc_client_create(const dcc_client_options_t *options, dcc_client_t **out);

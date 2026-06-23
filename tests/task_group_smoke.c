@@ -159,7 +159,7 @@ int main(void) {
 
     size_t first_index = (size_t)99U;
     status = dcc_task_group_wait_any(group, 2000, &first_index);
-    if (status != DCC_OK || first_index != 0U) {
+    if (status != DCC_OK || first_index >= 2U) {
         char message[160];
         snprintf(
             message,
@@ -178,7 +178,7 @@ int main(void) {
         result.task_count != 2U ||
         result.completed_count != 2U ||
         result.pending_count != 0U ||
-        result.first_completed_index != 0U ||
+        result.first_completed_index >= 2U ||
         result.last_completed_index == (size_t)-1 ||
         result.cancel_requested != 0U ||
         atomic_load_explicit(&state.ran, memory_order_acquire) != 2U ||

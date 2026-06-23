@@ -105,6 +105,9 @@ two shards and verifies aggregate health counters. The supervisor policy smokes
 cover explicit suppress and restart-over-budget decisions. Run them before the
 live soak when touching gateway reconnect, heartbeat, websocket send, cluster
 health, supervisor policy, or shutdown code.
+For live runs, also snapshot `dcc_client_gateway_info()` when reconnects repeat;
+it exposes the cached session ID, sequence, resume decision, pending reconnect
+request, identify delay, and last Gateway task status.
 
 Hot-reload validation notes:
 

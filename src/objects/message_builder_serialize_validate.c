@@ -9,6 +9,9 @@ dcc_status_t dcc_message_builder_validate_for_json(const dcc_message_builder_t *
         (builder->components_count != 0 && builder->components == NULL) ||
         (builder->components_v2_count != 0 && builder->components_v2 == NULL) ||
         (builder->poll != NULL && dcc_message_poll_validate(builder->poll) != DCC_OK) ||
+        (builder->allowed_mentions_json != NULL && builder->allowed_mentions != NULL) ||
+        (builder->allowed_mentions != NULL &&
+            dcc_allowed_mentions_validate_for_json(builder->allowed_mentions) != DCC_OK) ||
         (builder->sticker_ids_count != 0 && builder->sticker_ids == NULL)) {
         return DCC_ERR_INVALID_ARG;
     }

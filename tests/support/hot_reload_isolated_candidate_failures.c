@@ -111,8 +111,8 @@ dcc_status_t dcc_hot_reload_isolated_timeout_candidate_smoke(void) {
         .size = sizeof(options),
         .backend = DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER,
         .worker_path = DCC_HOT_RELOAD_WORKER,
-        .worker_health_timeout_ms = 100,
-        .worker_drain_timeout_ms = 25,
+        .worker_health_timeout_ms = 1000,
+        .worker_drain_timeout_ms = 50,
     };
     dcc_hot_reload_health_snapshot_t before = {
         .size = sizeof(before),

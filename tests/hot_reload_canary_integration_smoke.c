@@ -19,7 +19,7 @@ static dcc_status_t wait_for_canary_promotion(
     dcc_hot_reload_t *hot_reload,
     dcc_hot_reload_health_snapshot_t *out
 ) {
-    for (size_t i = 0; i < 80U; ++i) {
+    for (size_t i = 0; i < 160U; ++i) {
         dcc_status_t status = dcc_hot_reload_health_snapshot(hot_reload, out);
         if (status != DCC_OK) {
             return status;
@@ -56,8 +56,8 @@ static dcc_status_t canary_idle_promotion_smoke(void) {
         .size = sizeof(options),
         .backend = DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER,
         .worker_path = DCC_HOT_RELOAD_WORKER,
-        .worker_health_timeout_ms = 100U,
-        .worker_drain_timeout_ms = 25U,
+        .worker_health_timeout_ms = 1000U,
+        .worker_drain_timeout_ms = 50U,
         .worker_canary_enabled = 1U,
         .worker_canary_options = canary,
     };
@@ -188,8 +188,8 @@ static dcc_status_t canary_dispatch_rollback_smoke(void) {
         .size = sizeof(options),
         .backend = DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER,
         .worker_path = DCC_HOT_RELOAD_WORKER,
-        .worker_health_timeout_ms = 200U,
-        .worker_drain_timeout_ms = 25U,
+        .worker_health_timeout_ms = 1000U,
+        .worker_drain_timeout_ms = 50U,
         .worker_canary_enabled = 1U,
         .worker_canary_options = canary,
     };

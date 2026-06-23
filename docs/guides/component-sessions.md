@@ -64,6 +64,28 @@ dcc_message_builder_t page =
 
 ## Route Session Actions
 
+When you are using `dcc_app_t`, prefer the app-owned listener. It uses the same
+middleware, guard, auto-defer, and `dcc_ctx_t` helpers as slash commands.
+
+```c
+static void on_action(dcc_ctx_t *ctx, void *user_data) {
+    (void)user_data;
+
+    if (dcc_ctx_component_session_status(ctx) != DCC_COMPONENT_SESSION_VERIFY_OK) {
+        DCC_REPLY_ERROR(ctx, "Expired", "This UI can no longer be used.");
+        return;
+    }
+
+    if (strcmp(dcc_ctx_component_session_action(ctx), "next") == 0) {
+        DCC_REPLY_EPHEMERAL(ctx, "Next page");
+    }
+}
+
+dcc_app_component_session(app, &session, NULL, on_action, state);
+```
+
+Use the lower-level client listener when you are not using `dcc_app_t`.
+
 ```c
 static void on_action(
     dcc_client_t *client,
@@ -111,3 +133,36 @@ Sweep expired sessions periodically:
 ```c
 dcc_component_session_store_sweep(&store, now_ms);
 ```
+
+## Persist Sessions Across Restarts
+
+Persistent views are built by saving the session store outside the process and
+loading it back before registering the listener. DCC stores enough signed
+session data to keep existing `custom_id` values valid after a bot restart.
+
+```c
+char *json = NULL;
+size_t json_len = 0;
+
+dcc_component_session_store_export_json(&store, &json, &json_len);
+
+/* Save json/json_len to a file, SQLite row, MongoDB document, or Redis value. */
+
+dcc_component_session_store_json_free(json);
+```
+
+On startup, load the saved bytes and register the restored store:
+
+```c
+dcc_component_session_store_t restored;
+dcc_component_session_store_init(&restored);
+
+dcc_component_session_store_import_json(&restored, saved_json, saved_json_len);
+dcc_component_session_store_sweep(&restored, now_ms);
+
+dcc_app_component_session_store(app, &restored, NULL, on_action, state);
+```
+
+The exported JSON contains the session secret in hex so DCC can verify old
+signed buttons. Treat it like application secret material: store it in the same
+place you would store bot runtime state, not in public logs.

@@ -90,12 +90,20 @@ static void print_gateway_info(dcc_cluster_t *cluster) {
 
     printf(
         "gateway: recommended_shards=%u max_concurrency=%u remaining_identifies=%u/%u "
-        "reset_after_ms=%llu url=%s\n",
+        "reset_after_ms=%llu session=%s seq=%llu has_seq=%u can_resume=%u "
+        "reconnect_requested=%u reconnect_resume=%u last_status=%s url=%s\n",
         info.recommended_shards,
         info.max_concurrency,
         info.remaining_identifies,
         info.total_identifies,
         (unsigned long long)info.reset_after_ms,
+        info.session_id != NULL && info.session_id[0] != '\0' ? info.session_id : "-",
+        (unsigned long long)info.seq,
+        info.has_seq,
+        info.can_resume,
+        info.reconnect_requested,
+        info.reconnect_resume,
+        dcc_status_string(info.last_status),
         info.url != NULL ? info.url : ""
     );
 }

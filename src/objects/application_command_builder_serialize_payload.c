@@ -11,6 +11,21 @@ dcc_status_t dcc_application_command_builder_append_payload_json(
         if (status != DCC_OK) {
             return status;
         }
+    } else if (builder->options_count != 0U) {
+        if (builder->options == NULL) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        status = dcc_command_json_member_prefix(buffer, first, "options");
+        if (status == DCC_OK) {
+            status = dcc_application_command_option_builder_append_array_json(
+                builder->options,
+                builder->options_count,
+                buffer
+            );
+        }
+        if (status != DCC_OK) {
+            return status;
+        }
     }
     if (builder->has_default_member_permissions) {
         status = dcc_command_json_member_prefix(buffer, first, "default_member_permissions");

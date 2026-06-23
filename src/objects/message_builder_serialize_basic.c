@@ -54,5 +54,11 @@ dcc_status_t dcc_message_builder_append_basic_json(
     if (status == DCC_OK && builder->allowed_mentions_json != NULL) {
         status = dcc_message_json_append_raw_member(buffer, first, "allowed_mentions", builder->allowed_mentions_json);
     }
+    if (status == DCC_OK && builder->allowed_mentions != NULL) {
+        status = dcc_message_json_member_prefix(buffer, first, "allowed_mentions");
+        if (status == DCC_OK) {
+            status = dcc_allowed_mentions_append_json(builder->allowed_mentions, buffer);
+        }
+    }
     return status;
 }

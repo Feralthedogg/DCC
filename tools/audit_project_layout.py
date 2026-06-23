@@ -13,6 +13,13 @@ MAX_TOOL_FILE_LINES = 500
 MAX_TEST_FILE_LINES = 2000
 MAX_EXAMPLE_FILE_LINES = 500
 KNOWN_LARGE_FILE_LIMITS = {
+    "tools/dcc_new_app_action.c": 650,
+    "tools/dcc_new_app_options.c": 650,
+    "tools/dcc_new_app_routes.c": 600,
+    "tools/dcc_new_app_view.c": 650,
+    "tests/app_smoke.c": 2100,
+    "tests/package_consumer/package_consumer_app.c": 3000,
+    "tests/sugar_smoke.c": 5000,
 }
 
 

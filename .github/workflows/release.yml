@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example v1.2.4
+        description: Release version, for example v1.3.0
         required: false
-        default: v1.2.4
+        default: v1.3.0
         type: string
   push:
     tags:

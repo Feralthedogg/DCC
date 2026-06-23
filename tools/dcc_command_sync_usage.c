@@ -15,7 +15,7 @@ void dcc_command_sync_usage(FILE *stream, const char *argv0) {
         "      --plan                print the create/update/delete/noop plan; default action\n"
         "      --apply               apply the plan through Discord REST\n"
         "      --dry-run             force no REST writes even with --apply\n"
-        "      --token TOKEN         bot token; BOT_TOKEN or DISCORD_TOKEN are accepted\n"
+        "      --token TOKEN         bot token; DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN are accepted\n"
         "      --check               validate inputs and print resolved scope without writes\n"
         "  -h, --help                show this help\n"
         "\n"

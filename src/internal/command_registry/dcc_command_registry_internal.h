@@ -34,6 +34,11 @@ const dcc_command_registry_state_t *dcc_command_registry_state_const(
     const dcc_command_registry_t *registry
 );
 uint32_t dcc_command_registry_builder_type(const dcc_application_command_builder_t *command);
+dcc_status_t dcc_command_registry_builder_copy(
+    dcc_application_command_builder_t *dst,
+    const dcc_application_command_builder_t *src
+);
+void dcc_command_registry_builder_deinit(dcc_application_command_builder_t *builder);
 dcc_snowflake_t dcc_command_registry_options_guild_id(
     const dcc_command_registry_options_t *options
 );

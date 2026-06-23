@@ -161,7 +161,9 @@ static void dcc_component_session_listener_trampoline(
     check.size = sizeof(check);
     check.custom_id = interaction->custom_id;
     check.now_ms = dcc_component_session_listener_now(state);
-    check.user_id = dcc_component_session_event_user_id(event);
+    check.user_id = interaction->user_id != 0U
+        ? interaction->user_id
+        : dcc_component_session_event_user_id(event);
     check.channel_id = interaction->channel_id;
     check.guild_id = interaction->guild_id;
 

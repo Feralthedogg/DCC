@@ -115,6 +115,9 @@ int dcc_json_smoke_interactions(void) {
     const dcc_interaction_resolved_permission_t *issuer_permissions =
         dcc_interaction_resolved_permission(interaction, 447);
     if (st != DCC_OK ||
+        interaction->user_id != 447 ||
+        interaction->has_member_permissions != 1U ||
+        interaction->member_permissions != 4096 ||
         issuer_permissions == NULL ||
         issuer_permissions->permissions != 4096 ||
         dcc_interaction_resolved_permission(interaction, 999) != NULL) {

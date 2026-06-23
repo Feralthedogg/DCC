@@ -2,6 +2,7 @@
 #define DCC_H
 
 #include <dcc/application_command.h>
+#include <dcc/app.h>
 #include <dcc/autocomplete.h>
 #include <dcc/cache.h>
 #include <dcc/client.h>
@@ -21,12 +22,14 @@
 #include <dcc/interaction_server.h>
 #include <dcc/managed_message.h>
 #include <dcc/message.h>
+#include <dcc/message_link.h>
 #include <dcc/modal.h>
 #include <dcc/objects.h>
 #include <dcc/permissions.h>
 #include <dcc/replay.h>
 #include <dcc/rest.h>
 #include <dcc/snowflake.h>
+#include <dcc/store.h>
 #include <dcc/tasks.h>
 #include <dcc/version.h>
 #include <dcc/voice.h>

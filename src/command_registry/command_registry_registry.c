@@ -44,6 +44,9 @@ dcc_status_t dcc_command_registry_clear(dcc_command_registry_t *registry) {
     if (state == NULL) {
         return DCC_OK;
     }
+    for (size_t i = 0U; i < state->entry_count; ++i) {
+        dcc_command_registry_builder_deinit(&state->entries[i].command);
+    }
     free(state->entries);
     state->entries = NULL;
     state->entry_count = 0;

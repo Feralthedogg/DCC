@@ -200,18 +200,35 @@ int main(void) {
     dcc_component_session_store_t store;
     dcc_component_session_store_init(&store);
     check.custom_id = button.custom_id;
+    char *store_json = NULL;
+    size_t store_json_len = 0U;
+    dcc_component_session_store_t restored_store;
+    dcc_component_session_store_init(&restored_store);
     if (dcc_component_session_store_add(&store, &session) != DCC_OK ||
         dcc_component_session_store_count(&store) != 1U ||
         dcc_component_session_store_verify(&store, &check, &result) != DCC_OK ||
         !expect_status(result.status, DCC_COMPONENT_SESSION_VERIFY_OK, "store valid") ||
+        dcc_component_session_store_export_json(&store, &store_json, &store_json_len) != DCC_OK ||
+        store_json == NULL ||
+        store_json_len == 0U ||
+        strstr(store_json, "\"version\":1") == NULL ||
+        strstr(store_json, "\"session_id\":\"sess123\"") == NULL ||
+        dcc_component_session_store_import_json(&restored_store, store_json, store_json_len) != DCC_OK ||
+        dcc_component_session_store_count(&restored_store) != 1U ||
+        dcc_component_session_store_verify(&restored_store, &check, &result) != DCC_OK ||
+        !expect_status(result.status, DCC_COMPONENT_SESSION_VERIFY_OK, "restored store valid") ||
         dcc_component_session_store_sweep(&store, 6001U) != 1U ||
         dcc_component_session_store_count(&store) != 0U ||
         dcc_component_session_store_verify(&store, &check, &result) != DCC_OK ||
         !expect_status(result.status, DCC_COMPONENT_SESSION_VERIFY_NOT_FOUND, "store swept")) {
+        dcc_component_session_store_json_free(store_json);
+        dcc_component_session_store_deinit(&restored_store);
         dcc_component_session_store_deinit(&store);
         dcc_component_session_deinit(&session);
         return 1;
     }
+    dcc_component_session_store_json_free(store_json);
+    dcc_component_session_store_deinit(&restored_store);
 
     dcc_client_t *client = NULL;
     dcc_client_options_t client_options = {

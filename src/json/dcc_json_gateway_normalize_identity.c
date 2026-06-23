@@ -44,9 +44,17 @@ void dcc_json_gateway_normalize_identity(dcc_json_gateway_payload_t *out) {
     if (out->member.user.id == 0 && out->gateway.user_id != 0) {
         out->member.user.id = out->gateway.user_id;
     }
+    if (out->interaction.user_id == 0 && out->member.user.id != 0) {
+        out->interaction.user_id = out->member.user.id;
+    }
+    if (out->interaction.user_id == 0 && out->gateway.user_id != 0) {
+        out->interaction.user_id = out->gateway.user_id;
+    }
     if (out->interaction_member_permissions_present &&
         out->member.user.id != 0 &&
         (out->interaction.id != 0 || out->interaction.token != NULL || out->interaction.type != 0)) {
+        out->interaction.member_permissions = out->interaction_member_permissions;
+        out->interaction.has_member_permissions = 1U;
         dcc_json_gateway_add_interaction_resolved_permission(
             out,
             out->member.user.id,

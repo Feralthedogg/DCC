@@ -348,10 +348,19 @@ int main(void) {
     uint32_t gateway_total_identifies = gateway_info.total_identifies;
     uint64_t gateway_reset_after_ms = gateway_info.reset_after_ms;
     uint64_t gateway_reset_at_ms = gateway_info.reset_at_ms;
+    const char *gateway_session_id = gateway_info.session_id;
+    uint64_t gateway_seq = gateway_info.seq;
+    uint8_t gateway_has_seq = gateway_info.has_seq;
+    uint8_t gateway_can_resume = gateway_info.can_resume;
     int gateway_info_ok =
         gateway_info_status == DCC_OK &&
         gateway_info.url != NULL &&
         strstr(gateway_info.url, "?v=10&encoding=json") != NULL &&
+        gateway_session_id != NULL &&
+        strcmp(gateway_session_id, "mock-session") == 0 &&
+        gateway_has_seq == 1U &&
+        gateway_seq >= 37U &&
+        gateway_can_resume == 1U &&
         gateway_recommended_shards == 3 &&
         gateway_max_concurrency == 2 &&
         gateway_remaining_identifies == 998 &&
@@ -434,7 +443,7 @@ int main(void) {
         !state.voice_connect_seen ||
         !voice_auto_ok) {
         fprintf(stderr,
-                "gateway smoke failed: status=%s api=%d gateway_info=%d gw_status=%s gw_shards=%u gw_concurrency=%u gw_remaining=%u gw_total=%u gw_reset_after=%llu gw_reset_at=%llu ready=%d resumed=%d create=%d update=%d delete=%d guild_create=%d guild_update=%d guild_delete=%d interaction=%d voice=%d voice_connect=%d voice_op4=%d voice_auto_ready=%d voice_auto_disconnect=%d voice_final=%s channel=%d channel_update=%d channel_delete=%d channel_info=%d thread_create=%d thread_update=%d thread_delete=%d channel_topic=%d subscription=%d raw_subscription=%d reaction=%d reaction_remove=%d reaction_remove_all=%d reaction_remove_emoji=%d typing=%d bulk=%d thread_members=%d guild_member=%d guild_member_remove=%d guild_role=%d guild_role_update=%d guild_role_delete=%d user_update=%d automod=%d automod_rule=%d automod_rule_update=%d automod_rule_delete=%d poll=%d poll_remove=%d invite=%d invite_delete=%d voice_effect=%d scheduled=%d member_update=%d members_chunk=%d pins=%d stage=%d soundboard=%d entitlement=%d voice_server=%d integration=%d integration_update=%d integration_delete=%d presence=%d audit_log=%d ban_add=%d ban_remove=%d sched_user_add=%d sched_user_remove=%d thread_member=%d emojis=%d thread_list=%d soundboard_list=%d slash=%d button=%d autocomplete=%d select=%d message_menu=%d user_menu=%d form=%d named_slash=%d named_button=%d named_autocomplete=%d named_select=%d named_message_menu=%d named_user_menu=%d named_form=%d named_unexpected=%d named_off=%d socket_close=%d typed_low=%llx typed_high=%llx accessor_low=%llx accessor_high=%llx raw_low=%llx raw_high=%llx identify=%d heartbeat=%d resume=%d session=%s\n",
+                "gateway smoke failed: status=%s api=%d gateway_info=%d gw_status=%s gw_shards=%u gw_concurrency=%u gw_remaining=%u gw_total=%u gw_reset_after=%llu gw_reset_at=%llu gw_session=%s gw_seq=%llu gw_has_seq=%u gw_can_resume=%u ready=%d resumed=%d create=%d update=%d delete=%d guild_create=%d guild_update=%d guild_delete=%d interaction=%d voice=%d voice_connect=%d voice_op4=%d voice_auto_ready=%d voice_auto_disconnect=%d voice_final=%s channel=%d channel_update=%d channel_delete=%d channel_info=%d thread_create=%d thread_update=%d thread_delete=%d channel_topic=%d subscription=%d raw_subscription=%d reaction=%d reaction_remove=%d reaction_remove_all=%d reaction_remove_emoji=%d typing=%d bulk=%d thread_members=%d guild_member=%d guild_member_remove=%d guild_role=%d guild_role_update=%d guild_role_delete=%d user_update=%d automod=%d automod_rule=%d automod_rule_update=%d automod_rule_delete=%d poll=%d poll_remove=%d invite=%d invite_delete=%d voice_effect=%d scheduled=%d member_update=%d members_chunk=%d pins=%d stage=%d soundboard=%d entitlement=%d voice_server=%d integration=%d integration_update=%d integration_delete=%d presence=%d audit_log=%d ban_add=%d ban_remove=%d sched_user_add=%d sched_user_remove=%d thread_member=%d emojis=%d thread_list=%d soundboard_list=%d slash=%d button=%d autocomplete=%d select=%d message_menu=%d user_menu=%d form=%d named_slash=%d named_button=%d named_autocomplete=%d named_select=%d named_message_menu=%d named_user_menu=%d named_form=%d named_unexpected=%d named_off=%d socket_close=%d typed_low=%llx typed_high=%llx accessor_low=%llx accessor_high=%llx raw_low=%llx raw_high=%llx identify=%d heartbeat=%d resume=%d session=%s\n",
                 dcc_status_string(st),
                 api.saw_request,
                 gateway_info_ok,
@@ -445,6 +454,10 @@ int main(void) {
                 gateway_total_identifies,
                 (unsigned long long)gateway_reset_after_ms,
                 (unsigned long long)gateway_reset_at_ms,
+                gateway_session_id != NULL ? gateway_session_id : "(null)",
+                (unsigned long long)gateway_seq,
+                gateway_has_seq,
+                gateway_can_resume,
                 state.ready_seen,
                 state.resumed_seen,
                 state.message_create_seen,

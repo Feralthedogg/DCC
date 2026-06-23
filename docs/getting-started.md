@@ -65,30 +65,151 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-## Minimal Client
+## Create A Bot
+
+The fastest path is the scaffolded app runtime project:
+
+```sh
+dcc_new_app mybot
+cd mybot
+cp .env.example .env
+$EDITOR .env
+dcc_new_app add feature . profile
+dcc_new_app add command . profile greet
+dcc_new_app add subcommand . profile greet stats
+dcc_new_app add button . profile refresh
+dcc_new_app add select . profile role
+dcc_new_app add modal . profile edit
+dcc_new_app add autocomplete . profile profile
+dcc_new_app add event . profile ready
+dcc_new_app add view . profile dashboard
+dcc_new_app add config . log_channel channel LOG_CHANNEL
+dcc_new_app add latest-message . profile status log_channel
+dcc_new_app add scheduled-latest . profile daily_status log_channel --daily-kst 09:00
+dcc_new_app add message-command . profile hello --prefix '!'
+dcc_new_app add task . profile heartbeat --every-seconds 60
+dcc_new_app add action . profile gateway_status gateway --guild-only
+dcc_new_app add action . profile dm_user dm --guild-only
+dcc_new_app add action . profile grant_role role-add --guild-only --permission DCC_PERMISSION_MANAGE_ROLES
+dcc_new_app add preset . profile announcement --guild-only
+dcc_new_app add preset . profile confirm
+dcc_new_app add preset . profile paginator
+dcc_new_app add preset . profile form
+dcc_new_app add preset . profile settings
+dcc_new_app add preset . profile wizard
+dcc_new_app add preset . profile counter
+dcc_new_app add preset . profile crud
+dcc_new_app add preset . profile help
+dcc_new_app add preset . profile menu
+dcc_new_app add preset . profile poll
+dcc_new_app add preset . profile profile --name profile_card
+dcc_new_app add preset . profile roles --guild-only
+dcc_new_app add preset . profile ticket
+dcc_new_app add preset . profile welcome
+dcc_new_app add preset . profile flow
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$HOME/.local"
+cmake --build build
+./build/mybot
+```
+
+The generated app uses `DCC_BOT(...)`, which includes `DCC_APP_DEV_MODE()`, so
+it syncs `/ping` automatically, infers the application id from the Gateway READY
+event, auto-defers slow interactions, and enables friendly default error
+replies. Its `.env.example`
+also enables `DCC_STORE_FILE=bot-state.kv`, so the sample handler can use the
+app-owned store for a persistent ping count. For fast development, set
+`DCC_COMMAND_GUILD_ID` in `.env` to use guild-scoped commands; leave it
+commented out for global commands. `src/main.c` stays as the entrypoint, while
+feature routes live in feature files such as `src/ping.c`. Shared typed config
+lives in `src/config.h`, and generated feature files include it so handlers can use
+`BOT_CONFIG(user_data)` or `BOT_CTX_CONFIG(ctx)`. Generated slash commands use
+typed args by default with `DCC_FEATURE_COMMAND_ROUTES(...)`,
+`DCC_COMMAND_ROUTE_NO_OPTIONS*`, `DCC_COMMAND_ROUTE*`, and a small `*_PARAMS`
+list, so handlers receive a small C struct instead of manually reading every option from the context. Generated
+handlers are declared with `DCC_COMMAND_IMPL`, `DCC_HANDLER`, `DCC_COMMAND_ARGS_IMPL`,
+`DCC_BUTTON_ARGS_IMPL`, `DCC_SELECT_ARGS_IMPL`, `DCC_MODAL_ARGS_IMPL`,
+`DCC_READY_FN`, and `DCC_TASK_FN`, then reply with context-first `DCC_CTX_*`
+helpers and short Components v2 `DCC_UI_*` builders. Use
+`dcc_new_app add feature . profile` to create and wire another feature file, then
+`dcc_new_app add command . profile greet`,
+`dcc_new_app add subcommand . profile greet stats`,
+`dcc_new_app add button . profile refresh`, `dcc_new_app add select . profile role`,
+`dcc_new_app add modal . profile edit`, `dcc_new_app add autocomplete . profile profile`,
+`dcc_new_app add event . profile ready`,
+`dcc_new_app add view . profile dashboard`,
+`dcc_new_app add config . log_channel channel LOG_CHANNEL`,
+`dcc_new_app add latest-message . profile status log_channel`,
+`dcc_new_app add scheduled-latest . profile daily_status log_channel --daily-kst 09:00`,
+`dcc_new_app add message-command . profile hello --prefix '!'`, or
+`dcc_new_app add task . profile heartbeat --every-seconds 60` to append handlers
+and routes to that feature file, or typed app config. Use
+`dcc_new_app add action . profile gateway_status gateway --guild-only` when you
+want a generated slash command that demonstrates app-level shortcuts such as
+`DCC_GATEWAY_BOT_FETCH(...)`, `DCC_GUILD_VOICE_REGIONS_FETCH(...)`, or
+`DCC_CTX_SEND_UI(...)` without writing REST wiring by hand. `add action` also
+generates typed target-user workflows such as
+`dcc_new_app add action . profile dm_user dm --guild-only` and
+`dcc_new_app add action . profile grant_role role-add --guild-only --permission DCC_PERMISSION_MANAGE_ROLES`,
+so DM and role-management commands start with `DCC_USER_DM_SEND_TEXT(...)` or
+`DCC_MEMBER_ADD_ROLE(...)` already wired. Use
+`dcc_new_app add preset . profile announcement --guild-only` for a modal-based
+announcement composer with ephemeral preview and send/cancel buttons. Use
+`dcc_new_app add preset . profile confirm` or
+`dcc_new_app add preset . profile paginator` when you want generated slash
+commands plus button routes for common UI flows. Use
+`dcc_new_app add preset . profile form` for a slash command that opens a modal
+and receives typed form args. Use `dcc_new_app add preset . profile settings`
+for a settings panel with buttons plus an edit modal. Use
+`dcc_new_app add preset . profile wizard` for a slash-to-button-to-modal setup
+flow with review buttons. Use `dcc_new_app add preset . profile counter` for a
+store-backed slash command with `+1` and reset buttons. Use
+`dcc_new_app add preset . profile crud` for a store-backed item list with add,
+delete-last, and clear actions. Use `dcc_new_app add preset . profile help`
+for a paged help center with command/component/about buttons. Use
+`dcc_new_app add preset . profile menu`
+for a typed select-menu navigation panel. Use `dcc_new_app add preset . profile poll`
+for a store-backed yes/no vote panel. Use
+`dcc_new_app add preset . profile profile --name profile_card` for a user profile
+card with a refresh button. Use `dcc_new_app add preset . profile roles --guild-only`
+for a generated self-role menu with typed select handling and add/remove role
+actions. Use
+`dcc_new_app add preset . profile ticket` for an open-ticket button, typed modal,
+ephemeral ticket card, and close button. Use `dcc_new_app add preset . profile welcome`
+for a member-join welcome event plus slash preview. Use
+`dcc_new_app add preset . profile flow` for a slash-to-modal-to-confirm flow.
+Button, select, and modal generation use typed params so
+handlers receive a generated args struct instead of parsing `custom_id`, values,
+or form fields by hand. Subcommand generation rewrites the generated command
+schema to include `DCC_CMD_SUB_PARAMS(...)`; autocomplete generation also
+flips the generated slash command's `name` option to `STRING_AUTOCOMPLETE` and
+adds a typed `DCC_AUTOCOMPLETE_PARAMS_DATA(...)` route so Discord sends
+autocomplete interactions for that option.
+
+`dcc_command_sync` is still available when you want an explicit plan or a
+manual apply:
+
+```sh
+set -a
+. ./.env
+set +a
+DCC_APPLICATION_ID=your-application-id
+dcc_command_sync --commands commands.json --application-id "$DCC_APPLICATION_ID" --plan
+```
+
+## Minimal App
 
 ```c
 #include <dcc/sugar.h>
 
-#include <stdlib.h>
-
-int main(void) {
-    dcc_client_options_t options =
-        DCC_CLIENT_OPTIONS(getenv("DISCORD_TOKEN"), DCC_INTENTS_DEFAULT);
-
-    dcc_client_t *client = NULL;
-    if (dcc_client_create(&options, &client) != DCC_OK) {
-        return 1;
-    }
-
-    dcc_status_t status = dcc_client_start(client);
-    if (status == DCC_OK) {
-        status = dcc_client_wait(client);
-    }
-
-    dcc_client_destroy(client);
-    return status == DCC_OK ? 0 : 1;
+DCC_SLASH_FN(ping) {
+    (void)user_data;
+    (void)DCC_REPLY_TEXT(ctx, "pong");
 }
+
+DCC_BOT_ROUTES_MAIN(
+    "minimal",
+    DCC_ROUTE_COMMAND("ping", "Reply with pong", ping)
+)
 ```
 
 ## Include Style
@@ -107,7 +228,7 @@ firewall, and replay records:
 dcc_message_builder_t message =
     DCC_MESSAGE_TEXT_EMBEDS(
         "pong",
-        DCC_EMBED_COLOR("Latency", "Gateway online", 0x5865F2)
+        DCC_EMBED_COLOR("Latency", "Gateway online", DCC_COLOR_BLURPLE)
     );
 ```
 

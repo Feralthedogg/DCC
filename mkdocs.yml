@@ -62,6 +62,7 @@ nav:
       - Project Layout: architecture.md
   - Guides:
       - Sugar-First API: guides/sugar.md
+      - App Runtime: guides/app-runtime.md
       - Gateway And Events: guides/gateway-events.md
       - Slash Command Registry: guides/command-registry.md
       - Component Sessions: guides/component-sessions.md

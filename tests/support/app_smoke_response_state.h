@@ -1,0 +1,6 @@
+#ifndef DCC_TESTS_SUPPORT_APP_SMOKE_RESPONSE_STATE_H
+#define DCC_TESTS_SUPPORT_APP_SMOKE_RESPONSE_STATE_H
+
+int app_smoke_check_response_state(void);
+
+#endif

@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+#define DCC_AUTOCOMPLETE_MAX_CHOICES 25U
+
 typedef enum dcc_autocomplete_choice_value_type {
     DCC_AUTOCOMPLETE_CHOICE_STRING = 1,
     DCC_AUTOCOMPLETE_CHOICE_INTEGER = 2,

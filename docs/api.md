@@ -19,7 +19,7 @@ dcc_application_command_builder_t ping =
 dcc_message_builder_t message =
     DCC_MESSAGE_COMPONENTS_V2(
         DCC_V2_CONTAINER_ACCENT(
-            0x5865F2,
+            DCC_COLOR_BLURPLE,
             DCC_V2_SECTION(
                 DCC_V2_BUTTON_PRIMARY("Refresh", "status.refresh"),
                 DCC_V2_TEXT("# Runtime status")
@@ -28,11 +28,226 @@ dcc_message_builder_t message =
     );
 ```
 
+For app routes, prefer the role-specific aliases:
+`dcc_command_route_t`, `dcc_slash_route_t`, `dcc_subcommand_route_t`,
+`dcc_autocomplete_route_t`, `dcc_modal_route_t`, `dcc_button_route_t`,
+`dcc_select_route_t`, and `dcc_modal_flow_t`. These names are the
+sugar-first public surface; the lower-level `dcc_app_typed_*` structs remain
+compatible implementation types for existing code.
+
 The header covers client options, intent sets, messages, embeds, legacy
 components, Components v2, modals, slash/user/message commands, command
-registration scope, component sessions, direct interaction replies,
-interaction flows, managed latest-message publishing, hot reload canary options,
-REST firewall options, typed REST response ID extraction, and replay records.
+registration scope, command option builders and choices, struct field bindings, form bindings,
+struct field validators, validation result replies, app views,
+typed slash/subcommand/autocomplete/modal routes, typed modal flow declarations,
+role-specific route aliases,
+single-source `DCC_COMMAND_ROUTE*`, no-option `DCC_COMMAND_ROUTE_NO_OPTIONS*`, `DCC_SUBCOMMAND_ROUTE*`,
+`DCC_AUTOCOMPLETE_PARAMS*`, `DCC_MODAL_PARAMS*`,
+`DCC_BUTTON_PARAMS*`, and `DCC_SELECT_PARAMS*` declarations, including
+function-name params aliases such as `DCC_COMMAND_PARAMS_FN()`,
+`DCC_COMMAND_ROUTE_FN_DATA()`, `DCC_AUTOCOMPLETE_PARAMS_FN_DATA()`,
+`DCC_BUTTON_NS_PARAMS_FN()`, `DCC_SELECT_NS_PARAMS_FN()`, and
+`DCC_MODAL_NS_PARAMS_FN()`, direct route registration aliases such as
+`DCC_APP_REGISTER_COMMAND()`, `DCC_APP_REGISTER_SUBCOMMAND()`,
+`DCC_APP_REGISTER_AUTOCOMPLETE()`, `DCC_APP_REGISTER_BUTTON()`,
+`DCC_APP_REGISTER_SELECT()`, `DCC_APP_REGISTER_MODAL()`, and
+`DCC_APP_REGISTER_MODAL_FLOW()`,
+route-list aliases such as
+`DCC_APP_COMMAND_ROUTES()`, `DCC_APP_BUTTON_ROUTES()`,
+`DCC_APP_SELECT_ROUTES()`, and `DCC_APP_MODAL_ROUTES()`, direct typed
+registration aliases such as `DCC_APP_TYPED_SLASH()`, `DCC_APP_SLASH_ROUTE_FN_DATA()`,
+`DCC_APP_AUTOCOMPLETE_PARAMS_FN_DATA()`,
+`DCC_APP_MODAL_V2_FLOW_NS_PARAMS_FN_DATA()`, and
+`DCC_APP_BUTTON_NS_PREFIX_PARAMS_FN_DATA_GUARDED()`,
+role-specific handler declaration aliases such as `DCC_SLASH_FN()`,
+`DCC_BUTTON_FN()`, `DCC_SELECT_FN()`, and `DCC_MODAL_FN()`,
+handler wrapper aliases such as `DCC_COMMAND_IMPL()`,
+`DCC_COMMAND_ARGS_IMPL()`, `DCC_SUBCOMMAND_ARGS_IMPL()`,
+`DCC_BUTTON_ARGS_IMPL()`, `DCC_SELECT_ARGS_IMPL()`, `DCC_MODAL_ARGS_IMPL()`,
+`DCC_AUTOCOMPLETE_ARGS_IMPL()`, and mutable aliases such as
+`DCC_BUTTON_ARGS_MUT_IMPL()`, plus compatible `DCC_TYPED_*_IMPL()`
+and `DCC_TYPED_*_MUT_IMPL()` variants,
+function-name route aliases such as `DCC_ON_SLASH_FN()`,
+`DCC_BUTTON_FN()`, `DCC_SELECT_FN()`, `DCC_MODAL_FN()`,
+namespace function-name component aliases such as `DCC_BUTTON_NS_FN()`,
+`DCC_SELECT_NS_FN()`, and `DCC_MODAL_NS_FN()`, decorator-style static
+route descriptors such as `DCC_DECORATE_SLASH()`, `DCC_DECORATE_BUTTON_NS()`,
+`DCC_DECORATE_READY_ONCE()`, and `DCC_ROUTE()`, and direct registration
+aliases such as `DCC_APP_ON_SLASH_FN()`, `DCC_APP_ON_BUTTON_FN()`, and
+`DCC_APP_ON_BUTTON_NS_FN()`,
+readable form/component binding aliases such as `DCC_FORM_REQUIRED_TEXT()`,
+`DCC_FORM_CHECKBOX()`, `DCC_COMPONENT_REQUIRED_ACTION()`, and
+`DCC_COMPONENT_REQUIRED_VALUE()`,
+inline `DCC_ON_TYPED_SLASH(...)`/`DCC_ON_TYPED_SLASH_DATA(...)` command definitions,
+autocomplete choices, declarative app features and route/event/task
+setup helpers including `DCC_DEFINE_PUBLIC_FEATURE`, `DCC_DECLARE_FEATURE`,
+`DCC_APP_USE`, `DCC_APP_FEATURES`, `DCC_USE_FEATURE`, `DCC_BOT_USE`, `DCC_BOT_FEATURES`,
+`DCC_FEATURE_MODULE`, `DCC_LOAD_FEATURE`, and the compatible Cog names
+`DCC_DEFINE_COG`, `DCC_DEFINE_PUBLIC_COG`, `DCC_DECLARE_COG`, `DCC_COG_MODULE`,
+`DCC_LOAD_COG`, route/event/task
+aliases including `DCC_ON_*` and direct `DCC_APP_ON_*` registration helpers,
+bot definition aliases such as `DCC_BOT()`, `DCC_BOT_ROUTES()`,
+`DCC_GUILD_BOT_ROUTES()`, `DCC_BOT_LISTENERS()`, `DCC_GUILD_BOT()`,
+`DCC_RUN_BOT()`, and `DCC_RUN_BOT_ROUTES()` plus `_TOKEN`/`_ENV` variants for
+custom token environment names, and one-file entrypoint aliases such as
+`DCC_BOT_ROUTES_MAIN()`, `DCC_BOT_MAIN()`, and
+`DCC_GUILD_BOT_ROUTES_MAIN()`,
+Cog/app context menu routes including `DCC_COG_CONTEXT_MENUS()`,
+`DCC_ON_USER_CONTEXT_MENU()`, `DCC_ON_MESSAGE_CONTEXT_MENU()`,
+`DCC_APP_ON_USER_CONTEXT_MENU()`, and `DCC_APP_ON_MESSAGE_CONTEXT_MENU()`,
+inline guarded route aliases such as `DCC_ON_SLASH_GUARDED()` and
+`DCC_BUTTON_GUARDED()`, direct guarded registration aliases such as
+`DCC_APP_ON_SLASH_GUARDED()` and `DCC_APP_ON_BUTTON_GUARDED()`,
+component namespace route aliases such as `DCC_COMPONENT_ID()`,
+`DCC_BUTTON_NS()`, `DCC_MODAL_NS_PREFIX()`, and
+`DCC_APP_ON_BUTTON_NS_DATA_POLICY()`,
+namespace-aware component builders such as `DCC_UI_PRIMARY_NS()`,
+`DCC_UI_STRING_SELECT_NS()`, and `DCC_V2_TEXT_INPUT_PLACEHOLDER_NS()`,
+namespace-aware params route aliases such as `DCC_BUTTON_NS_PARAMS()` and
+`DCC_SELECT_NS_PARAMS()`, compatible lower-level typed route aliases such as
+`DCC_TYPED_BUTTON_NS()`, and single-source params aliases such as `DCC_MODAL_NS_PARAMS()`,
+`DCC_BUTTON_NS_PREFIX_PARAMS()`, `DCC_MODAL_V2_FLOW_NS_PARAMS()`, and
+`DCC_MODAL_V2_FLOW_NS_PARAMS_FN()`,
+namespace-aware persistent View helpers such as `DCC_VIEW_BUTTON_NS()` and
+`DCC_VIEW_ACTION_PRIMARY_NS()`,
+direct `DCC_APP_ON_*_POLICY` route registration helpers, typed routes inside cogs,
+component sessions, declarative app definitions, direct interaction replies,
+app-wide middleware and guard definitions, app-level error handler sugar such as
+`DCC_APP_ERROR_HANDLER()`, `DCC_FRIENDLY_ERROR_FN()`,
+`DCC_SIMPLE_ERROR_FN()`, `DCC_VERBOSE_ERROR_FN()`, context shortcut aliases,
+message prefix command aliases such as `DCC_PREFIX_COMMAND_FN()`,
+`DCC_PREFIX_COMMAND()`, and `DCC_APP_ON_PREFIX_COMMAND()`,
+route group aliases including `DCC_GROUP_*` and `DCC_GROUP_POLICY`,
+handler reply/update/followup/modal sugar including one-call Components v2 and modal display helpers,
+confirm/paginator/settings panel component presets,
+context-first reply aliases such as `DCC_CTX_REPLY_TEXT`,
+`DCC_CTX_EPHEMERAL`, `DCC_CTX_FOLLOWUP_V2`, and `DCC_CTX_SHOW_MODAL_V2`,
+short Components v2 UI aliases such as `DCC_UI_TEXT`, `DCC_UI_CARD_ACCENT`,
+`DCC_UI_ROW`, and `DCC_CTX_REPLY_UI`,
+button action view sugar such as `DCC_VIEW_ACTION_PRIMARY()`,
+`DCC_VIEW_ACTION_ROW()`, `DCC_VIEW_ACTION_ROUTES_DATA()`, and
+`DCC_APP_USE_VIEW_ACTIONS()`,
+standard status replies such as `DCC_ACK`, `DCC_DENY`, `DCC_BAD_INPUT`,
+`DCC_NOT_FOUND`, `DCC_BUSY`, and `DCC_INTERNAL_ERROR`,
+safe send/reply helpers such as `DCC_REPLY_SAFE()` and `DCC_APP_SEND_SAFE()`,
+status message builders such as `DCC_MESSAGE_SUCCESS()` and `DCC_MESSAGE_ERROR()`,
+message flag helpers such as `DCC_MESSAGE_PRIVATE()`, `DCC_MESSAGE_SILENT()`,
+`DCC_MESSAGE_NO_EMBEDS()`, and `DCC_MESSAGE_TEXT_FLAGS()`,
+context reply aliases such as `DCC_CTX_PRIVATE()`, `DCC_CTX_SILENT()`, and
+`DCC_CTX_NO_EMBEDS()`,
+respond aliases such as `DCC_RESPOND_TEXT()`, `DCC_RESPOND_PRIVATE()`,
+`DCC_RESPOND_OR_EDIT_TEXT()`, `DCC_RESPOND_OR_EDIT_UI()`,
+`DCC_RESPOND_OR_FOLLOWUP_TEXT()`, `DCC_RESPOND_PRIVATE_EMBED()`, `DCC_RESPOND_UI()`,
+`DCC_RESPOND_PRIVATE_UI()`, and `DCC_RESPOND_DEFER_PRIVATE()`,
+private defer/embed/flow aliases such as `DCC_DEFER_PRIVATE()`,
+`DCC_REPLY_PRIVATE_EMBED()`, and `DCC_FLOW_DEFER_PRIVATE()`,
+app option presets and auto-defer aliases such as `DCC_APP_OPTIONS_DEV()`,
+`DCC_APP_AUTO_DEFER_PRIVATE()`, and `DCC_APP_OPTIONS_AUTO_DEFER_PRIVATE_DEFAULT()`,
+command builder aliases such as `DCC_CMD()`, `DCC_CMD_OPTIONS()`,
+`DCC_CMD_TREE()`, `DCC_CMD_SUBGROUP()`, `DCC_CMD_SUB()`,
+route-table command schema registration through `DCC_ROUTE_COMMAND_SCHEMA()`,
+and grouped-subcommand path helpers such as `DCC_SUB_PATH()` and
+`DCC_SUBCOMMAND_ROUTE_IN_DATA()`,
+slash argument aliases, modal field aliases, select value aliases such as
+`DCC_CTX_ARG_STRING_OR()`, `DCC_CTX_FIELD_FIRST_VALUE_OR()`, and
+`DCC_CTX_SELECT_FIRST()`,
+component action helpers such as `DCC_CTX_COMPONENT_ACTION()` and
+`DCC_CTX_COMPONENT_IS()`, with declaration guards such as
+`DCC_REQUIRED_ACTION()`, `DCC_REQUIRED_COMPONENT_ACTION()`,
+`DCC_CTX_REQUIRE_ACTION()`, and `DCC_CTX_REQUIRE_COMPONENT_ACTION()`,
+handler-local default guards such as `DCC_REQUIRED_GUILD()`,
+`DCC_REQUIRED_PERMISSIONS()`, `DCC_REQUIRED_ARG_TEXT()`, and
+`DCC_REQUIRED_CUSTOM_ID_PREFIX()`, plus explicit-copy
+`DCC_CTX_REQUIRE_*` guards with `DCC_REQUIRE_*` aliases,
+status-embed guard aliases such as `DCC_CTX_REQUIRE_BAD_INPUT()`,
+`DCC_CTX_REQUIRE_DENY()`, `DCC_CTX_REQUIRE_ARG_TEXT_BAD_INPUT()`, and
+required-option declaration helpers such as `DCC_REQUIRED_STRING_OPTION()`,
+`DCC_REQUIRED_USER_OPTION()`, and `DCC_CTX_REQUIRE_STRING_OPTION()`, plus
+required modal field helpers such as `DCC_REQUIRED_TEXT_FIELD()`,
+`DCC_REQUIRED_CHECKBOX_FIELD()`, and `DCC_CTX_REQUIRE_TEXT_FIELD()`, and
+required select value helpers such as `DCC_REQUIRED_SELECT_FIRST()`,
+`DCC_REQUIRED_SELECT_VALUES()`, and `DCC_CTX_REQUIRE_SELECT_FIRST()`,
+variadic role checks such as `DCC_CTX_HAS_ANY_ROLE_IDS()` and
+`DCC_CTX_REQUIRE_ANY_ROLE_IDS()`,
+handler-local `DCC_CTX_VALIDATE_OR_REPLY()` validation exits,
+handler-local status guards such as `DCC_CTX_TRY()` and `DCC_CTX_TRY_MSG()`,
+strict `DCC_PARSE_DATE*` and `DCC_PARSE_BIRTHDAY()` helpers,
+handler option compatibility aliases such as `DCC_OPTION_STRING_OR` and
+`DCC_OPTION_USER`,
+typed allowed mention builders such as `DCC_MESSAGE_NO_MENTIONS()` and
+`DCC_ALLOWED_MENTIONS_USERS(...)`,
+Discord text formatting helpers such as `DCC_MENTION_USER()` and
+`DCC_MENTION_COMMAND()`/`DCC_EMOJI()`/`DCC_TIMESTAMP_RELATIVE()`, plus
+context-first aliases such as `DCC_CTX_USER_MENTION()` and
+`DCC_CTX_MESSAGE_LINK()`, and target/option aliases such as
+`DCC_CTX_TARGET_USER_MENTION()` and `DCC_CTX_ARG_ROLE_MENTION()`,
+display-name and asset aliases such as `DCC_CTX_AUTHOR_DISPLAY_NAME()`,
+`DCC_CTX_ARG_USER_DISPLAY_NAME()`, `DCC_CTX_GUILD_NAME()`, and
+`DCC_CTX_AUTHOR_AVATAR_URL()`,
+context REST shortcuts such as `DCC_CTX_THREAD_FROM_MESSAGE()`,
+`DCC_CTX_ARCHIVE_THREAD()`, and `DCC_CTX_LOCK_THREAD()`,
+short handler-local context aliases such as `DCC_USER()`, `DCC_MEMBER()`,
+`DCC_CHANNEL()`, `DCC_USER_ID()`, `DCC_CUSTOM_ID()`, and `DCC_ACTION()`,
+object-oriented REST shortcut aliases such as `DCC_CHANNEL_SEND_TEXT()`,
+`DCC_CHANNEL_SEND_UI()`, `DCC_MESSAGE_EDIT_TEXT()`,
+`DCC_MESSAGE_DELETE()`, `DCC_MESSAGE_THREAD()`, and `DCC_THREAD_LOCK()`,
+webhook aliases such as `DCC_WEBHOOK_SEND_TEXT()`, `DCC_WEBHOOK_SEND()`,
+`DCC_WEBHOOK_SEND_UI()`, `DCC_WEBHOOK_MESSAGE_EDIT()`, and
+`DCC_WEBHOOK_MESSAGE_DELETE()`,
+user/resource aliases such as `DCC_ME_FETCH()`, `DCC_USER_FETCH()`,
+`DCC_USER_DM_SEND_TEXT()`, `DCC_GUILD_INVITES_FETCH()`,
+`DCC_GROUP_DM_RECIPIENT_ADD_PARAMS()`, `DCC_STAGE_CREATE_PARAMS()`, and
+`DCC_GUILD_TEMPLATE_SYNC()`,
+guild operations such as `DCC_GUILD_AUDIT_LOG_FETCH_PAGE()`,
+`DCC_GUILD_WIDGET_EDIT_PARAMS()`, `DCC_GUILD_ONBOARDING_EDIT_PARAMS()`,
+`DCC_GUILD_WELCOME_SCREEN_EDIT_PARAMS()`, and `DCC_AUTO_MOD_RULE_CREATE_PARAMS()`,
+emoji/sticker aliases such as `DCC_GUILD_EMOJI_CREATE_PARAMS()`,
+`DCC_GUILD_STICKER_CREATE_PARAMS()`, `DCC_STICKER_PACKS_FETCH()`, and
+`DCC_GUILD_MESSAGES_SEARCH_PARAMS()`,
+gateway/commerce/voice aliases such as `DCC_GATEWAY_BOT_FETCH()`,
+`DCC_USER_VOICE_STATE_EDIT_PARAMS()`, `DCC_ENTITLEMENTS_FETCH_PAGE()`, and
+`DCC_ENTITLEMENT_CONSUME()`,
+wait/collector aliases such as `DCC_WAIT_FOR_BUTTON()`,
+`DCC_WAIT_FOR_MODAL_PREFIX()`, `DCC_COLLECT_BUTTON()`,
+`DCC_APP_WAIT_FOR_BUTTON()`, and `DCC_APP_WAIT_FOR_COMPONENT_FILTERED()`,
+formatted response helpers such as `DCC_CTX_REPLY_TEXT_F()`,
+`DCC_CTX_PRIVATE_F()`, `DCC_CTX_FOLLOWUP_PRIVATE_F()`,
+`DCC_CTX_UPDATE_TEXT_F()`, `DCC_CTX_EDIT_TEXT_F()`, `DCC_CTX_DONE_F()`,
+`DCC_CTX_BAD_INPUT_F()`, `DCC_APP_SEND_TEXT_F()`, `DCC_CHANNEL_SEND_TEXT_F()`,
+`DCC_APP_EDIT_TEXT_F()`, `DCC_MESSAGE_EDIT_TEXT_F()`,
+and `DCC_FORMAT_ALLOC()`,
+Discord markdown helpers such as `DCC_MD_BOLD()` and `DCC_MD_CODE_BLOCK()`,
+Discord CDN URL helpers such as `DCC_CDN_USER_AVATAR()` and
+`DCC_CDN_MEMBER_AVATAR()`,
+Discord color helpers such as `DCC_COLOR_RGB()`, `DCC_COLOR_FROM_HEX()`, and
+`DCC_COLOR_TO_HEX()`,
+duration helpers such as `DCC_SECONDS()`, `DCC_MINUTES()`, and
+`DCC_TIMEOUT_SECONDS_CHECKED()`,
+raw id and Discord mention parsers such as `DCC_PARSE_ID()` and
+`DCC_PARSE_CHANNEL_MENTION()`,
+snowflake creation-time helpers such as `DCC_SNOWFLAKE_RELATIVE()`,
+message link helpers such as `DCC_MESSAGE_LINK()` and
+`DCC_PARSE_MESSAGE_LINK()`,
+permission helpers such as `DCC_PERMISSIONS()`, `DCC_PERMISSION_TEXT_RICH`,
+`DCC_CTX_CAN_ANY_PERMISSION()`, and `DCC_CTX_REQUIRE_CAN_ANY()`,
+one-call app run helpers, interaction flows, `DCC_CTX_STORE_*` app-store sugar,
+`DCC_CTX_REQUIRE_STORE()` handler guards,
+friendly status aliases such as `DCC_REPLY_OK()`, `DCC_CTX_WARN()`,
+`DCC_MESSAGE_INFO()`, `DCC_APP_PUBLISH_LATEST_STORE()` managed panels,
+poll message helpers such as `DCC_POLL_YES_NO()` and `DCC_MESSAGE_TEXT_POLL()`,
+hot reload canary options, REST firewall options, typed REST response ID extraction, and replay records.
+It also includes typed env/config helpers such as `DCC_CONFIG_CHANNEL`,
+`DCC_CONFIG_BOOL_DEFAULT`, and one-off `DCC_ENV_CHANNEL` reads, so application
+startup code does not need scattered `getenv()` parsing. Channel, role, and user
+config helpers accept raw IDs or the matching Discord mention while guild and
+generic snowflake helpers stay raw-ID only.
+Guard sugar includes `DCC_GUARDS(...)`/`DCC_POLICY(...)` with
+guild-only/DM-only/NSFW-only guards, channel-type guards, owner checks, role
+guards, predicate checks, plus per-user, per-channel, per-guild, and global
+cooldowns for discord.py-style declarations. Use short decorator aliases such
+as `DCC_ONLY_GUILD()`, `DCC_CAN(...)`, `DCC_HAS_ANY_ROLE(...)`, and
+`DCC_RATE_LIMIT_USER(...)` with `DCC_ON_*_GUARDED(...)` route declarations when
+you want policy inline.
 Components v2 message sugar sets `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2` and
 intentionally avoids mixing v2 components with legacy `content` or `embeds`.
 
@@ -48,8 +263,64 @@ and calls out explicit APIs only where that extra control matters.
 
 ## Core Lifecycle
 
+- `app.h`: discord.js/discord.py-style high-level application runtime with
+  slash/component/modal/autocomplete routing, app-level Gateway event hooks,
+  message prefix command routing,
+  `dcc_app_send*()`, edit/delete message helpers, thread helpers, and member role helpers,
+  object-oriented sugar aliases such as `DCC_CHANNEL_SEND_TEXT()`,
+  `DCC_CHANNEL_FETCH()`, `DCC_CHANNEL_TYPING()`, `DCC_CHANNEL_DELETE()`,
+  `DCC_CHANNEL_INVITE_CREATE_PARAMS()`, `DCC_CHANNEL_PERMISSION_EDIT_PARAMS()`,
+  `DCC_GUILD_CHANNELS_REORDER_PARAMS()`,
+  `DCC_MESSAGE_EDIT_TEXT()`, `DCC_MESSAGE_PIN()`, `DCC_MESSAGE_REACT()`,
+  `DCC_MESSAGE_CROSSPOST()`, `DCC_MEMBER_ADD_ROLE()`, `DCC_MEMBER_TIMEOUT()`,
+  `DCC_MEMBER_KICK()`, `DCC_GUILD_ROLE_CREATE_PARAMS()`, `DCC_ROLE_DELETE()`,
+  `DCC_MEMBER_BAN()`, `DCC_MEMBER_UNBAN()`, `DCC_ME_SET_NICK()`,
+  `DCC_GUILD_PRUNE_COUNT()`, `DCC_SCHEDULED_EVENT_CREATE_PARAMS()`,
+  `DCC_WEBHOOK_SEND_TEXT()`, `DCC_WEBHOOK_SEND_UI()`,
+  `DCC_USER_DM_SEND_TEXT()`, `DCC_INVITE_FETCH_FULL()`,
+  `DCC_STAGE_CREATE_PARAMS()`, `DCC_GUILD_TEMPLATE_CREATE_PARAMS()`, and
+  `DCC_GUILD_AUDIT_LOG_FETCH_PAGE()`, `DCC_GUILD_WIDGET_EDIT_PARAMS()`,
+  `DCC_GUILD_ONBOARDING_EDIT_PARAMS()`, `DCC_GUILD_WELCOME_SCREEN_EDIT_PARAMS()`,
+  `DCC_AUTO_MOD_RULE_CREATE_PARAMS()`, and
+  `DCC_GUILD_EMOJI_CREATE_PARAMS()`, `DCC_GUILD_STICKER_CREATE_PARAMS()`,
+  `DCC_GUILD_MESSAGES_SEARCH_PARAMS()`, and
+  `DCC_GATEWAY_BOT_FETCH()`, `DCC_GROUP_DM_RECIPIENT_ADD_PARAMS()`,
+  `DCC_USER_VOICE_STATE_EDIT_PARAMS()`, `DCC_ENTITLEMENTS_FETCH_PAGE()`,
+  `DCC_ENTITLEMENT_CONSUME()`, and
+  `DCC_AUTHOR_ADD_ROLE()`,
+  app-level managed latest-message publishing, app-level waiter wrappers,
+  filtered app waiters, context-scoped button/select/modal/message waits,
+  `dcc_app_load_dotenv()`/env-based option loading, subcommand routing, app
+  views, declarative extension descriptors for Cog-style feature files,
+  prefixed route groups with shared middleware and guards, declarative route
+  policies, route-scoped middleware, predicate checks, guild/DM/NSFW/channel/role guards, and cooldowns, command/form/component variable and struct-field
+  binding helpers, command registry ownership, READY-time command sync, typed
+  app state, Cog-like app modules, declarative app definitions,
+  required environment validation, typed env/config binding helpers, one-shot READY handlers,
+  top-level `DCC_APP_EVENTS(...)`, `DCC_REQUIRE_ENV(...)`,
+  `DCC_ON_READY_ONCE(...)`, `dcc_app_create_defined()`, and `dcc_app_run_dotenv_defined()`,
+  typed slash/subcommand/autocomplete/modal/button/select route wrappers, typed modal flow
+  register/show helpers, compact typed slash sugar,
+  typed Gateway event sugar such as `DCC_MEMBER_JOIN_FN()`,
+  `DCC_MEMBER_JOIN_DATA()`, and `DCC_APP_ON_ROLE_UPDATE_DATA()`,
+  app definition middleware, error handlers, and guard policies,
+  persistent component-session store export/import,
+  field validators for required strings, ranges and strict dates,
+  strict date parsing into `dcc_ctx_parsed_date_t`,
+  flow-aware interaction context shortcuts, `DCC_FLOW_*` action sugar,
+  effective response-state helpers,
+  wait/collector context helpers and owned wait-result accessors,
+  app-owned file-backed store access via `dcc_app_store()`,
+  focused autocomplete option shortcuts and static choice filtering,
+  default error responses,
+  global error handling,
+  confirm, paginator, and settings panel component presets,
+  app-owned signed component sessions, app-wide middleware, common guards,
+  auto-defer, and interval or KST scheduled LLAM tasks.
 - `client.h`: client creation, options, start/wait/stop, gateway discovery,
-  event waits, and typed object wait helpers.
+  event waits, typed object wait helpers, and `dcc_client_gateway_info()` for
+  Gateway URL, identify budget, session ID, sequence, resumability, current
+  reconnect request, task-running state, and last Gateway task status.
 - `cluster.h`: compatibility aggregate for multi-shard lifecycle, shard access,
   gateway admission and discovery, rolling operations, health summaries, fixed
   buffer health/recovery/remediation-loop/operation-status/cluster-status JSON,
@@ -147,6 +418,63 @@ and calls out explicit APIs only where that extra control matters.
   its guild ID without REST. Set `infer_guild_id_from_channel` in
   `dcc_client_options_t`, or use `DCC_CLIENT_OPTIONS_WITH_GUILD_INFERENCE()`,
   when voice helpers should fill `guild_id` automatically from `channel_id`.
+- `message_link.h`: checked Discord message-link formatting and parsing.
+  `dcc_message_link_parse()` accepts normal, canary, ptb, path-only, and DM
+  `@me` links and returns a typed `dcc_message_link_t`; sugar aliases expose
+  `DCC_MESSAGE_LINK()`, `DCC_DM_MESSAGE_LINK()`, and
+  `DCC_PARSE_MESSAGE_LINK()`.
+- `app.h`: app-runtime context helpers expose `dcc_ctx_user()`,
+  `dcc_ctx_member()`, `dcc_ctx_guild()`, `dcc_ctx_channel()`, target helpers,
+  and typed option object helpers such as `dcc_ctx_option_user()` and
+  `dcc_ctx_option_channel()`. `dcc_ctx_response_state()` and the boolean
+  response helpers expose replied/deferred/followup state, including app-level
+  auto-defer. Option binding also supports direct borrowed
+  object fields for users, members, roles, channels, messages, and attachments.
+  They use interaction resolved objects first and the enabled cache as a
+  borrowed fallback where that object type is cached.
+- `sugar/app_registration.h`: focused direct app-registration sugar for
+  slash, context menu, component, modal, event, message create/update/delete,
+  ready, and message-prefix command routes, including `_DATA`, `_FN`,
+  namespace, `_POLICY`, and `_GUARDED` route helpers.
+- `sugar/decorators.h`: focused static route descriptor sugar for placing route
+  metadata beside the handler. `DCC_DECORATE_SLASH()`,
+  `DCC_DECORATE_BUTTON_NS()`, `DCC_DECORATE_MODAL_NS()`,
+  `DCC_DECORATE_READY_ONCE()`, typed event variants such as
+  `DCC_DECORATE_MEMBER_JOIN()`, task/event variants, and route policy/data
+  forms such as `DCC_DECORATE_SLASH_DATA_GUARDED()` and
+  `DCC_DECORATE_BUTTON_NS_DATA_GUARDED()` declare the handler and expose it to
+  Cogs through `DCC_ROUTE(handler_name)`. Typed slash params decorators such as
+  `DCC_DECORATE_SLASH_PARAMS_DATA_GUARDED()` and typed modal/component params
+  decorators such as `DCC_DECORATE_MODAL_NS_PARAMS_DATA_GUARDED()`,
+  `DCC_DECORATE_BUTTON_NS_PREFIX_PARAMS_DATA_GUARDED()`, and
+  `DCC_DECORATE_SELECT_NS_PARAMS_DATA_GUARDED()` expose typed descriptors
+  through `DCC_TYPED_ROUTE(handler_name)` for the matching
+  `DCC_COG_*_ROUTES` list.
+- `sugar/listeners.h`: discord.js-style route table sugar.
+  `DCC_ROUTE_COMMAND()`, `DCC_ROUTE_BUTTON_NS()`,
+  `DCC_ROUTE_READY_ONCE()`, typed gateway event aliases such as
+  `DCC_ROUTE_MEMBER_JOIN()`, `DCC_ROUTE_PREFIX_COMMAND()`,
+  `DCC_ROUTE_TASK_DAILY_KST()`, `DCC_ROUTE_COMMAND_SCHEMA()`,
+  `DCC_ROUTE_COMMAND_PARAMS()`, `DCC_ROUTE_COMMAND_FN_DATA_GUARDED()`,
+  `DCC_ROUTE_MODAL_PARAMS_DATA()`,
+  `DCC_ROUTE_BUTTON_NS_PREFIX_PARAMS_DATA_GUARDED()`,
+  `DCC_ROUTE_SELECT_NS_PARAMS_DATA()`, and decorated-handler aliases such as
+  `DCC_ROUTE_DECORATED_COMMAND()`, `DCC_ROUTE_DECORATED_BUTTON()`, and
+  `DCC_ROUTE_DECORATED_TYPED_COMMAND()` build a `DCC_ROUTES(...)` table for
+  `DCC_BOT_ROUTES()`, `DCC_BOT_ROUTES_MAIN()`,
+  `DCC_ROUTES_REGISTER(app, ...)`, or `DCC_DEFINE_ROUTES()` plus
+  `DCC_ROUTES_MODULE(...)`. The older `DCC_LISTEN_*` names remain compatible.
+- `sugar/messages.h`: focused message-builder literals such as
+  `DCC_MESSAGE_TEXT()`, `DCC_MESSAGE_EMBEDS()`,
+  `DCC_MESSAGE_COMPONENTS()`, and `DCC_MESSAGE_COMPONENTS_V2()`.
+- `sugar/app_actions.h`: focused app, channel, message, thread, and member
+  action shortcuts such as `DCC_APP_SEND_TEXT()`,
+  `DCC_CHANNEL_SEND_SAFE()`, `DCC_MESSAGE_THREAD()`,
+  `DCC_THREAD_LOCK()`, and `DCC_MEMBER_ADD_ROLE()`.
+- `sugar/context.h`: focused interaction-context shortcuts, including option
+  access, target/resource helpers, display-name and mention helpers, guards,
+  `DCC_CTX_REPLY_UI()`, `DCC_CTX_UPDATE_UI()`, `DCC_CTX_SEND_UI()`, and
+  `DCC_CTX_SHOW_MODAL_V2()`.
 
 Gateway event accessors return borrowed callback views unless the API name says
 `wait` and returns an owned pointer. Use `dcc_*_clone()` when an object must
@@ -225,6 +553,9 @@ interaction pointer for `SOCKET_CLOSE`. Use
   provide load/save callbacks for a message reference, and DCC deletes the
   previous message, posts the new message, parses the created message ID, and
   saves the new reference.
+- `store.h`: tiny key-value store abstraction with a dependency-free file
+  backend, string/u64 helpers, context/app store sugar, and managed-message
+  reference bindings for latest-message publishing.
 - `rest/application_commands.h`: compatibility aggregate for application command
   REST helpers. Focused subheaders under `dcc/rest/application_commands/`
   separate application emojis, default-global create/bulk/delete-all
@@ -248,7 +579,8 @@ interaction pointer for `SOCKET_CLOSE`. Use
   provides Components v2 layout, media, select-default, modal-input
   serializers, convenience initializers, and typed message component accessors;
   `message.h` sets `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2` when v2 components are
-  attached.
+  attached. `autocomplete.h` exposes the Discord response choice limit through
+  `DCC_AUTOCOMPLETE_MAX_CHOICES`.
 - `objects/clone/interactions.h`: command option accessors, resolved object
   lookups, and Components v2 modal submit helpers such as
   `dcc_interaction_form_value()` and `dcc_interaction_form_boolean()`.
@@ -256,7 +588,8 @@ interaction pointer for `SOCKET_CLOSE`. Use
   raw `dcc_message_t::components_json` and project a typed
   `dcc_message_t::components` tree for Components v2 layouts.
 - `component_session.h`: signed stateful UI sessions for legacy and Components
-  v2 controls, including `dcc_component_session_button_v2()`.
+  v2 controls, including `dcc_component_session_button_v2()`; app users can
+  route sessions with `dcc_app_component_session()`.
 
 REST futures are LLAM-backed. Completion callbacks run on DCC worker context;
 callers that need synchronous behavior should use the wait helpers.

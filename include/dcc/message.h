@@ -47,6 +47,18 @@ typedef struct dcc_poll_builder {
     uint8_t has_allow_multiselect;
 } dcc_poll_builder_t;
 
+typedef struct dcc_allowed_mentions_builder {
+    const dcc_snowflake_t *users;
+    size_t user_count;
+    const dcc_snowflake_t *roles;
+    size_t role_count;
+    uint8_t parse_users;
+    uint8_t parse_roles;
+    uint8_t parse_everyone;
+    uint8_t replied_user;
+    uint8_t has_replied_user;
+} dcc_allowed_mentions_builder_t;
+
 typedef struct dcc_message_builder {
     const char *content;
     const char *nonce;
@@ -64,6 +76,7 @@ typedef struct dcc_message_builder {
     size_t components_v2_count;
     const char *components_v2_json;
     const dcc_poll_builder_t *poll;
+    const dcc_allowed_mentions_builder_t *allowed_mentions;
     const dcc_snowflake_t *sticker_ids;
     size_t sticker_ids_count;
     uint64_t flags;
@@ -91,6 +104,10 @@ DCC_API dcc_status_t dcc_message_builder_set_message_reference_json(
 DCC_API dcc_status_t dcc_message_builder_set_allowed_mentions_json(
     dcc_message_builder_t *builder,
     const char *allowed_mentions_json
+);
+DCC_API dcc_status_t dcc_message_builder_set_allowed_mentions(
+    dcc_message_builder_t *builder,
+    const dcc_allowed_mentions_builder_t *allowed_mentions
 );
 DCC_API dcc_status_t dcc_message_builder_set_embeds(
     dcc_message_builder_t *builder,

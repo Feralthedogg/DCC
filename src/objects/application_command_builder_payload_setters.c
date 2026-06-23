@@ -30,6 +30,26 @@ dcc_status_t dcc_application_command_builder_set_options_json(
         return DCC_ERR_INVALID_ARG;
     }
     builder->options_json = options_json;
+    if (options_json != NULL) {
+        builder->options = NULL;
+        builder->options_count = 0U;
+    }
+    return DCC_OK;
+}
+
+dcc_status_t dcc_application_command_builder_set_options(
+    dcc_application_command_builder_t *builder,
+    const dcc_application_command_option_builder_t *options,
+    size_t options_count
+) {
+    if (builder == NULL || (options_count != 0U && options == NULL)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    builder->options = options;
+    builder->options_count = options_count;
+    if (options_count != 0U) {
+        builder->options_json = NULL;
+    }
     return DCC_OK;
 }
 

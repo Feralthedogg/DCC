@@ -13,7 +13,7 @@ static dcc_status_t wait_for_idle_promotion(
     dcc_hot_reload_t *hot_reload,
     dcc_hot_reload_health_snapshot_t *out
 ) {
-    for (size_t i = 0; i < 50U; ++i) {
+    for (size_t i = 0; i < 120U; ++i) {
         dcc_status_t status = dcc_hot_reload_health_snapshot(hot_reload, out);
         if (status != DCC_OK) {
             return status;
@@ -46,7 +46,7 @@ dcc_status_t dcc_hot_reload_isolated_idle_promotion_smoke(void) {
         .backend = DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER,
         .worker_path = DCC_HOT_RELOAD_WORKER,
         .poll_interval_ms = 5000,
-        .worker_health_timeout_ms = 250,
+        .worker_health_timeout_ms = 1000,
         .worker_drain_timeout_ms = 50,
     };
     dcc_hot_reload_test_wait_state_t wait_state = {

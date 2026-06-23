@@ -96,7 +96,10 @@ static int dcc_command_sync_is_value_option(const char *arg) {
 static void dcc_command_sync_apply_env(dcc_command_sync_options_t *options) {
     const char *value = NULL;
     if (options->token == NULL) {
-        value = dcc_command_sync_env_nonempty("BOT_TOKEN");
+        value = dcc_command_sync_env_nonempty("DCC_TOKEN");
+        if (value == NULL) {
+            value = dcc_command_sync_env_nonempty("BOT_TOKEN");
+        }
         options->token = value != NULL ? value : dcc_command_sync_env_nonempty("DISCORD_TOKEN");
     }
     if (options->application_id == 0) {
@@ -171,7 +174,7 @@ int dcc_command_sync_validate_options(const dcc_command_sync_options_t *options)
     }
     if ((options->remote_path == NULL || options->apply) &&
         (options->token == NULL || options->token[0] == '\0')) {
-        fprintf(stderr, "missing bot token; set BOT_TOKEN, DISCORD_TOKEN, or --token\n");
+        fprintf(stderr, "missing bot token; set DCC_TOKEN, BOT_TOKEN, DISCORD_TOKEN, or --token\n");
         return -1;
     }
     return 0;

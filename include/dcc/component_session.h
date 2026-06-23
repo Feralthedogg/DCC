@@ -180,6 +180,17 @@ DCC_API size_t dcc_component_session_store_sweep(
     uint64_t now_ms
 );
 DCC_API size_t dcc_component_session_store_count(const dcc_component_session_store_t *store);
+DCC_API dcc_status_t dcc_component_session_store_export_json(
+    const dcc_component_session_store_t *store,
+    char **out_json,
+    size_t *out_len
+);
+DCC_API dcc_status_t dcc_component_session_store_import_json(
+    dcc_component_session_store_t *store,
+    const char *json,
+    size_t json_len
+);
+DCC_API void dcc_component_session_store_json_free(char *json);
 
 DCC_API void dcc_component_session_listener_options_init(
     dcc_component_session_listener_options_t *options

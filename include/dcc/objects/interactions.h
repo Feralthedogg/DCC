@@ -91,7 +91,9 @@ typedef struct dcc_interaction {
     dcc_snowflake_t command_id;
     dcc_snowflake_t target_id;
     dcc_snowflake_t message_id;
+    dcc_snowflake_t user_id;
     dcc_permission_t app_permissions;
+    dcc_permission_t member_permissions;
     uint32_t attachment_size_limit;
     uint32_t version;
     uint32_t context;
@@ -99,6 +101,7 @@ typedef struct dcc_interaction {
     uint32_t command_type;
     uint32_t component_type;
     uint8_t has_context;
+    uint8_t has_member_permissions;
     const char *token;
     const char *name;
     const char *custom_id;

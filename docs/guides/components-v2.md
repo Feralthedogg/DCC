@@ -38,6 +38,20 @@ dcc_message_builder_t message =
     );
 ```
 
+Inside an interaction handler, use the one-call reply/update helpers when the
+message does not need to be stored:
+
+```c
+DCC_REPLY_V2(
+    ctx,
+    DCC_V2_CONTAINER_ACCENT(
+        0x5865F2,
+        DCC_V2_TEXT("## Runtime status"),
+        DCC_V2_ACTION_ROW(DCC_V2_BUTTON_PRIMARY("Refresh", "status.refresh"))
+    )
+);
+```
+
 The v2 message macro sets `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2` and hides the
 short-lived component arrays.
 
@@ -148,10 +162,7 @@ dcc_modal_builder_t modal =
         "config-modal",
         "Upload config",
         DCC_V2_LABEL("Config files", upload),
-        DCC_V2_LABEL(
-            "Apply immediately",
-            DCC_MODAL_V2_CHECKBOX("config.accept", "Apply after submit", 1U)
-        )
+        DCC_MODAL_V2_FIELD_CHECKBOX("config.accept", "Apply immediately", 1U)
     );
 ```
 

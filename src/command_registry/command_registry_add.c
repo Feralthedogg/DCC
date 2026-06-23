@@ -58,9 +58,15 @@ dcc_status_t dcc_command_registry_add_builder(
         state->entry_cap = next_cap;
     }
 
+    dcc_application_command_builder_t command_copy;
+    dcc_status_t status = dcc_command_registry_builder_copy(&command_copy, command);
+    if (status != DCC_OK) {
+        return status;
+    }
+
     dcc_command_registry_entry_t *entry = &state->entries[state->entry_count++];
     memset(entry, 0, sizeof(*entry));
     entry->size = sizeof(*entry);
-    entry->command = *command;
+    entry->command = command_copy;
     return DCC_OK;
 }

@@ -29,25 +29,20 @@
   </div>
 </section>
 
-## Minimal Runtime Shape
+## Minimal App Shape
 
 ```c
 #include <dcc/sugar.h>
 
-int main(void) {
-    dcc_client_options_t options =
-        DCC_CLIENT_OPTIONS(getenv("DISCORD_TOKEN"), DCC_INTENTS_DEFAULT);
-
-    dcc_client_t *client = NULL;
-    if (dcc_client_create(&options, &client) != DCC_OK) {
-        return 1;
-    }
-
-    dcc_client_start(client);
-    dcc_client_wait(client);
-    dcc_client_destroy(client);
-    return 0;
+DCC_SLASH_FN(on_ping) {
+    (void)user_data;
+    (void)DCC_REPLY_TEXT(ctx, "pong");
 }
+
+DCC_BOT_ROUTES_MAIN(
+    "minimal",
+    DCC_ROUTE_COMMAND("ping", "Reply with pong", on_ping)
+)
 ```
 
 <div class="dcc-card-grid">

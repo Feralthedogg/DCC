@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 1.2.4
+    VERSION 1.3.0
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )
@@ -215,6 +215,38 @@ endfunction()
 
 target_sources(dcc
     PRIVATE
+        src/app/app.c
+        src/app/app_auto_defer.c
+        src/app/app_commands.c
+        src/app/app_component_bind.c
+        src/app/app_component_sessions.c
+        src/app/app_context.c
+        src/app/app_context_shortcuts.c
+        src/app/app_definition.c
+        src/app/app_events.c
+        src/app/app_env.c
+        src/app/app_error.c
+        src/app/app_extensions.c
+        src/app/app_form_bind.c
+        src/app/app_guards.c
+        src/app/app_message_commands.c
+        src/app/app_messages.c
+        src/app/app_modules.c
+        src/app/app_option_bind.c
+        src/app/app_options.c
+        src/app/app_rest_shortcuts.c
+        src/app/app_rest_shortcuts_guilds.c
+        src/app/app_rest_shortcuts_resources.c
+        src/app/app_rest_shortcuts_webhooks.c
+        src/app/app_route_group.c
+        src/app/app_routes.c
+        src/app/app_scheduler.c
+        src/app/app_state.c
+        src/app/app_subcommands.c
+        src/app/app_typed_routes.c
+        src/app/app_validation.c
+        src/app/app_view.c
+        src/app/app_wait.c
         src/cache/cache.c
         src/cache/cache_merge_channels.c
         src/cache/cache_merge_guild_collections.c
@@ -250,11 +282,13 @@ target_sources(dcc
         src/component_session/component_session_options.c
         src/component_session/component_session_state.c
         src/component_session/component_session_store.c
+        src/component_session/component_session_store_persist.c
         src/component_session/component_session_verify.c
         src/command_registry/command_registry_action.c
         src/command_registry/command_registry_add.c
         src/command_registry/command_registry_apply.c
         src/command_registry/command_registry_apply_ops.c
+        src/command_registry/command_registry_builder_copy.c
         src/command_registry/command_registry_fetch.c
         src/command_registry/command_registry_format_buffer.c
         src/command_registry/command_registry_identity.c
@@ -990,6 +1024,7 @@ target_sources(dcc
         src/objects/application_command_builder_json.c
         src/objects/application_command_builder_members.c
         src/objects/application_command_builder_numbers.c
+        src/objects/application_command_option_builder_json.c
         src/objects/application_command_builder_payload_setters.c
         src/objects/application_command_builder_permission_setters.c
         src/objects/application_command_builder_serialize.c
@@ -1046,6 +1081,7 @@ target_sources(dcc
         src/objects/interaction_resolved_accessors_resources.c
         src/objects/interaction_subcommand_accessors.c
         src/objects/message_builder.c
+        src/objects/message_builder_allowed_mentions.c
         src/objects/message_builder_poll.c
         src/objects/message_builder_poll_media.c
         src/objects/message_builder_poll_validate.c
@@ -1395,6 +1431,11 @@ target_sources(dcc
         src/runtime/runtime.c
         src/runtime/runtime_control.c
         src/runtime/runtime_spawn.c
+        src/message_link.c
+        src/snowflake.c
+        src/store/store.c
+        src/store/store_file.c
+        src/store/store_managed_message.c
         src/voice/voice_crypto.c
         src/voice/voice_dave.c
         src/voice/voice_dave_client.c
@@ -1603,6 +1644,49 @@ if(DCC_BUILD_TOOLS)
         TARGETS dcc_replay
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
+
+    add_executable(dcc_new_app
+        tools/dcc_new_app.c
+        tools/dcc_new_app_action.c
+        tools/dcc_new_app_autocomplete.c
+        tools/dcc_new_app_context_menu.c
+        tools/dcc_new_app_cog.c
+        tools/dcc_new_app_config.c
+        tools/dcc_new_app_error_handler.c
+        tools/dcc_new_app_events.c
+        tools/dcc_new_app_fs.c
+        tools/dcc_new_app_generate.c
+        tools/dcc_new_app_guards.c
+        tools/dcc_new_app_latest_message.c
+        tools/dcc_new_app_middleware.c
+        tools/dcc_new_app_options.c
+        tools/dcc_new_app_preset_announcement.c
+        tools/dcc_new_app_preset_counter.c
+        tools/dcc_new_app_preset_crud.c
+        tools/dcc_new_app_preset_dispatch.c
+        tools/dcc_new_app_preset_flow.c
+        tools/dcc_new_app_preset_help.c
+        tools/dcc_new_app_preset_menu.c
+        tools/dcc_new_app_preset_poll.c
+        tools/dcc_new_app_preset_profile.c
+        tools/dcc_new_app_preset_roles.c
+        tools/dcc_new_app_preset_settings.c
+        tools/dcc_new_app_preset_ticket.c
+        tools/dcc_new_app_preset_welcome.c
+        tools/dcc_new_app_preset_wizard.c
+        tools/dcc_new_app_presets.c
+        tools/dcc_new_app_runtime_routes.c
+        tools/dcc_new_app_routes.c
+        tools/dcc_new_app_subcommand.c
+        tools/dcc_new_app_subcommand_update.c
+        tools/dcc_new_app_usage.c
+        tools/dcc_new_app_view.c
+    )
+    dcc_target_enable_sanitizers(dcc_new_app)
+    install(
+        TARGETS dcc_new_app
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 endif()
 
 if(DCC_BUILD_TOOLS OR DCC_BUILD_EXAMPLES)
@@ -1652,6 +1736,10 @@ if(DCC_BUILD_EXAMPLES)
     add_executable(dcc_basic examples/basic.c)
     target_link_libraries(dcc_basic PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_basic)
+
+    add_executable(dcc_app_ping examples/app_ping.c)
+    target_link_libraries(dcc_app_ping PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_app_ping)
 
     add_executable(dcc_pingpong examples/pingpong.c)
     target_link_libraries(dcc_pingpong PRIVATE dcc::dcc)
@@ -1803,8 +1891,161 @@ if(DCC_BUILD_TESTS)
 
     add_executable(dcc_sugar_smoke tests/sugar_smoke.c)
     target_link_libraries(dcc_sugar_smoke PRIVATE dcc::dcc)
+    target_include_directories(dcc_sugar_smoke PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     dcc_target_enable_sanitizers(dcc_sugar_smoke)
     add_test(NAME dcc_sugar_smoke COMMAND dcc_sugar_smoke)
+
+    add_executable(dcc_sugar_command_dsl_smoke tests/sugar_command_dsl_smoke.c)
+    target_link_libraries(dcc_sugar_command_dsl_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_command_dsl_smoke)
+    add_test(NAME dcc_sugar_command_dsl_smoke COMMAND dcc_sugar_command_dsl_smoke)
+
+    add_executable(dcc_sugar_app_registration_focused_smoke tests/sugar_app_registration_focused_smoke.c)
+    target_link_libraries(dcc_sugar_app_registration_focused_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_app_registration_focused_smoke)
+    add_test(NAME dcc_sugar_app_registration_focused_smoke COMMAND dcc_sugar_app_registration_focused_smoke)
+
+    add_executable(dcc_sugar_app_actions_focused_smoke tests/sugar_app_actions_focused_smoke.c)
+    target_link_libraries(dcc_sugar_app_actions_focused_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_app_actions_focused_smoke)
+    add_test(NAME dcc_sugar_app_actions_focused_smoke COMMAND dcc_sugar_app_actions_focused_smoke)
+
+    add_executable(dcc_sugar_context_focused_smoke tests/sugar_context_focused_smoke.c)
+    target_link_libraries(dcc_sugar_context_focused_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_context_focused_smoke)
+    add_test(NAME dcc_sugar_context_focused_smoke COMMAND dcc_sugar_context_focused_smoke)
+
+    add_executable(dcc_sugar_decorators_smoke tests/sugar_decorators_smoke.c)
+    target_link_libraries(dcc_sugar_decorators_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_decorators_smoke)
+    add_test(NAME dcc_sugar_decorators_smoke COMMAND dcc_sugar_decorators_smoke)
+
+    add_executable(dcc_sugar_listeners_smoke tests/sugar_listeners_smoke.c)
+    target_link_libraries(dcc_sugar_listeners_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_listeners_smoke)
+    add_test(NAME dcc_sugar_listeners_smoke COMMAND dcc_sugar_listeners_smoke)
+
+    add_executable(dcc_sugar_bot_main_compile tests/sugar_bot_main_compile.c)
+    target_link_libraries(dcc_sugar_bot_main_compile PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_bot_main_compile)
+
+    add_executable(dcc_sugar_embed_dsl_smoke tests/sugar_embed_dsl_smoke.c)
+    target_link_libraries(dcc_sugar_embed_dsl_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_embed_dsl_smoke)
+    add_test(NAME dcc_sugar_embed_dsl_smoke COMMAND dcc_sugar_embed_dsl_smoke)
+
+    add_executable(dcc_sugar_allowed_mentions_smoke tests/sugar_allowed_mentions_smoke.c)
+    target_link_libraries(dcc_sugar_allowed_mentions_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_allowed_mentions_smoke)
+    add_test(NAME dcc_sugar_allowed_mentions_smoke COMMAND dcc_sugar_allowed_mentions_smoke)
+
+    add_executable(dcc_sugar_status_smoke tests/sugar_status_smoke.c)
+    target_link_libraries(dcc_sugar_status_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_status_smoke)
+    add_test(NAME dcc_sugar_status_smoke COMMAND dcc_sugar_status_smoke)
+
+    add_executable(dcc_sugar_colors_smoke tests/sugar_colors_smoke.c)
+    target_link_libraries(dcc_sugar_colors_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_colors_smoke)
+    add_test(NAME dcc_sugar_colors_smoke COMMAND dcc_sugar_colors_smoke)
+
+    add_executable(dcc_sugar_time_smoke tests/sugar_time_smoke.c)
+    target_link_libraries(dcc_sugar_time_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_time_smoke)
+    add_test(NAME dcc_sugar_time_smoke COMMAND dcc_sugar_time_smoke)
+
+    add_executable(dcc_sugar_poll_smoke tests/sugar_poll_smoke.c)
+    target_link_libraries(dcc_sugar_poll_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_poll_smoke)
+    add_test(NAME dcc_sugar_poll_smoke COMMAND dcc_sugar_poll_smoke)
+
+    add_executable(dcc_sugar_flags_smoke tests/sugar_flags_smoke.c)
+    target_link_libraries(dcc_sugar_flags_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_flags_smoke)
+    add_test(NAME dcc_sugar_flags_smoke COMMAND dcc_sugar_flags_smoke)
+
+    add_executable(dcc_sugar_format_smoke tests/sugar_format_smoke.c)
+    target_link_libraries(dcc_sugar_format_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_format_smoke)
+    add_test(NAME dcc_sugar_format_smoke COMMAND dcc_sugar_format_smoke)
+
+    add_executable(dcc_sugar_cdn_smoke tests/sugar_cdn_smoke.c)
+    target_link_libraries(dcc_sugar_cdn_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_cdn_smoke)
+    add_test(NAME dcc_sugar_cdn_smoke COMMAND dcc_sugar_cdn_smoke)
+
+    add_executable(dcc_sugar_markdown_smoke tests/sugar_markdown_smoke.c)
+    target_link_libraries(dcc_sugar_markdown_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_markdown_smoke)
+    add_test(NAME dcc_sugar_markdown_smoke COMMAND dcc_sugar_markdown_smoke)
+
+    add_executable(dcc_snowflake_parse_smoke tests/snowflake_parse_smoke.c)
+    target_link_libraries(dcc_snowflake_parse_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_snowflake_parse_smoke)
+    add_test(NAME dcc_snowflake_parse_smoke COMMAND dcc_snowflake_parse_smoke)
+
+    add_executable(dcc_message_link_smoke tests/message_link_smoke.c)
+    target_link_libraries(dcc_message_link_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_message_link_smoke)
+    add_test(NAME dcc_message_link_smoke COMMAND dcc_message_link_smoke)
+
+    add_executable(dcc_sugar_permissions_smoke tests/sugar_permissions_smoke.c)
+    target_link_libraries(dcc_sugar_permissions_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_permissions_smoke)
+    add_test(NAME dcc_sugar_permissions_smoke COMMAND dcc_sugar_permissions_smoke)
+
+    add_executable(dcc_sugar_component_presets_smoke tests/sugar_component_presets_smoke.c)
+    target_link_libraries(dcc_sugar_component_presets_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_component_presets_smoke)
+    add_test(NAME dcc_sugar_component_presets_smoke COMMAND dcc_sugar_component_presets_smoke)
+
+    add_executable(dcc_sugar_flow_smoke tests/sugar_flow_smoke.c)
+    target_link_libraries(dcc_sugar_flow_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_sugar_flow_smoke)
+    add_test(NAME dcc_sugar_flow_smoke COMMAND dcc_sugar_flow_smoke)
+
+    add_executable(dcc_store_smoke tests/store_smoke.c)
+    target_link_libraries(dcc_store_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_store_smoke)
+    add_test(NAME dcc_store_smoke COMMAND dcc_store_smoke)
+
+    add_executable(dcc_app_smoke
+        tests/app_smoke.c
+        tests/support/app_smoke_response_state.c
+    )
+    target_link_libraries(dcc_app_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_smoke)
+    dcc_target_enable_sanitizers(dcc_app_smoke)
+    add_test(NAME dcc_app_smoke COMMAND dcc_app_smoke)
+
+    add_executable(dcc_app_message_command_smoke tests/app_message_command_smoke.c)
+    target_link_libraries(dcc_app_message_command_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_message_command_smoke)
+    dcc_target_enable_sanitizers(dcc_app_message_command_smoke)
+    add_test(NAME dcc_app_message_command_smoke COMMAND dcc_app_message_command_smoke)
+
+    add_executable(dcc_app_wait_filter_smoke tests/app_wait_filter_smoke.c)
+    target_link_libraries(dcc_app_wait_filter_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_wait_filter_smoke)
+    dcc_target_enable_sanitizers(dcc_app_wait_filter_smoke)
+    add_test(NAME dcc_app_wait_filter_smoke COMMAND dcc_app_wait_filter_smoke)
+
+    add_executable(dcc_app_autocomplete_sugar_smoke tests/app_autocomplete_sugar_smoke.c)
+    target_link_libraries(dcc_app_autocomplete_sugar_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_autocomplete_sugar_smoke)
+    dcc_target_enable_sanitizers(dcc_app_autocomplete_sugar_smoke)
+    add_test(NAME dcc_app_autocomplete_sugar_smoke COMMAND dcc_app_autocomplete_sugar_smoke)
+
+    add_executable(dcc_app_dx_sugar_smoke tests/app_dx_sugar_smoke.c)
+    target_link_libraries(dcc_app_dx_sugar_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_dx_sugar_smoke)
+    dcc_target_enable_sanitizers(dcc_app_dx_sugar_smoke)
+    add_test(NAME dcc_app_dx_sugar_smoke COMMAND dcc_app_dx_sugar_smoke)
+
+    add_executable(dcc_app_env_mentions_smoke tests/app_env_mentions_smoke.c)
+    target_link_libraries(dcc_app_env_mentions_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_app_env_mentions_smoke)
+    add_test(NAME dcc_app_env_mentions_smoke COMMAND dcc_app_env_mentions_smoke)
 
     add_executable(dcc_interaction_flow_smoke
         tests/interaction_flow_smoke.c
@@ -2336,6 +2577,22 @@ if(DCC_BUILD_TESTS)
             PASS_REGULAR_EXPRESSION "check=ok local_commands=3 remote_commands=3 scope=guild"
         )
 
+        add_test(NAME dcc_command_sync_dcc_token_env
+            COMMAND ${CMAKE_COMMAND} -E env
+                DCC_TOKEN=test-token
+                --unset=BOT_TOKEN
+                --unset=DISCORD_TOKEN
+                "$<TARGET_FILE:dcc_command_sync>"
+                    --commands "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/command_registry_local.json"
+                    --remote "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/command_registry_remote.json"
+                    --application-id 123456789012345678
+                    --apply
+                    --check
+        )
+        set_tests_properties(dcc_command_sync_dcc_token_env PROPERTIES
+            PASS_REGULAR_EXPRESSION "check=ok local_commands=3 remote_commands=3 scope=global"
+        )
+
         add_test(NAME dcc_command_sync_missing_commands
             COMMAND "$<TARGET_FILE:dcc_command_sync>" --remote "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/command_registry_remote.json"
         )
@@ -2372,6 +2629,634 @@ if(DCC_BUILD_TESTS)
                 PASS_REGULAR_EXPRESSION "records=1 gateway=1 interactions=0"
             )
         endif()
+    endif()
+
+    if(TARGET dcc_new_app)
+        add_test(NAME dcc_new_app_help COMMAND dcc_new_app --help)
+        set_tests_properties(dcc_new_app_help PROPERTIES
+            PASS_REGULAR_EXPRESSION "commands.json"
+        )
+
+        add_test(NAME dcc_new_app_generate
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                --name dcc_new_app_smoke
+                --force
+        )
+        set_tests_properties(dcc_new_app_generate PROPERTIES
+            PASS_REGULAR_EXPRESSION "created DCC app dcc_new_app_smoke"
+        )
+
+        add_test(NAME dcc_new_app_add_config_channel
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add config
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                log_channel
+                channel
+                LOG_CHANNEL
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_config_channel PROPERTIES
+            DEPENDS dcc_new_app_generate
+            PASS_REGULAR_EXPRESSION "created DCC config log_channel"
+        )
+
+        add_test(NAME dcc_new_app_add_config_bool
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add config
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                feature_enabled
+                bool
+                FEATURE_ENABLED
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_config_bool PROPERTIES
+            DEPENDS dcc_new_app_add_config_channel
+            PASS_REGULAR_EXPRESSION "created DCC config feature_enabled"
+        )
+
+        add_test(NAME dcc_new_app_add_error_handler
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add error-handler
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                bot_error
+                friendly
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_error_handler PROPERTIES
+            DEPENDS dcc_new_app_add_config_bool
+            PASS_REGULAR_EXPRESSION "created DCC error handler bot_error"
+        )
+
+        add_test(NAME dcc_new_app_add_feature
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add feature
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_feature PROPERTIES
+            DEPENDS dcc_new_app_add_error_handler
+            PASS_REGULAR_EXPRESSION "created DCC feature profile"
+        )
+
+        add_test(NAME dcc_new_app_add_latest_message
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add latest-message
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                status
+                log_channel
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_latest_message PROPERTIES
+            DEPENDS dcc_new_app_add_feature
+            PASS_REGULAR_EXPRESSION "created DCC latest message status"
+        )
+
+        add_test(NAME dcc_new_app_add_scheduled_latest
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add scheduled-latest
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                daily_status
+                log_channel
+                --daily-kst
+                09:00
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_scheduled_latest PROPERTIES
+            DEPENDS dcc_new_app_add_latest_message
+            PASS_REGULAR_EXPRESSION "created DCC scheduled latest message daily_status"
+        )
+
+        add_test(NAME dcc_new_app_add_command
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add command
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                greet
+                --force
+                --guild-only
+                --owner
+                123456789012345678ULL
+                --permission
+                DCC_PERMISSION_MANAGE_GUILD
+                --cooldown-user
+                1:5000
+        )
+        set_tests_properties(dcc_new_app_add_command PROPERTIES
+            DEPENDS dcc_new_app_add_scheduled_latest
+            PASS_REGULAR_EXPRESSION "created DCC command greet"
+        )
+
+        add_test(NAME dcc_new_app_add_subcommand
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add subcommand
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                greet
+                stats
+                --force
+                --role
+                223456789012345678ULL
+        )
+        set_tests_properties(dcc_new_app_add_subcommand PROPERTIES
+            DEPENDS dcc_new_app_add_command
+            PASS_REGULAR_EXPRESSION "created DCC subcommand stats for command greet"
+        )
+
+        add_test(NAME dcc_new_app_add_button
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add button
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                refresh
+                --force
+                --any-role
+                323456789012345678ULL,423456789012345678ULL
+        )
+        set_tests_properties(dcc_new_app_add_button PROPERTIES
+            DEPENDS dcc_new_app_add_subcommand
+            PASS_REGULAR_EXPRESSION "created DCC button refresh"
+        )
+
+        add_test(NAME dcc_new_app_add_select
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add select
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                role
+                --force
+                --dm-only
+        )
+        set_tests_properties(dcc_new_app_add_select PROPERTIES
+            DEPENDS dcc_new_app_add_button
+            PASS_REGULAR_EXPRESSION "created DCC select role"
+        )
+
+        add_test(NAME dcc_new_app_add_modal
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add modal
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                edit
+                --force
+                --nsfw-only
+        )
+        set_tests_properties(dcc_new_app_add_modal PROPERTIES
+            DEPENDS dcc_new_app_add_select
+            PASS_REGULAR_EXPRESSION "created DCC modal edit"
+        )
+
+        add_test(NAME dcc_new_app_add_autocomplete
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add autocomplete
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                profile
+                --force
+                --guild-only
+                --cooldown-user
+                2:3000
+        )
+        set_tests_properties(dcc_new_app_add_autocomplete PROPERTIES
+            DEPENDS dcc_new_app_add_modal
+            PASS_REGULAR_EXPRESSION "created DCC autocomplete profile"
+        )
+
+        add_test(NAME dcc_new_app_add_context_menu_user
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add context-menu
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                inspect_user
+                user
+                --force
+                --guild-only
+        )
+        set_tests_properties(dcc_new_app_add_context_menu_user PROPERTIES
+            DEPENDS dcc_new_app_add_autocomplete
+            PASS_REGULAR_EXPRESSION "created DCC user context menu inspect_user"
+        )
+
+        add_test(NAME dcc_new_app_add_context_menu_message
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add context-menu
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                quote_message
+                message
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_context_menu_message PROPERTIES
+            DEPENDS dcc_new_app_add_context_menu_user
+            PASS_REGULAR_EXPRESSION "created DCC message context menu quote_message"
+        )
+
+        add_test(NAME dcc_new_app_add_middleware
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add middleware
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                require_config
+                config
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_middleware PROPERTIES
+            DEPENDS dcc_new_app_add_context_menu_message
+            PASS_REGULAR_EXPRESSION "created DCC middleware require_config"
+        )
+
+        add_test(NAME dcc_new_app_add_event
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add event
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                ready
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_event PROPERTIES
+            DEPENDS dcc_new_app_add_middleware
+            PASS_REGULAR_EXPRESSION "created DCC event ready"
+        )
+
+        add_test(NAME dcc_new_app_add_event_member_join
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add event
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                member_join
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_event_member_join PROPERTIES
+            DEPENDS dcc_new_app_add_event
+            PASS_REGULAR_EXPRESSION "created DCC event member_join"
+        )
+
+        add_test(NAME dcc_new_app_add_view
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add view
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                dashboard
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_view PROPERTIES
+            DEPENDS dcc_new_app_add_event_member_join
+            PASS_REGULAR_EXPRESSION "created DCC view dashboard"
+        )
+
+        add_test(NAME dcc_new_app_add_message_command
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add message-command
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                hello
+                --prefix !
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_message_command PROPERTIES
+            DEPENDS dcc_new_app_add_view
+            PASS_REGULAR_EXPRESSION "created DCC message command hello"
+        )
+
+        add_test(NAME dcc_new_app_add_task
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add task
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                heartbeat
+                --every-seconds 60
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_task PROPERTIES
+            DEPENDS dcc_new_app_add_message_command
+            PASS_REGULAR_EXPRESSION "created DCC task heartbeat"
+        )
+
+        add_test(NAME dcc_new_app_add_action_gateway
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add action
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                gateway_status
+                gateway
+                --force
+                --guild-only
+        )
+        set_tests_properties(dcc_new_app_add_action_gateway PROPERTIES
+            DEPENDS dcc_new_app_add_task
+            PASS_REGULAR_EXPRESSION "created DCC action gateway_status"
+        )
+
+        add_test(NAME dcc_new_app_add_action_dm
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add action
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                dm_user
+                dm
+                --force
+                --guild-only
+        )
+        set_tests_properties(dcc_new_app_add_action_dm PROPERTIES
+            DEPENDS dcc_new_app_add_action_gateway
+            PASS_REGULAR_EXPRESSION "created DCC action dm_user"
+        )
+
+        add_test(NAME dcc_new_app_add_action_role_add
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add action
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                grant_role
+                role-add
+                --force
+                --guild-only
+                --permission
+                DCC_PERMISSION_MANAGE_ROLES
+        )
+        set_tests_properties(dcc_new_app_add_action_role_add PROPERTIES
+            DEPENDS dcc_new_app_add_action_dm
+            PASS_REGULAR_EXPRESSION "created DCC action grant_role"
+        )
+
+        add_test(NAME dcc_new_app_add_action_role_remove
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add action
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                revoke_role
+                role-remove
+                --force
+                --guild-only
+                --permission
+                DCC_PERMISSION_MANAGE_ROLES
+        )
+        set_tests_properties(dcc_new_app_add_action_role_remove PROPERTIES
+            DEPENDS dcc_new_app_add_action_role_add
+            PASS_REGULAR_EXPRESSION "created DCC action revoke_role"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_announcement
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                announcement
+                --force
+                --guild-only
+        )
+        set_tests_properties(dcc_new_app_add_preset_announcement PROPERTIES
+            DEPENDS dcc_new_app_add_action_role_remove
+            PASS_REGULAR_EXPRESSION "created DCC announcement preset announcement"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_confirm
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                confirm
+                --force
+                --guild-only
+        )
+        set_tests_properties(dcc_new_app_add_preset_confirm PROPERTIES
+            DEPENDS dcc_new_app_add_preset_announcement
+            PASS_REGULAR_EXPRESSION "created DCC confirm preset confirm"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_paginator
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                paginator
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_preset_paginator PROPERTIES
+            DEPENDS dcc_new_app_add_preset_confirm
+            PASS_REGULAR_EXPRESSION "created DCC paginator preset paginator"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_form
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                form
+                --force
+                --owner
+                523456789012345678ULL
+        )
+        set_tests_properties(dcc_new_app_add_preset_form PROPERTIES
+            DEPENDS dcc_new_app_add_preset_paginator
+            PASS_REGULAR_EXPRESSION "created DCC form preset form"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_settings
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                settings
+                --force
+                --role
+                623456789012345678ULL
+        )
+        set_tests_properties(dcc_new_app_add_preset_settings PROPERTIES
+            DEPENDS dcc_new_app_add_preset_form
+            PASS_REGULAR_EXPRESSION "created DCC settings preset settings"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_wizard
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                wizard
+                --force
+                --cooldown-user
+                1:1000
+        )
+        set_tests_properties(dcc_new_app_add_preset_wizard PROPERTIES
+            DEPENDS dcc_new_app_add_preset_settings
+            PASS_REGULAR_EXPRESSION "created DCC wizard preset wizard"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_counter
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                counter
+                --force
+                --cooldown-user
+                5:10000
+        )
+        set_tests_properties(dcc_new_app_add_preset_counter PROPERTIES
+            DEPENDS dcc_new_app_add_preset_wizard
+            PASS_REGULAR_EXPRESSION "created DCC counter preset counter"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_crud
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                crud
+                --force
+                --permission
+                DCC_PERMISSION_MANAGE_GUILD
+        )
+        set_tests_properties(dcc_new_app_add_preset_crud PROPERTIES
+            DEPENDS dcc_new_app_add_preset_counter
+            PASS_REGULAR_EXPRESSION "created DCC CRUD preset crud"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_help
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                help
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_preset_help PROPERTIES
+            DEPENDS dcc_new_app_add_preset_crud
+            PASS_REGULAR_EXPRESSION "created DCC help preset help"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_menu
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                menu
+                --force
+                --dm-only
+        )
+        set_tests_properties(dcc_new_app_add_preset_menu PROPERTIES
+            DEPENDS dcc_new_app_add_preset_help
+            PASS_REGULAR_EXPRESSION "created DCC menu preset menu"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_poll
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                poll
+                --force
+                --cooldown-user
+                3:10000
+        )
+        set_tests_properties(dcc_new_app_add_preset_poll PROPERTIES
+            DEPENDS dcc_new_app_add_preset_menu
+            PASS_REGULAR_EXPRESSION "created DCC poll preset poll"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_profile
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                profile
+                --name
+                profile_card
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_preset_profile PROPERTIES
+            DEPENDS dcc_new_app_add_preset_poll
+            PASS_REGULAR_EXPRESSION "created DCC profile preset profile_card"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_roles
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                roles
+                --force
+                --guild-only
+        )
+        set_tests_properties(dcc_new_app_add_preset_roles PROPERTIES
+            DEPENDS dcc_new_app_add_preset_profile
+            PASS_REGULAR_EXPRESSION "created DCC role menu preset roles"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_ticket
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                ticket
+                --force
+                --guild-only
+        )
+        set_tests_properties(dcc_new_app_add_preset_ticket PROPERTIES
+            DEPENDS dcc_new_app_add_preset_roles
+            PASS_REGULAR_EXPRESSION "created DCC ticket preset ticket"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_welcome
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                welcome
+                --force
+        )
+        set_tests_properties(dcc_new_app_add_preset_welcome PROPERTIES
+            DEPENDS dcc_new_app_add_preset_ticket
+            PASS_REGULAR_EXPRESSION "created DCC welcome preset welcome"
+        )
+
+        add_test(NAME dcc_new_app_add_preset_flow
+            COMMAND "$<TARGET_FILE:dcc_new_app>"
+                add preset
+                "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+                profile
+                flow
+                --force
+                --guild-only
+        )
+        set_tests_properties(dcc_new_app_add_preset_flow PROPERTIES
+            DEPENDS dcc_new_app_add_preset_welcome
+            PASS_REGULAR_EXPRESSION "created DCC flow preset flow"
+        )
+
+        if(Python3_Interpreter_FOUND)
+            add_test(NAME dcc_new_app_generated_contract
+                COMMAND ${Python3_EXECUTABLE}
+                    "${CMAKE_CURRENT_SOURCE_DIR}/tests/generated_app_contract.py"
+                    "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke"
+            )
+            set_tests_properties(dcc_new_app_generated_contract PROPERTIES
+                DEPENDS dcc_new_app_add_preset_flow
+                PASS_REGULAR_EXPRESSION "generated app contract passed"
+            )
+        endif()
+
+        add_test(NAME dcc_new_app_generated_compile_configure
+            COMMAND ${CMAKE_COMMAND}
+                -S "${CMAKE_CURRENT_SOURCE_DIR}/tests/generated_app_compile"
+                -B "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke/compile-check"
+                -DDCC_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+                -DDCC_GENERATED_APP_DIR=${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke
+        )
+        set_tests_properties(dcc_new_app_generated_compile_configure PROPERTIES
+            DEPENDS dcc_new_app_add_preset_flow
+        )
+
+        add_test(NAME dcc_new_app_generated_compile
+            COMMAND ${CMAKE_COMMAND}
+                --build "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke/compile-check"
+        )
+        set_tests_properties(dcc_new_app_generated_compile PROPERTIES
+            DEPENDS dcc_new_app_generated_compile_configure
+        )
     endif()
 
     if(TARGET dcc_interaction_webhook)

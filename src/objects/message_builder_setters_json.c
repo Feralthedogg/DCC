@@ -22,6 +22,17 @@ dcc_status_t dcc_message_builder_set_allowed_mentions_json(
     return DCC_OK;
 }
 
+dcc_status_t dcc_message_builder_set_allowed_mentions(
+    dcc_message_builder_t *builder,
+    const dcc_allowed_mentions_builder_t *allowed_mentions
+) {
+    if (builder == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    builder->allowed_mentions = allowed_mentions;
+    return DCC_OK;
+}
+
 dcc_status_t dcc_message_builder_set_embeds_json(dcc_message_builder_t *builder, const char *embeds_json) {
     if (builder == NULL) {
         return DCC_ERR_INVALID_ARG;

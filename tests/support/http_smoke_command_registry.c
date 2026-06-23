@@ -212,6 +212,113 @@ static int command_registry_snapshot_smoke(
     return failed;
 }
 
+static int command_registry_builder_lifetime_smoke(void) {
+    char command_name[] = "copy";
+    char command_description[] = "Copied command";
+    char subcommand_name[] = "find";
+    char subcommand_description[] = "Find something";
+    char option_name[] = "query";
+    char option_description[] = "Search query";
+    char choice_name[] = "First";
+    char choice_value[] = "first";
+    char channel_option_name[] = "channel";
+    char channel_option_description[] = "Target channel";
+    uint32_t channel_types[] = { DCC_CHANNEL_TEXT };
+    dcc_autocomplete_choice_t choices[] = {
+        {
+            .name = choice_name,
+            .value_string = choice_value,
+            .value_type = DCC_AUTOCOMPLETE_CHOICE_STRING,
+            .has_name = 1U,
+            .has_value = 1U,
+        },
+    };
+    dcc_application_command_option_builder_t subcommand_options[] = {
+        {
+            .name = option_name,
+            .description = option_description,
+            .choices = choices,
+            .choices_count = sizeof(choices) / sizeof(choices[0]),
+            .type = DCC_APPLICATION_COMMAND_OPTION_STRING,
+            .required = 1U,
+            .has_required = 1U,
+        },
+    };
+    dcc_application_command_option_builder_t options[] = {
+        {
+            .name = subcommand_name,
+            .description = subcommand_description,
+            .options = subcommand_options,
+            .options_count = sizeof(subcommand_options) / sizeof(subcommand_options[0]),
+            .type = DCC_APPLICATION_COMMAND_OPTION_SUB_COMMAND,
+        },
+        {
+            .name = channel_option_name,
+            .description = channel_option_description,
+            .channel_types = channel_types,
+            .channel_types_count = sizeof(channel_types) / sizeof(channel_types[0]),
+            .type = DCC_APPLICATION_COMMAND_OPTION_CHANNEL,
+        },
+    };
+    dcc_application_command_builder_t command = {
+        .name = command_name,
+        .description = command_description,
+        .options = options,
+        .options_count = sizeof(options) / sizeof(options[0]),
+        .type = DCC_APPLICATION_COMMAND_CHAT_INPUT,
+        .has_name = 1U,
+        .has_description = 1U,
+        .has_type = 1U,
+    };
+
+    dcc_command_registry_t registry;
+    dcc_command_registry_init(&registry);
+    if (dcc_command_registry_add_builder(&registry, &command) != DCC_OK) {
+        fprintf(stderr, "failed to add command for builder lifetime smoke\n");
+        dcc_command_registry_deinit(&registry);
+        return 1;
+    }
+
+    strcpy(command_name, "bad");
+    strcpy(command_description, "Bad command");
+    strcpy(subcommand_name, "bad");
+    strcpy(subcommand_description, "Bad route");
+    strcpy(option_name, "bad");
+    strcpy(option_description, "Bad option");
+    strcpy(choice_name, "Bad");
+    strcpy(choice_value, "bad");
+    strcpy(channel_option_name, "bad");
+    strcpy(channel_option_description, "Bad channel");
+    channel_types[0] = 99U;
+    command.options = NULL;
+    command.options_count = 0U;
+
+    dcc_command_registry_plan_t plan;
+    dcc_status_t status = dcc_command_registry_build_plan(&registry, NULL, NULL, 0U, &plan);
+    int failed = status != DCC_OK ||
+        plan.diff_count != 1U ||
+        plan.diffs[0].local_json == NULL ||
+        strstr(plan.diffs[0].local_json, "\"name\":\"copy\"") == NULL ||
+        strstr(plan.diffs[0].local_json, "\"description\":\"Copied command\"") == NULL ||
+        strstr(plan.diffs[0].local_json, "\"name\":\"find\"") == NULL ||
+        strstr(plan.diffs[0].local_json, "\"name\":\"query\"") == NULL ||
+        strstr(plan.diffs[0].local_json, "\"name\":\"First\"") == NULL ||
+        strstr(plan.diffs[0].local_json, "\"value\":\"first\"") == NULL ||
+        strstr(plan.diffs[0].local_json, "\"channel_types\":[0]") == NULL ||
+        strstr(plan.diffs[0].local_json, "\"name\":\"bad\"") != NULL;
+    if (failed) {
+        fprintf(
+            stderr,
+            "command registry builder lifetime smoke failed: %s json=%s\n",
+            dcc_status_string(status),
+            plan.diff_count != 0U && plan.diffs[0].local_json != NULL ? plan.diffs[0].local_json : "-"
+        );
+    }
+    dcc_command_registry_plan_deinit(&plan);
+    dcc_command_registry_deinit(&registry);
+    return failed;
+}
+
 static int command_registry_apply_smoke(
     dcc_client_t *client,
     const dcc_application_command_builder_t *command,
@@ -295,6 +402,9 @@ int run_public_command_registry_smoke(void) {
     int failed = command_registry_plan_smoke(client, &ping, &echo, &inspect, ping_json);
     if (!failed) {
         failed = command_registry_snapshot_smoke(&ping, &echo, &inspect);
+    }
+    if (!failed) {
+        failed = command_registry_builder_lifetime_smoke();
     }
 
     dcc_command_registry_options_t global_opts;

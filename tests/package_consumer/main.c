@@ -623,6 +623,7 @@ int main(void) {
                    task_group_cancel_when != NULL &&
                    task_group_cancel != NULL &&
                    task_group_destroy != NULL &&
+                   dcc_package_consumer_check_app_api() != 0 &&
                    dcc_package_consumer_check_cluster_api() != 0 &&
                    dcc_package_consumer_check_interaction_server_api() != 0 &&
                    dcc_package_consumer_check_hot_reload_api() != 0 &&

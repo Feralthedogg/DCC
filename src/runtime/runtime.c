@@ -31,6 +31,7 @@ dcc_status_t dcc_runtime_init(dcc_runtime_t *runtime) {
             dcc_runtime_global_lock_release();
             return DCC_ERR_RUNTIME;
         }
+        opts.deterministic = 0U;
         opts.profile = LLAM_RUNTIME_PROFILE_IO_LATENCY;
 
         if (llam_runtime_init_ex(&opts, LLAM_RUNTIME_OPTS_CURRENT_SIZE) != 0) {
