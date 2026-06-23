@@ -423,9 +423,9 @@ For descriptor-heavy apps, `DCC_BOT_MAIN()` mirrors `DCC_RUN_BOT()` and accepts
 
 ## Client Options
 
-`DCC_SIMPLE_BOT_MAIN()` and `DCC_RUN_BOT()` already load `.env`, `DCC_TOKEN`,
-and `DISCORD_TOKEN`. Use explicit option values when you are building a custom
-`main()` or embedding DCC inside another runtime.
+`DCC_SIMPLE_BOT_MAIN()` and `DCC_RUN_BOT()` already load `.env` and read
+`DCC_TOKEN`, `BOT_TOKEN`, or `DISCORD_TOKEN`. Use explicit option values when
+you are building a custom `main()` or embedding DCC inside another runtime.
 
 ```c
 dcc_client_options_t options =

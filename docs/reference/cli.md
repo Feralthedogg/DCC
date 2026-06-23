@@ -54,7 +54,7 @@ The generated app definition uses `DCC_BOT(...)`, which includes
 `DCC_APP_DEV_MODE()`, so it reconciles
 the sample `/ping` slash command on READY, infers the application id from the
 Gateway READY event, auto-defers slow interactions, and enables friendly default
-errors. The app template reads `DCC_TOKEN` or `DISCORD_TOKEN`,
+errors. The app template reads `DCC_TOKEN`, `BOT_TOKEN`, or `DISCORD_TOKEN`,
 `DCC_INTENTS`, `DCC_AUTO_DEFER_MS`, `DCC_AUTO_DEFER_EPHEMERAL`, and
 `DCC_STORE_FILE`, and `DCC_COMMAND_GUILD_ID` after loading `.env`, then binds
 feature config with `DCC_CONFIG(...)` before running through `DCC_RUN_APP_ENV(...)`.
@@ -226,7 +226,7 @@ dcc_hot_reload_host --guild 123456789012345678
 
 Important environment variables:
 
-- `DCC_TOKEN`
+- `DCC_TOKEN` (`BOT_TOKEN` and `DISCORD_TOKEN` are accepted as fallbacks)
 - `DCC_BOT_MODULE`
 - `DCC_HOT_RELOAD_WORKER`
 - `DCC_HOT_RELOAD_HEALTH_ADDRESS`
