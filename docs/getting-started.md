@@ -30,6 +30,10 @@ to remain untouched. By default the script installs DCC and then installs LLAM
 2.1.0 into the same prefix. Pass `--llam-version latest` when you intentionally
 want the newest LLAM release instead of the DCC-tested runtime.
 
+The POSIX installer detects the host target automatically. If you pass
+`--target` manually and it differs from the current machine, the installer emits
+a warning because the installed binaries and static libraries may not run there.
+
 Point CMake consumers at the prefix:
 
 ```sh

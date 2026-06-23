@@ -41,6 +41,9 @@ Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.3.1/
 The installer installs the DCC release archive and then calls LLAM's release
 installer for the DCC-tested LLAM 2.1.0 runtime into the same prefix.
 `--skip-llam` keeps the LLAM copy bundled inside the DCC archive.
+On POSIX, `--target` is normally detected from the host. Manually selecting a
+different target is allowed for staging, but the installer warns because the
+resulting binaries and libraries may not run on the current machine.
 
 GitHub Actions publishes releases automatically from version tags:
 

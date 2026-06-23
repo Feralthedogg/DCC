@@ -4,6 +4,8 @@ set -eu
 prefix="${DCC_INSTALL_PREFIX:-/usr/local}"
 version="${DCC_INSTALL_VERSION:-latest}"
 target="${DCC_INSTALL_TARGET:-}"
+target_explicit=0
+[ -n "$target" ] && target_explicit=1
 base_url="${DCC_INSTALL_BASE_URL:-}"
 llam_mode="${DCC_INSTALL_LLAM:-latest}"
 llam_version="${DCC_INSTALL_LLAM_VERSION:-2.1.0}"
@@ -47,10 +49,12 @@ while [ "$#" -gt 0 ]; do
         --target)
             [ "$#" -ge 2 ] || { echo "--target requires a value" >&2; exit 2; }
             target="$2"
+            target_explicit=1
             shift 2
             ;;
         --target=*)
             target="${1#--target=}"
+            target_explicit=1
             shift
             ;;
         --base-url)
@@ -174,6 +178,14 @@ detect_target() {
     printf '%s-%s\n' "$os_name" "$arch_name"
 }
 
+warn_cross_target() {
+    [ "$target_explicit" -eq 1 ] || return 0
+    host_target=$(detect_target 2>/dev/null || true)
+    [ -n "$host_target" ] || return 0
+    [ "$host_target" = "$target" ] && return 0
+    echo "warning: installing DCC target $target on host $host_target; binaries and libraries may not run on this machine" >&2
+}
+
 validate_component() {
     name=$1
     value=$2
@@ -286,6 +298,7 @@ if [ -z "$target" ]; then
     target=$(detect_target)
 fi
 validate_component "target" "$target"
+warn_cross_target
 
 if [ "$version" = "latest" ]; then
     version=$(latest_release_tag Feralthedogg/DCC)
