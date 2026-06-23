@@ -6,7 +6,7 @@ version="${DCC_INSTALL_VERSION:-latest}"
 target="${DCC_INSTALL_TARGET:-}"
 base_url="${DCC_INSTALL_BASE_URL:-}"
 llam_mode="${DCC_INSTALL_LLAM:-latest}"
-llam_version="${DCC_INSTALL_LLAM_VERSION:-latest}"
+llam_version="${DCC_INSTALL_LLAM_VERSION:-2.1.0}"
 llam_installer_url="${DCC_LLAM_INSTALLER_URL:-https://raw.githubusercontent.com/Feralthedogg/LLAM/main/scripts/install.sh}"
 dry_run=0
 force=0
@@ -18,8 +18,9 @@ usage: install.sh [--prefix <dir>] [--version <version|latest>] [--target <targe
                   [--dry-run] [--force]
 
 Installs DCC from a GitHub release archive. Release archives include a
-compatible LLAM runtime. By default the installer also refreshes LLAM from the
-latest LLAM release installer into the same prefix.
+compatible LLAM runtime. By default the installer also refreshes the
+DCC-tested LLAM 2.1.0 runtime into the same prefix. Pass
+--llam-version latest to intentionally use the newest LLAM release.
 EOF
 }
 
@@ -267,7 +268,7 @@ install_latest_llam() {
 
     if [ "$dry_run" -eq 1 ]; then
         echo "download $llam_installer_url"
-        echo "install latest LLAM $resolved_llam_version into $prefix"
+        echo "install LLAM $resolved_llam_version into $prefix"
         return 0
     fi
 

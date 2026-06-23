@@ -19,7 +19,7 @@ curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.
 ```
 
 The release archive includes a compatible LLAM runtime, and the installer also
-refreshes LLAM from the latest LLAM release installer by default.
+refreshes the DCC-tested LLAM 2.1.0 runtime by default.
 
 Local documentation preview:
 

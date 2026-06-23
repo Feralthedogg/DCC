@@ -353,7 +353,7 @@ jobs:
             echo "Invoke-WebRequest \"${base_url}/install.ps1\" -OutFile install.ps1; .\\install.ps1 -Version ${version} -BaseUrl \"${base_url}\" -Prefix \"\$env:LOCALAPPDATA\\DCC\""
             echo "\`\`\`"
             echo
-            echo "The installers install the DCC archive and then refresh LLAM from the latest LLAM release installer by default. FreeBSD, OpenBSD, and NetBSD release archives are published for x86_64; DragonFlyBSD is available as an experimental source/package-script target."
+            echo "The installers install the DCC archive and then refresh the DCC-tested LLAM 2.1.0 runtime by default. Pass --llam-version latest to intentionally use the newest LLAM release. FreeBSD, OpenBSD, and NetBSD release archives are published for x86_64; DragonFlyBSD is available as an experimental source/package-script target."
             echo
             echo "## Verification"
             echo

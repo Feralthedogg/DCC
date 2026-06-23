@@ -38,9 +38,9 @@ Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.3.0/
 .\install.ps1 -Version 1.3.0 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.3.0" -Prefix "$env:LOCALAPPDATA\DCC"
 ```
 
-The installer installs the DCC release archive and then calls LLAM's latest
-release installer into the same prefix. `--skip-llam` keeps the LLAM copy bundled
-inside the DCC archive.
+The installer installs the DCC release archive and then calls LLAM's release
+installer for the DCC-tested LLAM 2.1.0 runtime into the same prefix.
+`--skip-llam` keeps the LLAM copy bundled inside the DCC archive.
 
 GitHub Actions publishes releases automatically from version tags:
 

@@ -22,7 +22,7 @@ if ([string]::IsNullOrWhiteSpace($Target)) {
     $Target = "windows-x86_64"
 }
 if ([string]::IsNullOrWhiteSpace($LlamVersion)) {
-    $LlamVersion = "latest"
+    $LlamVersion = "2.1.0"
 }
 if ([string]::IsNullOrWhiteSpace($LlamInstallerUrl)) {
     $LlamInstallerUrl = "https://raw.githubusercontent.com/Feralthedogg/LLAM/main/scripts/install.ps1"
@@ -136,7 +136,7 @@ function Install-LatestLlam {
 
     if ($DryRun) {
         Write-Host "download $LlamInstallerUrl"
-        Write-Host "install latest LLAM $resolved into $Prefix"
+        Write-Host "install LLAM $resolved into $Prefix"
         return
     }
 

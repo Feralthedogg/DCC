@@ -67,7 +67,7 @@ DCC_SIMPLE_BOT_MAIN(
 ## Install
 
 The release installer detects the current platform, installs DCC, and refreshes
-LLAM through LLAM's latest release installer.
+the DCC-tested LLAM 2.1.0 runtime through LLAM's release installer.
 
 ```sh
 curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |

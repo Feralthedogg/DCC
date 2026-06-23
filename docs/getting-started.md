@@ -2,7 +2,7 @@
 
 The normal path is to install a published DCC release. The release archive is
 self-contained and includes a compatible LLAM runtime; the install script also
-refreshes LLAM through LLAM's latest release installer.
+refreshes the DCC-tested LLAM 2.1.0 runtime through LLAM's release installer.
 
 ## Install Release
 
@@ -26,8 +26,9 @@ curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.
 ```
 
 Use `--skip-llam` only when you want the LLAM copy bundled in the DCC archive
-to remain untouched. By default the script installs DCC and then fetches the
-latest LLAM release installer into the same prefix.
+to remain untouched. By default the script installs DCC and then installs LLAM
+2.1.0 into the same prefix. Pass `--llam-version latest` when you intentionally
+want the newest LLAM release instead of the DCC-tested runtime.
 
 Point CMake consumers at the prefix:
 
