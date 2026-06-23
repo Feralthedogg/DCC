@@ -379,7 +379,7 @@ and calls out explicit APIs only where that extra control matters.
   guild-scoped command development, accepts `--global` to clear an inherited
   guild scope, and accepts `--intents` or
   `DCC_HOT_RELOAD_INTENTS` for numeric or comma-separated named Gateway intents.
-  It also loads `.env`, accepts `DISCORD_TOKEN` as a token fallback, and
+  It also loads `.env`, accepts `DCC_TOKEN`, `BOT_TOKEN`, or `DISCORD_TOKEN`, and
   provides `--check` for no-network config validation of token presence, module
   readability, worker executable/PATH resolution, command scope, and optional
   health sidecar and timing settings. `--health-port` or

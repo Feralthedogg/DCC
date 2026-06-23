@@ -13,7 +13,7 @@ void dcc_replay_tool_usage(FILE *stream, const char *argv0) {
         "  -w, --worker PATH        isolated worker executable; defaults to %s\n"
         "      --isolated           use isolated worker mode; default for --module\n"
         "      --in-process         run module in the replay process\n"
-        "      --token TOKEN        REST token for in-process module handlers\n"
+        "      --token TOKEN        REST token; DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN are accepted\n"
         "      --worker-health-ms MS isolated worker health timeout; default 2000\n"
         "      --worker-drain-ms MS isolated worker drain timeout; default 500\n"
         "      --realtime           preserve captured timestamp gaps while replaying\n"

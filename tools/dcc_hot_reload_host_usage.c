@@ -3,7 +3,7 @@
 void dcc_hot_reload_host_usage(FILE *stream, const char *argv0) {
     fprintf(
         stream,
-        "usage: BOT_TOKEN=... %s [options] [module.so] [worker]\n"
+        "usage: DCC_TOKEN=... %s [options] [module.so] [worker]\n"
         "\n"
         "options:\n"
         "  -m, --module PATH       bot module path; defaults to DCC_BOT_MODULE\n"
@@ -21,7 +21,7 @@ void dcc_hot_reload_host_usage(FILE *stream, const char *argv0) {
         "  -h, --help              show this help\n"
         "\n"
         "environment:\n"
-        "  BOT_TOKEN               Discord bot token; DISCORD_TOKEN is accepted as fallback\n"
+        "  DCC_TOKEN               Discord bot token; BOT_TOKEN and DISCORD_TOKEN are accepted as fallback\n"
         "  DCC_BOT_MODULE          bot module path\n"
         "  DCC_HOT_RELOAD_WORKER   worker executable override\n"
         "  DCC_HOT_RELOAD_INTENTS  same format as --intents; default is guilds\n"

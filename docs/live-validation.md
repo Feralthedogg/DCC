@@ -4,7 +4,7 @@ DCC's default tests use local mock gateways and HTTP servers. Before a release,
 run an opt-in live soak against Discord with a real bot token:
 
 ```sh
-BOT_TOKEN=... \
+DCC_TOKEN=... \
 DCC_SOAK_SECONDS=900 \
 DCC_SOAK_INTERVAL_SECONDS=30 \
 ./build/dcc_live_gateway_soak
@@ -37,7 +37,7 @@ selected shard and reason.
 For a live voice join probe, use a development guild and an empty voice channel:
 
 ```sh
-BOT_TOKEN=... \
+DCC_TOKEN=... \
 DCC_VOICE_GUILD_ID=... \
 DCC_VOICE_CHANNEL_ID=... \
 DCC_VOICE_USER_ID=... \
@@ -120,7 +120,7 @@ request, identify delay, and last Gateway task status.
 Hot-reload validation notes:
 
 - Build `dcc_hot_reload_host` and `dcc_hot_reload_bot`, run the host with
-  `BOT_TOKEN=...`, then rebuild the module at the same path. The Gateway session
+  `DCC_TOKEN=...`, then rebuild the module at the same path. The Gateway session
   should stay connected while the module generation changes.
 - Use `examples/hot_reload/` for end-to-end slash-command hot reload testing:
   `make run` starts a host and watched module, registers `/테스트` globally by
@@ -132,7 +132,7 @@ Hot-reload validation notes:
   the same `make` flow by using the installed `dcc` CMake package; pass
   `DCC_LLAM_ROOT` and `DCC_LLAM_LIBRARY` if LLAM is not installed through CMake.
 - For repeatable live reload validation, run
-  `BOT_TOKEN=... make -C examples/hot_reload live-soak`. The helper starts the
+  `DCC_TOKEN=... make -C examples/hot_reload live-soak`. The helper starts the
   isolated host, waits for Gateway READY, rebuilds the module repeatedly, and
   waits for every expected `active generation` line in `build/live-soak.log`.
   Use `DCC_HOT_RELOAD_SOAK_RELOADS`, `DCC_HOT_RELOAD_SOAK_INTERVAL_SECONDS`,
@@ -153,7 +153,7 @@ Hot-reload validation notes:
   path where the parent sends an ephemeral temporary error response and retires
   malformed or hung active workers, plus the double-failure path where the
   promoted last-good worker also fails the retry and is retired.
-- Use installed `dcc_hot_reload_host` for the minimal `BOT_TOKEN` +
+- Use installed `dcc_hot_reload_host` for the minimal `DCC_TOKEN` +
   `DCC_BOT_MODULE` development host when DCC's installed `bin` directory is on
   `PATH`. Installed package builds provide that host/worker pair by default
   through `DCC_BUILD_TOOLS=ON`, even when examples/tests are disabled. Set
@@ -163,8 +163,8 @@ Hot-reload validation notes:
   `DCC_HOT_RELOAD_INTENTS` or `--intents` for
   non-slash-command Gateway events. `DCC_HOT_RELOAD_INTENTS=all` enables every
   supported intent; use it only when privileged intents are allowed for the bot.
-  It loads `.env`, accepts `DISCORD_TOKEN` as
-  a `BOT_TOKEN` fallback, and supports `dcc_hot_reload_host --check` before
+  It loads `.env`, accepts `BOT_TOKEN` and `DISCORD_TOKEN` as fallbacks, and
+  supports `dcc_hot_reload_host --check` before
   opening a Gateway session. `--check` confirms token presence, module
   readability, worker executable/PATH resolution, and health sidecar settings.
   Set `DCC_HOT_RELOAD_HEALTH_PORT=18080` or pass `--health-port 18080` and

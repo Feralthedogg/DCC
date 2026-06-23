@@ -21,7 +21,7 @@ int dcc_hot_reload_host_check_config(const dcc_hot_reload_host_options_t *option
         }
     }
     if (token == NULL || token[0] == '\0') {
-        fprintf(stderr, "missing token: set BOT_TOKEN or DISCORD_TOKEN\n");
+        fprintf(stderr, "missing token: set DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN\n");
         ok = 0;
     }
     if (worker_path == NULL || worker_path[0] == '\0') {

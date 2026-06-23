@@ -1,25 +1,13 @@
 #include "internal/dcc_command_sync.h"
 
-#include <errno.h>
-#include <stdlib.h>
 #include <string.h>
 
-const char *dcc_command_sync_env_nonempty(const char *name) {
-    const char *value = getenv(name);
-    return value != NULL && value[0] != '\0' ? value : NULL;
-}
-
 int dcc_command_sync_parse_snowflake(const char *text, dcc_snowflake_t *out) {
-    if (text == NULL || text[0] == '\0' || out == NULL) {
+    dcc_snowflake_t value = 0;
+    if (dcc_snowflake_parse(text, &value) != DCC_OK || value == 0U || out == NULL) {
         return -1;
     }
-    errno = 0;
-    char *end = NULL;
-    unsigned long long value = strtoull(text, &end, 10);
-    if (errno != 0 || end == text || *end != '\0' || value == 0ULL) {
-        return -1;
-    }
-    *out = (dcc_snowflake_t)value;
+    *out = value;
     return 0;
 }
 
@@ -94,27 +82,23 @@ static int dcc_command_sync_is_value_option(const char *arg) {
 }
 
 static void dcc_command_sync_apply_env(dcc_command_sync_options_t *options) {
-    const char *value = NULL;
     if (options->token == NULL) {
-        value = dcc_command_sync_env_nonempty("DCC_TOKEN");
-        if (value == NULL) {
-            value = dcc_command_sync_env_nonempty("BOT_TOKEN");
+        const char *token = NULL;
+        if (dcc_app_env_get_token(NULL, &token) == DCC_OK) {
+            options->token = token;
         }
-        options->token = value != NULL ? value : dcc_command_sync_env_nonempty("DISCORD_TOKEN");
     }
     if (options->application_id == 0) {
-        value = dcc_command_sync_env_nonempty("DCC_APPLICATION_ID");
-        if (value == NULL) {
-            value = dcc_command_sync_env_nonempty("DISCORD_APPLICATION_ID");
-        }
-        if (value != NULL) {
-            (void)dcc_command_sync_parse_snowflake(value, &options->application_id);
+        dcc_snowflake_t application_id = 0;
+        if (dcc_app_env_get_snowflake("DCC_APPLICATION_ID", &application_id) == DCC_OK ||
+            dcc_app_env_get_snowflake("DISCORD_APPLICATION_ID", &application_id) == DCC_OK) {
+            options->application_id = application_id;
         }
     }
     if (options->guild_id == 0) {
-        value = dcc_command_sync_env_nonempty("DCC_COMMAND_SYNC_GUILD_ID");
-        if (value != NULL) {
-            (void)dcc_command_sync_parse_snowflake(value, &options->guild_id);
+        dcc_snowflake_t guild_id = 0;
+        if (dcc_app_env_get_guild("DCC_COMMAND_SYNC_GUILD_ID", &guild_id) == DCC_OK) {
+            options->guild_id = guild_id;
         }
     }
 }

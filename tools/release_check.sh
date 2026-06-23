@@ -358,7 +358,7 @@ hot_reload_deploy_template_check() {
     grep -q 'dcc_hot_reload_worker' "$container_file"
 
     check_output=$(
-        BOT_TOKEN=release-check \
+        DCC_TOKEN=release-check \
         DCC_BOT_MODULE="$module" \
         DCC_HOT_RELOAD_WORKER="$worker" \
         DCC_HOT_RELOAD_INTENTS=guilds \

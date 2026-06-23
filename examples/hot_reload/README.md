@@ -82,7 +82,7 @@ To validate repeated live reloads without manually rebuilding in another
 terminal, run:
 
 ```sh
-BOT_TOKEN=... make live-soak
+DCC_TOKEN=... make live-soak
 ```
 
 `make live-soak` starts the isolated host, waits for Gateway READY, rebuilds the

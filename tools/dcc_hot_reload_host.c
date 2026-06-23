@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
         fprintf(
             stderr,
             "hot reload host failed: %s\n"
-            "usage: BOT_TOKEN=... %s [module.so] [worker]\n"
+            "usage: DCC_TOKEN=... %s [module.so] [worker]\n"
             "or set DCC_BOT_MODULE; DCC_HOT_RELOAD_WORKER overrides the default worker name\n"
             "set DCC_HOT_RELOAD_INTENTS or --intents for non-slash-command events\n"
             "set DCC_HOT_RELOAD_HEALTH_PORT or --health-port to expose /hot-reloadz\n",

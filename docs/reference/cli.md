@@ -226,7 +226,7 @@ dcc_hot_reload_host --guild 123456789012345678
 
 Important environment variables:
 
-- `DISCORD_TOKEN`
+- `DCC_TOKEN`
 - `DCC_BOT_MODULE`
 - `DCC_HOT_RELOAD_WORKER`
 - `DCC_HOT_RELOAD_HEALTH_ADDRESS`

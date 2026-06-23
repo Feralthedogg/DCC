@@ -101,7 +101,7 @@ install -m 0644 my_bot_module.so modules/bot.so.tmp
 mv modules/bot.so.tmp modules/bot.so
 ```
 
-Keep `BOT_TOKEN` in `dcc-hot-reload.env` or an external secret store, and keep
+Keep `DCC_TOKEN` in `dcc-hot-reload.env` or an external secret store, and keep
 `DCC_HOT_RELOAD_GUILD_ID` empty unless you intentionally want guild-scoped
 development command registration. Manual runs can pass `--global` to force
 global command registration even when the environment file contains a guild id.

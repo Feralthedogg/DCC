@@ -4,11 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *dcc_replay_tool_env_nonempty(const char *name) {
-    const char *value = getenv(name);
-    return value != NULL && value[0] != '\0' ? value : NULL;
-}
-
 int dcc_replay_tool_parse_u32(const char *text, uint32_t *out) {
     if (text == NULL || text[0] == '\0' || out == NULL) {
         return -1;
@@ -134,8 +129,10 @@ int dcc_replay_tool_parse_options(
         }
     }
     if (options->token == NULL) {
-        const char *token = dcc_replay_tool_env_nonempty("BOT_TOKEN");
-        options->token = token != NULL ? token : dcc_replay_tool_env_nonempty("DISCORD_TOKEN");
+        const char *token = NULL;
+        if (dcc_app_env_get_token(NULL, &token) == DCC_OK) {
+            options->token = token;
+        }
     }
     if (options->module_path == NULL && !options->summary) {
         options->summary = 1;

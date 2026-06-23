@@ -122,7 +122,7 @@ def audit_hot_reload(errors: list[str]) -> None:
     require_line(env_rel, env, "DCC_HOT_RELOAD_SETTLE_MS=100", errors)
     require_line(env_rel, env, "DCC_HOT_RELOAD_WORKER_HEALTH_MS=2000", errors)
     require_line(env_rel, env, "DCC_HOT_RELOAD_WORKER_DRAIN_MS=500", errors)
-    require_contains(env_rel, env, "BOT_TOKEN=", errors)
+    require_contains(env_rel, env, "DCC_TOKEN=", errors)
 
     require_line(tmpfiles_rel, tmpfiles, "d /var/lib/dcc 0750 dcc dcc -", errors)
     require_line(tmpfiles_rel, tmpfiles, "d /var/lib/dcc/hot_reload 0750 dcc dcc -", errors)

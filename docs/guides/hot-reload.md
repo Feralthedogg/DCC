@@ -58,7 +58,7 @@ dcc_hot_reload_options_t options =
 ## Host CLI
 
 ```sh
-DISCORD_TOKEN=... \
+DCC_TOKEN=... \
 DCC_BOT_MODULE=./bot.so \
 build/dcc_hot_reload_host --global
 ```
@@ -67,7 +67,7 @@ Guild-scoped development:
 
 ```sh
 DCC_BOT_MODULE=./bot.so \
-DISCORD_TOKEN=... \
+DCC_TOKEN=... \
 build/dcc_hot_reload_host --guild "$GUILD_ID"
 ```
 

@@ -81,8 +81,8 @@ int dcc_hot_reload_host_parse_options(
 }
 
 const char *dcc_hot_reload_host_token(void) {
-    const char *token = dcc_hot_reload_host_env_nonempty("BOT_TOKEN");
-    return token != NULL ? token : dcc_hot_reload_host_env_nonempty("DISCORD_TOKEN");
+    const char *token = NULL;
+    return dcc_app_env_get_token(NULL, &token) == DCC_OK ? token : NULL;
 }
 
 const char *dcc_hot_reload_host_resolved_worker(const dcc_hot_reload_host_options_t *options) {

@@ -72,7 +72,7 @@ commands should be removed during apply.
 build/dcc_command_sync \
   --commands commands.json \
   --application-id "$APPLICATION_ID" \
-  --token "$DISCORD_TOKEN" \
+  --token "$DCC_TOKEN" \
   --plan
 ```
 
@@ -82,7 +82,7 @@ Apply only when the plan is expected:
 build/dcc_command_sync \
   --commands commands.json \
   --application-id "$APPLICATION_ID" \
-  --token "$DISCORD_TOKEN" \
+  --token "$DCC_TOKEN" \
   --apply
 ```
 

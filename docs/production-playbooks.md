@@ -139,7 +139,7 @@ deploying the installed isolated host/worker pair. The templates keep the
 module under `/var/lib/dcc/hot_reload/bot.so`, run
 `dcc_hot_reload_host --check` before opening Gateway where systemd is used, and
 expect module rollouts to replace that file atomically.
-Use the installed `dcc_hot_reload_host` plus `DCC_BOT_MODULE` and `BOT_TOKEN`
+Use the installed `dcc_hot_reload_host` plus `DCC_BOT_MODULE` and `DCC_TOKEN`
 for the smallest no-code isolated development host when DCC's installed `bin`
 directory is on `PATH`. Installed builds include both `dcc_hot_reload_host` and
 `dcc_hot_reload_worker` by default through `DCC_BUILD_TOOLS=ON`, even when
@@ -152,7 +152,7 @@ a module needs message, presence, voice, or other Gateway events; use
 `DCC_HOT_RELOAD_INTENTS=all` only when every supported intent is needed and
 privileged intents are enabled in the Developer Portal. It loads
 `.env` from the current directory without overriding exported variables, accepts
-`DISCORD_TOKEN` as a `BOT_TOKEN` fallback, and supports
+`BOT_TOKEN` and `DISCORD_TOKEN` as fallbacks, and supports
 `dcc_hot_reload_host --check` for no-network config validation. `--check`
 verifies token presence, module readability, and worker executability or
 `PATH` discovery, and reports optional health sidecar settings. The deployment
@@ -210,7 +210,7 @@ broken, DCC keeps the last good generation and reports degraded health with the
 last load error and last-good worker metadata.
 
 Before release or a risky handler rollout, run
-`BOT_TOKEN=... make -C examples/hot_reload live-soak` against a development bot.
+`DCC_TOKEN=... make -C examples/hot_reload live-soak` against a development bot.
 It keeps one Gateway session open, repeatedly rebuilds the watched module, and
 waits for each expected isolated-worker generation before exiting.
 
@@ -304,7 +304,7 @@ tools/release_check.sh
 For Discord-facing validation:
 
 ```sh
-BOT_TOKEN=... DCC_SOAK_SECONDS=900 ./build/dcc_live_gateway_soak
+DCC_TOKEN=... DCC_SOAK_SECONDS=900 ./build/dcc_live_gateway_soak
 ```
 
 Do not tag when local chaos tests, package consumer tests, sanitizer tests, or

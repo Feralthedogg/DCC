@@ -84,9 +84,9 @@ The release path expects:
   isolated hot reload host/worker pair plus the interaction webhook tool and
   supports external CMake consumers.
 - Optional token-backed hot reload live soak with
-  `BOT_TOKEN=... make -C examples/hot_reload live-soak`.
+  `DCC_TOKEN=... make -C examples/hot_reload live-soak`.
 - Optional token-backed voice join probe with
-  `BOT_TOKEN=... DCC_VOICE_GUILD_ID=... DCC_VOICE_CHANNEL_ID=... DCC_VOICE_USER_ID=... ./build/dcc_live_voice_probe`.
+  `DCC_TOKEN=... DCC_VOICE_GUILD_ID=... DCC_VOICE_CHANNEL_ID=... DCC_VOICE_USER_ID=... ./build/dcc_live_voice_probe`.
 - Installed hot reload example files, including the live-soak helper script.
 - Installed deployment templates for interaction webhooks and isolated hot
   reload host/worker service operation, with service env, systemd, Kubernetes,

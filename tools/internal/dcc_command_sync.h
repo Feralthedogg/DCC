@@ -50,7 +50,6 @@ int dcc_command_sync_parse_options(
 );
 int dcc_command_sync_validate_options(const dcc_command_sync_options_t *options);
 int dcc_command_sync_parse_snowflake(const char *text, dcc_snowflake_t *out);
-const char *dcc_command_sync_env_nonempty(const char *name);
 
 dcc_status_t dcc_command_sync_load_file(
     const char *path,

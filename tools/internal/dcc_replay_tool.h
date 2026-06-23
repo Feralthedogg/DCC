@@ -45,7 +45,6 @@ int dcc_replay_tool_parse_options(
     dcc_replay_tool_options_t *options
 );
 int dcc_replay_tool_validate_options(const dcc_replay_tool_options_t *options);
-const char *dcc_replay_tool_env_nonempty(const char *name);
 int dcc_replay_tool_parse_u32(const char *text, uint32_t *out);
 
 void dcc_replay_tool_stats_record(

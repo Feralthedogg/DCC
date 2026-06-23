@@ -45,15 +45,15 @@ if is_true "${DCC_HOT_RELOAD_SOAK_DRY_RUN:-0}"; then
 fi
 
 has_token=0
-if [ -n "${BOT_TOKEN:-}" ] || [ -n "${DISCORD_TOKEN:-}" ]; then
+if [ -n "${DCC_TOKEN:-}" ] || [ -n "${BOT_TOKEN:-}" ] || [ -n "${DISCORD_TOKEN:-}" ]; then
     has_token=1
-elif [ -f .env ] && grep -Eq '^(BOT_TOKEN|DISCORD_TOKEN)=' .env; then
+elif [ -f .env ] && grep -Eq '^(DCC_TOKEN|BOT_TOKEN|DISCORD_TOKEN)=' .env; then
     has_token=1
-elif [ -f ../../.env ] && grep -Eq '^(BOT_TOKEN|DISCORD_TOKEN)=' ../../.env; then
+elif [ -f ../../.env ] && grep -Eq '^(DCC_TOKEN|BOT_TOKEN|DISCORD_TOKEN)=' ../../.env; then
     has_token=1
 fi
 if [ "$has_token" -ne 1 ]; then
-    printf '%s\n' "BOT_TOKEN or DISCORD_TOKEN is required in the environment, .env, or ../../.env" >&2
+    printf '%s\n' "DCC_TOKEN, BOT_TOKEN, or DISCORD_TOKEN is required in the environment, .env, or ../../.env" >&2
     exit 2
 fi
 
