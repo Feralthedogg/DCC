@@ -13,6 +13,21 @@ DCC_READY_FN(bot_main_ready) {
     (void)user_data;
 }
 
+DCC_MESSAGE_CREATE_FN(bot_main_message_create) {
+    (void)app;
+    (void)message;
+    (void)event;
+    (void)user_data;
+}
+
+DCC_MESSAGE_COMMAND_FN(bot_main_message_command) {
+    (void)app;
+    (void)message;
+    (void)args;
+    (void)event;
+    (void)user_data;
+}
+
 DCC_DEFINE_FEATURE(
     bot_main_feature,
     "bot_main_feature",
@@ -46,7 +61,9 @@ DCC_BOT_MAIN_ENV(
 DCC_SIMPLE_BOT_MAIN(
     "main.compile.simple",
     DCC_LISTEN_SLASH("ping", "Reply with pong", bot_main_ping),
-    DCC_LISTEN_READY_DATA(bot_main_ready, &bot_main_state)
+    DCC_LISTEN_READY_DATA(bot_main_ready, &bot_main_state),
+    DCC_LISTEN_MESSAGE_CREATE(bot_main_message_create),
+    DCC_LISTEN_MESSAGE_COMMAND("!", "ping", bot_main_message_command)
 )
 #undef main
 

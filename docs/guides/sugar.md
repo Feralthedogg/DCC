@@ -1201,7 +1201,7 @@ dependency wiring, or cleanup:
 
 ```c
 static dcc_status_t ping_module_setup(dcc_app_t *app, void *user_data) {
-    return dcc_app_slash(app, "ping", "Reply with pong", on_ping, user_data);
+    return DCC_APP_ON_SLASH_DATA(app, "ping", "Reply with pong", on_ping, user_data);
 }
 
 dcc_app_module_t ping_module =

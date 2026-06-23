@@ -184,7 +184,7 @@ typedef struct bot_state {
     unsigned request_count;
 } bot_state_t;
 
-static void on_ping(dcc_ctx_t *ctx, void *user_data) {
+DCC_SLASH_FN(on_ping) {
     (void)user_data;
 
     bot_state_t *state = DCC_CTX_STATE(bot_state_t, ctx);
@@ -198,17 +198,17 @@ bot_state_t state = {0};
 dcc_app_set_state(app, &state, NULL);
 ```
 
-Modules are small setup functions that register a feature's routes, events, and
-scheduled tasks together. This gives C code a feature-module shape without requiring a
-separate framework.
+Modules are small setup functions that register a feature's listeners, events,
+and scheduled tasks together. This gives C code a feature-module shape without
+requiring a separate framework.
 
 ```c
-static dcc_status_t ping_module_setup(dcc_app_t *app, void *user_data) {
-    return dcc_app_slash(app, "ping", "Reply with pong", on_ping, user_data);
-}
+DCC_DEFINE_LISTENERS(
+    ping,
+    DCC_LISTEN_SLASH("ping", "Reply with pong", on_ping)
+)
 
-dcc_app_module_t ping_module =
-    DCC_APP_MODULE("ping", ping_module_setup, &state);
+dcc_app_module_t ping_module = DCC_LISTENERS_MODULE(ping, NULL);
 
 dcc_app_module_register(app, &ping_module);
 ```
@@ -220,12 +220,12 @@ For simpler feature files, use `DCC_DEFINE_FEATURE`. It generates the setup
 function for you and registers a declarative extension inside that setup call.
 
 ```c
-static void on_ping(dcc_ctx_t *ctx, void *user_data) {
+DCC_SLASH_FN(on_ping) {
     (void)user_data;
     DCC_REPLY_TEXT(ctx, "pong");
 }
 
-static void on_ready(dcc_app_t *app, const dcc_ready_event_t *ready, void *user_data) {
+DCC_READY_FN(on_ready) {
     (void)app;
     (void)user_data;
     printf("ready shard=%u/%u\n", ready->shard_id, ready->shard_count);
@@ -376,14 +376,15 @@ is generated dynamically.
 
 ## Routes
 
-`dcc_app_slash()` registers both the local slash command definition and the
-runtime handler. Component routes can match exact custom IDs or prefixes.
+`DCC_APP_ON_SLASH()` registers both the local slash command definition and the
+runtime handler on an already-created app. Component routes can match exact
+custom IDs or prefixes.
 
 ```c
-dcc_app_slash(app, "rank", "Show server rank", on_rank, state);
-dcc_app_button(app, "settings.save", on_save, state);
-dcc_app_button_prefix(app, "page:", on_page, state);
-dcc_app_modal(app, "birthday.register", on_birthday_modal, state);
+DCC_APP_ON_SLASH_DATA(app, "rank", "Show server rank", on_rank, state);
+DCC_APP_ON_BUTTON_DATA(app, "settings.save", on_save, state);
+DCC_APP_ON_BUTTON_PREFIX_DATA(app, "page:", on_page, state);
+DCC_APP_ON_MODAL_DATA(app, "birthday.register", on_birthday_modal, state);
 ```
 
 Subcommands can be routed directly. Use `group/subcommand` when the command has
@@ -768,35 +769,30 @@ startup logs, message listeners, and bot-local schedulers that should not reach
 down into `dcc_client_on()` directly.
 
 ```c
-static void on_ready(dcc_app_t *app, const dcc_ready_event_t *ready, void *user_data) {
+DCC_READY_FN(on_ready) {
     (void)app;
     (void)user_data;
     printf("ready shard=%u/%u\n", ready->shard_id, ready->shard_count);
 }
 
-static void on_message(
-    dcc_app_t *app,
-    const dcc_message_t *message,
-    const char *args,
-    const dcc_event_t *event,
-    void *user_data
-) {
+DCC_MESSAGE_COMMAND_FN(on_message) {
     (void)args;
     (void)event;
     (void)user_data;
 
-    dcc_app_send_text(app, message->channel_id, "pong", NULL, NULL);
+    (void)DCC_APP_SEND_TEXT(app, message->channel_id, "pong");
 }
 
 DCC_APP_ON_READY_ONCE(app, on_ready);
-dcc_app_on_message_command(app, "!", "ping", on_message, NULL);
+DCC_APP_ON_MESSAGE_COMMAND(app, "!", "ping", on_message);
 ```
 
-`dcc_app_on_message_command()` matches `!ping` and `!ping args`, rejects
+`DCC_APP_ON_MESSAGE_COMMAND()` matches `!ping` and `!ping args`, rejects
 `!pingpong`, skips whitespace after the command name, and passes the remaining
 arguments as a pointer into the original message content. Use
-`dcc_app_on_message_create()` only when a feature needs raw `MESSAGE_CREATE`
-events instead of command routing.
+`DCC_APP_ON_MESSAGE_CREATE()` only when a feature needs raw `MESSAGE_CREATE`
+events instead of command routing. The underlying `dcc_app_on_*` functions
+remain available for generated code.
 
 Schedulers can be registered directly or declared through `DCC_APP(...)`.
 `DCC_TASK_LOOP_*` mirrors discord.py's `tasks.loop` naming while still mapping
