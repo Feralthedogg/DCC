@@ -36,7 +36,19 @@ Basic build:
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="$HOME/.local"
 cmake --build build
-ctest --test-dir build --output-on-failure
+```
+
+Developer test build:
+
+```sh
+cmake -S . -B build-dev \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DDCC_BUILD_EXAMPLES=ON \
+  -DDCC_BUILD_TESTS=ON \
+  -DDCC_LLAM_USE_SUBDIRECTORY=ON \
+  -DDCC_LLAM_ROOT=../LLAM
+cmake --build build-dev
+ctest --test-dir build-dev --output-on-failure
 ```
 
 License: MIT. See [LICENSE](LICENSE).

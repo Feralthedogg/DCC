@@ -492,6 +492,8 @@ source_package_hygiene_check() {
 step "configure primary debug build"
 cmake_configure "$build_dir" \
     -DCMAKE_BUILD_TYPE=Debug \
+    -DDCC_BUILD_EXAMPLES=ON \
+    -DDCC_BUILD_TESTS=ON \
     -DDCC_BUILD_BENCHMARKS=ON \
     -DDCC_LLAM_USE_SUBDIRECTORY="$llam_use_subdirectory" \
     -DDCC_BUNDLE_LLAM="$bundle_llam" \
@@ -684,6 +686,7 @@ if ! is_true "${DCC_SKIP_ASAN:-0}"; then
     step "configure ASAN/UBSAN build"
     cmake_configure "$asan_build_dir" \
         -DCMAKE_BUILD_TYPE=Debug \
+        -DDCC_BUILD_TESTS=ON \
         -DDCC_ENABLE_SANITIZERS=ON \
         -DDCC_LLAM_USE_SUBDIRECTORY="$llam_use_subdirectory" \
         -DDCC_BUNDLE_LLAM="$bundle_llam" \
@@ -704,6 +707,7 @@ if ! is_true "${DCC_SKIP_NOOPUS:-0}"; then
     step "configure no-opus build"
     cmake_configure "$noopus_build_dir" \
         -DCMAKE_BUILD_TYPE=Debug \
+        -DDCC_BUILD_TESTS=ON \
         -DDCC_WITH_OPUS=OFF \
         -DDCC_LLAM_USE_SUBDIRECTORY="$llam_use_subdirectory" \
         -DDCC_BUNDLE_LLAM="$bundle_llam" \

@@ -5,8 +5,8 @@ DCC is configured through CMake.
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `DCC_BUILD_SHARED` | `OFF` | Build `dcc` as a shared library. |
-| `DCC_BUILD_EXAMPLES` | `ON` | Build example programs. |
-| `DCC_BUILD_TESTS` | `ON` | Build smoke and audit tests. |
+| `DCC_BUILD_EXAMPLES` | `OFF` | Build example programs. |
+| `DCC_BUILD_TESTS` | `OFF` | Build smoke and audit tests. |
 | `DCC_BUILD_TOOLS` | `ON` | Build and install runtime tools. |
 | `DCC_BUILD_BENCHMARKS` | `OFF` | Build micro benchmarks. |
 | `DCC_BUILD_FUZZERS` | `OFF` | Build JSON fuzz harnesses. |
@@ -39,6 +39,8 @@ check that the LLAM ABI major version matches DCC's supported runtime ABI.
 ```sh
 cmake -S . -B build \
   -DCMAKE_BUILD_TYPE=Debug \
+  -DDCC_BUILD_EXAMPLES=ON \
+  -DDCC_BUILD_TESTS=ON \
   -DDCC_LLAM_USE_SUBDIRECTORY=ON \
   -DDCC_LLAM_ROOT=../LLAM
 cmake --build build

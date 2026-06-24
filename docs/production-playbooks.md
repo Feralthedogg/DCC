@@ -61,7 +61,8 @@ First response:
    for the selected shard/all shards.
 3. If identify sessions are low, stop rollout and wait for Discord reset timing
    before admitting more shards.
-4. Run the local chaos suite before redeploying gateway changes:
+4. Run the local chaos suite before redeploying gateway changes. Configure
+   the build with `-DDCC_BUILD_TESTS=ON` before running these checks:
 
 ```sh
 ctest --test-dir build -R '^dcc_(gateway|cluster)_chaos_smoke$' --output-on-failure
@@ -295,7 +296,10 @@ keeping one broad listener alive indefinitely.
 Before tagging:
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DDCC_BUILD_EXAMPLES=ON \
+  -DDCC_BUILD_TESTS=ON
 cmake --build build
 ctest --test-dir build --output-on-failure
 tools/release_check.sh

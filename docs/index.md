@@ -93,7 +93,6 @@ git clone https://github.com/Feralthedogg/LLAM.git
 cd DCC
 cmake -S . -B build -DDCC_LLAM_USE_SUBDIRECTORY=ON -DDCC_LLAM_ROOT=../LLAM
 cmake --build build
-ctest --test-dir build --output-on-failure
 ```
 
 DCC suppresses LLAM's install rules in this combined source build, so

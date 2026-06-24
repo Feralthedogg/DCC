@@ -59,11 +59,12 @@ int dcc_hot_reload_host_parse_intents(const char *text, dcc_intents_t *out) {
         return 0;
     }
 
-    copy = (char *)malloc(strlen(text) + 1U);
+    size_t text_len = strlen(text);
+    copy = (char *)malloc(text_len + 1U);
     if (copy == NULL) {
         return -1;
     }
-    strcpy(copy, text);
+    memcpy(copy, text, text_len + 1U);
 
     cursor = copy;
     while (cursor != NULL) {

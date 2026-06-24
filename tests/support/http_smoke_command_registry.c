@@ -279,16 +279,16 @@ static int command_registry_builder_lifetime_smoke(void) {
         return 1;
     }
 
-    strcpy(command_name, "bad");
-    strcpy(command_description, "Bad command");
-    strcpy(subcommand_name, "bad");
-    strcpy(subcommand_description, "Bad route");
-    strcpy(option_name, "bad");
-    strcpy(option_description, "Bad option");
-    strcpy(choice_name, "Bad");
-    strcpy(choice_value, "bad");
-    strcpy(channel_option_name, "bad");
-    strcpy(channel_option_description, "Bad channel");
+    memcpy(command_name, "bad", sizeof("bad"));
+    memcpy(command_description, "Bad command", sizeof("Bad command"));
+    memcpy(subcommand_name, "bad", sizeof("bad"));
+    memcpy(subcommand_description, "Bad route", sizeof("Bad route"));
+    memcpy(option_name, "bad", sizeof("bad"));
+    memcpy(option_description, "Bad option", sizeof("Bad option"));
+    memcpy(choice_name, "Bad", sizeof("Bad"));
+    memcpy(choice_value, "bad", sizeof("bad"));
+    memcpy(channel_option_name, "bad", sizeof("bad"));
+    memcpy(channel_option_description, "Bad channel", sizeof("Bad channel"));
     channel_types[0] = 99U;
     command.options = NULL;
     command.options_count = 0U;

@@ -100,7 +100,7 @@ and interval when validating supervisor automation against a live bot.
 For event-volume checks, set `DCC_SOAK_RAW_SAMPLE=1000` to print every thousandth
 raw dispatch without flooding stdout.
 
-Local pre-soak checks:
+Local pre-soak checks require a build configured with `-DDCC_BUILD_TESTS=ON`:
 
 ```sh
 ctest --test-dir build -R '^dcc_(gateway|cluster)_chaos_smoke$|^dcc_cluster_supervisor_policy' --output-on-failure

@@ -117,6 +117,7 @@ jobs:
             -DDCC_LLAM_ROOT="$GITHUB_WORKSPACE/LLAM" \
             -DDCC_WITH_OPUS=OFF \
             -DDCC_BUILD_EXAMPLES=OFF \
+            -DDCC_BUILD_TESTS=ON \
             -DDCC_BUILD_TOOLS=OFF \
             ${openssl_arg}
           cmake --build "$GITHUB_WORKSPACE/DCC/build-bsd" --parallel 2 --target \
