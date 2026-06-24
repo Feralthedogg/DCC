@@ -602,7 +602,7 @@ if ! is_true "${DCC_SKIP_PACKAGE:-0}"; then
 
     if ! is_true "${DCC_SKIP_PKG_CONFIG_CHECK:-0}"; then
         step "build installed pkg-config consumer"
-        pkg_config_consumer_check "$package_prefix" "$package_consumer_build_dir"
+        pkg_config_consumer_check "$package_prefix" "$package_consumer_build_dir" "$package_llam_library"
     fi
 fi
 
@@ -678,7 +678,7 @@ if ! is_true "${DCC_SKIP_MINIMAL_PACKAGE:-0}"; then
 
     if ! is_true "${DCC_SKIP_PKG_CONFIG_CHECK:-0}"; then
         step "build minimal installed pkg-config consumer"
-        pkg_config_consumer_check "$minimal_package_prefix" "$minimal_package_consumer_build_dir"
+        pkg_config_consumer_check "$minimal_package_prefix" "$minimal_package_consumer_build_dir" "$package_llam_library"
     fi
 fi
 
