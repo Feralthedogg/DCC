@@ -5,6 +5,7 @@ param(
     [string]$BaseUrl = $env:DCC_INSTALL_BASE_URL,
     [string]$LlamVersion = $env:DCC_INSTALL_LLAM_VERSION,
     [string]$LlamInstallerUrl = $env:DCC_LLAM_INSTALLER_URL,
+    [switch]$InstallLlam,
     [switch]$SkipLlam,
     [switch]$DryRun,
     [switch]$Force
@@ -23,6 +24,15 @@ if ([string]::IsNullOrWhiteSpace($Target)) {
 }
 if ([string]::IsNullOrWhiteSpace($LlamVersion)) {
     $LlamVersion = "2.1.0"
+}
+if (($env:DCC_INSTALL_LLAM) -and ($env:DCC_INSTALL_LLAM -ne "skip")) {
+    $InstallLlam = $true
+}
+if ($PSBoundParameters.ContainsKey("LlamVersion")) {
+    $InstallLlam = $true
+}
+if ($SkipLlam) {
+    $InstallLlam = $false
 }
 function Assert-ReleaseComponent {
     param(
@@ -105,9 +115,6 @@ function Install-DccTree {
     if (-not (Test-Path -LiteralPath (Join-Path $Root "include\dcc\dcc.h"))) {
         throw "DCC archive does not contain include\dcc\dcc.h"
     }
-    if (-not (Test-Path -LiteralPath (Join-Path $Root "include\llam\runtime.h"))) {
-        throw "DCC archive does not contain bundled LLAM headers"
-    }
 
     Copy-Directory (Join-Path $Root "include") (Join-Path $Prefix "include")
     Copy-Directory (Join-Path $Root "lib") (Join-Path $Prefix "lib")
@@ -119,7 +126,7 @@ function Install-DccTree {
 }
 
 function Install-LatestLlam {
-    if ($SkipLlam) {
+    if (-not $InstallLlam) {
         return
     }
 

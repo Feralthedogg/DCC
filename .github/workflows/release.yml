@@ -82,7 +82,7 @@ jobs:
           DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
           DCC_CMAKE_GENERATOR: Ninja
           DCC_LLAM_USE_SUBDIRECTORY: ON
-          DCC_BUNDLE_LLAM: ON
+          DCC_BUNDLE_LLAM: OFF
           DCC_LLAM_ROOT: ${{ github.workspace }}/LLAM
           DCC_BUILD_PARALLEL: 4
           DCC_RELEASE_CTEST_EXCLUDE: ^(dcc_cluster_chaos_smoke|dcc_cluster_gateway_smoke)$
@@ -95,7 +95,7 @@ jobs:
         env:
           DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
           DCC_LLAM_USE_SUBDIRECTORY: ON
-          DCC_BUNDLE_LLAM: ON
+          DCC_BUNDLE_LLAM: OFF
           DCC_LLAM_ROOT: ${{ github.workspace }}\LLAM
           DCC_BUILD_PARALLEL: 4
         run: .\tools\package_release_windows.ps1 -Target "${{ matrix.target }}"
@@ -212,7 +212,7 @@ jobs:
             DCC_SKIP_RELEASE_TESTS=1 \
             DCC_BUILD_PARALLEL=2 \
             DCC_LLAM_USE_SUBDIRECTORY=ON \
-            DCC_BUNDLE_LLAM=ON \
+            DCC_BUNDLE_LLAM=OFF \
             DCC_LLAM_ROOT="$GITHUB_WORKSPACE/LLAM" \
             DCC_EXTRA_CMAKE_ARGS="$extra_args" \
             sh "$GITHUB_WORKSPACE/DCC/tools/package_release.sh" "${{ matrix.target }}"
@@ -281,7 +281,7 @@ jobs:
             echo "## Highlights"
             echo
             echo "- DPP-inspired Discord C client surface with Gateway, REST, slash command, component, and interaction helpers."
-            echo "- LLAM-backed runtime and networking path bundled into release archives."
+            echo "- LLAM-backed runtime and networking path with LLAM kept as a separate runtime package."
             echo "- Direct interaction reply helpers, stronger modal sugar, managed latest-message publishing, and REST response ID extraction."
             echo "- Optional cached channel-to-guild inference for voice helpers and \`all\` Gateway intent selection in the hot reload host."
             echo "- Hot-reload isolated worker mode with last-good rollback support."
@@ -321,7 +321,6 @@ jobs:
             echo
             echo "- Public headers under \`include/dcc/\`."
             echo "- Static DCC library and runtime helper tools."
-            echo "- Bundled LLAM runtime headers, libraries, \`llam-config.cmake\`, and \`llam.pc\`."
             echo "- CMake package files under \`lib/cmake/dcc/\` and pkg-config metadata under \`lib/pkgconfig/\`."
             echo "- Runtime tools such as \`dcc_hot_reload_host\`, \`dcc_hot_reload_worker\`, \`dcc_command_sync\`, and \`dcc_replay\`."
             echo "- Examples, deployment templates, and Markdown documentation."
@@ -338,12 +337,14 @@ jobs:
             echo "POSIX auto-detect:"
             echo
             echo "\`\`\`bash"
+            echo "curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh | sh -s -- --prefix \"\$HOME/.local\""
             echo "curl -fsSL ${base_url}/install.sh | sh -s -- --version ${version} --base-url \"${base_url}\" --prefix \"\$HOME/.local\""
             echo "\`\`\`"
             echo
             echo "POSIX explicit target:"
             echo
             echo "\`\`\`bash"
+            echo "curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh | sh -s -- --prefix \"\$HOME/.local\""
             echo "curl -fsSL ${base_url}/install.sh | sh -s -- --version ${version} --base-url \"${base_url}\" --target macos-aarch64 --prefix \"\$HOME/.local\""
             echo "\`\`\`"
             echo
@@ -353,7 +354,7 @@ jobs:
             echo "Invoke-WebRequest \"${base_url}/install.ps1\" -OutFile install.ps1; .\\install.ps1 -Version ${version} -BaseUrl \"${base_url}\" -Prefix \"\$env:LOCALAPPDATA\\DCC\""
             echo "\`\`\`"
             echo
-            echo "The installers install the DCC archive and then refresh the DCC-tested LLAM 2.1.0 runtime by default. Pass --llam-version latest to intentionally use the newest LLAM release. FreeBSD, OpenBSD, and NetBSD release archives are published for x86_64; DragonFlyBSD is available as an experimental source/package-script target."
+            echo "Install LLAM separately before installing DCC, or pass --install-llam to the POSIX installer / -InstallLlam to the PowerShell installer to fetch the DCC-tested LLAM 2.1.0 runtime into the same prefix. FreeBSD, OpenBSD, and NetBSD release archives are published for x86_64; DragonFlyBSD is available as an experimental source/package-script target."
             echo
             echo "## Verification"
             echo

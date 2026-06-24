@@ -28,7 +28,7 @@ minimal_package_consumer_build_dir=${DCC_MINIMAL_PACKAGE_CONSUMER_BUILD_DIR:-"$s
 llam_root=${DCC_LLAM_ROOT:-"$source_dir/../LLAM"}
 llam_library=${DCC_LLAM_LIBRARY:-"$llam_root/libllam_runtime.a"}
 llam_use_subdirectory=${DCC_LLAM_USE_SUBDIRECTORY:-ON}
-bundle_llam=${DCC_BUNDLE_LLAM:-ON}
+bundle_llam=${DCC_BUNDLE_LLAM:-OFF}
 ctest_timeout=${DCC_CTEST_TIMEOUT:-180}
 ctest_regex=${DCC_CTEST_REGEX:-^dcc_}
 ctest_exclude=${DCC_CTEST_EXCLUDE:-}
@@ -195,9 +195,31 @@ pkg_config_consumer_check() {
     consumer_dir=$source_dir/tests/pkg_config_consumer
     consumer_build_dir=$build/pkg-config-consumer
     mkdir -p "$consumer_build_dir"
+    if [ -n "$package_llam" ]; then
+        package_llam_dir=$(dirname -- "$package_llam")
+        package_llam_pc_private_libs="-pthread"
+        case "$(uname -s)" in
+            Linux) package_llam_pc_private_libs="-pthread -luring -lm" ;;
+            NetBSD) package_llam_pc_private_libs="-pthread -lrt" ;;
+        esac
+        mkdir -p "$consumer_build_dir/pkgconfig"
+        cat >"$consumer_build_dir/pkgconfig/llam.pc" <<EOF
+prefix=$llam_root
+exec_prefix=\${prefix}
+libdir=$package_llam_dir
+includedir=$llam_root/include
+
+Name: LLAM
+Description: Stackful user-thread runtime for C applications
+Version: 2.1.0
+Libs: -L\${libdir} -lllam_runtime
+Libs.private: $package_llam_pc_private_libs
+Cflags: -I\${includedir}
+EOF
+    fi
 
     old_pkg_config_path=${PKG_CONFIG_PATH:-}
-    PKG_CONFIG_PATH="$prefix/lib/pkgconfig:$prefix/lib64/pkgconfig:$llam_root/build/cmake-path-check:$llam_root/build:$llam_root/lib/pkgconfig"
+    PKG_CONFIG_PATH="$consumer_build_dir/pkgconfig:$prefix/lib/pkgconfig:$prefix/lib64/pkgconfig:$llam_root/build/cmake-path-check:$llam_root/build:$llam_root/lib/pkgconfig"
     if [ -n "$old_pkg_config_path" ]; then
         PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$old_pkg_config_path"
     fi

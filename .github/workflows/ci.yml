@@ -56,7 +56,7 @@ jobs:
         env:
           DCC_CMAKE_GENERATOR: Ninja
           DCC_LLAM_USE_SUBDIRECTORY: ON
-          DCC_BUNDLE_LLAM: ON
+          DCC_BUNDLE_LLAM: OFF
           DCC_LLAM_ROOT: ${{ github.workspace }}/LLAM
           DCC_CTEST_TIMEOUT: 300
           DCC_CTEST_EXCLUDE: ^(dcc_cluster_chaos_smoke|dcc_cluster_gateway_smoke)$

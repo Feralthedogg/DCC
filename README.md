@@ -11,15 +11,18 @@ Documentation is published at:
 
 https://Feralthedogg.github.io/DCC/
 
-Install the latest release:
+Install LLAM, then install the latest DCC release:
 
 ```sh
+curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
+  sh -s -- --prefix "$HOME/.local"
 curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
 ```
 
-The release archive includes a compatible LLAM runtime, and the installer also
-refreshes the DCC-tested LLAM 2.1.0 runtime by default.
+DCC does not vendor LLAM into release archives by default. The DCC installer can
+install the tested LLAM runtime with `--install-llam`, but ordinary installs keep
+the two runtimes separate.
 
 Local documentation preview:
 
@@ -31,7 +34,7 @@ mkdocs serve
 Basic build:
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DDCC_LLAM_USE_SUBDIRECTORY=ON
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="$HOME/.local"
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```

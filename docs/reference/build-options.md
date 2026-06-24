@@ -13,7 +13,7 @@ DCC is configured through CMake.
 | `DCC_ENABLE_SANITIZERS` | `OFF` | Enable ASAN/UBSAN for supported compilers. |
 | `DCC_LLAM_USE_SUBDIRECTORY` | `OFF` | Build LLAM from source through `add_subdirectory`. |
 | `DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS` | `OFF` | Keep LLAM's own tests enabled when LLAM is added as a subdirectory. |
-| `DCC_BUNDLE_LLAM` | `ON` | Install LLAM runtime package files with DCC when LLAM is built as a subdirectory. |
+| `DCC_BUNDLE_LLAM` | `OFF` | Install LLAM runtime package files with DCC when LLAM is built as a subdirectory. |
 | `DCC_LLAM_REQUIRED_VERSION` | `2.1.0` | Minimum LLAM runtime version DCC validates during source and package builds. |
 | `DCC_LLAM_ROOT` | `../LLAM` | LLAM source or install root. |
 | `DCC_LLAM_LIBRARY` | `../LLAM/libllam_runtime.a` | Prebuilt LLAM static library. |
@@ -28,10 +28,9 @@ curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install
   sh -s -- --prefix "$HOME/.local"
 ```
 
-The release archive includes bundled LLAM package files, and the installer
-refreshes the DCC-tested LLAM 2.1.0 runtime by default.
-DCC's CI and release workflows currently build the bundled runtime from the
-LLAM `v2.1.0` release tag.
+DCC release archives do not bundle LLAM by default. Install LLAM separately, or
+pass `--install-llam` to the DCC installer when you want it to fetch the
+DCC-tested LLAM runtime into the same prefix.
 Source and package builds reject LLAM headers older than 2.1.0, and they also
 check that the LLAM ABI major version matches DCC's supported runtime ABI.
 
@@ -46,10 +45,8 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-When `DCC_LLAM_USE_SUBDIRECTORY=ON`, DCC disables LLAM's own CTest entries by
-default so `ctest` reports DCC failures only. Add
-`-DDCC_LLAM_ENABLE_SUBDIRECTORY_TESTS=ON` when you intentionally want to run
-the LLAM test suite from the combined build tree.
+DCC suppresses LLAM's install rules in combined source builds. `cmake --install`
+installs DCC files only unless `DCC_BUNDLE_LLAM=ON` is explicitly enabled.
 
 ## CI Build With LLAM Source
 
@@ -59,6 +56,11 @@ cmake -S . -B build \
   -DDCC_LLAM_ROOT=../LLAM
 cmake --build build
 ```
+
+When `DCC_LLAM_USE_SUBDIRECTORY=ON`, DCC disables LLAM's install rules and CTest
+entries by default so `cmake --install` and `ctest` report DCC behavior only.
+Add `-DDCC_LLAM_ENABLE_SUBDIRECTORY_TESTS=ON` when you intentionally want to run
+the LLAM test suite from the combined build tree.
 
 ## Platform Notes
 
@@ -87,8 +89,11 @@ cmake -S . -B build-package \
   -DDCC_BUILD_EXAMPLES=OFF \
   -DDCC_BUILD_TESTS=OFF \
   -DDCC_LLAM_USE_SUBDIRECTORY=ON \
-  -DDCC_LLAM_ROOT=../LLAM \
-  -DDCC_BUNDLE_LLAM=ON
+  -DDCC_LLAM_ROOT=../LLAM
 cmake --build build-package
 cmake --install build-package --prefix /usr/local
 ```
+
+Set `-DDCC_BUNDLE_LLAM=ON` only when you intentionally want a self-contained DCC
+package that also carries LLAM runtime headers and libraries. Even then, DCC
+keeps LLAM's demo and stress binaries out of the DCC install tree.

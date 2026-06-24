@@ -7,7 +7,7 @@ target="${DCC_INSTALL_TARGET:-}"
 target_explicit=0
 [ -n "$target" ] && target_explicit=1
 base_url="${DCC_INSTALL_BASE_URL:-}"
-llam_mode="${DCC_INSTALL_LLAM:-latest}"
+llam_mode="${DCC_INSTALL_LLAM:-skip}"
 llam_version="${DCC_INSTALL_LLAM_VERSION:-2.1.0}"
 llam_installer_url="${DCC_LLAM_INSTALLER_URL:-}"
 dry_run=0
@@ -16,13 +16,13 @@ force=0
 usage() {
     cat <<'EOF'
 usage: install.sh [--prefix <dir>] [--version <version|latest>] [--target <target>]
-                  [--base-url <url>] [--skip-llam] [--llam-version <version|latest>]
+                  [--base-url <url>] [--install-llam] [--skip-llam] [--llam-version <version|latest>]
                   [--dry-run] [--force]
 
-Installs DCC from a GitHub release archive. Release archives include a
-compatible LLAM runtime. By default the installer also refreshes the
-DCC-tested LLAM 2.1.0 runtime into the same prefix. Pass
---llam-version latest to intentionally use the newest LLAM release.
+Installs DCC from a GitHub release archive. LLAM is a separate runtime
+dependency; install LLAM first or pass --install-llam to install the
+DCC-tested LLAM 2.1.0 runtime into the same prefix. Pass --llam-version
+latest to intentionally use the newest LLAM release.
 EOF
 }
 
@@ -68,6 +68,10 @@ while [ "$#" -gt 0 ]; do
             ;;
         --skip-llam)
             llam_mode=skip
+            shift
+            ;;
+        --install-llam)
+            llam_mode=latest
             shift
             ;;
         --llam-version)
@@ -229,6 +233,20 @@ verify_checksum() {
     fi
 }
 
+extract_tar_gz() {
+    archive=$1
+    dst=$2
+    if tar -xzf "$archive" -C "$dst"; then
+        return 0
+    fi
+    if command -v gzip >/dev/null 2>&1; then
+        gzip -dc "$archive" | (cd "$dst" && tar -xf -)
+        return $?
+    fi
+    echo "could not extract $archive; tar -z or gzip is required" >&2
+    return 1
+}
+
 copy_dir() {
     src=$1
     dst=$2
@@ -254,10 +272,6 @@ install_tree() {
     root=$1
     [ -f "$root/include/dcc/dcc.h" ] || {
         echo "DCC archive does not contain include/dcc/dcc.h" >&2
-        exit 1
-    }
-    [ -f "$root/include/llam/runtime.h" ] || {
-        echo "DCC archive does not contain bundled LLAM headers" >&2
         exit 1
     }
 
@@ -330,7 +344,7 @@ else
     download_file "$base_url/$package_archive" "$tmp_dir/$package_archive"
     download_file "$base_url/$package_archive.sha256" "$tmp_dir/$package_archive.sha256"
     verify_checksum "$tmp_dir/$package_archive" "$tmp_dir/$package_archive.sha256" "$package_archive"
-    tar -xf "$tmp_dir/$package_archive" -C "$tmp_dir"
+    extract_tar_gz "$tmp_dir/$package_archive" "$tmp_dir"
 fi
 
 package_root=$(find "$tmp_dir" -type f -path '*/include/dcc/dcc.h' -print |

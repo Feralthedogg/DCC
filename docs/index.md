@@ -66,10 +66,13 @@ DCC_SIMPLE_BOT_MAIN(
 
 ## Install
 
-The release installer detects the current platform, installs DCC, and refreshes
-the DCC-tested LLAM 2.1.0 runtime through LLAM's release installer.
+Install LLAM first, then let the release installer detect the current platform
+and install DCC. Pass `--install-llam` when you want the DCC installer to fetch
+the tested LLAM runtime into the same prefix.
 
 ```sh
+curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
+  sh -s -- --prefix "$HOME/.local"
 curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
 ```
@@ -92,6 +95,9 @@ cmake -S . -B build -DDCC_LLAM_USE_SUBDIRECTORY=ON -DDCC_LLAM_ROOT=../LLAM
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
+
+DCC suppresses LLAM's install rules in this combined source build, so
+`cmake --install build` installs DCC files only.
 
 ## Where To Go Next
 

@@ -18,13 +18,14 @@ example `dcc-1.3.0-macos-aarch64.tar.gz`.
 Binary release archives include:
 
 - DCC public headers, library, CMake package, and pkg-config metadata.
-- Bundled LLAM runtime headers, library, CMake package, and pkg-config metadata.
 - DCC command-line tools, examples, deployment templates, and docs.
 
-Users do not need to clone LLAM for release installs. The public POSIX install
-path is:
+Users install LLAM separately before installing DCC, or explicitly ask the DCC
+installer to fetch LLAM. The public POSIX install path is:
 
 ```sh
+curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
+  sh -s -- --prefix "$HOME/.local"
 curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.3.0/install.sh |
   sh -s -- --version 1.3.0 \
     --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.3.0" \
@@ -38,9 +39,8 @@ Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.3.0/
 .\install.ps1 -Version 1.3.0 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.3.0" -Prefix "$env:LOCALAPPDATA\DCC"
 ```
 
-The installer installs the DCC release archive and then calls LLAM's release
-installer for the DCC-tested LLAM 2.1.0 runtime into the same prefix.
-`--skip-llam` keeps the LLAM copy bundled inside the DCC archive.
+Pass `--install-llam` when you want the POSIX installer to fetch the DCC-tested
+LLAM 2.1.0 runtime into the same prefix.
 On POSIX, `--target` is normally detected from the host. Manually selecting a
 different target is allowed for staging, but the installer warns because the
 resulting binaries and libraries may not run on the current machine.
@@ -52,12 +52,13 @@ git tag v1.3.0
 git push origin v1.3.0
 ```
 
-The `Release` workflow checks out `DCC` and `LLAM` side by side, builds LLAM
-through `DCC_LLAM_USE_SUBDIRECTORY=ON`, bundles LLAM into the DCC install tree,
-runs the DCC test suite, creates CPack binary/source archives, uploads artifacts,
-builds `SHA256SUMS`, and creates the GitHub Release. Tag versions must match
-`project(dcc VERSION ...)`. DCC Beta releases use the release title and notes
-for the Beta label while keeping GitHub's prerelease option disabled.
+The `Release` workflow checks out `DCC` and `LLAM` side by side, builds against
+LLAM through `DCC_LLAM_USE_SUBDIRECTORY=ON`, keeps LLAM's install rules out of
+the DCC package, runs the DCC test suite, creates CPack binary/source archives,
+uploads artifacts, builds `SHA256SUMS`, and creates the GitHub Release. Tag
+versions must match `project(dcc VERSION ...)`. DCC Beta releases use the
+release title and notes for the Beta label while keeping GitHub's prerelease
+option disabled.
 
 The release path expects:
 
@@ -72,9 +73,8 @@ The release path expects:
 - Examples that compile using public headers.
 - Package consumer tests that verify installed CMake metadata and, when
   `pkg-config` or `pkgconf` is available, compile a `dcc.pc` consumer.
-- Bundled LLAM headers, libraries, `llam-config.cmake`, and `llam.pc` are present
-  in binary packages, so installed consumers do not need `DCC_LLAM_ROOT` or
-  `DCC_LLAM_LIBRARY`.
+- LLAM is installed separately or supplied to consumers through
+  `DCC_LLAM_ROOT` and `DCC_LLAM_LIBRARY`.
 - Installed hot reload host/worker preflight through `dcc_hot_reload_host
   --check`, including default-global, `--guild`, and `--global` command scope
   checks.

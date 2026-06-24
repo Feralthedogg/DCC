@@ -56,6 +56,12 @@ function Assert-ZipContains {
     }
 }
 
+function Test-Truthy {
+    param([string]$Value)
+
+    return $Value -match '^(1|ON|On|on|TRUE|True|true|YES|Yes|yes)$'
+}
+
 $Root = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")
 $Root = $Root.Path
 $ProjectVersion = Get-ProjectVersion $Root
@@ -84,6 +90,7 @@ if ([System.IO.Path]::IsPathRooted($BuildDir)) {
 $DistDir = Join-Path $Root "target\dist"
 $PackageOutput = Join-Path $BuildRoot "package-output"
 $LlamRoot = if ($env:DCC_LLAM_ROOT) { $env:DCC_LLAM_ROOT } else { Join-Path $Root "..\LLAM" }
+$BundleLlam = if ($env:DCC_BUNDLE_LLAM) { $env:DCC_BUNDLE_LLAM } else { "OFF" }
 
 New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
 Remove-Item -Recurse -Force -LiteralPath $PackageOutput -ErrorAction SilentlyContinue
@@ -96,7 +103,7 @@ $configureArgs = @(
     "-DCMAKE_BUILD_TYPE=$Configuration",
     "-DDCC_LLAM_ROOT=$LlamRoot",
     "-DDCC_LLAM_USE_SUBDIRECTORY=ON",
-    "-DDCC_BUNDLE_LLAM=ON",
+    "-DDCC_BUNDLE_LLAM=$BundleLlam",
     "-DDCC_BUILD_EXAMPLES=OFF",
     "-DDCC_BUILD_TESTS=OFF",
     "-DDCC_WITH_OPUS=OFF"
@@ -156,14 +163,36 @@ $outArchive = Join-Path $DistDir "dcc-$Version-$Target.zip"
 Copy-Item -Force -LiteralPath $packageArchive.FullName -Destination $outArchive
 Write-Sha256Sidecar $outArchive
 
-Assert-ZipContains $outArchive @(
+$requiredMembers = @(
     '/include/dcc/dcc\.h$',
-    '/include/llam/runtime\.h$',
-    '/lib/(lib)?llam_runtime.*\.(lib|dll|a)$',
-    '/lib/cmake/llam/llam-config\.cmake$',
-    '/lib/pkgconfig/llam\.pc$',
     '/lib/pkgconfig/dcc\.pc$',
     '/share/dcc/docs/api\.md$'
 )
+if (Test-Truthy $BundleLlam) {
+    $requiredMembers += @(
+        '/include/llam/runtime\.h$',
+        '/lib/(lib)?llam_runtime.*\.(lib|dll|a)$',
+        '/lib/cmake/llam/llam-config\.cmake$',
+        '/lib/pkgconfig/llam\.pc$'
+    )
+}
+
+Assert-ZipContains $outArchive $requiredMembers
+
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$zipCheck = [System.IO.Compression.ZipFile]::OpenRead($outArchive)
+try {
+    $entries = @($zipCheck.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
+    if (-not (Test-Truthy $BundleLlam)) {
+        if ($entries | Where-Object { $_ -match '/include/llam/|/lib/cmake/llam/|/lib/pkgconfig/llam\.pc$|/lib/(lib)?llam_runtime' } | Select-Object -First 1) {
+            throw "Windows package unexpectedly contains LLAM bundle files"
+        }
+    }
+    if ($entries | Where-Object { $_ -match '/bin/(demo|stress|bench|server|server_lossless|server_flood)(\.exe)?$' } | Select-Object -First 1) {
+        throw "Windows package unexpectedly contains LLAM example binaries"
+    }
+} finally {
+    $zipCheck.Dispose()
+}
 
 Write-Output $outArchive

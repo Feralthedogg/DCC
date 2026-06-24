@@ -6,6 +6,14 @@ source_dir=${DCC_SOURCE_DIR:-$(CDPATH= cd -- "$script_dir/.." && pwd)}
 build_dir=${DCC_RELEASE_BUILD_DIR:-"$source_dir/build-release-dist"}
 dist_dir=${DCC_DIST_DIR:-"$source_dir/target/dist"}
 target=${1:-}
+bundle_llam=${DCC_BUNDLE_LLAM:-OFF}
+
+is_true() {
+    case "$1" in
+        1|ON|On|on|TRUE|True|true|YES|Yes|yes) return 0 ;;
+        *) return 1 ;;
+    esac
+}
 
 detect_target() {
     os=$(uname -s)
@@ -118,7 +126,7 @@ if [ -n "${DCC_CMAKE_GENERATOR:-}" ]; then
         -DDCC_LLAM_ROOT="${DCC_LLAM_ROOT:-$source_dir/../LLAM}" \
         -DDCC_LLAM_LIBRARY="${DCC_LLAM_LIBRARY:-$source_dir/../LLAM/libllam_runtime.a}" \
         -DDCC_LLAM_USE_SUBDIRECTORY="${DCC_LLAM_USE_SUBDIRECTORY:-ON}" \
-        -DDCC_BUNDLE_LLAM="${DCC_BUNDLE_LLAM:-ON}" \
+        -DDCC_BUNDLE_LLAM="$bundle_llam" \
         ${DCC_EXTRA_CMAKE_ARGS:-}
 else
     # shellcheck disable=SC2086
@@ -127,7 +135,7 @@ else
         -DDCC_LLAM_ROOT="${DCC_LLAM_ROOT:-$source_dir/../LLAM}" \
         -DDCC_LLAM_LIBRARY="${DCC_LLAM_LIBRARY:-$source_dir/../LLAM/libllam_runtime.a}" \
         -DDCC_LLAM_USE_SUBDIRECTORY="${DCC_LLAM_USE_SUBDIRECTORY:-ON}" \
-        -DDCC_BUNDLE_LLAM="${DCC_BUNDLE_LLAM:-ON}" \
+        -DDCC_BUNDLE_LLAM="$bundle_llam" \
         ${DCC_EXTRA_CMAKE_ARGS:-}
 fi
 
@@ -188,10 +196,21 @@ cp "$source_archive" "$source_out"
 )
 
 tar -tzf "$binary_out" | grep '/include/dcc/dcc.h$' >/dev/null
-tar -tzf "$binary_out" | grep '/include/llam/runtime.h$' >/dev/null
-tar -tzf "$binary_out" | grep -E '/lib/libllam_runtime(\.a|\.so|\.dylib)(\.[0-9.]+)?$' >/dev/null
-tar -tzf "$binary_out" | grep '/lib/cmake/llam/llam-config.cmake$' >/dev/null
-tar -tzf "$binary_out" | grep '/lib/pkgconfig/llam.pc$' >/dev/null
+if is_true "$bundle_llam"; then
+    tar -tzf "$binary_out" | grep '/include/llam/runtime.h$' >/dev/null
+    tar -tzf "$binary_out" | grep -E '/lib/libllam_runtime(\.a|\.so|\.dylib)(\.[0-9.]+)?$' >/dev/null
+    tar -tzf "$binary_out" | grep '/lib/cmake/llam/llam-config.cmake$' >/dev/null
+    tar -tzf "$binary_out" | grep '/lib/pkgconfig/llam.pc$' >/dev/null
+else
+    if tar -tzf "$binary_out" | grep -E '/include/llam/|/lib/cmake/llam/|/lib/pkgconfig/llam\.pc$|/lib/libllam_runtime' >/dev/null; then
+        echo "DCC package unexpectedly contains LLAM bundle files" >&2
+        exit 1
+    fi
+fi
+if tar -tzf "$binary_out" | grep -E '/bin/(demo|stress|bench|server|server_lossless|server_flood)(\.exe)?$' >/dev/null; then
+    echo "DCC package unexpectedly contains LLAM example binaries" >&2
+    exit 1
+fi
 tar -tzf "$binary_out" | grep '/lib/pkgconfig/dcc.pc$' >/dev/null
 tar -tzf "$binary_out" | grep '/share/dcc/docs/api.md$' >/dev/null
 tar -tzf "$source_out" | grep '/CMakeLists.txt$' >/dev/null

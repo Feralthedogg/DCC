@@ -113,7 +113,7 @@ jobs:
           cmake -S "$GITHUB_WORKSPACE/DCC" -B "$GITHUB_WORKSPACE/DCC/build-bsd" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DDCC_LLAM_USE_SUBDIRECTORY=ON \
-            -DDCC_BUNDLE_LLAM=ON \
+            -DDCC_BUNDLE_LLAM=OFF \
             -DDCC_LLAM_ROOT="$GITHUB_WORKSPACE/LLAM" \
             -DDCC_WITH_OPUS=OFF \
             -DDCC_BUILD_EXAMPLES=OFF \
@@ -147,7 +147,7 @@ jobs:
             DCC_SKIP_RELEASE_TESTS=1 \
             DCC_BUILD_PARALLEL=2 \
             DCC_LLAM_USE_SUBDIRECTORY=ON \
-            DCC_BUNDLE_LLAM=ON \
+            DCC_BUNDLE_LLAM=OFF \
             DCC_LLAM_ROOT="$GITHUB_WORKSPACE/LLAM" \
             DCC_EXTRA_CMAKE_ARGS="$extra_args" \
             sh "$GITHUB_WORKSPACE/DCC/tools/package_release.sh" "${{ matrix.package_target }}"

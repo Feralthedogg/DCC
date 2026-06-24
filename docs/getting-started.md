@@ -1,12 +1,14 @@
 # Getting Started
 
-The normal path is to install a published DCC release. The release archive is
-self-contained and includes a compatible LLAM runtime; the install script also
-refreshes the DCC-tested LLAM 2.1.0 runtime through LLAM's release installer.
+The normal path is to install LLAM first, then install a published DCC release.
+DCC keeps LLAM as a separate runtime dependency instead of vendoring LLAM files
+into the DCC archive by default.
 
 ## Install Release
 
 ```sh
+curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
+  sh -s -- --prefix "$HOME/.local"
 curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
 ```
@@ -14,6 +16,8 @@ curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.
 For system-wide installs use a system prefix:
 
 ```sh
+curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
+  sudo sh -s -- --prefix /usr/local
 curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
   sudo sh -s -- --prefix /usr/local
 ```
@@ -25,9 +29,9 @@ curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.
   sh -s -- --prefix "$HOME/.local" --force
 ```
 
-Use `--skip-llam` only when you want the LLAM copy bundled in the DCC archive
-to remain untouched. By default the script installs DCC and then installs LLAM
-2.1.0 into the same prefix. Pass `--llam-version latest` when you intentionally
+DCC's installer does not install LLAM unless requested. Pass `--install-llam`
+when you want the installer to fetch the DCC-tested LLAM runtime into the same
+prefix. Pass `--llam-version latest` with `--install-llam` when you intentionally
 want the newest LLAM release instead of the DCC-tested runtime.
 
 The POSIX installer detects the host target automatically. If you pass
@@ -50,7 +54,8 @@ This path is for working on DCC itself.
 - CMake 3.20 or newer
 - C11 compiler
 - OpenSSL development headers
-- LLAM checkout at `../LLAM`
+- LLAM 2.1.0 or newer installed, or a checked-out LLAM source tree plus a
+  prebuilt `libllam_runtime.a`
 - Optional libopus development headers for voice Opus encode/decode
 
 Linux also needs `liburing` for LLAM's io_uring backend.
@@ -64,11 +69,24 @@ propagates that through CMake package files and pkg-config metadata.
 ```sh
 cmake -S . -B build \
   -DCMAKE_BUILD_TYPE=Debug \
-  -DDCC_LLAM_USE_SUBDIRECTORY=ON \
-  -DDCC_LLAM_ROOT=../LLAM
+  -DCMAKE_PREFIX_PATH="$HOME/.local"
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
+
+When working with sibling source trees instead of an installed LLAM package,
+you can use a combined source build:
+
+```sh
+cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DDCC_LLAM_USE_SUBDIRECTORY=ON \
+  -DDCC_LLAM_ROOT=../LLAM
+cmake --build build
+```
+
+DCC disables LLAM's install rules in this mode. Installing the DCC build will
+not install LLAM demo, stress, benchmark, or server binaries.
 
 ## Create A Bot
 
