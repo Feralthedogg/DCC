@@ -239,6 +239,15 @@ dcc_status_t call_rest_get_channel_pins(dcc_client_t *client, dcc_rest_cb cb, vo
 dcc_status_t call_rest_get_channel_pins_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_channel_pins_page(client, 222, "2024-01-01T00:00:00.000000+00:00", 0, cb, user_data);
 }
+dcc_status_t call_rest_legacy_pin_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
+    return dcc_rest_legacy_pin_message(client, 222, 777, cb, user_data);
+}
+dcc_status_t call_rest_legacy_unpin_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
+    return dcc_rest_legacy_unpin_message(client, 222, 777, cb, user_data);
+}
+dcc_status_t call_rest_get_legacy_channel_pins(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
+    return dcc_rest_get_legacy_channel_pins(client, 222, "limit=50", cb, user_data);
+}
 dcc_status_t call_rest_get_poll_answer_voters(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_poll_answer_voters(client, 222, 777, 3, "limit=2&after=444", cb, user_data);
 }

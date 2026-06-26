@@ -84,6 +84,7 @@ def main() -> int:
         "/src/rest/rest_official_surface.c$",
         "/src/webhook_events.c$",
         "/tests/official_surface_smoke.c$",
+        "/tests/package_consumer/package_consumer_official_surface.c$",
         "/tests/support/http_smoke_official_surface.c$",
         "/tools/audit_discord_api_docs_surface.py$",
         "/tools/audit_official_events_surface.py$",

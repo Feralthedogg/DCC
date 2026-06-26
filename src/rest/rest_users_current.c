@@ -9,7 +9,7 @@ dcc_status_t dcc_rest_get_current_application(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    return dcc_rest_request_method(client, DCC_REST_GET, "/oauth2/applications/@me", NULL, cb, user_data);
+    return dcc_rest_request_method(client, DCC_REST_GET, "/applications/@me", NULL, cb, user_data);
 }
 
 dcc_status_t dcc_rest_get_current_user(

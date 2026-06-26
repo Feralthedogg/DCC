@@ -73,6 +73,9 @@ int main(void) {
     if (run_public_rest_gap_smoke() != 0) {
         return 1;
     }
+    if (run_public_rest_official_surface_smoke() != 0) {
+        return 1;
+    }
     if (run_public_rest_wrapper_smoke() != 0) {
         return 1;
     }

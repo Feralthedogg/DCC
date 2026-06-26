@@ -270,6 +270,30 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
+                    "legacy_pin_message",
+                    call_rest_legacy_pin_message,
+                    "PUT",
+                    "/channels/222/pins/777",
+                    NULL
+                ) != 0 ||
+        run_public_rest_wrapper_expect(
+                    client,
+                    "legacy_unpin_message",
+                    call_rest_legacy_unpin_message,
+                    "DELETE",
+                    "/channels/222/pins/777",
+                    NULL
+                ) != 0 ||
+        run_public_rest_wrapper_expect(
+                    client,
+                    "get_legacy_channel_pins",
+                    call_rest_get_legacy_channel_pins,
+                    "GET",
+                    "/channels/222/pins?limit=50",
+                    NULL
+                ) != 0 ||
+        run_public_rest_wrapper_expect(
+                    client,
                     "get_poll_answer_voters",
                     call_rest_get_poll_answer_voters,
                     "GET",

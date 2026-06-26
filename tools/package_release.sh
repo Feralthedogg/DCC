@@ -229,6 +229,7 @@ tar -tzf "$source_out" | grep '/src/oauth2.c$' >/dev/null
 tar -tzf "$source_out" | grep '/src/rest/rest_official_surface.c$' >/dev/null
 tar -tzf "$source_out" | grep '/src/webhook_events.c$' >/dev/null
 tar -tzf "$source_out" | grep '/tests/official_surface_smoke.c$' >/dev/null
+tar -tzf "$source_out" | grep '/tests/package_consumer/package_consumer_official_surface.c$' >/dev/null
 tar -tzf "$source_out" | grep '/tests/support/http_smoke_official_surface.c$' >/dev/null
 tar -tzf "$source_out" | grep '/tools/audit_discord_api_docs_surface.py$' >/dev/null
 tar -tzf "$source_out" | grep '/tools/audit_official_events_surface.py$' >/dev/null

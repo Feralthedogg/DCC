@@ -1,3 +1,8 @@
+/**
+ * @file tests/package_consumer/symbols/rest_messages.h
+ * @brief Test declarations for package consumer symbols REST messages.
+ */
+
 #ifndef DCC_PACKAGE_CONSUMER_SYMBOLS_REST_MESSAGES_H
 #define DCC_PACKAGE_CONSUMER_SYMBOLS_REST_MESSAGES_H
 
@@ -12,6 +17,20 @@ typedef dcc_status_t (*dcc_package_message_reaction_fn)(
 typedef dcc_status_t (*dcc_package_message_flags_fn)(
         dcc_client_t *,
         const dcc_message_flags_params_t *,
+        dcc_rest_cb,
+        void *
+    );
+typedef dcc_status_t (*dcc_package_message_pin_fn)(
+        dcc_client_t *,
+        dcc_snowflake_t,
+        dcc_snowflake_t,
+        dcc_rest_cb,
+        void *
+    );
+typedef dcc_status_t (*dcc_package_channel_pins_fn)(
+        dcc_client_t *,
+        dcc_snowflake_t,
+        const char *,
         dcc_rest_cb,
         void *
     );

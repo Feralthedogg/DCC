@@ -40,6 +40,7 @@ OBJECT_RESOURCES_AGGREGATE_FILE = ROOT / "include/dcc/objects/resources.h"
 DOC_FILE = ROOT / "docs/reference/official-api-surface.md"
 MKDOCS_FILE = ROOT / "mkdocs.yml"
 PACKAGE_CONSUMER_FILE = ROOT / "tests/package_consumer/package_consumer_official_surface.c"
+PACKAGE_CONSUMER_CMAKE_FILE = ROOT / "tests/package_consumer/CMakeLists.txt"
 HTTP_SMOKE_FILE = ROOT / "tests/support/http_smoke_official_surface.c"
 CMAKE_FILE = ROOT / "CMakeLists.txt"
 
@@ -88,6 +89,10 @@ CMAKE_TEST_ENTRIES = [
     "tests/official_surface_headers/rest_header.c",
     "tests/official_surface_headers/sugar_header.c",
     "tests/official_surface_headers/webhook_events_header.c",
+    "tests/support/http_smoke_official_surface.c",
+]
+PACKAGE_CONSUMER_CMAKE_ENTRIES = [
+    "package_consumer_official_surface.c",
 ]
 
 PUBLIC_SYMBOLS = [
@@ -346,6 +351,7 @@ def main() -> int:
     doc_text = DOC_FILE.read_text(encoding="utf-8")
     mkdocs_text = MKDOCS_FILE.read_text(encoding="utf-8")
     package_consumer_text = PACKAGE_CONSUMER_FILE.read_text(encoding="utf-8")
+    package_consumer_cmake_text = PACKAGE_CONSUMER_CMAKE_FILE.read_text(encoding="utf-8")
     http_smoke_text = HTTP_SMOKE_FILE.read_text(encoding="utf-8")
     cmake_text = CMAKE_FILE.read_text(encoding="utf-8")
 
@@ -363,6 +369,10 @@ def main() -> int:
     for test_entry in CMAKE_TEST_ENTRIES:
         if test_entry not in cmake_text:
             missing.append(f"CMake official surface header smoke entry missing: {test_entry}")
+
+    for package_entry in PACKAGE_CONSUMER_CMAKE_ENTRIES:
+        if package_entry not in package_consumer_cmake_text:
+            missing.append(f"package consumer CMake entry missing: {package_entry}")
 
     for include in PACKAGE_CONSUMER_INCLUDES:
         if include not in package_consumer_text:

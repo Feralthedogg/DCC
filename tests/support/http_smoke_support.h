@@ -1,3 +1,8 @@
+/**
+ * @file tests/support/http_smoke_support.h
+ * @brief Test declarations for HTTP smoke.
+ */
+
 #ifndef DCC_TEST_HTTP_SMOKE_SUPPORT_H
 #define DCC_TEST_HTTP_SMOKE_SUPPORT_H
 
@@ -100,6 +105,7 @@ int run_public_rest_app_send_thread_smoke(void);
 int run_public_rest_rate_limit_smoke(void);
 int run_public_rest_direct_message_smoke(void);
 int run_public_rest_gap_smoke(void);
+int run_public_rest_official_surface_smoke(void);
 int run_public_rest_wrapper_smoke(void);
 int run_public_rest_bucket_smoke(void);
 
@@ -150,6 +156,9 @@ dcc_status_t call_rest_pin_message(dcc_client_t *client, dcc_rest_cb cb, void *u
 dcc_status_t call_rest_unpin_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_get_channel_pins(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_get_channel_pins_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
+dcc_status_t call_rest_legacy_pin_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
+dcc_status_t call_rest_legacy_unpin_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
+dcc_status_t call_rest_get_legacy_channel_pins(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_get_poll_answer_voters(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_get_poll_answer_voters_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_end_poll(dcc_client_t *client, dcc_rest_cb cb, void *user_data);

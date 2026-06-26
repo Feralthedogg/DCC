@@ -96,3 +96,51 @@ dcc_status_t dcc_rest_get_channel_pins_page(
     dcc_rest_buffer_deinit(&query);
     return status;
 }
+
+dcc_status_t dcc_rest_legacy_pin_message(
+    dcc_client_t *client,
+    dcc_snowflake_t channel_id,
+    dcc_snowflake_t message_id,
+    dcc_rest_cb cb,
+    void *user_data
+) {
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path,
+        sizeof(path),
+        "/channels/%llu/pins/%llu",
+        (unsigned long long)channel_id,
+        (unsigned long long)message_id
+    );
+    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_PUT, path, NULL, cb, user_data) : status;
+}
+
+dcc_status_t dcc_rest_legacy_unpin_message(
+    dcc_client_t *client,
+    dcc_snowflake_t channel_id,
+    dcc_snowflake_t message_id,
+    dcc_rest_cb cb,
+    void *user_data
+) {
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path,
+        sizeof(path),
+        "/channels/%llu/pins/%llu",
+        (unsigned long long)channel_id,
+        (unsigned long long)message_id
+    );
+    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_DELETE, path, NULL, cb, user_data) : status;
+}
+
+dcc_status_t dcc_rest_get_legacy_channel_pins(
+    dcc_client_t *client,
+    dcc_snowflake_t channel_id,
+    const char *query,
+    dcc_rest_cb cb,
+    void *user_data
+) {
+    char path[64];
+    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/channels/%llu/pins", (unsigned long long)channel_id);
+    return status == DCC_OK ? dcc_rest_request_with_query(client, DCC_REST_GET, path, query, NULL, cb, user_data) : status;
+}

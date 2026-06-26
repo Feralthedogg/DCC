@@ -393,7 +393,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     "get_current_application",
                     call_rest_get_current_application,
                     "GET",
-                    "/oauth2/applications/@me",
+                    "/applications/@me",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(

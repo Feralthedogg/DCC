@@ -1,3 +1,8 @@
+/**
+ * @file tests/package_consumer/package_consumer_checks.h
+ * @brief Test declarations for package consumer package consumer checks.
+ */
+
 #ifndef DCC_PACKAGE_CONSUMER_CHECKS_H
 #define DCC_PACKAGE_CONSUMER_CHECKS_H
 
@@ -11,5 +16,6 @@ int dcc_package_consumer_check_cluster_api(void);
 int dcc_package_consumer_check_interaction_api(void);
 int dcc_package_consumer_check_interaction_server_api(void);
 int dcc_package_consumer_check_hot_reload_api(void);
+int dcc_package_consumer_check_official_surface_api(void);
 
 #endif

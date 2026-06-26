@@ -496,6 +496,7 @@ source_package_hygiene_check() {
     grep -q '/src/rest/rest_official_surface.c$' "$list_file"
     grep -q '/src/webhook_events.c$' "$list_file"
     grep -q '/tests/official_surface_smoke.c$' "$list_file"
+    grep -q '/tests/package_consumer/package_consumer_official_surface.c$' "$list_file"
     grep -q '/tests/support/http_smoke_official_surface.c$' "$list_file"
     grep -q '/tools/audit_discord_api_docs_surface.py$' "$list_file"
     grep -q '/tools/audit_official_events_surface.py$' "$list_file"

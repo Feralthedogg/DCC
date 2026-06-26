@@ -249,6 +249,9 @@ int main(void) {
     dcc_package_dm_create_fn dm_create = dcc_rest_create_dm_channel_params;
     dcc_package_message_reaction_fn reaction_add = dcc_rest_add_message_reaction_params;
     dcc_package_message_flags_fn message_flags_edit = dcc_rest_edit_message_flags_params;
+    dcc_package_message_pin_fn legacy_pin_message = dcc_rest_legacy_pin_message;
+    dcc_package_message_pin_fn legacy_unpin_message = dcc_rest_legacy_unpin_message;
+    dcc_package_channel_pins_fn legacy_channel_pins = dcc_rest_get_legacy_channel_pins;
     dcc_package_direct_message_builder_fn direct_message_create = dcc_rest_create_direct_message_builder;
     dcc_package_application_command_builder_fn application_command_create =
         dcc_rest_create_application_command_builder;
@@ -553,6 +556,9 @@ int main(void) {
                    dcc_package_consumer_check_voice_api() != 0 &&
                    reaction_add != NULL &&
                    message_flags_edit != NULL &&
+                   legacy_pin_message != NULL &&
+                   legacy_unpin_message != NULL &&
+                   legacy_channel_pins != NULL &&
                    direct_message_create != NULL &&
                    application_command_create != NULL &&
                    application_command_bulk != NULL &&
@@ -628,6 +634,7 @@ int main(void) {
                    dcc_package_consumer_check_cluster_api() != 0 &&
                    dcc_package_consumer_check_interaction_server_api() != 0 &&
                    dcc_package_consumer_check_hot_reload_api() != 0 &&
+                   dcc_package_consumer_check_official_surface_api() != 0 &&
                    dcc_package_consumer_check_interaction_api() != 0 &&
                    dcc_package_consumer_check_wait_api() != 0
                ? 0

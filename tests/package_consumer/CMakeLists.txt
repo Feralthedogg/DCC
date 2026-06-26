@@ -16,6 +16,7 @@ add_executable(dcc_package_consumer
     package_consumer_hot_reload.c
     package_consumer_interaction.c
     package_consumer_interaction_server.c
+    package_consumer_official_surface.c
     package_consumer_voice.c
     package_consumer_wait.c
 )
