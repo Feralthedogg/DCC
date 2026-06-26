@@ -584,9 +584,10 @@ static int run_public_rest_official_body_builder_edges(void) {
         .has_event_webhooks_status = 1,
         .has_event_webhooks_types = 1
     };
+    dcc_status_t body_status = dcc_rest_build_application_modify_body(&application, &json);
     if (expect_official_body_json(
             "application_modify_escape_edges",
-            dcc_rest_build_application_modify_body(&application, &json),
+            body_status,
             json,
             "{\"custom_install_url\":\"https://example.test/install?x=1\",\"description\":\"DCC \\\"runtime\\\" \\\\ core\",\"role_connections_verification_url\":\"https://example.test/verify\",\"install_params\":{\"scopes\":[\"bot\",\"applications.commands\"],\"permissions\":\"2048\"},\"integration_types_config\":{\"0\":{\"oauth2_install_params\":{\"scopes\":[\"bot\",\"applications.commands\"],\"permissions\":\"2048\"}}},\"flags\":32768,\"icon\":null,\"cover_image\":\"cover-data\",\"interactions_endpoint_url\":\"https://example.test/interactions\",\"tags\":[\"alpha\",\"quote\\\"tag\"],\"event_webhooks_url\":\"https://example.test/events\",\"event_webhooks_status\":2,\"event_webhooks_types\":[\"APPLICATION_AUTHORIZED\",\"LOBBY_MESSAGE_CREATE\"]}") != 0) {
         return 1;
@@ -600,9 +601,10 @@ static int run_public_rest_official_body_builder_edges(void) {
         .has_dms_disabled_until = 1
     };
     json = NULL;
+    body_status = dcc_rest_build_guild_incident_actions_body(&incident, &json);
     if (expect_official_body_json(
             "incident_nullable_edges",
-            dcc_rest_build_guild_incident_actions_body(&incident, &json),
+            body_status,
             json,
             "{\"invites_disabled_until\":\"2026-06-27T00:00:00+00:00\",\"dms_disabled_until\":null}") != 0) {
         return 1;
@@ -617,9 +619,10 @@ static int run_public_rest_official_body_builder_edges(void) {
         .has_flags = 1
     };
     json = NULL;
+    body_status = dcc_rest_build_lobby_message_body(&lobby_message, &json);
     if (expect_official_body_json(
             "lobby_message_raw_metadata_edges",
-            dcc_rest_build_lobby_message_body(&lobby_message, &json),
+            body_status,
             json,
             "{\"content\":\"hello \\\"world\\\" \\\\ slash\",\"metadata\":{\"raw\":true},\"flags\":4}") != 0) {
         return 1;
@@ -635,9 +638,10 @@ static int run_public_rest_official_body_builder_edges(void) {
         .item_count = 2
     };
     json = NULL;
+    body_status = dcc_rest_build_lobby_message_moderation_metadata_body(&moderation, &json);
     if (expect_official_body_json(
             "lobby_moderation_metadata_escape_edges",
-            dcc_rest_build_lobby_message_moderation_metadata_body(&moderation, &json),
+            body_status,
             json,
             "{\"decision\\\"key\":\"allow\\\\value\",\"source\":\"auto\\\"mod\"}") != 0) {
         return 1;
