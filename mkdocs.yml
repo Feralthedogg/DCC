@@ -73,6 +73,7 @@ nav:
       - REST Firewall: guides/rate-limit-firewall.md
   - API Reference:
       - Public API Guide: api.md
+      - Official Discord Surface: reference/official-api-surface.md
       - CLI Tools: reference/cli.md
       - Runtime Modules: reference/runtime-modules.md
   - Operations:

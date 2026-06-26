@@ -593,6 +593,7 @@ target_sources(dcc
         src/gateway/gateway_session_receive.c
         src/gateway/gateway_timing.c
         src/gateway/gateway_voice_state_update.c
+        src/gateway/gateway_send_public.c
         src/gateway/gateway_ws_control.c
         src/hot_reload/hot_reload_accessors.c
         src/hot_reload/hot_reload_file_sig.c
@@ -1278,6 +1279,7 @@ target_sources(dcc
         src/objects/objects_thread_member_fields.c
         src/objects/objects.c
         src/managed_message/managed_message.c
+        src/oauth2.c
         src/replay/replay_json.c
         src/replay/replay_kind.c
         src/replay/replay_line.c
@@ -1361,6 +1363,7 @@ target_sources(dcc
         src/rest/rest_future_wait.c
         src/rest/rest_future_wait_channel.c
         src/rest/rest_gateway.c
+        src/rest/rest_official_surface.c
         src/rest/rest_group_dms.c
         src/rest/rest_header_parse.c
         src/rest/rest_headers.c
@@ -1538,6 +1541,7 @@ target_sources(dcc
         src/runtime/runtime_control.c
         src/runtime/runtime_spawn.c
         src/message_link.c
+        src/webhook_events.c
         src/snowflake.c
         src/store/store.c
         src/store/store_file.c
@@ -1962,6 +1966,7 @@ if(DCC_BUILD_TESTS)
         tests/support/http_smoke_command_registry.c
         tests/support/http_smoke_common.c
         tests/support/http_smoke_gap.c
+        tests/support/http_smoke_official_surface.c
         tests/support/http_smoke_public.c
         tests/support/http_smoke_public_multipart.c
         tests/support/http_smoke_rest_calls_channels.c
@@ -1981,6 +1986,31 @@ if(DCC_BUILD_TESTS)
     target_link_libraries(dcc_http_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_http_smoke)
     add_test(NAME dcc_http_smoke COMMAND dcc_http_smoke)
+
+    add_executable(dcc_official_surface_smoke
+        tests/official_surface_smoke.c
+        tests/support/http_smoke_common.c
+        tests/support/http_smoke_official_surface.c
+        tests/support/http_smoke_public_multipart.c
+        tests/support/http_smoke_server.c
+    )
+    dcc_target_use_private_headers(dcc_official_surface_smoke)
+    target_link_libraries(dcc_official_surface_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_official_surface_smoke)
+    add_test(NAME dcc_official_surface_smoke COMMAND dcc_official_surface_smoke)
+
+    add_executable(dcc_official_surface_headers_smoke
+        tests/official_surface_headers/applications_header.c
+        tests/official_surface_headers/lobbies_header.c
+        tests/official_surface_headers/main.c
+        tests/official_surface_headers/oauth2_header.c
+        tests/official_surface_headers/rest_header.c
+        tests/official_surface_headers/sugar_header.c
+        tests/official_surface_headers/webhook_events_header.c
+    )
+    target_link_libraries(dcc_official_surface_headers_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_official_surface_headers_smoke)
+    add_test(NAME dcc_official_surface_headers_smoke COMMAND dcc_official_surface_headers_smoke)
 
     add_executable(dcc_component_session_smoke tests/component_session_smoke.c)
     target_link_libraries(dcc_component_session_smoke PRIVATE dcc::dcc)
@@ -3544,6 +3574,37 @@ if(DCC_BUILD_TESTS)
         set_tests_properties(dcc_rest_surface_audit PROPERTIES
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
+        add_test(
+            NAME dcc_official_surface_audit
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_official_surface.py
+        )
+        set_tests_properties(dcc_official_surface_audit PROPERTIES
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+        set(DCC_DISCORD_API_DOCS_ROOT_FOR_TEST "$ENV{DCC_DISCORD_API_DOCS_ROOT}")
+        if(DCC_DISCORD_API_DOCS_ROOT_FOR_TEST STREQUAL "")
+            set(DCC_DISCORD_API_DOCS_ROOT_FOR_TEST "/tmp/discord-api-docs")
+        endif()
+        if(EXISTS "${DCC_DISCORD_API_DOCS_ROOT_FOR_TEST}/developers")
+            add_test(
+                NAME dcc_discord_api_docs_surface_audit
+                COMMAND ${CMAKE_COMMAND} -E env
+                    "DCC_DISCORD_API_DOCS_ROOT=${DCC_DISCORD_API_DOCS_ROOT_FOR_TEST}"
+                    ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_discord_api_docs_surface.py
+            )
+            set_tests_properties(dcc_discord_api_docs_surface_audit PROPERTIES
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+            add_test(
+                NAME dcc_official_events_surface_audit
+                COMMAND ${CMAKE_COMMAND} -E env
+                    "DCC_DISCORD_API_DOCS_ROOT=${DCC_DISCORD_API_DOCS_ROOT_FOR_TEST}"
+                    ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_official_events_surface.py
+            )
+            set_tests_properties(dcc_official_events_surface_audit PROPERTIES
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endif()
         add_test(
             NAME dcc_rest_request_assertion_audit
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_rest_request_assertions.py

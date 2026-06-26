@@ -196,6 +196,10 @@ cp "$source_archive" "$source_out"
 )
 
 tar -tzf "$binary_out" | grep '/include/dcc/dcc.h$' >/dev/null
+tar -tzf "$binary_out" | grep '/include/dcc/oauth2.h$' >/dev/null
+tar -tzf "$binary_out" | grep '/include/dcc/rest/official_surface.h$' >/dev/null
+tar -tzf "$binary_out" | grep '/include/dcc/sugar/official_surface.h$' >/dev/null
+tar -tzf "$binary_out" | grep '/include/dcc/webhook_events.h$' >/dev/null
 if is_true "$bundle_llam"; then
     tar -tzf "$binary_out" | grep '/include/llam/runtime.h$' >/dev/null
     tar -tzf "$binary_out" | grep -E '/lib/libllam_runtime(\.a|\.so|\.dylib)(\.[0-9.]+)?$' >/dev/null
@@ -213,8 +217,23 @@ if tar -tzf "$binary_out" | grep -E '/bin/(demo|stress|bench|server|server_lossl
 fi
 tar -tzf "$binary_out" | grep '/lib/pkgconfig/dcc.pc$' >/dev/null
 tar -tzf "$binary_out" | grep '/share/dcc/docs/api.md$' >/dev/null
+tar -tzf "$binary_out" | grep '/share/dcc/docs/reference/official-api-surface.md$' >/dev/null
 tar -tzf "$source_out" | grep '/CMakeLists.txt$' >/dev/null
 tar -tzf "$source_out" | grep '/docs/index.md$' >/dev/null
+tar -tzf "$source_out" | grep '/include/dcc/oauth2.h$' >/dev/null
+tar -tzf "$source_out" | grep '/include/dcc/rest/official_surface.h$' >/dev/null
+tar -tzf "$source_out" | grep '/include/dcc/sugar/official_surface.h$' >/dev/null
+tar -tzf "$source_out" | grep '/include/dcc/webhook_events.h$' >/dev/null
+tar -tzf "$source_out" | grep '/src/gateway/gateway_send_public.c$' >/dev/null
+tar -tzf "$source_out" | grep '/src/oauth2.c$' >/dev/null
+tar -tzf "$source_out" | grep '/src/rest/rest_official_surface.c$' >/dev/null
+tar -tzf "$source_out" | grep '/src/webhook_events.c$' >/dev/null
+tar -tzf "$source_out" | grep '/tests/official_surface_smoke.c$' >/dev/null
+tar -tzf "$source_out" | grep '/tests/support/http_smoke_official_surface.c$' >/dev/null
+tar -tzf "$source_out" | grep '/tools/audit_discord_api_docs_surface.py$' >/dev/null
+tar -tzf "$source_out" | grep '/tools/audit_official_events_surface.py$' >/dev/null
+tar -tzf "$source_out" | grep '/tools/audit_official_surface.py$' >/dev/null
+tar -tzf "$source_out" | grep '/docs/reference/official-api-surface.md$' >/dev/null
 
 printf '%s\n' "$binary_out"
 printf '%s\n' "$source_out"

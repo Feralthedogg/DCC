@@ -487,7 +487,48 @@ source_package_hygiene_check() {
     grep -q '/deploy/interaction-webhook/dcc-interaction-webhook.env$' "$list_file"
     grep -q '/deploy/interaction-webhook/kubernetes.yaml$' "$list_file"
     grep -q '/deploy/hot-reload/dcc-hot-reload.env$' "$list_file"
+    grep -q '/include/dcc/oauth2.h$' "$list_file"
+    grep -q '/include/dcc/rest/official_surface.h$' "$list_file"
+    grep -q '/include/dcc/sugar/official_surface.h$' "$list_file"
+    grep -q '/include/dcc/webhook_events.h$' "$list_file"
+    grep -q '/src/gateway/gateway_send_public.c$' "$list_file"
+    grep -q '/src/oauth2.c$' "$list_file"
+    grep -q '/src/rest/rest_official_surface.c$' "$list_file"
+    grep -q '/src/webhook_events.c$' "$list_file"
+    grep -q '/tests/official_surface_smoke.c$' "$list_file"
+    grep -q '/tests/support/http_smoke_official_surface.c$' "$list_file"
+    grep -q '/tools/audit_discord_api_docs_surface.py$' "$list_file"
+    grep -q '/tools/audit_official_events_surface.py$' "$list_file"
+    grep -q '/tools/audit_official_surface.py$' "$list_file"
+    grep -q '/docs/reference/official-api-surface.md$' "$list_file"
 }
+
+official_discord_docs_audit() {
+    docs_root=${DCC_DISCORD_API_DOCS_ROOT:-}
+    if [ -z "$docs_root" ]; then
+        step "skip official Discord API docs audit: DCC_DISCORD_API_DOCS_ROOT not set"
+        return 0
+    fi
+    if [ ! -d "$docs_root/developers" ]; then
+        printf 'official Discord API docs checkout missing developers/: %s\n' "$docs_root" >&2
+        return 1
+    fi
+
+    python=${DCC_PYTHON:-python3}
+    if ! command -v "$python" >/dev/null 2>&1; then
+        printf 'official Discord API docs audit requires Python: %s\n' "$python" >&2
+        return 1
+    fi
+
+    step "run official Discord API docs audit"
+    DCC_DISCORD_API_DOCS_ROOT="$docs_root" "$python" "$source_dir/tools/audit_official_surface.py"
+    DCC_DISCORD_API_DOCS_ROOT="$docs_root" "$python" "$source_dir/tools/audit_discord_api_docs_surface.py"
+    DCC_DISCORD_API_DOCS_ROOT="$docs_root" "$python" "$source_dir/tools/audit_official_events_surface.py"
+}
+
+if ! is_true "${DCC_SKIP_OFFICIAL_DOCS_AUDIT:-0}"; then
+    official_discord_docs_audit
+fi
 
 step "configure primary debug build"
 cmake_configure "$build_dir" \

@@ -24,10 +24,17 @@ def require_line(relative: str, text: str, line: str, errors: list[str]) -> None
         errors.append(f"{relative} is missing required line: {line}")
 
 
+def require_text(relative: str, text: str, needle: str, errors: list[str]) -> None:
+    if needle not in text:
+        errors.append(f"{relative} is missing required text: {needle}")
+
+
 def main() -> int:
     errors: list[str] = []
     gitignore = read(".gitignore", errors)
     cmake = read("CMakeLists.txt", errors)
+    release_check = read("tools/release_check.sh", errors)
+    package_release = read("tools/package_release.sh", errors)
 
     require_line(".gitignore", gitignore, ".env", errors)
     require_line(".gitignore", gitignore, ".env.*", errors)
@@ -65,6 +72,26 @@ def main() -> int:
 
     if "PATTERN \"*.env\"" not in cmake:
         errors.append("CMake install rules must keep deployment .env templates installed")
+
+    official_surface_package_entries = (
+        "/docs/reference/official-api-surface.md$",
+        "/include/dcc/oauth2.h$",
+        "/include/dcc/rest/official_surface.h$",
+        "/include/dcc/sugar/official_surface.h$",
+        "/include/dcc/webhook_events.h$",
+        "/src/gateway/gateway_send_public.c$",
+        "/src/oauth2.c$",
+        "/src/rest/rest_official_surface.c$",
+        "/src/webhook_events.c$",
+        "/tests/official_surface_smoke.c$",
+        "/tests/support/http_smoke_official_surface.c$",
+        "/tools/audit_discord_api_docs_surface.py$",
+        "/tools/audit_official_events_surface.py$",
+        "/tools/audit_official_surface.py$",
+    )
+    for entry in official_surface_package_entries:
+        require_text("tools/release_check.sh", release_check, entry, errors)
+        require_text("tools/package_release.sh", package_release, entry, errors)
 
     if errors:
         print("DCC source package audit failed:")

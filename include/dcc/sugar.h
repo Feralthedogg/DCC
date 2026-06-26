@@ -1,3 +1,8 @@
+/**
+ * @file include/dcc/sugar.h
+ * @brief Public DCC sugar declarations.
+ */
+
 #ifndef DCC_SUGAR_H
 #define DCC_SUGAR_H
 
@@ -69,4 +74,5 @@
 #include <dcc/sugar/guild_shortcuts.h>
 #include <dcc/sugar/message_component_ui.h>
 #include <dcc/sugar/runtime_tools.h>
+#include <dcc/sugar/official_surface.h>
 #endif
