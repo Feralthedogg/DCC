@@ -11,6 +11,34 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+static size_t http_smoke_parse_content_length(const char *request, const char *headers_end) {
+    const char *line = request;
+    const char name[] = "Content-Length:";
+    const size_t name_len = sizeof(name) - 1U;
+
+    while (line < headers_end) {
+        const char *next = strstr(line, "\r\n");
+        const char *line_end = next != NULL && next < headers_end ? next : headers_end;
+        if ((size_t)(line_end - line) >= name_len && strncmp(line, name, name_len) == 0) {
+            const char *value = line + name_len;
+            size_t length = 0;
+            while (value < line_end && (*value == ' ' || *value == '\t')) {
+                value++;
+            }
+            while (value < line_end && *value >= '0' && *value <= '9') {
+                length = length * 10U + (size_t)(*value - '0');
+                value++;
+            }
+            return length;
+        }
+        if (next == NULL || next >= headers_end) {
+            break;
+        }
+        line = next + 2;
+    }
+    return 0;
+}
+
 static void *http_server_main(void *arg) {
     http_server_t *server = (http_server_t *)arg;
     int request_total =
@@ -32,8 +60,26 @@ static void *http_server_main(void *arg) {
             request_len = 0;
         }
         request_buf[request_len] = '\0';
-        (void)sscanf(request_buf, "%15s %511s", server->method, server->path);
         char *headers_end = strstr(request_buf, "\r\n\r\n");
+        if (headers_end != NULL) {
+            size_t content_length = http_smoke_parse_content_length(request_buf, headers_end);
+            char *body_start = headers_end + 4;
+            size_t body_have = request_buf + request_len > body_start ? (size_t)(request_buf + request_len - body_start) : 0U;
+            while (body_have < content_length && (size_t)request_len < sizeof(request_buf) - 1U) {
+                size_t space = sizeof(request_buf) - 1U - (size_t)request_len;
+                ssize_t n = read(client, request_buf + request_len, space);
+                if (n <= 0) {
+                    break;
+                }
+                request_len += n;
+                request_buf[request_len] = '\0';
+                body_have = request_buf + request_len > body_start ?
+                    (size_t)(request_buf + request_len - body_start) :
+                    0U;
+            }
+        }
+        (void)sscanf(request_buf, "%15s %511s", server->method, server->path);
+        headers_end = strstr(request_buf, "\r\n\r\n");
         if (headers_end != NULL) {
             size_t headers_len = (size_t)(headers_end - request_buf);
             if (headers_len >= sizeof(server->headers)) {
