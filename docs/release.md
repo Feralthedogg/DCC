@@ -13,7 +13,7 @@ tools/package_release.sh
 ```
 
 This writes normalized archives and checksum files to `target/dist/`, for
-example `dcc-1.3.0-macos-aarch64.tar.gz`.
+example `dcc-1.4.0-macos-aarch64.tar.gz`.
 
 Binary release archives include:
 
@@ -26,17 +26,17 @@ installer to fetch LLAM. The public POSIX install path is:
 ```sh
 curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
-curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.3.0/install.sh |
-  sh -s -- --version 1.3.0 \
-    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.3.0" \
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.4.0/install.sh |
+  sh -s -- --version 1.4.0 \
+    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.4.0" \
     --prefix "$HOME/.local"
 ```
 
 Windows installs use the release PowerShell installer:
 
 ```powershell
-Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.3.0/install.ps1" -OutFile install.ps1
-.\install.ps1 -Version 1.3.0 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.3.0" -Prefix "$env:LOCALAPPDATA\DCC"
+Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.4.0/install.ps1" -OutFile install.ps1
+.\install.ps1 -Version 1.4.0 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.4.0" -Prefix "$env:LOCALAPPDATA\DCC"
 ```
 
 Pass `--install-llam` when you want the POSIX installer to fetch the DCC-tested
@@ -48,8 +48,8 @@ resulting binaries and libraries may not run on the current machine.
 GitHub Actions publishes releases automatically from version tags:
 
 ```sh
-git tag v1.3.0
-git push origin v1.3.0
+git tag v1.4.0
+git push origin v1.4.0
 ```
 
 The `Release` workflow checks out `DCC` and `LLAM` side by side, builds against

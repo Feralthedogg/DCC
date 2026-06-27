@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example v1.3.0
+        description: Release version, for example v1.4.0
         required: false
-        default: v1.3.0
+        default: v1.4.0
         type: string
   push:
     tags:
@@ -280,6 +280,8 @@ jobs:
             echo
             echo "## Highlights"
             echo
+            echo "- Official Discord API surface expansion covering Application, OAuth2, Lobby/Social SDK, Soundboard, Subscriptions, guild extras, invite target users, compatibility webhooks, and legacy pin routes."
+            echo "- Public Gateway send helpers for guild member requests, soundboard sound requests, channel info requests, and presence updates, plus generic Webhook Events parsing."
             echo "- DPP-inspired Discord C client surface with Gateway, REST, slash command, component, and interaction helpers."
             echo "- LLAM-backed runtime and networking path with LLAM kept as a separate runtime package."
             echo "- Direct interaction reply helpers, stronger modal sugar, managed latest-message publishing, and REST response ID extraction."
