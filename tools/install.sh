@@ -8,7 +8,7 @@ target_explicit=0
 [ -n "$target" ] && target_explicit=1
 base_url="${DCC_INSTALL_BASE_URL:-}"
 llam_mode="${DCC_INSTALL_LLAM:-skip}"
-llam_version="${DCC_INSTALL_LLAM_VERSION:-2.1.0}"
+llam_version="${DCC_INSTALL_LLAM_VERSION:-2.2.0}"
 llam_installer_url="${DCC_LLAM_INSTALLER_URL:-}"
 dry_run=0
 force=0
@@ -21,7 +21,7 @@ usage: install.sh [--prefix <dir>] [--version <version|latest>] [--target <targe
 
 Installs DCC from a GitHub release archive. LLAM is a separate runtime
 dependency; install LLAM first or pass --install-llam to install the
-DCC-tested LLAM 2.1.0 runtime into the same prefix. Pass --llam-version
+DCC-tested LLAM 2.2.0 runtime into the same prefix. Pass --llam-version
 latest to intentionally use the newest LLAM release.
 EOF
 }

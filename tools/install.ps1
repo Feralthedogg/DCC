@@ -23,7 +23,7 @@ if ([string]::IsNullOrWhiteSpace($Target)) {
     $Target = "windows-x86_64"
 }
 if ([string]::IsNullOrWhiteSpace($LlamVersion)) {
-    $LlamVersion = "2.1.0"
+    $LlamVersion = "2.2.0"
 }
 if (($env:DCC_INSTALL_LLAM) -and ($env:DCC_INSTALL_LLAM -ne "skip")) {
     $InstallLlam = $true

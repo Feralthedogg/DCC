@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 1.4.0
+    VERSION 1.4.1
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )
@@ -38,7 +38,7 @@ option(DCC_LLAM_USE_SUBDIRECTORY "Build LLAM from source through add_subdirector
 option(DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS "Keep LLAM tests enabled when LLAM is added as a subdirectory" OFF)
 option(DCC_BUNDLE_LLAM "Install LLAM runtime files with DCC packages when LLAM is built as a subdirectory" OFF)
 option(DCC_WITH_OPUS "Build the optional libopus voice codec backend when libopus is available" ON)
-set(DCC_LLAM_REQUIRED_VERSION "2.1.0" CACHE STRING "Minimum LLAM runtime version required by DCC")
+set(DCC_LLAM_REQUIRED_VERSION "2.2.0" CACHE STRING "Minimum LLAM runtime version required by DCC")
 set(DCC_LLAM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../LLAM" CACHE PATH "Path to the LLAM runtime source tree")
 set(DCC_LLAM_LIBRARY "${DCC_LLAM_ROOT}/libllam_runtime.a" CACHE FILEPATH "Path to a prebuilt LLAM static library")
 set(DCC_OPUS_ROOT "" CACHE PATH "Path to a libopus installation")

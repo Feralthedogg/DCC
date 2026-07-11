@@ -14,7 +14,7 @@ DCC is configured through CMake.
 | `DCC_LLAM_USE_SUBDIRECTORY` | `OFF` | Build LLAM from source through `add_subdirectory`. |
 | `DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS` | `OFF` | Keep LLAM's own tests enabled when LLAM is added as a subdirectory. |
 | `DCC_BUNDLE_LLAM` | `OFF` | Install LLAM runtime package files with DCC when LLAM is built as a subdirectory. |
-| `DCC_LLAM_REQUIRED_VERSION` | `2.1.0` | Minimum LLAM runtime version DCC validates during source and package builds. |
+| `DCC_LLAM_REQUIRED_VERSION` | `2.2.0` | Minimum LLAM runtime version DCC validates during source and package builds. |
 | `DCC_LLAM_ROOT` | `../LLAM` | LLAM source or install root. |
 | `DCC_LLAM_LIBRARY` | `../LLAM/libllam_runtime.a` | Prebuilt LLAM static library. |
 | `DCC_WITH_OPUS` | `ON` | Use optional libopus voice codec backend when found. |
@@ -31,7 +31,7 @@ curl -fsSL https://raw.githubusercontent.com/Feralthedogg/DCC/main/tools/install
 DCC release archives do not bundle LLAM by default. Install LLAM separately, or
 pass `--install-llam` to the DCC installer when you want it to fetch the
 DCC-tested LLAM runtime into the same prefix.
-Source and package builds reject LLAM headers older than 2.1.0, and they also
+Source and package builds reject LLAM headers older than 2.2.0, and they also
 check that the LLAM ABI major version matches DCC's supported runtime ABI.
 
 ## Development Build

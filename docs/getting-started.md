@@ -54,7 +54,7 @@ This path is for working on DCC itself.
 - CMake 3.20 or newer
 - C11 compiler
 - OpenSSL development headers
-- LLAM 2.1.0 or newer installed, or a checked-out LLAM source tree plus a
+- LLAM 2.2.0 or newer installed, or a checked-out LLAM source tree plus a
   prebuilt `libllam_runtime.a`
 - Optional libopus development headers for voice Opus encode/decode
 

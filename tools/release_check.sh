@@ -211,7 +211,7 @@ includedir=$llam_root/include
 
 Name: LLAM
 Description: Stackful user-thread runtime for C applications
-Version: 2.1.0
+Version: 2.2.0
 Libs: -L\${libdir} -lllam_runtime
 Libs.private: $package_llam_pc_private_libs
 Cflags: -I\${includedir}

@@ -2594,7 +2594,7 @@ snprintf(
     sizeof(status),
     "%s %s %s",
     DCC_MD_BOLD("Deploy complete"),
-    DCC_MD_CODE("v1.4.0"),
+    DCC_MD_CODE("v1.4.1"),
     DCC_MD_HIDE_LINK_EMBED("https://example.com/release")
 );
 ```
