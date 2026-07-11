@@ -1,10 +1,27 @@
 # Getting Started
 
-The normal path is to install LLAM first, then install a published DCC release.
-DCC keeps LLAM as a separate runtime dependency instead of vendoring LLAM files
-into the DCC archive by default.
+This guide takes the recommended application path: install LLAM and DCC,
+scaffold one bot, confirm `/ping`, and add one feature. If another framework
+will own the client lifecycle, start with
+[Choose An API Layer](concepts/api-layers.md) instead.
 
-## Install Release
+## Before You Start
+
+Have these ready:
+
+- a Discord application with a bot user;
+- the bot token stored outside source control;
+- the bot invited to a development server;
+- a C11 compiler and CMake 3.20 or newer.
+
+Your first success criterion is intentionally small: the process reaches READY,
+the development guild contains `/ping`, and `/ping` replies. Add features only
+after this works.
+
+## 1. Install LLAM And DCC
+
+DCC keeps LLAM as a separate runtime dependency. Install both into the same
+prefix:
 
 ```sh
 curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
@@ -13,215 +30,84 @@ curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.
   sh -s -- --prefix "$HOME/.local"
 ```
 
-For system-wide installs use a system prefix:
-
-```sh
-curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
-  sudo sh -s -- --prefix /usr/local
-curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
-  sudo sh -s -- --prefix /usr/local
-```
-
-Upgrade an existing prefix with:
+To let the DCC installer fetch its tested LLAM version, use one command:
 
 ```sh
 curl -fsSL https://github.com/Feralthedogg/DCC/releases/latest/download/install.sh |
-  sh -s -- --prefix "$HOME/.local" --force
+  sh -s -- --prefix "$HOME/.local" --install-llam
 ```
 
-DCC's installer does not install LLAM unless requested. Pass `--install-llam`
-when you want the installer to fetch the DCC-tested LLAM runtime into the same
-prefix. Pass `--llam-version latest` with `--install-llam` when you intentionally
-want the newest LLAM release instead of the DCC-tested runtime.
+Use `--force` to upgrade an existing prefix. For a system installation, replace
+`$HOME/.local` with `/usr/local` and run the installer with appropriate
+permissions.
 
-The POSIX installer detects the host target automatically. If you pass
-`--target` manually and it differs from the current machine, the installer emits
-a warning because the installed binaries and static libraries may not run there.
-
-Point CMake consumers at the prefix:
-
-```sh
-cmake -S . -B build -DCMAKE_PREFIX_PATH="$HOME/.local"
-cmake --build build
-```
-
-## Build From Source
-
-This path is for working on DCC itself.
-
-## Requirements
-
-- CMake 3.20 or newer
-- C11 compiler
-- OpenSSL development headers
-- LLAM 2.2.0 or newer installed, or a checked-out LLAM source tree plus a
-  prebuilt `libllam_runtime.a`
-- Optional libopus development headers for voice Opus encode/decode
-
-Linux also needs `liburing` for LLAM's io_uring backend.
-macOS and BSD use LLAM's kqueue backend. FreeBSD, OpenBSD, NetBSD, and
-DragonFlyBSD builds need CMake, OpenSSL or LibreSSL development headers, and
-`pkgconf` when validating pkg-config consumers. NetBSD also needs `librt`; DCC
-propagates that through CMake package files and pkg-config metadata.
-
-## Build
-
-```sh
-cmake -S . -B build \
-  -DCMAKE_BUILD_TYPE=Debug \
-  -DCMAKE_PREFIX_PATH="$HOME/.local"
-cmake --build build
-```
-
-When working with sibling source trees instead of an installed LLAM package,
-you can use a combined source build:
-
-```sh
-cmake -S . -B build \
-  -DCMAKE_BUILD_TYPE=Debug \
-  -DDCC_BUILD_EXAMPLES=ON \
-  -DDCC_BUILD_TESTS=ON \
-  -DDCC_LLAM_USE_SUBDIRECTORY=ON \
-  -DDCC_LLAM_ROOT=../LLAM
-cmake --build build
-ctest --test-dir build --output-on-failure
-```
-
-DCC disables LLAM's install rules in this mode. Installing the DCC build will
-not install LLAM demo, stress, benchmark, or server binaries.
-
-## Create A Bot
-
-The fastest path is the scaffolded app runtime project:
+## 2. Scaffold A Bot
 
 ```sh
 dcc_new_app mybot
 cd mybot
 cp .env.example .env
 $EDITOR .env
-dcc_new_app add feature . profile
-dcc_new_app add command . profile greet
-dcc_new_app add subcommand . profile greet stats
-dcc_new_app add button . profile refresh
-dcc_new_app add select . profile role
-dcc_new_app add modal . profile edit
-dcc_new_app add autocomplete . profile profile
-dcc_new_app add event . profile ready
-dcc_new_app add view . profile dashboard
-dcc_new_app add config . log_channel channel LOG_CHANNEL
-dcc_new_app add latest-message . profile status log_channel
-dcc_new_app add scheduled-latest . profile daily_status log_channel --daily-kst 09:00
-dcc_new_app add message-command . profile hello --prefix '!'
-dcc_new_app add task . profile heartbeat --every-seconds 60
-dcc_new_app add action . profile gateway_status gateway --guild-only
-dcc_new_app add action . profile dm_user dm --guild-only
-dcc_new_app add action . profile grant_role role-add --guild-only --permission DCC_PERMISSION_MANAGE_ROLES
-dcc_new_app add preset . profile announcement --guild-only
-dcc_new_app add preset . profile confirm
-dcc_new_app add preset . profile paginator
-dcc_new_app add preset . profile form
-dcc_new_app add preset . profile settings
-dcc_new_app add preset . profile wizard
-dcc_new_app add preset . profile counter
-dcc_new_app add preset . profile crud
-dcc_new_app add preset . profile help
-dcc_new_app add preset . profile menu
-dcc_new_app add preset . profile poll
-dcc_new_app add preset . profile profile --name profile_card
-dcc_new_app add preset . profile roles --guild-only
-dcc_new_app add preset . profile ticket
-dcc_new_app add preset . profile welcome
-dcc_new_app add preset . profile flow
+```
+
+Put the bot token in `.env`. While developing, set `DCC_COMMAND_GUILD_ID` to the
+ID of one test guild so command changes appear quickly. Never commit `.env`.
+
+The generated project starts with `/ping`, automatic command reconciliation,
+friendly error replies, auto-defer, and a file-backed store.
+
+## 3. Build And Run
+
+```sh
 cmake -S . -B build -DCMAKE_PREFIX_PATH="$HOME/.local"
 cmake --build build
 ./build/mybot
 ```
 
-The generated app uses `DCC_BOT(...)`, which includes `DCC_APP_DEV_MODE()`, so
-it syncs `/ping` automatically, infers the application id from the Gateway READY
-event, auto-defers slow interactions, and enables friendly default error
-replies. Its `.env.example`
-also enables `DCC_STORE_FILE=bot-state.kv`, so the sample handler can use the
-app-owned store for a persistent ping count. For fast development, set
-`DCC_COMMAND_GUILD_ID` in `.env` to use guild-scoped commands; leave it
-commented out for global commands. `src/main.c` stays as the entrypoint, while
-feature routes live in feature files such as `src/ping.c`. Shared typed config
-lives in `src/config.h`, and generated feature files include it so handlers can use
-`BOT_CONFIG(user_data)` or `BOT_CTX_CONFIG(ctx)`. Generated slash commands use
-typed args by default with `DCC_FEATURE_COMMAND_ROUTES(...)`,
-`DCC_COMMAND_ROUTE_NO_OPTIONS*`, `DCC_COMMAND_ROUTE*`, and a small `*_PARAMS`
-list, so handlers receive a small C struct instead of manually reading every option from the context. Generated
-handlers are declared with `DCC_COMMAND_IMPL`, `DCC_HANDLER`, `DCC_COMMAND_ARGS_IMPL`,
-`DCC_BUTTON_ARGS_IMPL`, `DCC_SELECT_ARGS_IMPL`, `DCC_MODAL_ARGS_IMPL`,
-`DCC_READY_FN`, and `DCC_TASK_FN`, then reply with context-first `DCC_CTX_*`
-helpers and short Components v2 `DCC_UI_*` builders. Use
-`dcc_new_app add feature . profile` to create and wire another feature file, then
-`dcc_new_app add command . profile greet`,
-`dcc_new_app add subcommand . profile greet stats`,
-`dcc_new_app add button . profile refresh`, `dcc_new_app add select . profile role`,
-`dcc_new_app add modal . profile edit`, `dcc_new_app add autocomplete . profile profile`,
-`dcc_new_app add event . profile ready`,
-`dcc_new_app add view . profile dashboard`,
-`dcc_new_app add config . log_channel channel LOG_CHANNEL`,
-`dcc_new_app add latest-message . profile status log_channel`,
-`dcc_new_app add scheduled-latest . profile daily_status log_channel --daily-kst 09:00`,
-`dcc_new_app add message-command . profile hello --prefix '!'`, or
-`dcc_new_app add task . profile heartbeat --every-seconds 60` to append handlers
-and routes to that feature file, or typed app config. Use
-`dcc_new_app add action . profile gateway_status gateway --guild-only` when you
-want a generated slash command that demonstrates app-level shortcuts such as
-`DCC_GATEWAY_BOT_FETCH(...)`, `DCC_GUILD_VOICE_REGIONS_FETCH(...)`, or
-`DCC_CTX_SEND_UI(...)` without writing REST wiring by hand. `add action` also
-generates typed target-user workflows such as
-`dcc_new_app add action . profile dm_user dm --guild-only` and
-`dcc_new_app add action . profile grant_role role-add --guild-only --permission DCC_PERMISSION_MANAGE_ROLES`,
-so DM and role-management commands start with `DCC_USER_DM_SEND_TEXT(...)` or
-`DCC_MEMBER_ADD_ROLE(...)` already wired. Use
-`dcc_new_app add preset . profile announcement --guild-only` for a modal-based
-announcement composer with ephemeral preview and send/cancel buttons. Use
-`dcc_new_app add preset . profile confirm` or
-`dcc_new_app add preset . profile paginator` when you want generated slash
-commands plus button routes for common UI flows. Use
-`dcc_new_app add preset . profile form` for a slash command that opens a modal
-and receives typed form args. Use `dcc_new_app add preset . profile settings`
-for a settings panel with buttons plus an edit modal. Use
-`dcc_new_app add preset . profile wizard` for a slash-to-button-to-modal setup
-flow with review buttons. Use `dcc_new_app add preset . profile counter` for a
-store-backed slash command with `+1` and reset buttons. Use
-`dcc_new_app add preset . profile crud` for a store-backed item list with add,
-delete-last, and clear actions. Use `dcc_new_app add preset . profile help`
-for a paged help center with command/component/about buttons. Use
-`dcc_new_app add preset . profile menu`
-for a typed select-menu navigation panel. Use `dcc_new_app add preset . profile poll`
-for a store-backed yes/no vote panel. Use
-`dcc_new_app add preset . profile profile --name profile_card` for a user profile
-card with a refresh button. Use `dcc_new_app add preset . profile roles --guild-only`
-for a generated self-role menu with typed select handling and add/remove role
-actions. Use
-`dcc_new_app add preset . profile ticket` for an open-ticket button, typed modal,
-ephemeral ticket card, and close button. Use `dcc_new_app add preset . profile welcome`
-for a member-join welcome event plus slash preview. Use
-`dcc_new_app add preset . profile flow` for a slash-to-modal-to-confirm flow.
-Button, select, and modal generation use typed params so
-handlers receive a generated args struct instead of parsing `custom_id`, values,
-or form fields by hand. Subcommand generation rewrites the generated command
-schema to include `DCC_CMD_SUB_PARAMS(...)`; autocomplete generation also
-flips the generated slash command's `name` option to `STRING_AUTOCOMPLETE` and
-adds a typed `DCC_AUTOCOMPLETE_PARAMS_DATA(...)` route so Discord sends
-autocomplete interactions for that option.
+Look for the READY log, then run `/ping` in the development guild.
 
-`dcc_command_sync` is still available when you want an explicit plan or a
-manual apply:
+!!! success "Checkpoint"
+    Continue only after `/ping` replies. If the bot does not reach READY or the
+    command is missing, use [Troubleshooting](troubleshooting.md).
+
+## 4. Add One Feature
+
+Create a feature module and one typed slash command:
 
 ```sh
-set -a
-. ./.env
-set +a
-DCC_APPLICATION_ID=your-application-id
-dcc_command_sync --commands commands.json --application-id "$DCC_APPLICATION_ID" --plan
+dcc_new_app add feature . profile
+dcc_new_app add command . profile greet
+cmake --build build
+./build/mybot
 ```
 
-## Minimal App
+Generated feature code lives under `src/` and is wired into the application for
+you. Handlers use typed argument structs, so normal command code does not need
+to parse raw interaction options.
+
+Use the generator only for features you need. The full command catalog is in
+[CLI Tools](reference/cli.md); route, guard, component, task, and store behavior
+is explained in [App Runtime](guides/app-runtime.md).
+
+## Generated Project Map
+
+| Path | Purpose |
+| --- | --- |
+| `src/main.c` | Process entry point and bot definition |
+| `src/config.h` | Typed application configuration |
+| `src/ping.c` | Initial feature and `/ping` handler |
+| `src/<feature>.c` | Generated routes, events, and tasks for one feature |
+| `.env.example` | Safe configuration template |
+| `.env` | Local secrets and runtime configuration; never commit it |
+| `CMakeLists.txt` | DCC package discovery and application build |
+
+The generated bot uses `DCC_BOT(...)` with development defaults. It infers the
+application ID from Gateway READY, reconciles commands, and makes the app-owned
+store available through handler context.
+
+## Minimal One-File App
+
+You can also write a bot without the generator:
 
 ```c
 #include <dcc/sugar.h>
@@ -237,40 +123,81 @@ DCC_SIMPLE_BOT_MAIN(
 )
 ```
 
+For production projects, the generated feature layout scales better than a
+single translation unit.
+
+## Command Sync Without The App Default
+
+Use `dcc_command_sync` when deployment needs an explicit plan or check:
+
+```sh
+set -a
+. ./.env
+set +a
+
+dcc_command_sync \
+  --commands commands.json \
+  --application-id "$DCC_APPLICATION_ID" \
+  --plan
+```
+
+See [Slash Command Registry](guides/command-registry.md) before applying command
+deletions or moving from guild to global scope.
+
+## Build DCC From Source
+
+This path is for working on DCC itself. Requirements are:
+
+- CMake 3.20 or newer;
+- a C11 compiler;
+- OpenSSL development headers;
+- LLAM 2.2.0 or newer;
+- optional libopus development headers for Opus voice encode/decode.
+
+Linux also needs `liburing`. macOS and BSD use LLAM's kqueue backend.
+
+With DCC and LLAM checked out side by side:
+
+```sh
+cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DDCC_BUILD_EXAMPLES=ON \
+  -DDCC_BUILD_TESTS=ON \
+  -DDCC_LLAM_USE_SUBDIRECTORY=ON \
+  -DDCC_LLAM_ROOT=../LLAM
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+DCC disables LLAM install rules and LLAM tests in this combined build by
+default. See [Build Options](reference/build-options.md) for packaging,
+sanitizer, fuzzer, shared-library, and LLAM test controls.
+
 ## Include Style
 
-Application code should usually start with the sugar header:
+Application code should normally begin with:
 
 ```c
 #include <dcc/sugar.h>
 ```
 
-It includes the common public types and adds compact literals for options,
-commands, messages, embeds, components, modals, sessions, flows, hot reload,
-firewall, and replay records:
-
-```c
-dcc_message_builder_t message =
-    DCC_MESSAGE_TEXT_EMBEDS(
-        "pong",
-        DCC_EMBED_COLOR("Latency", "Gateway online", DCC_COLOR_BLURPLE)
-    );
-```
-
-Use the aggregate header when you want every public declaration without sugar
-macros:
-
-```c
-#include <dcc/dcc.h>
-```
-
-Use focused headers in low-level library code:
+Use `<dcc/app.h>` for explicit app lifecycle and registration. Use focused
+headers in low-level code:
 
 ```c
 #include <dcc/client.h>
 #include <dcc/events/listeners.h>
-#include <dcc/rest/application_commands.h>
+#include <dcc/rest/messages.h>
 ```
 
-Public headers live under `include/dcc/`. Internal headers under
-`src/internal/` are not part of the package API.
+`<dcc/dcc.h>` aggregates the public API without Sugar helpers. Headers under
+`src/internal/` are implementation details and are not installed API.
+
+## Where To Go Next
+
+- [Choose An API Layer](concepts/api-layers.md) explains Sugar, App, and Core.
+- [Ownership And Async](concepts/ownership-and-async.md) covers callback and
+  cache lifetimes.
+- [Sugar-First API](guides/sugar.md) is the complete application helper guide.
+- [Components v2](guides/components-v2.md) covers modern Discord layouts.
+- [Production Playbooks](production-playbooks.md) covers deployment and health.

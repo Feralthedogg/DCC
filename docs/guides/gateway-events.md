@@ -1,5 +1,9 @@
 # Gateway And Events
 
+Event accessor results are borrowed unless a helper explicitly returns an
+owned result. Read [Ownership And Async](../concepts/ownership-and-async.md)
+before moving event data to another task or retaining it after a callback.
+
 DCC keeps Gateway ownership inside the app runtime by default. Application code
 usually registers typed listener handlers through `<dcc/sugar.h>` and lets the
 runtime own the underlying `dcc_client_t`.

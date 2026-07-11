@@ -3752,6 +3752,10 @@ dcc_replay_record_t record =
 
 ## Lifetime Rules
 
+This section covers Sugar compound literals. For event, cache, REST callback,
+future, clone, and runtime-object lifetimes, read
+[Ownership And Async](../concepts/ownership-and-async.md).
+
 Variadic macros create block-scoped compound literal arrays. This is ideal when
 the value is immediately serialized, registered, or passed into DCC during the
 same block.

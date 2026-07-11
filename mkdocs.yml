@@ -58,6 +58,9 @@ nav:
   - Home: index.md
   - Getting Started:
       - Quickstart: getting-started.md
+      - Choose An API Layer: concepts/api-layers.md
+      - Ownership And Async: concepts/ownership-and-async.md
+      - Troubleshooting: troubleshooting.md
       - Build Options: reference/build-options.md
       - Project Layout: architecture.md
   - Guides:

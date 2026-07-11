@@ -4,6 +4,35 @@ DCC public headers are installed under `include/dcc/` and are included as
 `<dcc/name.h>`. Applications may also include `<dcc/dcc.h>` for the aggregate
 header.
 
+## Pick One Primary Layer
+
+| Layer | Entry header | Use it for | Avoid it when |
+| --- | --- | --- | --- |
+| Sugar | `<dcc/sugar.h>` | Normal bots, commands, components, events, scheduled tasks | You need custom lifecycle or allocation behavior |
+| App | `<dcc/app.h>` | Explicit app creation, route registration, stores, command sync | You only need a small bot and prefer declarative macros |
+| Core | Focused headers such as `<dcc/client.h>` and `<dcc/rest/messages.h>` | Embedding, custom runtimes, transport-level control | App/Sugar already owns the lifecycle you need |
+
+These layers use the same public value types and can meet at clear boundaries.
+For example, a Sugar handler may call a focused REST helper through
+`dcc_app_client(app)`. Do not create a second client just to access a lower-level
+function.
+
+Read [Choose An API Layer](concepts/api-layers.md) for a task-oriented map and
+[Ownership And Async](concepts/ownership-and-async.md) before retaining pointers
+from callbacks or caches.
+
+## How To Read API Names
+
+- `*_init()` initializes caller-owned storage; set documented `size` fields.
+- `*_create()` returns an owned runtime object paired with `*_destroy()`.
+- `*_clone()` returns owned heap storage paired with the matching `*_free()`.
+- `dcc_event_*()` and cache getters normally return borrowed views.
+- REST callback bodies are borrowed for the callback; futures retain their body
+  until the future is destroyed.
+- Every function returning `dcc_status_t` should be checked. Use
+  `dcc_status_string(status)` for the category and the owning object's
+  `*_last_error()` accessor for context when available.
+
 ## Sugar Header
 
 `<dcc/sugar.h>` is the recommended first stop for application code. It provides
@@ -666,6 +695,9 @@ DCC exposes DAVE transition and MLS frame plumbing for external MLS engines. Ful
 built-in MLS group crypto remains an explicit roadmap item.
 
 ## Ownership Rules
+
+See [Ownership And Async](concepts/ownership-and-async.md) for the complete
+lifetime table, retention examples, REST future sequence, and callback rules.
 
 - Borrowed callback views: event accessors, `dcc_event_data()`, and raw frame
   pointers.
