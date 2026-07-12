@@ -33,6 +33,11 @@
   C11 decorator API is compiled without MSVC's file-scope compound-literal limitation.
 - The release-tested LLAM dependency is pinned to the immutable v2.2.0 commit.
 
+### Fixed
+
+- Generated welcome presets avoid a constant-condition warning when compiled
+  with Visual Studio `/W4 /WX`.
+
 ### Compatibility
 
 - The public API remains source- and ABI-compatible with DCC 1.4.x; new APIs are additive.

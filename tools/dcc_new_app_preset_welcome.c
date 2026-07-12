@@ -150,7 +150,8 @@ static int dcc_new_app_welcome_insert_handlers(const char *path, const dcc_new_a
         "    (void)event;\n"
         "    (void)user_data;\n"
         "\n"
-        "    if (%s == 0U) {\n"
+        "    dcc_snowflake_t channel_id = (dcc_snowflake_t)%s;\n"
+        "    if (channel_id == 0U) {\n"
         "        return;\n"
         "    }\n"
         "    if (member == NULL || member->user.id == 0U) {\n"
@@ -160,7 +161,7 @@ static int dcc_new_app_welcome_insert_handlers(const char *path, const dcc_new_a
         "        (member->user.global_name != NULL ? member->user.global_name : member->user.username);\n"
         "    char text[256];\n"
         "    %s_build_text(text, sizeof(text), member->user.id, name);\n"
-        "    (void)DCC_APP_SEND_UI(app, %s, DCC_UI_CARD_ACCENT(0x5865F2, DCC_UI_TEXT(text)));\n"
+        "    (void)DCC_APP_SEND_UI(app, channel_id, DCC_UI_CARD_ACCENT(0x5865F2, DCC_UI_TEXT(text)));\n"
         "}\n"
         "\n",
         channel_macro,
@@ -170,8 +171,7 @@ static int dcc_new_app_welcome_insert_handlers(const char *path, const dcc_new_a
         handler,
         event_handler,
         channel_macro,
-        handler,
-        channel_macro
+        handler
     );
     return dcc_new_app_insert_before_marker(path, DCC_NEW_APP_HANDLER_MARKER, insertion, handler);
 }
