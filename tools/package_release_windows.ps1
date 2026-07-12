@@ -96,6 +96,7 @@ New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
 Remove-Item -Recurse -Force -LiteralPath $PackageOutput -ErrorAction SilentlyContinue
 
 $generator = if ($env:DCC_CMAKE_GENERATOR) { $env:DCC_CMAKE_GENERATOR } else { "Visual Studio 17 2022" }
+$toolset = if ($env:DCC_CMAKE_TOOLSET) { $env:DCC_CMAKE_TOOLSET } else { "" }
 $configureArgs = @(
     "-S", $Root,
     "-B", $BuildRoot,
@@ -110,6 +111,11 @@ $configureArgs = @(
 )
 if ($generator -match "Visual Studio") {
     $configureArgs += @("-A", "x64")
+    if (-not [string]::IsNullOrWhiteSpace($toolset)) {
+        $configureArgs += @("-T", $toolset)
+    }
+} elseif (-not [string]::IsNullOrWhiteSpace($toolset)) {
+    throw "DCC_CMAKE_TOOLSET is only supported with a Visual Studio generator"
 }
 if ($env:DCC_WINDOWS_CMAKE_TOOLCHAIN) {
     $configureArgs += "-DCMAKE_TOOLCHAIN_FILE=$($env:DCC_WINDOWS_CMAKE_TOOLCHAIN)"

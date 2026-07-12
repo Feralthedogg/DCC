@@ -29,6 +29,8 @@
   `DCC_DEV_GUILD_BOT*` run/main aliases retain development auto-sync.
 - DAVE negotiation fails closed when neither libdave nor an explicit external MLS handler is available.
 - Release packaging always builds and runs the DCC test suite.
+- Official Windows archives use Visual Studio's ClangCL toolset so the public
+  C11 decorator API is compiled without MSVC's file-scope compound-literal limitation.
 - The release-tested LLAM dependency is pinned to the immutable v2.2.0 commit.
 
 ### Compatibility

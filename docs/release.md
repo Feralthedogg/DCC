@@ -58,6 +58,9 @@ the DCC package, runs the DCC test suite, creates CPack binary/source archives,
 uploads artifacts, builds `SHA256SUMS`, and creates the GitHub Release. Tag
 versions must match `project(dcc VERSION ...)`. The workflow also publishes a
 CycloneDX SBOM and signs artifact provenance through GitHub attestations.
+Windows archives are built with the Visual Studio 2022 generator and its
+ClangCL toolset. This preserves the MSVC-compatible Windows ABI while compiling
+DCC's public C11 decorator macros with a conforming C frontend.
 
 Verify a downloaded archive before installation:
 

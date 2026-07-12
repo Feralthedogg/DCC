@@ -41,6 +41,8 @@ def main() -> int:
         source / "src/client/client_utils.c": "return DCC_VERSION_STRING;",
         source / "include/dcc/version.h": "#include <dcc/version_generated.h>",
         source / "cmake/dcc.pc.in": "Version: @PROJECT_VERSION@",
+        source / "tools/package_release_windows.ps1": 'DCC_CMAKE_TOOLSET',
+        source / ".github/workflows/release.yml": "DCC_CMAKE_TOOLSET: ClangCL",
     }
     for path, fragment in expected_source_fragments.items():
         if fragment not in read(path):

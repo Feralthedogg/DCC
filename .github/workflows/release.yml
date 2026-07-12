@@ -94,6 +94,8 @@ jobs:
         shell: pwsh
         env:
           DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
+          DCC_CMAKE_GENERATOR: Visual Studio 17 2022
+          DCC_CMAKE_TOOLSET: ClangCL
           DCC_LLAM_USE_SUBDIRECTORY: ON
           DCC_BUNDLE_LLAM: OFF
           DCC_LLAM_ROOT: ${{ github.workspace }}\LLAM
