@@ -220,7 +220,10 @@ fi
 tar -tzf "$binary_out" | grep '/lib/pkgconfig/dcc.pc$' >/dev/null
 tar -tzf "$binary_out" | grep '/share/dcc/docs/api.md$' >/dev/null
 tar -tzf "$binary_out" | grep '/share/dcc/docs/reference/official-api-surface.md$' >/dev/null
-tar -tzf "$binary_out" | grep '/bin/dcc_doctor$' >/dev/null
+if ! tar -tzf "$binary_out" | grep '/bin/dcc_doctor$' >/dev/null; then
+    echo "DCC release package is missing dcc_doctor; configure with DCC_BUILD_TOOLS=ON" >&2
+    exit 1
+fi
 tar -tzf "$binary_out" | grep '/share/dcc/deploy/bot/entrypoint.sh$' >/dev/null
 tar -tzf "$source_out" | grep '/CMakeLists.txt$' >/dev/null
 tar -tzf "$source_out" | grep '/docs/index.md$' >/dev/null

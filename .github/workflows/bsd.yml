@@ -138,7 +138,7 @@ jobs:
             cat "$GITHUB_WORKSPACE/.dcc-bsd-infra-skip"
             exit 0
           fi
-          extra_args="-DDCC_WITH_OPUS=OFF -DDCC_BUILD_EXAMPLES=OFF -DDCC_BUILD_TOOLS=OFF -DDCC_BUILD_TESTS=OFF"
+          extra_args="-DDCC_WITH_OPUS=OFF -DDCC_BUILD_EXAMPLES=OFF -DDCC_BUILD_TOOLS=ON -DDCC_BUILD_TESTS=OFF"
           case "$(uname -s)" in
             FreeBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/local" ;;
             NetBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/pkg" ;;

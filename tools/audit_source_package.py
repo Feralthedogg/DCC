@@ -35,6 +35,7 @@ def main() -> int:
     cmake = read("CMakeLists.txt", errors)
     release_check = read("tools/release_check.sh", errors)
     package_release = read("tools/package_release.sh", errors)
+    bsd_workflow = read(".github/workflows/bsd.yml", errors)
 
     require_line(".gitignore", gitignore, ".env", errors)
     require_line(".gitignore", gitignore, ".env.*", errors)
@@ -49,24 +50,31 @@ def main() -> int:
     required_cpack_excludes = {
         '"/build[^/]*/"': "build trees",
         '"/CMakeFiles/"': "in-source CMakeFiles directories",
-        '"/CMakeCache\\\\.txt$"': "in-source CMake caches",
-        '"/cmake_install\\\\.cmake$"': "in-source install scripts",
-        '"/install_manifest\\\\.txt$"': "in-source install manifests",
+        '"/CMakeCache[.]txt$"': "in-source CMake caches",
+        '"/cmake_install[.]cmake$"': "in-source install scripts",
+        '"/install_manifest[.]txt$"': "in-source install manifests",
         '"/Testing/"': "in-source CTest output",
         '"/site/"': "MkDocs output",
         '"/target/"': "release artifacts",
         '"/dist/"': "distribution artifacts",
-        '"/\\\\\\\\.venv/"': "Python virtualenvs",
-        '"/compile_commands\\\\\\\\.json$"': "compile_commands.json",
+        '"/[.]venv/"': "Python virtualenvs",
+        '"/compile_commands[.]json$"': "compile_commands.json",
         '"/__pycache__/"': "__pycache__ directories",
-        '"\\\\\\\\.pyc$"': "Python bytecode",
-        '"/\\\\\\\\.DS_Store$"': ".DS_Store files",
-        '"/\\\\\\\\.env($|\\\\\\\\.)"': "hidden .env files",
-        '"/\\\\\\\\.git/"': ".git directories",
+        '"[.]pyc$"': "Python bytecode",
+        '"/[.]DS_Store$"': ".DS_Store files",
+        '"/[.]env($|[.])"': "hidden .env files",
+        '"/[.]git/"': ".git directories",
     }
     for needle, label in required_cpack_excludes.items():
         if needle not in cmake:
             errors.append(f"CMakeLists.txt CPACK_SOURCE_IGNORE_FILES must exclude {label}")
+
+    require_text(
+        ".github/workflows/bsd.yml",
+        bsd_workflow,
+        "-DDCC_BUILD_TOOLS=ON",
+        errors,
+    )
 
     for template in (
         "deploy/interaction-webhook/dcc-interaction-webhook.env",
@@ -117,6 +125,12 @@ def main() -> int:
         "tools/package_release.sh",
         package_release,
         "/share/dcc/deploy/bot/entrypoint.sh$",
+        errors,
+    )
+    require_text(
+        "tools/package_release.sh",
+        package_release,
+        "DCC release package is missing dcc_doctor; configure with DCC_BUILD_TOOLS=ON",
         errors,
     )
 
