@@ -36,9 +36,30 @@ void dcc_interaction_accept_task(void *arg) {
         }
         atomic_fetch_add_explicit(&server->accepted_connections, 1U, memory_order_relaxed);
 
+        uint64_t active_before = atomic_fetch_add_explicit(
+            &server->active_requests,
+            1U,
+            memory_order_acq_rel
+        );
+        if (active_before >= server->max_active_requests) {
+            atomic_fetch_sub_explicit(&server->active_requests, 1U, memory_order_acq_rel);
+            atomic_fetch_add_explicit(&server->overloaded_responses, 1U, memory_order_relaxed);
+            dcc_interaction_request_t *rejected = calloc(1U, sizeof(*rejected));
+            if (rejected != NULL) {
+                rejected->server = server;
+                (void)dcc_interaction_request_reply_text(rejected, 503, "Server is at request capacity");
+                dcc_interaction_server_note_response(server, 503U);
+                (void)dcc_interaction_write_response(fd, rejected);
+                dcc_interaction_request_free(rejected);
+            }
+            (void)llam_close(fd);
+            continue;
+        }
+
         dcc_interaction_client_task_t *task = (dcc_interaction_client_task_t *)malloc(sizeof(*task));
         if (task == NULL) {
             atomic_fetch_add_explicit(&server->spawn_errors, 1U, memory_order_relaxed);
+            atomic_fetch_sub_explicit(&server->active_requests, 1U, memory_order_acq_rel);
             (void)llam_close(fd);
             continue;
         }
@@ -48,6 +69,7 @@ void dcc_interaction_accept_task(void *arg) {
             free(task);
             (void)llam_close(fd);
             atomic_fetch_add_explicit(&server->spawn_errors, 1U, memory_order_relaxed);
+            atomic_fetch_sub_explicit(&server->active_requests, 1U, memory_order_acq_rel);
             dcc_interaction_server_set_error(server, "failed to spawn interaction connection task");
         }
     }

@@ -19,6 +19,10 @@ dcc_status_t dcc_replay_read_line(FILE *file, char **out_line, size_t *out_len) 
     size_t len = 0;
     int ch = EOF;
     while ((ch = fgetc(file)) != EOF) {
+        if (len >= DCC_REPLAY_MAX_LINE_SIZE) {
+            free(line);
+            return DCC_ERR_NOMEM;
+        }
         if (len + 1U >= cap) {
             if (cap > SIZE_MAX / 2U) {
                 free(line);

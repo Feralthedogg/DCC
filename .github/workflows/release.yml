@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example v1.4.1
+        description: Release version, for example v1.5.0
         required: false
-        default: v1.4.1
+        default: v1.5.0
         type: string
   push:
     tags:
@@ -41,15 +41,15 @@ jobs:
 
     steps:
       - name: Checkout DCC
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           path: DCC
 
       - name: Checkout LLAM
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ github.repository_owner }}/LLAM
-          ref: v2.2.0
+          ref: 2808e99c0339b8b3d6ed5ef7fab3dc231927c568 # v2.2.0
           path: LLAM
 
       - name: Install Linux dependencies
@@ -101,7 +101,7 @@ jobs:
         run: .\tools\package_release_windows.ps1 -Target "${{ matrix.target }}"
 
       - name: Upload platform artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: release-${{ matrix.target }}
           path: |
@@ -113,7 +113,7 @@ jobs:
 
       - name: Upload source artifact
         if: matrix.target == 'linux-x86_64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: release-source
           path: |
@@ -147,19 +147,19 @@ jobs:
 
     steps:
       - name: Checkout DCC
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           path: DCC
 
       - name: Checkout LLAM
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ github.repository_owner }}/LLAM
-          ref: v2.2.0
+          ref: 2808e99c0339b8b3d6ed5ef7fab3dc231927c568 # v2.2.0
           path: LLAM
 
       - name: Start BSD VM
-        uses: cross-platform-actions/action@v1.1.0
+        uses: cross-platform-actions/action@0c165ad7eb2d6a7e8552d6af5aad2bbedfc646b0 # v1.1.0
         timeout-minutes: 10
         with:
           operating_system: ${{ matrix.os }}
@@ -218,7 +218,7 @@ jobs:
             sh "$GITHUB_WORKSPACE/DCC/tools/package_release.sh" "${{ matrix.target }}"
 
       - name: Upload BSD artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: release-${{ matrix.target }}
           path: |
@@ -233,19 +233,18 @@ jobs:
       - build-bsd-artifacts
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           pattern: release-*
           path: release-artifacts
           merge-multiple: true
-
-      - name: Build checksum manifest
-        run: |
-          cd release-artifacts
-          cat ./*.sha256 | LC_ALL=C sort -k2 > SHA256SUMS
 
       - name: Add standalone installers
         run: |
@@ -255,7 +254,23 @@ jobs:
           cd release-artifacts
           sha256sum install.sh > install.sh.sha256
           sha256sum install.ps1 > install.ps1.sha256
-          cat install.sh.sha256 install.ps1.sha256 >> SHA256SUMS
+
+      - name: Generate CycloneDX SBOM
+        env:
+          RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
+        run: |
+          version="${RELEASE_VERSION#v}"
+          python3 tools/generate_sbom.py \
+            --version "$version" \
+            --artifacts release-artifacts \
+            --output "release-artifacts/dcc-${version}-sbom.cdx.json"
+          cd release-artifacts
+          sha256sum "dcc-${version}-sbom.cdx.json" > "dcc-${version}-sbom.cdx.json.sha256"
+
+      - name: Build checksum manifest
+        run: |
+          cd release-artifacts
+          cat ./*.sha256 | LC_ALL=C sort -k2 > SHA256SUMS
 
       - name: Build release notes
         env:
@@ -274,24 +289,20 @@ jobs:
           base_url="https://github.com/${REPOSITORY}/releases/download/${tag}"
           run_url="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
           {
-            echo "# DCC ${version} Beta"
+            echo "# DCC ${version}"
             echo
-            echo "DCC ${version} Beta publishes native Discord C runtime packages for Linux, macOS, Windows, and BSD."
+            echo "DCC ${version} publishes native Discord C runtime packages for Linux, macOS, Windows, and BSD."
             echo
             echo "## Highlights"
             echo
-            echo "- DCC now requires and builds against LLAM 2.2.0 or newer."
-            echo "- Official Discord API surface expansion covering Application, OAuth2, Lobby/Social SDK, Soundboard, Subscriptions, guild extras, invite target users, compatibility webhooks, and legacy pin routes."
-            echo "- Public Gateway send helpers for guild member requests, soundboard sound requests, channel info requests, and presence updates, plus generic Webhook Events parsing."
-            echo "- DPP-inspired Discord C client surface with Gateway, REST, slash command, component, and interaction helpers."
-            echo "- LLAM-backed runtime and networking path with LLAM kept as a separate runtime package."
-            echo "- Direct interaction reply helpers, stronger modal sugar, managed latest-message publishing, and REST response ID extraction."
-            echo "- Optional cached channel-to-guild inference for voice helpers and \`all\` Gateway intent selection in the hot reload host."
-            echo "- Hot-reload isolated worker mode with last-good rollback support."
-            echo "- Hardened hot-reload worker IPC with bounded reads/writes, payload caps, and bounded shutdown escalation."
-            echo "- Combined DCC+LLAM source builds keep vendored LLAM tests isolated from DCC release checks by default."
-            echo "- Command registry reconciliation, component sessions, interaction flows, replay harness, and rate-limit firewall APIs."
-            echo "- SDK metadata for CMake and pkg-config consumers."
+            echo "- LLAM 2.2.0 runtime baseline with generated version metadata and public API/legacy ABI release gates."
+            echo "- Components V2 validation and serialization updates, callback response type 12, REST \`with_response\`, and interaction overload/replay/deadline protection."
+            echo "- Runtime-loaded official Discord libdave backend for MLS state, key ratchets, and fail-closed Opus frame encryption/decryption."
+            echo "- Production-safe bot presets, explicit development auto-sync aliases, and signal-safe graceful shutdown runners."
+            echo "- Cluster-wide IDENTIFY coordination, jittered reconnects, and Prometheus metrics for cluster, interaction, voice, and DAVE health."
+            echo "- Strict bounded replay validation, the no-network \`dcc_doctor\` diagnostic, and production systemd, Compose, and Kubernetes bot templates."
+            echo "- Expanded operational, compatibility, contribution, support, security, and roadmap documentation."
+            echo "- CycloneDX SBOM, SHA-256 manifest, immutable workflow pins, and GitHub build provenance attestations."
             echo
             echo "## Downloads"
             echo
@@ -325,7 +336,7 @@ jobs:
             echo "- Public headers under \`include/dcc/\`."
             echo "- Static DCC library and runtime helper tools."
             echo "- CMake package files under \`lib/cmake/dcc/\` and pkg-config metadata under \`lib/pkgconfig/\`."
-            echo "- Runtime tools such as \`dcc_hot_reload_host\`, \`dcc_hot_reload_worker\`, \`dcc_command_sync\`, and \`dcc_replay\`."
+            echo "- Runtime tools such as \`dcc_doctor\`, \`dcc_hot_reload_host\`, \`dcc_hot_reload_worker\`, \`dcc_command_sync\`, and \`dcc_replay\`."
             echo "- Examples, deployment templates, and Markdown documentation."
             echo
             echo "## Standalone Installers"
@@ -364,13 +375,24 @@ jobs:
             echo "- Release workflow succeeded: ${run_url}"
             echo "- Release target commit: \`${RELEASE_SHA}\`."
             echo "- Full checksum manifest: [SHA256SUMS](${base_url}/SHA256SUMS)."
+            echo "- CycloneDX SBOM: [dcc-${version}-sbom.cdx.json](${base_url}/dcc-${version}-sbom.cdx.json)."
           } > RELEASE_NOTES.md
 
+      - name: Attest release artifacts
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: |
+            release-artifacts/*.tar.gz
+            release-artifacts/*.zip
+            release-artifacts/*.cdx.json
+            release-artifacts/install.sh
+            release-artifacts/install.ps1
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.event.inputs.version }}
-          name: DCC ${{ github.event.inputs.version || github.ref_name }} Beta
+          name: DCC ${{ github.event.inputs.version || github.ref_name }}
           body_path: release-artifacts/RELEASE_NOTES.md
           prerelease: false
           fail_on_unmatched_files: true
@@ -383,4 +405,6 @@ jobs:
             release-artifacts/install.sh.sha256
             release-artifacts/install.ps1
             release-artifacts/install.ps1.sha256
+            release-artifacts/*.cdx.json
+            release-artifacts/*.cdx.json.sha256
             release-artifacts/SHA256SUMS

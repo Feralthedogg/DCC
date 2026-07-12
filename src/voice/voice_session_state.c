@@ -77,6 +77,7 @@ dcc_status_t dcc_voice_client_disconnect_session(dcc_voice_client_t *voice_clien
         return DCC_ERR_INVALID_ARG;
     }
     (void)dcc_voice_client_stop_receive_jitter_timer(voice_client);
+    dcc_voice_dave_backend_reset_session(voice_client);
     dcc_voice_clear_session_descriptor(voice_client);
     dcc_voice_reset_transport_state(voice_client);
     voice_client->guild_id = 0;
@@ -95,5 +96,8 @@ dcc_status_t dcc_voice_client_disconnect_session(dcc_voice_client_t *voice_clien
     voice_client->dave_transition_pending = 0;
     voice_client->dave_transition_ready = 0;
     voice_client->dave_transition_id = 0;
+    voice_client->dave_media_ready = 0U;
+    voice_client->dave_epoch = 0U;
+    voice_client->dave_participant_count = 0U;
     return DCC_OK;
 }

@@ -281,9 +281,6 @@ static dcc_status_t dcc_component_v2_append_text_input_fields(
             (uint32_t)builder->text_input_style
         );
     }
-    if (status == DCC_OK && builder->label != NULL) {
-        status = dcc_component_json_append_string_member(buffer, first, "label", builder->label);
-    }
     if (status == DCC_OK && builder->placeholder != NULL) {
         status = dcc_component_json_append_string_member(buffer, first, "placeholder", builder->placeholder);
     }
@@ -474,28 +471,29 @@ static dcc_status_t dcc_component_v2_append_fields(
             if (status == DCC_OK && builder->has_required) {
                 status = dcc_component_json_append_bool_member(buffer, first, "required", builder->required);
             }
+            if (status == DCC_OK && builder->type == DCC_COMPONENT_V2_CHECKBOX_GROUP &&
+                builder->has_min_values) {
+                status = dcc_component_json_append_u32_member(
+                    buffer,
+                    first,
+                    "min_values",
+                    builder->min_values
+                );
+            }
+            if (status == DCC_OK && builder->type == DCC_COMPONENT_V2_CHECKBOX_GROUP &&
+                builder->has_max_values) {
+                status = dcc_component_json_append_u32_member(
+                    buffer,
+                    first,
+                    "max_values",
+                    builder->max_values
+                );
+            }
             break;
         case DCC_COMPONENT_V2_CHECKBOX:
             status = dcc_component_json_append_string_member(buffer, first, "custom_id", builder->custom_id);
-            if (status == DCC_OK) {
-                status = dcc_component_json_append_string_member(buffer, first, "label", builder->label);
-            }
-            if (status == DCC_OK && builder->value != NULL) {
-                status = dcc_component_json_append_string_member(buffer, first, "value", builder->value);
-            }
-            if (status == DCC_OK && builder->description != NULL) {
-                status = dcc_component_json_append_string_member(
-                    buffer,
-                    first,
-                    "description",
-                    builder->description
-                );
-            }
             if (status == DCC_OK && builder->has_checked) {
                 status = dcc_component_json_append_bool_member(buffer, first, "default", builder->checked);
-            }
-            if (status == DCC_OK && builder->has_required) {
-                status = dcc_component_json_append_bool_member(buffer, first, "required", builder->required);
             }
             break;
         default:

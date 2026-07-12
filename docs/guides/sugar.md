@@ -340,8 +340,9 @@ dcc_app_definition_t bot =
 ```
 
 `DCC_SIMPLE_BOT()` is the listener-list-first form for one-file bots. It is
-`DCC_BOT()` plus `DCC_APP_LISTENERS(...)`, so it includes command auto-sync,
-ephemeral auto-defer after 1500ms, and default error replies. Use
+`DCC_BOT()` plus `DCC_APP_LISTENERS(...)`, so it includes ephemeral auto-defer
+after 1500ms and default error replies without READY-time command mutation. Use
+`DCC_DEV_BOT()` when local development should also auto-sync commands. Use
 `DCC_LISTENERS(...)` when you need a standalone listener list, or
 `DCC_LISTENERS_REGISTER(app, ...)` for one-off setup code. The older
 `DCC_BOT_ROUTES()`, `DCC_ROUTE_*`, and `DCC_ROUTES(...)` names remain
@@ -467,7 +468,10 @@ dcc_voice_client_connect(voice, 0, voice_channel_id, 0, 0, 1);
 For application code, the shortest executable shape is `DCC_RUN_BOT(...)`.
 It reads `.env` when present, reads `DCC_TOKEN`, `BOT_TOKEN`, or `DISCORD_TOKEN`, applies
 runtime options such as `DCC_STORE_FILE`, runs the app, and destroys it before
-returning. `DCC_BOT(...)` includes `DCC_APP_DEV_MODE()` by default.
+returning. `DCC_BOT(...)` includes the production-safe preset by default:
+auto-defer and friendly errors, but no READY-time command sync. Use
+`DCC_DEV_BOT(...)` or `DCC_DEV_GUILD_BOT(...)` only for explicit
+development-time auto-sync.
 
 ```c
 dcc_status_t status =
@@ -2174,6 +2178,10 @@ DCC_CTX_REQUIRE_INTERNAL(ctx, database != NULL);
 Use `DCC_BOT(...)` when an entrypoint should read like one bot declaration
 instead of a sequence of route registration calls. Use `DCC_APP(...)` when you
 want to choose every app option explicitly.
+
+`DCC_BOT(...)` and `DCC_GUILD_BOT(...)` are production-safe and never mutate
+commands on READY. `DCC_DEV_BOT(...)` and `DCC_DEV_GUILD_BOT(...)` enable
+automatic global or guild-scoped development sync.
 
 ```c
 dcc_app_definition_t bot =

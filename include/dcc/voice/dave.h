@@ -8,6 +8,11 @@ extern "C" {
 #endif
 
 DCC_API dcc_status_t dcc_voice_client_set_dave_enabled(dcc_voice_client_t *voice_client, uint8_t enabled);
+DCC_API uint8_t dcc_voice_client_dave_backend_available(const dcc_voice_client_t *voice_client);
+DCC_API dcc_status_t dcc_voice_client_dave_stats(
+    const dcc_voice_client_t *voice_client,
+    dcc_voice_dave_stats_t *out
+);
 DCC_API uint8_t dcc_voice_client_dave_enabled(const dcc_voice_client_t *voice_client);
 DCC_API dcc_voice_dave_version_t dcc_voice_client_dave_version(const dcc_voice_client_t *voice_client);
 DCC_API uint8_t dcc_voice_client_dave_transition_pending(const dcc_voice_client_t *voice_client);

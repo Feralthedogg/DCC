@@ -127,6 +127,7 @@ if [ -n "${DCC_CMAKE_GENERATOR:-}" ]; then
         -DDCC_LLAM_LIBRARY="${DCC_LLAM_LIBRARY:-$source_dir/../LLAM/libllam_runtime.a}" \
         -DDCC_LLAM_USE_SUBDIRECTORY="${DCC_LLAM_USE_SUBDIRECTORY:-ON}" \
         -DDCC_BUNDLE_LLAM="$bundle_llam" \
+        -DDCC_BUILD_TESTS=ON \
         ${DCC_EXTRA_CMAKE_ARGS:-}
 else
     # shellcheck disable=SC2086
@@ -136,6 +137,7 @@ else
         -DDCC_LLAM_LIBRARY="${DCC_LLAM_LIBRARY:-$source_dir/../LLAM/libllam_runtime.a}" \
         -DDCC_LLAM_USE_SUBDIRECTORY="${DCC_LLAM_USE_SUBDIRECTORY:-ON}" \
         -DDCC_BUNDLE_LLAM="$bundle_llam" \
+        -DDCC_BUILD_TESTS=ON \
         ${DCC_EXTRA_CMAKE_ARGS:-}
 fi
 
@@ -218,6 +220,8 @@ fi
 tar -tzf "$binary_out" | grep '/lib/pkgconfig/dcc.pc$' >/dev/null
 tar -tzf "$binary_out" | grep '/share/dcc/docs/api.md$' >/dev/null
 tar -tzf "$binary_out" | grep '/share/dcc/docs/reference/official-api-surface.md$' >/dev/null
+tar -tzf "$binary_out" | grep '/bin/dcc_doctor$' >/dev/null
+tar -tzf "$binary_out" | grep '/share/dcc/deploy/bot/entrypoint.sh$' >/dev/null
 tar -tzf "$source_out" | grep '/CMakeLists.txt$' >/dev/null
 tar -tzf "$source_out" | grep '/docs/index.md$' >/dev/null
 tar -tzf "$source_out" | grep '/include/dcc/oauth2.h$' >/dev/null
@@ -235,6 +239,7 @@ tar -tzf "$source_out" | grep '/tools/audit_discord_api_docs_surface.py$' >/dev/
 tar -tzf "$source_out" | grep '/tools/audit_official_events_surface.py$' >/dev/null
 tar -tzf "$source_out" | grep '/tools/audit_official_surface.py$' >/dev/null
 tar -tzf "$source_out" | grep '/docs/reference/official-api-surface.md$' >/dev/null
+tar -tzf "$source_out" | grep '/deploy/bot/entrypoint.sh$' >/dev/null
 
 printf '%s\n' "$binary_out"
 printf '%s\n' "$source_out"

@@ -10,6 +10,11 @@ dcc_status_t dcc_voice_client_set_dave_mls_handler(
     }
     voice_client->dave_mls_handler = handler;
     voice_client->dave_mls_user_data = user_data;
+    if (handler != NULL) {
+        voice_client->dave_backend_ready = 1U;
+    } else if (voice_client->dave_backend == NULL) {
+        voice_client->dave_backend_ready = 0U;
+    }
     return DCC_OK;
 }
 

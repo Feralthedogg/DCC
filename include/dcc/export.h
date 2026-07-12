@@ -13,5 +13,12 @@
 #  define DCC_API
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+#  define DCC_DEPRECATED(message) __attribute__((deprecated(message)))
+#elif defined(_MSC_VER)
+#  define DCC_DEPRECATED(message) __declspec(deprecated(message))
+#else
+#  define DCC_DEPRECATED(message)
 #endif
 
+#endif

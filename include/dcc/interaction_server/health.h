@@ -43,6 +43,16 @@ typedef struct dcc_interaction_server_state {
     uint64_t completed_requests;
 } dcc_interaction_server_state_t;
 
+typedef struct dcc_interaction_server_protection_stats {
+    size_t size;
+    uint64_t max_active_requests;
+    uint32_t response_deadline_ms;
+    uint32_t replay_window_ms;
+    uint64_t overloaded_responses;
+    uint64_t replayed_requests;
+    uint64_t deadline_exceeded_requests;
+} dcc_interaction_server_protection_stats_t;
+
 typedef enum dcc_interaction_server_health {
     DCC_INTERACTION_SERVER_HEALTH_UNKNOWN = 0,
     DCC_INTERACTION_SERVER_HEALTH_READY,
@@ -61,6 +71,7 @@ typedef struct dcc_interaction_server_health_snapshot {
     dcc_interaction_server_state_t state;
     dcc_interaction_server_stats_t stats;
     char reason[160];
+    dcc_interaction_server_protection_stats_t protection;
 } dcc_interaction_server_health_snapshot_t;
 
 DCC_API dcc_status_t dcc_interaction_server_stats(
@@ -71,12 +82,22 @@ DCC_API dcc_status_t dcc_interaction_server_get_state(
     const dcc_interaction_server_t *server,
     dcc_interaction_server_state_t *out
 );
+DCC_API dcc_status_t dcc_interaction_server_protection_stats(
+    const dcc_interaction_server_t *server,
+    dcc_interaction_server_protection_stats_t *out
+);
 DCC_API dcc_status_t dcc_interaction_server_health_snapshot(
     const dcc_interaction_server_t *server,
     dcc_interaction_server_health_snapshot_t *out
 );
 DCC_API const char *dcc_interaction_server_health_string(dcc_interaction_server_health_t health);
 DCC_API dcc_status_t dcc_interaction_server_health_snapshot_json(
+    const dcc_interaction_server_health_snapshot_t *snapshot,
+    char *out,
+    size_t out_size,
+    size_t *out_len
+);
+DCC_API dcc_status_t dcc_interaction_server_health_snapshot_prometheus(
     const dcc_interaction_server_health_snapshot_t *snapshot,
     char *out,
     size_t out_size,

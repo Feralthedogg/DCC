@@ -299,11 +299,12 @@ are composing generated route descriptors in the same block.
 
 For app entrypoints, group extensions, typed routes, modules, app-wide
 middleware, guards, auto-defer, default error replies, and command sync into a
-single definition. `DCC_BOT(...)` is the short definition form for normal
-executables because it includes `DCC_APP_DEV_MODE()`: command auto-sync,
-ephemeral auto-defer after 1500ms, and default error replies. Use
-`DCC_GUILD_BOT(name, guild_id, ...)` for the same handler-side defaults with
-guild command sync, and use `DCC_REQUIRE_ENV(...)` when a bot should fail fast
+single definition. `DCC_BOT(...)` is the production-safe short definition form
+for normal executables: ephemeral auto-defer after 1500ms and default error
+replies, without READY-time command changes. `DCC_GUILD_BOT(...)` has the same
+safe runtime behavior. Use `DCC_DEV_BOT(...)` or
+`DCC_DEV_GUILD_BOT(name, guild_id, ...)` when local development should perform
+automatic global or guild command sync, and use `DCC_REQUIRE_ENV(...)` when a bot should fail fast
 on missing deployment variables. `DCC_APP(...)` remains available when you want
 to choose every app option explicitly. `dcc_app_apply()` adds the definition to
 an existing app, and `dcc_app_create_defined()` creates and applies it in one

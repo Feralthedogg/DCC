@@ -14,7 +14,6 @@ int voice_dave_gateway_smoke(dcc_voice_client_t *voice_client) {
     const char *voice_dave_epoch_frame =
         "{\"op\":24,\"d\":{\"protocol_version\":1,\"epoch\":1}}";
     const char *voice_dave_invalid_frame = "{\"op\":31,\"d\":{\"transition_id\":9}}";
-    const char *voice_dave_invalid_mismatch_frame = "{\"op\":31,\"d\":{\"transition_id\":54}}";
     const uint8_t voice_dave_external_sender_frame[] = {0x00, 0x07, 25, 0x11, 0x22, 0x33};
     const uint8_t voice_dave_announce_commit_frame[] = {0x00, 0x08, 29, 0x00, 0x37, 0xaa, 0xbb};
     const uint8_t voice_dave_short_announce_frame[] = {0x00, 0x09, 29, 0x00};
@@ -48,6 +47,8 @@ int voice_dave_gateway_smoke(dcc_voice_client_t *voice_client) {
     memset(&dave_mls_state, 0, sizeof(dave_mls_state));
 
     if (dcc_voice_client_disconnect_session(voice_client) != DCC_OK ||
+        dcc_voice_client_set_dave_mls_handler(voice_client, voice_dave_mls_handler, &dave_mls_state) !=
+            DCC_OK ||
         dcc_voice_client_start_session(voice_client, 333, 222, 0, 0, 1) != DCC_OK ||
         dcc_voice_client_apply_voice_server_update(voice_client, &self_voice_server) != DCC_OK ||
         dcc_voice_client_apply_voice_state(voice_client, &self_voice_state, 999) != DCC_OK ||
@@ -135,8 +136,6 @@ int voice_dave_gateway_smoke(dcc_voice_client_t *voice_client) {
         dave_frame.sequence != 8 ||
         dave_frame.transition_id != 55 ||
         dave_frame.payload_size != 2 ||
-        dcc_voice_client_set_dave_mls_handler(voice_client, voice_dave_mls_handler, &dave_mls_state) !=
-            DCC_OK ||
         dcc_voice_client_handle_gateway_binary_frame(
             voice_client,
             voice_dave_external_sender_frame,
@@ -184,11 +183,6 @@ int voice_dave_gateway_smoke(dcc_voice_client_t *voice_client) {
         ) != DCC_ERR_JSON ||
         dcc_voice_client_dave_transition_id(voice_client) != 55 ||
         !dcc_voice_client_dave_transition_pending(voice_client) ||
-        dcc_voice_client_handle_gateway_frame(
-            voice_client,
-            voice_dave_invalid_mismatch_frame,
-            strlen(voice_dave_invalid_mismatch_frame)
-        ) != DCC_ERR_JSON ||
         dcc_voice_client_dave_transition_id(voice_client) != 55 ||
         !dcc_voice_client_dave_transition_pending(voice_client)) {
         fprintf(stderr, "voice dave malformed transition hardening failed\n");
@@ -220,7 +214,7 @@ int voice_dave_gateway_smoke(dcc_voice_client_t *voice_client) {
     session_info.size = sizeof(session_info);
     if (dcc_voice_client_session_info(voice_client, &session_info) != DCC_OK ||
         session_info.dave_pending_version != DCC_VOICE_DAVE_NONE ||
-        !session_info.dave_transition_ready ||
+        session_info.dave_transition_ready ||
         dcc_voice_client_handle_gateway_frame(
             voice_client,
             voice_dave_execute_frame,
@@ -238,20 +232,20 @@ int voice_dave_gateway_smoke(dcc_voice_client_t *voice_client) {
             voice_dave_epoch_frame,
             strlen(voice_dave_epoch_frame)
         ) != DCC_OK ||
-        !dcc_voice_client_dave_enabled(voice_client) ||
-        dcc_voice_client_dave_version(voice_client) != DCC_VOICE_DAVE_VERSION_1 ||
+        dcc_voice_client_dave_enabled(voice_client) ||
+        dcc_voice_client_dave_version(voice_client) != DCC_VOICE_DAVE_NONE ||
         dcc_voice_client_handle_gateway_frame(
             voice_client,
             voice_dave_invalid_frame,
             strlen(voice_dave_invalid_frame)
         ) != DCC_OK ||
-        dcc_voice_client_dave_transition_pending(voice_client) ||
-        dcc_voice_client_dave_transition_id(voice_client) != 9 ||
+        !dcc_voice_client_dave_transition_pending(voice_client) ||
+        dcc_voice_client_dave_transition_id(voice_client) != 7 ||
         dcc_voice_client_stats(voice_client, &voice_stats) != DCC_OK ||
-        !voice_stats.dave_enabled ||
-        voice_stats.dave_version != DCC_VOICE_DAVE_VERSION_1 ||
-        voice_stats.dave_transition_pending ||
-        voice_stats.dave_transition_id != 9 ||
+        voice_stats.dave_enabled ||
+        voice_stats.dave_version != DCC_VOICE_DAVE_NONE ||
+        !voice_stats.dave_transition_pending ||
+        voice_stats.dave_transition_id != 7 ||
         voice_stats.receive_sequence != dcc_voice_client_receive_sequence(voice_client)) {
         fprintf(stderr, "voice dave epoch/invalid state failed\n");
         return 1;

@@ -16,11 +16,20 @@ typedef struct dcc_replay_tool_options {
     const char *token;
     uint32_t worker_health_timeout_ms;
     uint32_t worker_drain_timeout_ms;
+    uint32_t max_gap_ms;
+    uint64_t max_records;
+    uint64_t expect_records;
+    uint64_t expect_gateway;
+    uint64_t expect_interactions;
     int summary;
     int validate;
     int realtime;
     int isolated;
     int in_process;
+    int allow_nonmonotonic;
+    int has_expect_records;
+    int has_expect_gateway;
+    int has_expect_interactions;
 } dcc_replay_tool_options_t;
 
 typedef struct dcc_replay_tool_stats {

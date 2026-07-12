@@ -1,12 +1,15 @@
 #include "internal/voice/dcc_voice_internal.h"
 
+#include <stddef.h>
 #include <string.h>
+
+#define DCC_VOICE_HEALTH_LEGACY_SIZE offsetof(dcc_voice_health_snapshot_t, dave)
 
 dcc_status_t dcc_voice_client_health_snapshot(
     const dcc_voice_client_t *voice_client,
     dcc_voice_health_snapshot_t *out
 ) {
-    if (voice_client == NULL || out == NULL || out->size < sizeof(*out)) {
+    if (voice_client == NULL || out == NULL || out->size < DCC_VOICE_HEALTH_LEGACY_SIZE) {
         return DCC_ERR_INVALID_ARG;
     }
 
@@ -15,11 +18,14 @@ dcc_status_t dcc_voice_client_health_snapshot(
     snapshot.size = sizeof(snapshot);
     snapshot.session.size = sizeof(snapshot.session);
     snapshot.stats.size = sizeof(snapshot.stats);
+    snapshot.dave.size = sizeof(snapshot.dave);
 
     dcc_status_t status = dcc_voice_client_session_info(voice_client, &snapshot.session);
     if (status != DCC_OK) {
         return status;
     }
+    status = dcc_voice_client_dave_stats(voice_client, &snapshot.dave);
+    if (status != DCC_OK) return status;
     status = dcc_voice_client_stats(voice_client, &snapshot.stats);
     if (status != DCC_OK) {
         return status;
@@ -29,7 +35,8 @@ dcc_status_t dcc_voice_client_health_snapshot(
     snapshot.health = dcc_voice_health_classify(&snapshot.session, &snapshot.stats, snapshot.action);
     snapshot.media_ready = snapshot.session.ready != 0U &&
         snapshot.stats.ssrc != 0U &&
-        (snapshot.stats.encryption_mode == DCC_VOICE_ENCRYPTION_NONE || snapshot.stats.has_secret_key != 0U)
+        (snapshot.stats.encryption_mode == DCC_VOICE_ENCRYPTION_NONE || snapshot.stats.has_secret_key != 0U) &&
+        (snapshot.stats.dave_enabled == 0U || snapshot.dave.media_ready != 0U)
         ? 1U
         : 0U;
     snapshot.websocket_ready = snapshot.stats.websocket_loop_running != 0U &&
@@ -46,6 +53,11 @@ dcc_status_t dcc_voice_client_health_snapshot(
         sizeof(snapshot.reason),
         dcc_voice_health_reason(&snapshot.session, &snapshot.stats, snapshot.health, snapshot.action)
     );
-    *out = snapshot;
+    size_t out_size = out->size;
+    size_t copy_size = out_size < sizeof(snapshot) ? out_size : sizeof(snapshot);
+    memcpy(out, &snapshot, copy_size);
+    out->size = out_size;
     return DCC_OK;
 }
+
+#undef DCC_VOICE_HEALTH_LEGACY_SIZE

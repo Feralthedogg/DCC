@@ -1,4 +1,5 @@
 #include "internal/replay/dcc_replay_internal.h"
+#include "internal/json/dcc_json.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -72,5 +73,13 @@ int dcc_replay_payload_shape_ok(const char *payload, size_t payload_len) {
         return 0;
     }
     char first = payload[begin];
-    return first == '{' || first == '[';
+    if (first != '{' && first != '[') {
+        return 0;
+    }
+    dcc_json_t *json = NULL;
+    dcc_status_t status = dcc_json_parse(payload, payload_len, &json);
+    int ok = status == DCC_OK &&
+        (dcc_json_typeof(json) == DCC_JSON_OBJECT || dcc_json_typeof(json) == DCC_JSON_ARRAY);
+    dcc_json_free(json);
+    return ok;
 }

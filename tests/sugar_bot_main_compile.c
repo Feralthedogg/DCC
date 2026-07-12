@@ -41,6 +41,21 @@ DCC_BOT_MAIN(
 )
 #undef main
 
+#define main dcc_dev_bot_main_compile_app
+DCC_DEV_BOT_MAIN(
+    "main.compile.dev.app",
+    DCC_APP_EVENTS(DCC_ON_READY_DATA(bot_main_ready, &bot_main_state))
+)
+#undef main
+
+#define main dcc_dev_guild_bot_main_compile_app
+DCC_DEV_GUILD_BOT_MAIN(
+    "main.compile.dev.guild.app",
+    123ULL,
+    DCC_APP_EVENTS(DCC_ON_READY_DATA(bot_main_ready, &bot_main_state))
+)
+#undef main
+
 #define main dcc_bot_main_compile_app_token
 DCC_BOT_MAIN_TOKEN(
     "DCC_MAIN_TOKEN",

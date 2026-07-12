@@ -20,6 +20,7 @@ dcc_status_t dcc_cluster_create_shards(
         if (status != DCC_OK) {
             return status;
         }
+        cluster->shards[i]->gateway_identify_coordinator = &cluster->identify_coordinator;
 
         dcc_cluster_shard_info_t *health = &cluster->health[i];
         health->size = sizeof(*health);

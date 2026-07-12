@@ -1,4 +1,5 @@
 #include "internal/client/dcc_client_state_internal.h"
+#include "internal/client/dcc_cluster_identify_coordinator_internal.h"
 #include "internal/dcc_core_internal.h"
 #include "internal/gateway/dcc_gateway_lifecycle_internal.h"
 #include "internal/gateway/dcc_gateway_resume_internal.h"
@@ -77,6 +78,13 @@ dcc_status_t dcc_client_gateway_info(const dcc_client_t *client, dcc_gateway_inf
     out->recommended_shards = client->gateway_recommended_shards;
     out->max_concurrency = client->gateway_max_concurrency == 0 ? 1U : client->gateway_max_concurrency;
     out->remaining_identifies = client->gateway_remaining_identifies;
+    if (client->gateway_identify_coordinator != NULL) {
+        dcc_cluster_identify_coordinator_t *coordinator = client->gateway_identify_coordinator;
+        while (atomic_flag_test_and_set_explicit(&coordinator->lock, memory_order_acquire)) {
+        }
+        out->remaining_identifies = coordinator->remaining;
+        atomic_flag_clear_explicit(&coordinator->lock, memory_order_release);
+    }
     out->total_identifies = client->gateway_session_total_identifies;
     out->reset_after_ms = client->gateway_session_reset_after_ms;
     out->reset_at_ms = client->gateway_session_reset_at_ms;

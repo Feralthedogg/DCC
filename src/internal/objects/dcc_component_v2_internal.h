@@ -17,9 +17,20 @@ typedef struct dcc_component_v2_validation {
     size_t total_count;
 } dcc_component_v2_validation_t;
 
+typedef enum dcc_component_v2_context {
+    DCC_COMPONENT_V2_CONTEXT_ANY = 0,
+    DCC_COMPONENT_V2_CONTEXT_MESSAGE,
+    DCC_COMPONENT_V2_CONTEXT_MODAL
+} dcc_component_v2_context_t;
+
 dcc_status_t dcc_component_v2_validate_array(
     const dcc_component_v2_builder_t *builders,
     size_t builder_count
+);
+dcc_status_t dcc_component_v2_validate_array_context(
+    const dcc_component_v2_builder_t *builders,
+    size_t builder_count,
+    dcc_component_v2_context_t context
 );
 dcc_status_t dcc_component_v2_append_json(
     const dcc_component_v2_builder_t *builder,

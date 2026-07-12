@@ -101,9 +101,13 @@ is explained in [App Runtime](guides/app-runtime.md).
 | `.env` | Local secrets and runtime configuration; never commit it |
 | `CMakeLists.txt` | DCC package discovery and application build |
 
-The generated bot uses `DCC_BOT(...)` with development defaults. It infers the
+The generated bot uses `DCC_DEV_BOT(...)` with explicit development defaults. It infers the
 application ID from Gateway READY, reconciles commands, and makes the app-owned
 store available through handler context.
+
+Before production, switch to `DCC_BOT(...)` and deploy commands explicitly with
+`dcc_command_sync --plan` followed by `--apply`. Production bot aliases do not
+modify Discord commands during READY.
 
 ## Minimal One-File App
 
@@ -117,14 +121,15 @@ DCC_SLASH_FN(ping) {
     (void)DCC_REPLY_TEXT(ctx, "pong");
 }
 
-DCC_SIMPLE_BOT_MAIN(
+DCC_DEV_BOT_MAIN(
     "minimal",
-    DCC_LISTEN_SLASH("ping", "Reply with pong", ping)
+    DCC_APP_LISTENERS(DCC_LISTEN_SLASH("ping", "Reply with pong", ping))
 )
 ```
 
-For production projects, the generated feature layout scales better than a
-single translation unit.
+`DCC_DEV_BOT_MAIN` performs automatic development command sync. For production,
+use `DCC_BOT_MAIN` and deploy commands explicitly. The generated feature layout
+also scales better than a single translation unit.
 
 ## Command Sync Without The App Default
 

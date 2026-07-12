@@ -458,6 +458,33 @@ interaction_webhook_deploy_template_check() {
     printf '%s\n' "$check_output" | grep -q 'routes=ready'
 }
 
+normal_bot_deploy_template_check() {
+    prefix=$1
+    doctor=$2
+    deploy_dir=$prefix/share/dcc/deploy/bot
+    for file in \
+        "$deploy_dir/README.md" \
+        "$deploy_dir/dcc-bot.env" \
+        "$deploy_dir/dcc-bot.service" \
+        "$deploy_dir/dcc-bot.tmpfiles.conf" \
+        "$deploy_dir/docker-compose.yaml" \
+        "$deploy_dir/kubernetes.yaml" \
+        "$deploy_dir/entrypoint.sh" \
+        "$deploy_dir/Containerfile"; do
+        if [ ! -f "$file" ]; then
+            printf 'missing installed normal bot deployment template: %s\n' "$file" >&2
+            return 1
+        fi
+    done
+    grep -q '^ExecStartPre=/usr/local/bin/dcc_doctor --require-token$' "$deploy_dir/dcc-bot.service"
+    grep -q '^KillSignal=SIGTERM$' "$deploy_dir/dcc-bot.service"
+    grep -q 'stop_grace_period: 30s' "$deploy_dir/docker-compose.yaml"
+    grep -q 'terminationGracePeriodSeconds: 30' "$deploy_dir/kubernetes.yaml"
+    check_output=$(DCC_TOKEN=release-check "$doctor" --json --require-token)
+    printf '%s\n' "$check_output" | grep -q '"dcc_version":"1.5.0"'
+    printf '%s\n' "$check_output" | grep -q '"token_present":true'
+}
+
 source_package_hygiene_check() {
     build=$1
     output_dir=$build/source-package-check
@@ -487,6 +514,9 @@ source_package_hygiene_check() {
     grep -q '/deploy/interaction-webhook/dcc-interaction-webhook.env$' "$list_file"
     grep -q '/deploy/interaction-webhook/kubernetes.yaml$' "$list_file"
     grep -q '/deploy/hot-reload/dcc-hot-reload.env$' "$list_file"
+    grep -q '/deploy/bot/dcc-bot.env$' "$list_file"
+    grep -q '/deploy/bot/kubernetes.yaml$' "$list_file"
+    grep -q '/deploy/bot/entrypoint.sh$' "$list_file"
     grep -q '/include/dcc/oauth2.h$' "$list_file"
     grep -q '/include/dcc/rest/official_surface.h$' "$list_file"
     grep -q '/include/dcc/sugar/official_surface.h$' "$list_file"
@@ -630,6 +660,12 @@ if ! is_true "${DCC_SKIP_PACKAGE:-0}"; then
         interaction_webhook_deploy_template_check "$package_prefix" "$installed_interaction_webhook"
     fi
 
+    if ! is_true "${DCC_SKIP_BOT_DEPLOY_TEMPLATE_CHECK:-0}"; then
+        installed_doctor=$(find_executable "$package_prefix/bin" dcc_doctor)
+        step "run installed normal bot deploy template preflight"
+        normal_bot_deploy_template_check "$package_prefix" "$installed_doctor"
+    fi
+
     if ! is_true "${DCC_SKIP_HOT_RELOAD_EXAMPLE_BUILD:-0}"; then
         step "build installed hot reload example"
         hot_reload_example_build_check "$package_prefix" "$package_llam_library"
@@ -694,6 +730,12 @@ if ! is_true "${DCC_SKIP_MINIMAL_PACKAGE:-0}"; then
         minimal_interaction_webhook=$(find_executable "$minimal_package_prefix/bin" dcc_interaction_webhook)
         step "run minimal installed interaction webhook deploy template preflight"
         interaction_webhook_deploy_template_check "$minimal_package_prefix" "$minimal_interaction_webhook"
+    fi
+
+    if ! is_true "${DCC_SKIP_BOT_DEPLOY_TEMPLATE_CHECK:-0}"; then
+        minimal_doctor=$(find_executable "$minimal_package_prefix/bin" dcc_doctor)
+        step "run minimal installed normal bot deploy template preflight"
+        normal_bot_deploy_template_check "$minimal_package_prefix" "$minimal_doctor"
     fi
 
     if ! is_true "${DCC_SKIP_HOT_RELOAD_EXAMPLE_BUILD:-0}"; then

@@ -50,7 +50,7 @@ def main() -> int:
         'DCC_CONFIG_BOOL("FEATURE_ENABLED", &config.feature_enabled)',
         "/* dcc_new_app:config-bindings */",
         "DCC_RUN_APP_ENV(",
-        "DCC_BOT(",
+        "DCC_DEV_BOT(",
         "bot_config_t config = {0};",
         '#include "config.h"',
         '#include "ping.h"',
@@ -544,8 +544,8 @@ def main() -> int:
             errors.append(f".env.example missing {needle!r}")
 
     for needle in (
-        "DCC_BOT(",
-        "DCC_APP_DEV_MODE()",
+        "DCC_DEV_BOT(",
+        "DCC_DEV_BOT(",
         "DCC_CONFIG(",
         "BOT_DEBUG",
         "DCC_RUN_APP_ENV(",

@@ -27,6 +27,19 @@ build/dcc_replay --file events.jsonl --summary
 build/dcc_replay --file events.jsonl --validate
 ```
 
+Validation parses the entire outer record and payload JSON, rejects missing or
+wrongly typed fields, caps each JSONL line at 8 MiB, and requires monotonic
+timestamps. Use explicit expectations in CI so an accidentally empty or
+partially captured fixture cannot pass:
+
+```sh
+build/dcc_replay --file events.jsonl --validate \
+  --expect-records 120 --expect-gateway 100 --expect-interactions 20
+```
+
+`--max-records` bounds fixture work. `--allow-nonmonotonic` is available for
+legacy captures, but deterministic fixtures should normally be sorted.
+
 ## API Records
 
 When recording from a custom harness, use the sugar record literals:
@@ -49,8 +62,13 @@ build/dcc_replay \
   --isolated
 ```
 
-`--realtime` respects timestamps. Without it, DCC replays as fast as the local
-runtime can dispatch.
+`--realtime` respects timestamps, with each sleep capped by `--max-gap-ms`
+(default 5000) so a corrupt capture cannot stall CI indefinitely. Without it,
+DCC replays as fast as the local runtime can dispatch.
+
+Replay payloads can contain tokens, message content, and user data. Keep capture
+files out of source control unless sanitized and store local captures with
+owner-only permissions.
 
 Replay is especially useful before promoting a hot reload candidate: run the
 same captured payload file against the new module and fail the build if handler

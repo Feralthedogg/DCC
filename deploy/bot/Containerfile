@@ -1,0 +1,12 @@
+FROM debian:bookworm-slim
+
+RUN useradd --system --uid 10001 --create-home --home-dir /var/lib/dcc/bot dcc
+WORKDIR /var/lib/dcc/bot
+COPY bin/bot /usr/local/bin/dcc-bot
+COPY bin/dcc_doctor /usr/local/bin/dcc_doctor
+COPY entrypoint.sh /usr/local/bin/dcc-bot-entrypoint
+COPY lib/ /usr/local/lib/
+RUN chmod 0755 /usr/local/bin/dcc-bot /usr/local/bin/dcc_doctor /usr/local/bin/dcc-bot-entrypoint
+ENV LD_LIBRARY_PATH=/usr/local/lib
+USER 10001:10001
+ENTRYPOINT ["/usr/local/bin/dcc-bot-entrypoint"]

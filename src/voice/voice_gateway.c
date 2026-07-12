@@ -27,6 +27,8 @@ static dcc_status_t dcc_voice_handle_parsed_frame(dcc_voice_client_t *voice_clie
             return dcc_voice_gateway_handle_hello(voice_client, d);
         case 9:
             return dcc_voice_client_mark_session_active(voice_client);
+        case 11:
+            return dcc_voice_gateway_handle_clients_connect(voice_client, d);
         case 5:
             return dcc_voice_gateway_handle_speaking(voice_client, d);
         case 13:
@@ -39,8 +41,6 @@ static dcc_status_t dcc_voice_handle_parsed_frame(dcc_voice_client_t *voice_clie
             return dcc_voice_gateway_handle_dave_execute_transition(voice_client, d);
         case 24:
             return dcc_voice_gateway_handle_dave_session_update(voice_client, d);
-        case 31:
-            return dcc_voice_gateway_handle_dave_transition_result(voice_client, d);
         default:
             return DCC_OK;
     }

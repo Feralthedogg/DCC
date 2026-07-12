@@ -39,9 +39,9 @@ DCC_SLASH_FN(on_ping) {
     (void)DCC_REPLY_TEXT(ctx, "pong");
 }
 
-DCC_SIMPLE_BOT_MAIN(
+DCC_DEV_BOT_MAIN(
     "minimal",
-    DCC_LISTEN_SLASH("ping", "Reply with pong", on_ping)
+    DCC_APP_LISTENERS(DCC_LISTEN_SLASH("ping", "Reply with pong", on_ping))
 )
 ```
 

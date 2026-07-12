@@ -99,3 +99,23 @@ dcc_status_t dcc_voice_client_stats(
     out->dave_pending_version = voice_client->dave_pending_version;
     return DCC_OK;
 }
+
+dcc_status_t dcc_voice_client_dave_stats(
+    const dcc_voice_client_t *voice_client,
+    dcc_voice_dave_stats_t *out
+) {
+    if (voice_client == NULL || out == NULL || out->size < sizeof(*out)) return DCC_ERR_INVALID_ARG;
+    size_t size = out->size;
+    memset(out, 0, sizeof(*out));
+    out->size = size;
+    out->backend_available = dcc_voice_client_dave_backend_available(voice_client);
+    out->media_ready = voice_client->dave_media_ready;
+    out->epoch = voice_client->dave_epoch;
+    out->participant_count = voice_client->dave_participant_count;
+    out->encrypt_success = voice_client->dave_encrypt_success;
+    out->encrypt_failures = voice_client->dave_encrypt_failures;
+    out->decrypt_success = voice_client->dave_decrypt_success;
+    out->decrypt_failures = voice_client->dave_decrypt_failures;
+    out->missing_key_failures = voice_client->dave_missing_key_failures;
+    return DCC_OK;
+}

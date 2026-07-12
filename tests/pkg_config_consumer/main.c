@@ -59,6 +59,7 @@ int main(void) {
     interaction_health.size = sizeof(interaction_health);
 
     return version != NULL &&
+            strcmp(version, DCC_VERSION_STRING) == 0 &&
             strcmp(DCC_HOT_RELOAD_DEFAULT_WORKER, "dcc_hot_reload_worker") == 0 &&
             hot_reload_options.backend == DCC_HOT_RELOAD_BACKEND_IN_PROCESS &&
             hot_reload_health.backend == DCC_HOT_RELOAD_BACKEND_IN_PROCESS &&

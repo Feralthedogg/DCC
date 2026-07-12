@@ -12,12 +12,13 @@ llam_version="${DCC_INSTALL_LLAM_VERSION:-2.2.0}"
 llam_installer_url="${DCC_LLAM_INSTALLER_URL:-}"
 dry_run=0
 force=0
+run_doctor=1
 
 usage() {
     cat <<'EOF'
 usage: install.sh [--prefix <dir>] [--version <version|latest>] [--target <target>]
                   [--base-url <url>] [--install-llam] [--skip-llam] [--llam-version <version|latest>]
-                  [--dry-run] [--force]
+                  [--dry-run] [--force] [--skip-doctor]
 
 Installs DCC from a GitHub release archive. LLAM is a separate runtime
 dependency; install LLAM first or pass --install-llam to install the
@@ -91,6 +92,10 @@ while [ "$#" -gt 0 ]; do
             ;;
         --force)
             force=1
+            shift
+            ;;
+        --skip-doctor)
+            run_doctor=0
             shift
             ;;
         -h|--help)
@@ -357,3 +362,14 @@ fi
 install_tree "$package_root"
 
 install_latest_llam
+
+if [ "$run_doctor" -eq 1 ]; then
+    host_target=$(detect_target 2>/dev/null || true)
+    if [ "$host_target" = "$target" ] && [ -x "$prefix/bin/dcc_doctor" ]; then
+        "$prefix/bin/dcc_doctor" --json
+    elif [ "$host_target" = "$target" ]; then
+        echo "warning: installed package does not include dcc_doctor" >&2
+    else
+        echo "skip dcc_doctor for cross-target install ($target)" >&2
+    fi
+fi

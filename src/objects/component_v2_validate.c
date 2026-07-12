@@ -2,6 +2,18 @@
 
 #include <string.h>
 
+static int dcc_component_v2_string_length_between(
+    const char *value,
+    size_t min_length,
+    size_t max_length
+) {
+    if (value == NULL) {
+        return min_length == 0U;
+    }
+    size_t length = strlen(value);
+    return length >= min_length && length <= max_length;
+}
+
 static int dcc_component_v2_type_valid(dcc_component_v2_type_t type) {
     switch (type) {
         case DCC_COMPONENT_V2_ACTION_ROW:
@@ -185,7 +197,9 @@ static dcc_status_t dcc_component_v2_validate_options(
         return DCC_ERR_INVALID_ARG;
     }
     for (size_t i = 0; i < options_count; ++i) {
-        if (options[i].label == NULL || options[i].value == NULL) {
+        if (!dcc_component_v2_string_length_between(options[i].label, 1U, 100U) ||
+            !dcc_component_v2_string_length_between(options[i].value, 1U, 100U) ||
+            !dcc_component_v2_string_length_between(options[i].description, 0U, 100U)) {
             return DCC_ERR_INVALID_ARG;
         }
         if (options[i].has_emoji && dcc_component_v2_validate_emoji(&options[i].emoji) != DCC_OK) {
@@ -205,7 +219,8 @@ static dcc_status_t dcc_component_v2_validate_media(
         return DCC_ERR_INVALID_ARG;
     }
     for (size_t i = 0; i < media_count; ++i) {
-        if (media[i].url == NULL || media[i].url[0] == '\0') {
+        if (!dcc_component_v2_string_length_between(media[i].url, 1U, 2048U) ||
+            !dcc_component_v2_string_length_between(media[i].description, 0U, 1024U)) {
             return DCC_ERR_INVALID_ARG;
         }
     }
@@ -241,14 +256,26 @@ static dcc_status_t dcc_component_v2_validate_button(
     if (!builder->has_button_style || !dcc_component_v2_button_style_valid(builder->button_style)) {
         return DCC_ERR_INVALID_ARG;
     }
+    if (!dcc_component_v2_string_length_between(builder->label, 0U, 80U) ||
+        !dcc_component_v2_string_length_between(builder->url, 0U, 512U)) {
+        return DCC_ERR_INVALID_ARG;
+    }
     if (builder->has_emoji && dcc_component_v2_validate_emoji(&builder->emoji) != DCC_OK) {
         return DCC_ERR_INVALID_ARG;
     }
     if (builder->button_style == DCC_BUTTON_LINK) {
-        return builder->url != NULL ? DCC_OK : DCC_ERR_INVALID_ARG;
+        return builder->url != NULL && builder->custom_id == NULL && !builder->has_sku_id
+            ? DCC_OK
+            : DCC_ERR_INVALID_ARG;
     }
     if (builder->button_style == DCC_BUTTON_PREMIUM) {
-        return builder->has_sku_id ? DCC_OK : DCC_ERR_INVALID_ARG;
+        return builder->has_sku_id && builder->custom_id == NULL && builder->url == NULL &&
+                builder->label == NULL && !builder->has_emoji
+            ? DCC_OK
+            : DCC_ERR_INVALID_ARG;
+    }
+    if (builder->url != NULL || builder->has_sku_id) {
+        return DCC_ERR_INVALID_ARG;
     }
     if (builder->label == NULL && !builder->has_emoji) {
         return DCC_ERR_INVALID_ARG;
@@ -270,6 +297,9 @@ static dcc_status_t dcc_component_v2_validate_select(
             return status;
         }
     } else if (builder->options_count != 0) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (!dcc_component_v2_string_length_between(builder->placeholder, 0U, 150U)) {
         return DCC_ERR_INVALID_ARG;
     }
     status = dcc_component_v2_validate_select_defaults(
@@ -361,7 +391,9 @@ static dcc_status_t dcc_component_v2_validate_label(
     const dcc_component_v2_builder_t *builder,
     dcc_component_v2_validation_t *ctx
 ) {
-    if (builder->label == NULL || builder->children_count != 1U || builder->children == NULL) {
+    if (!dcc_component_v2_string_length_between(builder->label, 1U, 45U) ||
+        !dcc_component_v2_string_length_between(builder->description, 0U, 100U) ||
+        builder->children_count != 1U || builder->children == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
     dcc_component_v2_type_t child_type = builder->children[0].type;
@@ -412,6 +444,13 @@ static dcc_status_t dcc_component_v2_validate_one(
                 !dcc_component_v2_text_input_style_valid(builder->text_input_style)) {
                 return DCC_ERR_INVALID_ARG;
             }
+            if (!dcc_component_v2_string_length_between(builder->placeholder, 0U, 100U) ||
+                !dcc_component_v2_string_length_between(builder->value, 0U, 4000U) ||
+                (builder->has_min_length && builder->min_length > 4000U) ||
+                (builder->has_max_length &&
+                    (builder->max_length == 0U || builder->max_length > 4000U))) {
+                return DCC_ERR_INVALID_ARG;
+            }
             if (builder->has_min_length && builder->has_max_length &&
                 builder->min_length > builder->max_length) {
                 return DCC_ERR_INVALID_ARG;
@@ -420,7 +459,9 @@ static dcc_status_t dcc_component_v2_validate_one(
         case DCC_COMPONENT_V2_SECTION:
             return dcc_component_v2_validate_section(builder, ctx);
         case DCC_COMPONENT_V2_TEXT_DISPLAY:
-            return builder->content != NULL ? DCC_OK : DCC_ERR_INVALID_ARG;
+            return dcc_component_v2_string_length_between(builder->content, 1U, 4000U)
+                ? DCC_OK
+                : DCC_ERR_INVALID_ARG;
         case DCC_COMPONENT_V2_THUMBNAIL:
         case DCC_COMPONENT_V2_FILE:
             return dcc_component_v2_validate_media(builder->media, builder->media_count, 1U, 1U);
@@ -438,6 +479,13 @@ static dcc_status_t dcc_component_v2_validate_one(
         case DCC_COMPONENT_V2_LABEL:
             return dcc_component_v2_validate_label(builder, ctx);
         case DCC_COMPONENT_V2_FILE_UPLOAD:
+            if ((builder->has_min_values && builder->min_values > 10U) ||
+                (builder->has_max_values &&
+                    (builder->max_values == 0U || builder->max_values > 10U)) ||
+                (builder->has_min_values && builder->has_max_values &&
+                    builder->min_values > builder->max_values)) {
+                return DCC_ERR_INVALID_ARG;
+            }
             return dcc_component_v2_validate_custom_id(ctx, builder->custom_id);
         case DCC_COMPONENT_V2_RADIO_GROUP:
             if (dcc_component_v2_validate_custom_id(ctx, builder->custom_id) != DCC_OK) {
@@ -453,6 +501,15 @@ static dcc_status_t dcc_component_v2_validate_one(
             if (dcc_component_v2_validate_custom_id(ctx, builder->custom_id) != DCC_OK) {
                 return DCC_ERR_INVALID_ARG;
             }
+            if ((builder->has_min_values && builder->min_values > 10U) ||
+                (builder->has_max_values &&
+                    (builder->max_values == 0U || builder->max_values > 10U)) ||
+                (builder->has_min_values && builder->has_max_values &&
+                    builder->min_values > builder->max_values) ||
+                ((!builder->has_required || builder->required) && builder->has_min_values &&
+                    builder->min_values == 0U)) {
+                return DCC_ERR_INVALID_ARG;
+            }
             return dcc_component_v2_validate_options(
                 builder->options,
                 builder->options_count,
@@ -460,9 +517,6 @@ static dcc_status_t dcc_component_v2_validate_one(
                 DCC_COMPONENT_V2_MAX_CHECKBOX_OPTIONS
             );
         case DCC_COMPONENT_V2_CHECKBOX:
-            if (builder->label == NULL) {
-                return DCC_ERR_INVALID_ARG;
-            }
             return dcc_component_v2_validate_custom_id(ctx, builder->custom_id);
         default:
             return DCC_ERR_INVALID_ARG;
@@ -479,6 +533,102 @@ dcc_status_t dcc_component_v2_validate_array(
     dcc_component_v2_validation_t ctx = {0};
     for (size_t i = 0; i < builder_count; ++i) {
         dcc_status_t status = dcc_component_v2_validate_one(&builders[i], &ctx);
+        if (status != DCC_OK) {
+            return status;
+        }
+    }
+    return DCC_OK;
+}
+
+static int dcc_component_v2_message_root_allowed(dcc_component_v2_type_t type) {
+    switch (type) {
+        case DCC_COMPONENT_V2_ACTION_ROW:
+        case DCC_COMPONENT_V2_SECTION:
+        case DCC_COMPONENT_V2_TEXT_DISPLAY:
+        case DCC_COMPONENT_V2_MEDIA_GALLERY:
+        case DCC_COMPONENT_V2_FILE:
+        case DCC_COMPONENT_V2_SEPARATOR:
+        case DCC_COMPONENT_V2_CONTAINER:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int dcc_component_v2_container_child_allowed(dcc_component_v2_type_t type) {
+    switch (type) {
+        case DCC_COMPONENT_V2_ACTION_ROW:
+        case DCC_COMPONENT_V2_TEXT_DISPLAY:
+        case DCC_COMPONENT_V2_SECTION:
+        case DCC_COMPONENT_V2_MEDIA_GALLERY:
+        case DCC_COMPONENT_V2_SEPARATOR:
+        case DCC_COMPONENT_V2_FILE:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static dcc_status_t dcc_component_v2_validate_message_layout(
+    const dcc_component_v2_builder_t *builder,
+    dcc_component_v2_type_t parent,
+    int is_root
+) {
+    if (is_root && !dcc_component_v2_message_root_allowed(builder->type)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (!is_root && parent == DCC_COMPONENT_V2_CONTAINER &&
+        !dcc_component_v2_container_child_allowed(builder->type)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (builder->type == DCC_COMPONENT_V2_CONTAINER && builder->children_count == 0U) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    for (size_t i = 0; i < builder->children_count; ++i) {
+        dcc_status_t status = dcc_component_v2_validate_message_layout(
+            &builder->children[i],
+            builder->type,
+            0
+        );
+        if (status != DCC_OK) {
+            return status;
+        }
+    }
+    if (builder->accessory != NULL) {
+        return dcc_component_v2_validate_message_layout(
+            builder->accessory,
+            builder->type,
+            0
+        );
+    }
+    return DCC_OK;
+}
+
+dcc_status_t dcc_component_v2_validate_array_context(
+    const dcc_component_v2_builder_t *builders,
+    size_t builder_count,
+    dcc_component_v2_context_t context
+) {
+    dcc_status_t status = dcc_component_v2_validate_array(builders, builder_count);
+    if (status != DCC_OK || context == DCC_COMPONENT_V2_CONTEXT_ANY) {
+        return status;
+    }
+    if (context == DCC_COMPONENT_V2_CONTEXT_MODAL) {
+        if (builder_count == 0U || builder_count > 5U) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        for (size_t i = 0; i < builder_count; ++i) {
+            if (builders[i].type != DCC_COMPONENT_V2_LABEL) {
+                return DCC_ERR_INVALID_ARG;
+            }
+        }
+        return DCC_OK;
+    }
+    if (context != DCC_COMPONENT_V2_CONTEXT_MESSAGE) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    for (size_t i = 0; i < builder_count; ++i) {
+        status = dcc_component_v2_validate_message_layout(&builders[i], builders[i].type, 1);
         if (status != DCC_OK) {
             return status;
         }

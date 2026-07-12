@@ -24,6 +24,10 @@ DCC_API dcc_status_t dcc_cluster_health_summary(
     const dcc_cluster_t *cluster,
     dcc_cluster_health_summary_t *out
 );
+DCC_API dcc_status_t dcc_cluster_identify_stats(
+    const dcc_cluster_t *cluster,
+    dcc_cluster_identify_stats_t *out
+);
 DCC_API dcc_status_t dcc_cluster_wait_until_ready(
     dcc_cluster_t *cluster,
     uint32_t timeout_ms,
@@ -56,6 +60,18 @@ DCC_API dcc_status_t dcc_cluster_remediate_loop(
 );
 DCC_API dcc_status_t dcc_cluster_health_summary_json(
     const dcc_cluster_health_summary_t *summary,
+    char *out,
+    size_t out_size,
+    size_t *out_len
+);
+DCC_API dcc_status_t dcc_cluster_health_summary_prometheus(
+    const dcc_cluster_health_summary_t *summary,
+    char *out,
+    size_t out_size,
+    size_t *out_len
+);
+DCC_API dcc_status_t dcc_cluster_identify_stats_prometheus(
+    const dcc_cluster_identify_stats_t *stats,
     char *out,
     size_t out_size,
     size_t *out_len

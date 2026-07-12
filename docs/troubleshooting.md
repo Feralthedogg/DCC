@@ -4,6 +4,13 @@ Start with the first failing boundary: configuration, build, authentication,
 Gateway READY, command sync, interaction response, or shutdown. Avoid changing
 multiple layers at once.
 
+Start with a no-network preflight and include its sanitized output in bug
+reports:
+
+```sh
+dcc_doctor --json
+```
+
 ## CMake Cannot Find DCC Or LLAM
 
 For an installed package, point CMake at the shared prefix:
@@ -20,7 +27,7 @@ cmake -S . -B build \
   -DDCC_LLAM_ROOT=../LLAM
 ```
 
-DCC 1.4.1 requires LLAM 2.2.0 or newer with ABI major 2. Remove an old CMake
+DCC 1.5.0 requires LLAM 2.2.0 or newer with ABI major 2. Remove an old CMake
 build directory, or explicitly update `DCC_LLAM_REQUIRED_VERSION`, when a cache
 still reports an earlier requirement.
 

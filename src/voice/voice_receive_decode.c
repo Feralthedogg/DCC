@@ -1,5 +1,6 @@
 #include "internal/voice/dcc_voice_internal.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 dcc_status_t dcc_voice_client_process_rtp_packet(
@@ -25,7 +26,8 @@ dcc_status_t dcc_voice_client_process_rtp_packet(
         return DCC_OK;
     }
 
-    if (dcc_voice_client_user_for_ssrc(voice_client, view.ssrc) == 0) {
+    dcc_snowflake_t user_id = dcc_voice_client_user_for_ssrc(voice_client, view.ssrc);
+    if (user_id == 0) {
         return DCC_ERR_STATE;
     }
     if (voice_client->decoder == NULL) {
@@ -76,6 +78,22 @@ dcc_status_t dcc_voice_client_process_rtp_packet(
         return DCC_OK;
     }
 
+    uint8_t *dave_plain = NULL;
+    if (voice_client->dave_enabled) {
+        dcc_status_t dave_status = dcc_voice_dave_backend_decrypt(
+            voice_client,
+            user_id,
+            opus_payload,
+            opus_payload_size,
+            &dave_plain,
+            &opus_payload_size
+        );
+        if (dave_status != DCC_OK) {
+            return dave_status;
+        }
+        opus_payload = dave_plain;
+    }
+
     union {
         uint8_t bytes[DCC_VOICE_PCM_BUFFER_CAP];
         int16_t align_i16;
@@ -90,6 +108,7 @@ dcc_status_t dcc_voice_client_process_rtp_packet(
         sizeof(pcm.bytes),
         &pcm_size
     );
+    free(dave_plain);
     if (status != DCC_OK) {
         return status;
     }

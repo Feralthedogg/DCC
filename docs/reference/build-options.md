@@ -18,6 +18,13 @@ DCC is configured through CMake.
 | `DCC_LLAM_ROOT` | `../LLAM` | LLAM source or install root. |
 | `DCC_LLAM_LIBRARY` | `../LLAM/libllam_runtime.a` | Prebuilt LLAM static library. |
 | `DCC_WITH_OPUS` | `ON` | Use optional libopus voice codec backend when found. |
+| `DCC_WITH_DAVE` | `ON` | Enable runtime loading of Discord's official libdave C ABI. |
+
+`DCC_WITH_DAVE=ON` does not bundle libdave. Install the official shared library
+as `libdave.so`, `libdave.dylib`, or `dave.dll`, or set `DCC_DAVE_LIBRARY` to an
+absolute path. DCC checks the complete session, MLS, key-ratchet, encryptor, and
+decryptor symbol set before advertising DAVE support; incomplete or old libraries
+fail closed.
 
 ## Release Install
 

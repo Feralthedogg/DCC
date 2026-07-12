@@ -1,0 +1,26 @@
+name: Feature request
+description: Propose a focused API or workflow improvement
+title: "[feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What concrete user or operational problem should DCC solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed contract
+      description: Include API shape, ownership, errors, compatibility, and alternatives.
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification plan
+      description: Which unit, integration, replay, or live tests prove it?
+    validations:
+      required: true

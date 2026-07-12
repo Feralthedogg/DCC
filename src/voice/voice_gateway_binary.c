@@ -17,6 +17,13 @@ dcc_status_t dcc_voice_client_handle_gateway_binary_frame(
         return parse_status;
     }
 
+    if (voice_client->dave_backend != NULL) {
+        dcc_status_t status = dcc_voice_dave_backend_handle_mls(voice_client, &frame);
+        if (status != DCC_OK) {
+            return status;
+        }
+    }
+
     if (voice_client->dave_mls_handler != NULL) {
         dcc_status_t status = voice_client->dave_mls_handler(
             voice_client->dave_mls_user_data,

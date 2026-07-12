@@ -8,7 +8,8 @@ param(
     [switch]$InstallLlam,
     [switch]$SkipLlam,
     [switch]$DryRun,
-    [switch]$Force
+    [switch]$Force,
+    [switch]$SkipDoctor
 )
 
 $ErrorActionPreference = "Stop"
@@ -201,6 +202,16 @@ try {
     }
     Install-DccTree $packageRoot
     Install-LatestLlam
+    if (-not $SkipDoctor) {
+        $doctor = Join-Path $Prefix "bin\dcc_doctor.exe"
+        if (-not (Test-Path -LiteralPath $doctor -PathType Leaf)) {
+            throw "installed package does not include dcc_doctor.exe"
+        }
+        & $doctor --json
+        if ($LASTEXITCODE -ne 0) {
+            throw "dcc_doctor failed after installation"
+        }
+    }
 } finally {
     Remove-Item -Recurse -Force -LiteralPath $script:TempDir -ErrorAction SilentlyContinue
 }

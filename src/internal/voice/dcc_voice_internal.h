@@ -6,6 +6,7 @@
 #include "internal/gateway/dcc_gateway_lifecycle_internal.h"
 #include "internal/voice/dcc_voice_crypto_internal.h"
 #include "internal/voice/dcc_voice_dave_client_internal.h"
+#include "internal/voice/dcc_voice_dave_backend_internal.h"
 #include "internal/voice/dcc_voice_gateway_internal.h"
 #include "internal/voice/dcc_voice_gateway_handlers_internal.h"
 #include "internal/voice/dcc_voice_health_internal.h"

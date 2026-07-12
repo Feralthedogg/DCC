@@ -78,6 +78,20 @@ typedef struct dcc_voice_client_stats {
     dcc_voice_dave_version_t dave_pending_version;
 } dcc_voice_client_stats_t;
 
+typedef struct dcc_voice_dave_stats {
+    size_t size;
+    uint8_t backend_available;
+    uint8_t media_ready;
+    uint8_t reserved[6];
+    uint64_t epoch;
+    size_t participant_count;
+    uint64_t encrypt_success;
+    uint64_t encrypt_failures;
+    uint64_t decrypt_success;
+    uint64_t decrypt_failures;
+    uint64_t missing_key_failures;
+} dcc_voice_dave_stats_t;
+
 typedef struct dcc_voice_health_snapshot {
     size_t size;
     dcc_voice_health_t health;
@@ -89,6 +103,7 @@ typedef struct dcc_voice_health_snapshot {
     dcc_voice_session_info_t session;
     dcc_voice_client_stats_t stats;
     char reason[160];
+    dcc_voice_dave_stats_t dave;
 } dcc_voice_health_snapshot_t;
 
 #ifdef __cplusplus

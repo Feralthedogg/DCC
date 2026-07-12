@@ -3,6 +3,7 @@ DCC_API dcc_status_t dcc_app_start(dcc_app_t *app);
 DCC_API dcc_status_t dcc_app_stop(dcc_app_t *app);
 DCC_API dcc_status_t dcc_app_wait(dcc_app_t *app);
 DCC_API dcc_status_t dcc_app_run(dcc_app_t *app);
+DCC_API dcc_status_t dcc_app_run_with_signals(dcc_app_t *app);
 
 DCC_API dcc_status_t dcc_app_auto_defer(dcc_app_t *app, uint64_t after_ms);
 DCC_API dcc_status_t dcc_app_auto_defer_ephemeral(dcc_app_t *app, uint64_t after_ms);

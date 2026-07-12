@@ -76,7 +76,7 @@ static int interaction_validate_after_stop(
         server_state.stopping != 1U ||
         server_state.listening != 0U ||
         server_state.active_requests != 0U ||
-        server_state.completed_requests != 18U) {
+        server_state.completed_requests != 19U) {
         fprintf(
             stderr,
             "interaction stopped state mismatch: started=%u stopping=%u listening=%u active=%llu completed=%llu\n",

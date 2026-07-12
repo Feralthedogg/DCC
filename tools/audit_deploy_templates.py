@@ -149,10 +149,45 @@ def audit_hot_reload(errors: list[str]) -> None:
     require_contains(caddy_rel, caddy, "reverse_proxy hot-reload:18080", errors)
 
 
+def audit_bot(errors: list[str]) -> None:
+    base = "deploy/bot"
+    service_rel = f"{base}/dcc-bot.service"
+    env_rel = f"{base}/dcc-bot.env"
+    compose_rel = f"{base}/docker-compose.yaml"
+    k8s_rel = f"{base}/kubernetes.yaml"
+    readme_rel = f"{base}/README.md"
+    service = read(service_rel, errors)
+    env = read(env_rel, errors)
+    compose = read(compose_rel, errors)
+    k8s = read(k8s_rel, errors)
+    read(f"{base}/dcc-bot.tmpfiles.conf", errors)
+    container = read(f"{base}/Containerfile", errors)
+    entrypoint = read(f"{base}/entrypoint.sh", errors)
+    readme = read(readme_rel, errors)
+
+    require_line(service_rel, service, "ExecStartPre=/usr/local/bin/dcc_doctor --require-token", errors)
+    require_line(service_rel, service, "ExecStart=/opt/dcc-bot/bin/bot", errors)
+    require_line(service_rel, service, "KillSignal=SIGTERM", errors)
+    require_line(service_rel, service, "NoNewPrivileges=true", errors)
+    require_line(service_rel, service, "ProtectSystem=strict", errors)
+    require_contains(env_rel, env, "DCC_TOKEN=", errors)
+    require_contains(compose_rel, compose, "stop_grace_period: 30s", errors)
+    require_contains(compose_rel, compose, "no-new-privileges:true", errors)
+    require_contains(f"{base}/Containerfile", container, "dcc-bot-entrypoint", errors)
+    require_contains(f"{base}/entrypoint.sh", entrypoint, "dcc_doctor --require-token --json", errors)
+    require_contains(k8s_rel, k8s, "terminationGracePeriodSeconds: 30", errors)
+    require_contains(k8s_rel, k8s, "args: [\"--require-token\", \"--json\"]", errors)
+    require_contains(k8s_rel, k8s, "readOnlyRootFilesystem: true", errors)
+    require_contains(k8s_rel, k8s, "drop: [\"ALL\"]", errors)
+    require_contains(readme_rel, readme, "dcc_doctor --require-token", errors)
+    require_contains(readme_rel, readme, "dcc_command_sync --plan", errors)
+
+
 def main() -> int:
     errors: list[str] = []
     audit_interaction_webhook(errors)
     audit_hot_reload(errors)
+    audit_bot(errors)
 
     if errors:
         print("DCC deployment template audit failed:")

@@ -13,7 +13,7 @@ tools/package_release.sh
 ```
 
 This writes normalized archives and checksum files to `target/dist/`, for
-example `dcc-1.4.1-macos-aarch64.tar.gz`.
+example `dcc-1.5.0-macos-aarch64.tar.gz`.
 
 Binary release archives include:
 
@@ -26,17 +26,17 @@ installer to fetch LLAM. The public POSIX install path is:
 ```sh
 curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
-curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.4.1/install.sh |
-  sh -s -- --version 1.4.1 \
-    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.4.1" \
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v1.5.0/install.sh |
+  sh -s -- --version 1.5.0 \
+    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v1.5.0" \
     --prefix "$HOME/.local"
 ```
 
 Windows installs use the release PowerShell installer:
 
 ```powershell
-Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.4.1/install.ps1" -OutFile install.ps1
-.\install.ps1 -Version 1.4.1 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.4.1" -Prefix "$env:LOCALAPPDATA\DCC"
+Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v1.5.0/install.ps1" -OutFile install.ps1
+.\install.ps1 -Version 1.5.0 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v1.5.0" -Prefix "$env:LOCALAPPDATA\DCC"
 ```
 
 Pass `--install-llam` when you want the POSIX installer to fetch the DCC-tested
@@ -48,17 +48,27 @@ resulting binaries and libraries may not run on the current machine.
 GitHub Actions publishes releases automatically from version tags:
 
 ```sh
-git tag v1.4.1
-git push origin v1.4.1
+git tag v1.5.0
+git push origin v1.5.0
 ```
 
 The `Release` workflow checks out `DCC` and `LLAM` side by side, builds against
 LLAM through `DCC_LLAM_USE_SUBDIRECTORY=ON`, keeps LLAM's install rules out of
 the DCC package, runs the DCC test suite, creates CPack binary/source archives,
 uploads artifacts, builds `SHA256SUMS`, and creates the GitHub Release. Tag
-versions must match `project(dcc VERSION ...)`. DCC Beta releases use the
-release title and notes for the Beta label while keeping GitHub's prerelease
-option disabled.
+versions must match `project(dcc VERSION ...)`. The workflow also publishes a
+CycloneDX SBOM and signs artifact provenance through GitHub attestations.
+
+Verify a downloaded archive before installation:
+
+```sh
+sha256sum -c dcc-1.5.0-linux-x86_64.tar.gz.sha256
+gh attestation verify dcc-1.5.0-linux-x86_64.tar.gz --repo Feralthedogg/DCC
+```
+
+After installation, run `dcc_doctor --json`; production hosts should add
+`--require-token`, and voice deployments that require E2EE should also add
+`--require-dave`.
 
 The release path expects:
 
@@ -95,6 +105,12 @@ The release path expects:
   reload host/worker service operation, with service env, systemd, Kubernetes,
   and reverse-proxy templates checked against `dcc_interaction_webhook --check`
   and `dcc_hot_reload_host --check`.
+- Installed normal-bot systemd, Compose, and Kubernetes templates gated by
+  `dcc_doctor --require-token`.
+- Every external GitHub Action and the LLAM 2.2.0 checkout pinned to immutable
+  commit SHA values.
+- CycloneDX SBOM generation, checksum sidecars, `SHA256SUMS`, and GitHub build
+  provenance attestations.
 
 Before tagging, also review:
 

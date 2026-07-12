@@ -13,6 +13,19 @@ dcc_status_t dcc_voice_client_build_identify_payload(
     if (!dcc_voice_session_descriptor_ready(voice_client)) {
         return DCC_ERR_STATE;
     }
+    if (voice_client->dave_requested &&
+        !dcc_voice_client_dave_backend_available(voice_client)) {
+        dcc_set_error(voice_client->client, "DAVE identify blocked because no MLS backend is available");
+        return DCC_ERR_STATE;
+    }
+    voice_client->dave_self_user_id = self_user_id;
+    if (voice_client->dave_backend != NULL) {
+        dcc_status_t init_status = dcc_voice_dave_backend_init_session(voice_client);
+        if (init_status != DCC_OK) {
+            dcc_set_error(voice_client->client, "failed to initialize the libdave MLS session");
+            return init_status;
+        }
+    }
 
     dcc_voice_json_buffer_t payload = {
         .data = out,

@@ -29,6 +29,11 @@ dcc_status_t dcc_interaction_request_set_response_copy(
     const void *body,
     size_t body_len
 );
+int dcc_interaction_server_replay_seen(
+    dcc_interaction_server_t *server,
+    const char *timestamp,
+    const char *signature
+);
 
 #ifdef __cplusplus
 }

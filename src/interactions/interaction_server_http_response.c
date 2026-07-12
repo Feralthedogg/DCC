@@ -19,6 +19,12 @@ static const char *dcc_interaction_http_reason(uint16_t status) {
             return "Method Not Allowed";
         case 413:
             return "Payload Too Large";
+        case 409:
+            return "Conflict";
+        case 503:
+            return "Service Unavailable";
+        case 504:
+            return "Gateway Timeout";
         case 500:
             return "Internal Server Error";
         default:

@@ -53,3 +53,23 @@ uint8_t dcc_interaction_request_is_ping(const dcc_interaction_request_t *request
     const dcc_interaction_t *interaction = dcc_interaction_request_interaction(request);
     return interaction != NULL && interaction->type == 1U ? 1U : 0U;
 }
+
+uint64_t dcc_interaction_request_elapsed_ms(const dcc_interaction_request_t *request) {
+    if (request == NULL || request->started_at_ns == 0U) {
+        return 0U;
+    }
+    uint64_t now_ns = llam_now_ns();
+    return now_ns > request->started_at_ns
+        ? (now_ns - request->started_at_ns) / UINT64_C(1000000)
+        : 0U;
+}
+
+uint64_t dcc_interaction_request_deadline_remaining_ms(const dcc_interaction_request_t *request) {
+    if (request == NULL || request->deadline_at_ns == 0U) {
+        return 0U;
+    }
+    uint64_t now_ns = llam_now_ns();
+    return now_ns < request->deadline_at_ns
+        ? (request->deadline_at_ns - now_ns) / UINT64_C(1000000)
+        : 0U;
+}

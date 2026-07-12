@@ -653,7 +653,8 @@ callers that need synchronous behavior should use the wait helpers.
   and responses, and signature verification. Lifecycle helpers also include
   `dcc_interaction_server_wait_until_ready()` and
   `dcc_interaction_server_wait_until_drained()` for LLAM-backed operational
-  probes.
+  probes. `dcc_interaction_server_health_snapshot_prometheus()` renders the
+  same bounded snapshot for metrics endpoints.
 - `events.h`: gateway-side named listener helpers for slash commands,
   autocomplete, context menus, buttons, select menus, modal submits, and
   gateway/interaction admission plus interaction-or-close wait helpers for
@@ -691,8 +692,26 @@ permissions, context, message id, version, attachment size limit,
   API order for live validation: Gateway READY, connect-and-wait READY, and
   optional voice ACTIVE wait.
 
-DCC exposes DAVE transition and MLS frame plumbing for external MLS engines. Full
-built-in MLS group crypto remains an explicit roadmap item.
+DCC integrates Discord's official libdave C ABI for MLS group state and Opus
+frame encryption/decryption. It also exposes DAVE transition and MLS frame
+plumbing for applications that deliberately manage an external engine.
+`dcc_voice_client_health_snapshot_prometheus()` exports voice/DAVE readiness,
+packet, reconnect, and crypto counters without heap allocation.
+
+## Replay And Operations
+
+- `replay.h`: strict JSONL recording/playback and
+  `dcc_replay_validate_file()` summary validation. Payloads must be complete
+  JSON objects or arrays; validation reports record kinds, timestamp bounds,
+  and monotonicity.
+- `cluster/health.h`: JSON plus
+  `dcc_cluster_health_summary_prometheus()` for shard state and the separate
+  `dcc_cluster_identify_stats()` / `dcc_cluster_identify_stats_prometheus()`
+  pair for shared IDENTIFY-coordinator state.
+- `dcc_app_run_with_signals()` and the `*_defined_with_signals()` variants:
+  signal-safe app stop orchestration used by the high-level run/main macros.
+- `dcc_doctor`: installed no-network diagnostic for the compiled/runtime DCC
+  version, LLAM, OpenSSL, token discovery, certificate paths, and libdave ABI.
 
 ## Ownership Rules
 
@@ -719,5 +738,9 @@ CTest runs source audits when Python is available:
 - `dcc_project_layout_audit`
 - `dcc_source_package_audit`
 - `dcc_deploy_template_audit`
+- `dcc_release_contract_audit`
+- `dcc_public_api_audit`
+- `dcc_workflow_pin_audit`
+- `dcc_sbom_generation`
 
 Run `tools/release_check.sh` before tagging a release.

@@ -17,6 +17,9 @@ typedef struct dcc_interaction_server_options {
     size_t max_body_size;
     dcc_interaction_server_cb callback;
     void *user_data;
+    uint64_t max_active_requests;
+    uint32_t response_deadline_ms;
+    uint32_t replay_window_ms;
 } dcc_interaction_server_options_t;
 
 DCC_API dcc_status_t dcc_interaction_server_create(

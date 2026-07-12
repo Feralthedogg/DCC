@@ -60,6 +60,10 @@ dcc_status_t dcc_cluster_alloc_from_plan(
     dcc_cluster_operation_reset(&cluster->operation, 0);
     atomic_init(&cluster->supervisor_stop, false);
     atomic_init(&cluster->gateway_admission_open, true);
+    atomic_flag_clear(&cluster->identify_coordinator.lock);
+    cluster->identify_coordinator.max_concurrency = plan->max_concurrency;
+    atomic_init(&cluster->identify_coordinator.waits, 0U);
+    atomic_init(&cluster->identify_coordinator.reservations, 0U);
 
     *out = cluster;
     return DCC_OK;

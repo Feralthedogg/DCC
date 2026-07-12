@@ -1,4 +1,7 @@
 #include "internal/objects/dcc_modal_builder_internal.h"
+#include "internal/objects/dcc_component_v2_internal.h"
+
+#include <string.h>
 
 dcc_status_t dcc_modal_builder_build_json(const dcc_modal_builder_t *builder, char **out_json) {
     if (builder == NULL ||
@@ -10,6 +13,12 @@ dcc_status_t dcc_modal_builder_build_json(const dcc_modal_builder_t *builder, ch
         return DCC_ERR_INVALID_ARG;
     }
     if (!builder->has_custom_id || !builder->has_title) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    size_t custom_id_length = strlen(builder->custom_id);
+    size_t title_length = strlen(builder->title);
+    if (custom_id_length == 0U || custom_id_length > 100U ||
+        title_length == 0U || title_length > 45U) {
         return DCC_ERR_INVALID_ARG;
     }
     const int has_legacy_components = builder->components_count != 0 ||
@@ -43,11 +52,18 @@ dcc_status_t dcc_modal_builder_build_json(const dcc_modal_builder_t *builder, ch
 
     if (builder->components_v2_count != 0) {
         char *components_json = NULL;
-        status = dcc_component_v2_builder_build_array_json(
+        status = dcc_component_v2_validate_array_context(
             builder->components_v2,
             builder->components_v2_count,
-            &components_json
+            DCC_COMPONENT_V2_CONTEXT_MODAL
         );
+        if (status == DCC_OK) {
+            status = dcc_component_v2_builder_build_array_json(
+                builder->components_v2,
+                builder->components_v2_count,
+                &components_json
+            );
+        }
         if (status != DCC_OK) {
             dcc_modal_json_buffer_deinit(&buffer);
             return status;

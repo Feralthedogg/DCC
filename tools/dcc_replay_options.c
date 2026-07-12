@@ -23,6 +23,8 @@ static void dcc_replay_tool_defaults(dcc_replay_tool_options_t *options) {
     options->worker_path = DCC_HOT_RELOAD_DEFAULT_WORKER;
     options->worker_health_timeout_ms = 2000U;
     options->worker_drain_timeout_ms = 500U;
+    options->max_gap_ms = 5000U;
+    options->max_records = 1000000U;
     options->isolated = 1;
 }
 
@@ -75,6 +77,28 @@ static int dcc_replay_tool_parse_value_option(
     if (strcmp(arg, "--worker-drain-ms") == 0) {
         return dcc_replay_tool_parse_u32(value, &options->worker_drain_timeout_ms);
     }
+    if (strcmp(arg, "--max-gap-ms") == 0) {
+        return dcc_replay_tool_parse_u32(value, &options->max_gap_ms);
+    }
+    uint32_t parsed = 0U;
+    if (strcmp(arg, "--max-records") == 0 || strcmp(arg, "--expect-records") == 0 ||
+        strcmp(arg, "--expect-gateway") == 0 || strcmp(arg, "--expect-interactions") == 0) {
+        if (dcc_replay_tool_parse_u32(value, &parsed) != 0) return -1;
+        if (strcmp(arg, "--max-records") == 0) options->max_records = parsed;
+        if (strcmp(arg, "--expect-records") == 0) {
+            options->expect_records = parsed;
+            options->has_expect_records = 1;
+        }
+        if (strcmp(arg, "--expect-gateway") == 0) {
+            options->expect_gateway = parsed;
+            options->has_expect_gateway = 1;
+        }
+        if (strcmp(arg, "--expect-interactions") == 0) {
+            options->expect_interactions = parsed;
+            options->has_expect_interactions = 1;
+        }
+        return 0;
+    }
     return -1;
 }
 
@@ -87,7 +111,12 @@ static int dcc_replay_tool_is_value_option(const char *arg) {
            strcmp(arg, "--worker") == 0 ||
            strcmp(arg, "--token") == 0 ||
            strcmp(arg, "--worker-health-ms") == 0 ||
-           strcmp(arg, "--worker-drain-ms") == 0;
+           strcmp(arg, "--worker-drain-ms") == 0 ||
+           strcmp(arg, "--max-gap-ms") == 0 ||
+           strcmp(arg, "--max-records") == 0 ||
+           strcmp(arg, "--expect-records") == 0 ||
+           strcmp(arg, "--expect-gateway") == 0 ||
+           strcmp(arg, "--expect-interactions") == 0;
 }
 
 int dcc_replay_tool_parse_options(
@@ -121,6 +150,8 @@ int dcc_replay_tool_parse_options(
         } else if (strcmp(arg, "--in-process") == 0) {
             options->in_process = 1;
             options->isolated = 0;
+        } else if (strcmp(arg, "--allow-nonmonotonic") == 0) {
+            options->allow_nonmonotonic = 1;
         } else if (arg[0] != '-' && options->file_path == NULL) {
             options->file_path = arg;
         } else {
@@ -153,6 +184,10 @@ int dcc_replay_tool_validate_options(const dcc_replay_tool_options_t *options) {
     }
     if (options->worker_health_timeout_ms == 0U) {
         fprintf(stderr, "--worker-health-ms must be greater than zero\n");
+        return -1;
+    }
+    if (options->max_records == 0U) {
+        fprintf(stderr, "--max-records must be greater than zero\n");
         return -1;
     }
     return 0;

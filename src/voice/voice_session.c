@@ -12,16 +12,27 @@ dcc_status_t dcc_voice_client_start_session(
         return DCC_ERR_INVALID_ARG;
     }
 
+    if (enable_dave) {
+        dcc_status_t dave_status = dcc_voice_client_set_dave_enabled(voice_client, 1U);
+        if (dave_status != DCC_OK) {
+            return dave_status;
+        }
+    } else {
+        (void)dcc_voice_client_set_dave_enabled(voice_client, 0U);
+    }
+
     voice_client->guild_id = guild_id;
     voice_client->channel_id = channel_id;
     voice_client->self_mute = self_mute ? 1U : 0U;
     voice_client->self_deaf = self_deaf ? 1U : 0U;
-    voice_client->dave_enabled = enable_dave ? 1U : 0U;
-    voice_client->dave_version = enable_dave ? DCC_VOICE_DAVE_VERSION_1 : DCC_VOICE_DAVE_NONE;
     voice_client->dave_pending_version = DCC_VOICE_DAVE_NONE;
     voice_client->dave_transition_pending = 0;
     voice_client->dave_transition_ready = 0;
     voice_client->dave_transition_id = 0;
+    voice_client->dave_epoch = 0U;
+    voice_client->dave_self_user_id = 0U;
+    voice_client->dave_participant_count = 0U;
+    dcc_voice_dave_backend_reset_session(voice_client);
     voice_client->reconnect_requested = 0;
     voice_client->full_reconnect_requested = 0;
     voice_client->last_close_code = 0;

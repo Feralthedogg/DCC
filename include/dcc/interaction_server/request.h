@@ -30,6 +30,10 @@ DCC_API dcc_event_type_t dcc_interaction_request_event_type(
     const dcc_interaction_request_t *request
 );
 DCC_API uint8_t dcc_interaction_request_is_ping(const dcc_interaction_request_t *request);
+DCC_API uint64_t dcc_interaction_request_elapsed_ms(const dcc_interaction_request_t *request);
+DCC_API uint64_t dcc_interaction_request_deadline_remaining_ms(
+    const dcc_interaction_request_t *request
+);
 
 DCC_API dcc_status_t dcc_interaction_request_set_response(
     dcc_interaction_request_t *request,

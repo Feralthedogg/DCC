@@ -1,6 +1,9 @@
 #include "internal/interactions/dcc_interaction_server_internal.h"
 
+#include <stddef.h>
 #include <string.h>
+
+#define DCC_INTERACTION_HEALTH_LEGACY_SIZE offsetof(dcc_interaction_server_health_snapshot_t, protection)
 
 static dcc_interaction_server_health_t dcc_interaction_health_classify(
     const dcc_interaction_server_state_t *state,
@@ -61,7 +64,7 @@ dcc_status_t dcc_interaction_server_health_snapshot(
     const dcc_interaction_server_t *server,
     dcc_interaction_server_health_snapshot_t *out
 ) {
-    if (server == NULL || out == NULL || out->size < sizeof(*out)) {
+    if (server == NULL || out == NULL || out->size < DCC_INTERACTION_HEALTH_LEGACY_SIZE) {
         return DCC_ERR_INVALID_ARG;
     }
 
@@ -70,12 +73,15 @@ dcc_status_t dcc_interaction_server_health_snapshot(
     snapshot.size = sizeof(snapshot);
     snapshot.state.size = sizeof(snapshot.state);
     snapshot.stats.size = sizeof(snapshot.stats);
+    snapshot.protection.size = sizeof(snapshot.protection);
 
     dcc_interaction_server_fill_state(server, &snapshot.state);
     dcc_status_t status = dcc_interaction_server_stats(server, &snapshot.stats);
     if (status != DCC_OK) {
         return status;
     }
+    status = dcc_interaction_server_protection_stats(server, &snapshot.protection);
+    if (status != DCC_OK) return status;
 
     snapshot.health = dcc_interaction_health_classify(&snapshot.state, &snapshot.stats);
     snapshot.ready = snapshot.state.started != 0U &&
@@ -94,6 +100,11 @@ dcc_status_t dcc_interaction_server_health_snapshot(
         sizeof(snapshot.reason),
         dcc_interaction_health_reason(snapshot.health, &snapshot.state, &snapshot.stats)
     );
-    *out = snapshot;
+    size_t out_size = out->size;
+    size_t copy_size = out_size < sizeof(snapshot) ? out_size : sizeof(snapshot);
+    memcpy(out, &snapshot, copy_size);
+    out->size = out_size;
     return DCC_OK;
 }
+
+#undef DCC_INTERACTION_HEALTH_LEGACY_SIZE

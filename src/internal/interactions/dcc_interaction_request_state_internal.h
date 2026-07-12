@@ -26,6 +26,9 @@ struct dcc_interaction_request {
     char *response_content_type;
     char *response_body;
     size_t response_body_len;
+    uint64_t started_at_ns;
+    uint64_t deadline_at_ns;
+    uint8_t deadline_noted;
 };
 
 #endif

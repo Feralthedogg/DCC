@@ -13,6 +13,18 @@ dcc_status_t dcc_interaction_request_set_response_copy(
     if (request == NULL || status < 100U || content_type == NULL || (body == NULL && body_len > 0U)) {
         return DCC_ERR_INVALID_ARG;
     }
+    if (request->parsed && status < 400U && request->deadline_at_ns != 0U &&
+        llam_now_ns() > request->deadline_at_ns) {
+        if (!request->deadline_noted) {
+            atomic_fetch_add_explicit(
+                &request->server->deadline_exceeded_requests,
+                1U,
+                memory_order_relaxed
+            );
+            request->deadline_noted = 1U;
+        }
+        return DCC_ERR_TIMEOUT;
+    }
     char *content_type_copy = dcc_strdup(content_type);
     if (content_type_copy == NULL) {
         return DCC_ERR_NOMEM;

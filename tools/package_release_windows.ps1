@@ -105,7 +105,7 @@ $configureArgs = @(
     "-DDCC_LLAM_USE_SUBDIRECTORY=ON",
     "-DDCC_BUNDLE_LLAM=$BundleLlam",
     "-DDCC_BUILD_EXAMPLES=OFF",
-    "-DDCC_BUILD_TESTS=OFF",
+    "-DDCC_BUILD_TESTS=ON",
     "-DDCC_WITH_OPUS=OFF"
 )
 if ($generator -match "Visual Studio") {
@@ -166,7 +166,8 @@ Write-Sha256Sidecar $outArchive
 $requiredMembers = @(
     '/include/dcc/dcc\.h$',
     '/lib/pkgconfig/dcc\.pc$',
-    '/share/dcc/docs/api\.md$'
+    '/share/dcc/docs/api\.md$',
+    '/bin/dcc_doctor\.exe$'
 )
 if (Test-Truthy $BundleLlam) {
     $requiredMembers += @(

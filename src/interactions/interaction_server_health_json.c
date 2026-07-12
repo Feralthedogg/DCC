@@ -2,6 +2,7 @@
 #include "internal/interactions/dcc_interaction_health_json_internal.h"
 
 #include <stdio.h>
+#include <stddef.h>
 
 const char *dcc_interaction_server_health_string(dcc_interaction_server_health_t health) {
     switch (health) {
@@ -25,8 +26,14 @@ dcc_status_t dcc_interaction_server_health_snapshot_json(
     size_t out_size,
     size_t *out_len
 ) {
-    if (snapshot == NULL || snapshot->size < sizeof(*snapshot) || out == NULL || out_size == 0U) {
+    if (snapshot == NULL || snapshot->size < offsetof(dcc_interaction_server_health_snapshot_t, protection) ||
+        out == NULL || out_size == 0U) {
         return DCC_ERR_INVALID_ARG;
+    }
+    dcc_interaction_server_protection_stats_t protection = {0};
+    if (snapshot->size >= offsetof(dcc_interaction_server_health_snapshot_t, protection) +
+            sizeof(snapshot->protection)) {
+        protection = snapshot->protection;
     }
 
     char reason_json[1024];
@@ -46,7 +53,8 @@ dcc_status_t dcc_interaction_server_health_snapshot_json(
         "\"draining\":%s,\"drain_complete\":%s,\"port\":%u,\"routes\":%zu,"
         "\"accepted\":%llu,\"active\":%llu,\"completed\":%llu,"
         "\"read_errors\":%llu,\"write_errors\":%llu,\"spawn_errors\":%llu,"
-        "\"4xx\":%llu,\"5xx\":%llu,\"reason\":%s}",
+        "\"4xx\":%llu,\"5xx\":%llu,\"overloaded\":%llu,\"replayed\":%llu,"
+        "\"deadline_exceeded\":%llu,\"reason\":%s}",
         snapshot->ok != 0U ? "true" : "false",
         snapshot->ready != 0U ? "true" : "false",
         dcc_interaction_server_health_string(snapshot->health),
@@ -63,6 +71,9 @@ dcc_status_t dcc_interaction_server_health_snapshot_json(
         (unsigned long long)snapshot->stats.spawn_errors,
         (unsigned long long)snapshot->stats.response_4xx,
         (unsigned long long)snapshot->stats.response_5xx,
+        (unsigned long long)protection.overloaded_responses,
+        (unsigned long long)protection.replayed_requests,
+        (unsigned long long)protection.deadline_exceeded_requests,
         reason_json
     );
     if (len < 0) {

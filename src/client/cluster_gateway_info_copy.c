@@ -1,6 +1,7 @@
 #include "internal/client/dcc_cluster_internal.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 dcc_status_t dcc_cluster_copy_gateway_info_from_first(dcc_cluster_t *cluster) {
     if (cluster == NULL || cluster->shard_count == 0 || cluster->shards[0] == NULL) {
@@ -31,5 +32,20 @@ dcc_status_t dcc_cluster_copy_gateway_info_from_first(dcc_cluster_t *cluster) {
     if (source->gateway_max_concurrency != 0) {
         cluster->gateway_max_concurrency = source->gateway_max_concurrency;
     }
+    while (atomic_flag_test_and_set_explicit(
+        &cluster->identify_coordinator.lock,
+        memory_order_acquire
+    )) {
+    }
+    cluster->identify_coordinator.max_concurrency = cluster->gateway_max_concurrency;
+    cluster->identify_coordinator.remaining = source->gateway_remaining_identifies;
+    cluster->identify_coordinator.total = source->gateway_session_total_identifies;
+    cluster->identify_coordinator.reset_at_ms = source->gateway_session_reset_at_ms;
+    memset(
+        cluster->identify_coordinator.bucket_next_ms,
+        0,
+        sizeof(cluster->identify_coordinator.bucket_next_ms)
+    );
+    atomic_flag_clear_explicit(&cluster->identify_coordinator.lock, memory_order_release);
     return dcc_cluster_apply_identify_delays(cluster);
 }

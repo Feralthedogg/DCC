@@ -3,6 +3,10 @@
 These playbooks describe the operational behavior DCC already exposes and the
 checks to run before treating a bot deployment as release-ready.
 
+Use `deploy/bot/` for a normal production bot. Its systemd, Compose, and
+Kubernetes templates run `dcc_doctor --require-token` before startup, use
+non-root/read-only defaults, and reserve 30 seconds for graceful shutdown.
+
 ## Gateway And Cluster
 
 Use `dcc_cluster_recovery_plan()` as the single supervisor snapshot. It returns
@@ -18,6 +22,11 @@ needs a fixed-buffer JSON body.
 Use `dcc_cluster_operation_status_json()` when the same route needs to expose
 the current rolling reconnect plan, active batch, progress counters, and last
 operation status without heap allocation.
+Use `dcc_cluster_health_summary_prometheus()` to render the same bounded
+shard-health snapshot as Prometheus text. Read the shared coordinator through
+`dcc_cluster_identify_stats()` and render its wait, reservation, remaining, and
+reset metrics with `dcc_cluster_identify_stats_prometheus()`; these values are
+cluster-wide rather than per-shard estimates.
 Use `dcc_cluster_wait_until_ready()` from the supervisor/control thread after
 `dcc_cluster_start()` when deploy admission should wait for every shard to reach
 READY. It returns the final health summary on success and fails early with
@@ -73,6 +82,11 @@ window at or below the discovered `max_concurrency`. The `dcc_cluster_rollout`
 example accepts `DCC_CLUSTER_PRINT_JSON=1` to print the same fixed-buffer
 cluster-status JSON a sidecar would expose.
 
+Cluster IDENTIFY reservations are coordinated across every shard. Each
+`shard_id % max_concurrency` bucket is spaced by five seconds, the global
+session-start limit is consumed once per reservation, and reconnect backoff has
+bounded jitter to prevent synchronized retry waves.
+
 ## REST And Rate Limits
 
 DCC serializes major-route buckets and keeps 429 retry queues from occupying
@@ -113,6 +127,9 @@ Expose:
 - deploy/shutdown probes using `dcc_interaction_server_wait_until_ready()` and
   `dcc_interaction_server_wait_until_drained()`
 - counters from `dcc_interaction_server_stats()`
+- overload, replay, and response-deadline counters from
+  `dcc_interaction_server_protection_stats()`
+- Prometheus text from `dcc_interaction_server_health_snapshot_prometheus()`
 
 Alert on:
 
@@ -244,9 +261,22 @@ First response:
 4. For terminal codes such as permission or deleted-channel failures, stop media
    producers and surface the failure to bot logic.
 
-DAVE/MLS frame bridge helpers allow external MLS engines to integrate with DCC.
-Built-in full MLS group crypto is still roadmap work, so production DAVE
-deployments should keep the MLS engine boundary explicit.
+DAVE uses Discord's official libdave C ABI for MLS group state, key packages,
+commits/welcomes, per-user key ratchets, and Opus frame encryption/decryption.
+Install the official shared library and set `DCC_DAVE_LIBRARY` when it is not on
+the platform loader path. DCC advertises protocol version 1 only after the whole
+ABI is available, and media remains closed until the MLS transition installs
+ratchets and completes. `dcc_voice_client_set_dave_mls_handler()` remains
+available for observing or extending MLS frames; DCC-managed encrypted media
+still requires the official backend and never silently falls back to plaintext.
+
+Watch `dave_backend_available`, `dave_media_ready`, epoch, participant count,
+encrypt/decrypt successes, failures, and missing-key failures in the voice health
+snapshot. A missing backend, failed commit/welcome, or missing participant key is
+a deployment error, not a plaintext fallback.
+Export the same counters with
+`dcc_voice_client_health_snapshot_prometheus()` when the process exposes a
+Prometheus endpoint.
 
 For supervised voice joins, use
 `dcc_voice_client_connect_and_wait_until_ready()` when the supervisor owns the
@@ -260,6 +290,20 @@ Run `dcc_live_voice_probe` against a development guild before a voice-related
 release. It exercises the same connect-and-wait helper, managed voice READY
 wait, and optional websocket ACTIVE wait that a production supervisor should
 depend on.
+
+## Process Shutdown And Presets
+
+`DCC_RUN_APP*`, `DCC_*_MAIN`, and the bot run aliases install SIGINT/SIGTERM
+handlers on POSIX and console-control handlers on Windows. Signal handlers only
+wake a monitor thread; `dcc_app_stop()` and cleanup execute outside signal
+context. Lower-level hosts can call `dcc_app_run_with_signals()` or
+`dcc_app_run_defined_with_signals()` directly.
+
+Use `DCC_BOT(...)`, `DCC_GUILD_BOT(...)`, or `DCC_PROD_APP(...)` in deployed
+processes. These presets auto-defer and provide default errors but never sync
+commands on READY. Use `DCC_DEV_BOT(...)` and `DCC_DEV_GUILD_BOT(...)` only in
+development. Production command changes should pass an explicit
+`dcc_command_sync --plan` review before `--apply`.
 
 ## Wait Policies
 

@@ -1,13 +1,20 @@
 #include "internal/voice/dcc_voice_internal.h"
 
+#include <stddef.h>
+
 dcc_status_t dcc_voice_client_health_snapshot_json(
     const dcc_voice_health_snapshot_t *snapshot,
     char *out,
     size_t out_size,
     size_t *out_len
 ) {
-    if (snapshot == NULL || snapshot->size < sizeof(*snapshot) || out == NULL || out_size == 0U) {
+    if (snapshot == NULL || snapshot->size < offsetof(dcc_voice_health_snapshot_t, dave) ||
+        out == NULL || out_size == 0U) {
         return DCC_ERR_INVALID_ARG;
+    }
+    dcc_voice_dave_stats_t dave = {0};
+    if (snapshot->size >= offsetof(dcc_voice_health_snapshot_t, dave) + sizeof(snapshot->dave)) {
+        dave = snapshot->dave;
     }
 
     dcc_voice_json_buffer_t json = {
@@ -48,6 +55,24 @@ dcc_status_t dcc_voice_client_health_snapshot_json(
         dcc_voice_json_append_cstr(&json, snapshot->stats.dave_enabled != 0U ? "true" : "false") != 0 ||
         dcc_voice_json_append_cstr(&json, ",\"dave_transition_pending\":") != 0 ||
         dcc_voice_json_append_cstr(&json, snapshot->stats.dave_transition_pending != 0U ? "true" : "false") != 0 ||
+        dcc_voice_json_append_cstr(&json, ",\"dave_backend_available\":") != 0 ||
+        dcc_voice_json_append_cstr(&json, dave.backend_available != 0U ? "true" : "false") != 0 ||
+        dcc_voice_json_append_cstr(&json, ",\"dave_media_ready\":") != 0 ||
+        dcc_voice_json_append_cstr(&json, dave.media_ready != 0U ? "true" : "false") != 0 ||
+        dcc_voice_json_append_cstr(&json, ",\"dave_epoch\":") != 0 ||
+        dcc_voice_json_append_u64(&json, dave.epoch) != 0 ||
+        dcc_voice_json_append_cstr(&json, ",\"dave_participant_count\":") != 0 ||
+        dcc_voice_json_append_u64(&json, dave.participant_count) != 0 ||
+        dcc_voice_json_append_cstr(&json, ",\"dave_encrypt_success\":") != 0 ||
+        dcc_voice_json_append_u64(&json, dave.encrypt_success) != 0 ||
+        dcc_voice_json_append_cstr(&json, ",\"dave_encrypt_failures\":") != 0 ||
+        dcc_voice_json_append_u64(&json, dave.encrypt_failures) != 0 ||
+        dcc_voice_json_append_cstr(&json, ",\"dave_decrypt_success\":") != 0 ||
+        dcc_voice_json_append_u64(&json, dave.decrypt_success) != 0 ||
+        dcc_voice_json_append_cstr(&json, ",\"dave_decrypt_failures\":") != 0 ||
+        dcc_voice_json_append_u64(&json, dave.decrypt_failures) != 0 ||
+        dcc_voice_json_append_cstr(&json, ",\"dave_missing_key_failures\":") != 0 ||
+        dcc_voice_json_append_u64(&json, dave.missing_key_failures) != 0 ||
         dcc_voice_json_append_cstr(&json, ",\"reason\":") != 0 ||
         dcc_voice_json_append_string(&json, snapshot->reason) != 0 ||
         dcc_voice_json_append_cstr(&json, "}") != 0) {

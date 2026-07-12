@@ -1,5 +1,6 @@
 #include "internal/objects/dcc_message_builder_serialize_internal.h"
 #include "internal/objects/dcc_message_json_members_internal.h"
+#include "internal/objects/dcc_component_v2_internal.h"
 
 #include <dcc/component.h>
 #include <dcc/component_v2.h>
@@ -24,11 +25,18 @@ dcc_status_t dcc_message_builder_append_rich_json(
     }
     if (status == DCC_OK && builder->components_v2_count != 0) {
         char *components_json = NULL;
-        status = dcc_component_v2_builder_build_array_json(
+        status = dcc_component_v2_validate_array_context(
             builder->components_v2,
             builder->components_v2_count,
-            &components_json
+            DCC_COMPONENT_V2_CONTEXT_MESSAGE
         );
+        if (status == DCC_OK) {
+            status = dcc_component_v2_builder_build_array_json(
+                builder->components_v2,
+                builder->components_v2_count,
+                &components_json
+            );
+        }
         if (status != DCC_OK) {
             return status;
         }

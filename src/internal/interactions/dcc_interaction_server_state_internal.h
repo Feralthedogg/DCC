@@ -13,6 +13,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+typedef struct dcc_interaction_replay_entry {
+    uint64_t hash;
+    uint64_t seen_at_ns;
+} dcc_interaction_replay_entry_t;
+
 struct dcc_interaction_server {
     dcc_runtime_t runtime;
     char *public_key_hex;
@@ -22,6 +27,9 @@ struct dcc_interaction_server {
     uint32_t backlog;
     size_t max_header_size;
     size_t max_body_size;
+    uint64_t max_active_requests;
+    uint32_t response_deadline_ms;
+    uint32_t replay_window_ms;
     dcc_interaction_server_cb callback;
     void *user_data;
     dcc_interaction_route_entry_t *routes;
@@ -45,6 +53,12 @@ struct dcc_interaction_server {
     atomic_uint_fast64_t not_found_responses;
     atomic_uint_fast64_t method_not_allowed_responses;
     atomic_uint_fast64_t payload_too_large_responses;
+    atomic_uint_fast64_t overloaded_responses;
+    atomic_uint_fast64_t replayed_requests;
+    atomic_uint_fast64_t deadline_exceeded_requests;
+    atomic_flag replay_lock;
+    dcc_interaction_replay_entry_t replay_entries[DCC_INTERACTION_REPLAY_CAP];
+    size_t replay_next;
     char last_error[256];
 };
 

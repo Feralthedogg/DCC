@@ -1092,6 +1092,13 @@ static int app_smoke_check_dotenv(void) {
 }
 
 int main(void) {
+    if (dcc_app_run_with_signals(NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_app_run_defined_with_signals(NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_app_run_from_env_defined_with_signals(NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_app_run_dotenv_defined_with_signals(NULL, NULL) != DCC_ERR_INVALID_ARG) {
+        fprintf(stderr, "signal runner invalid-argument contract failed\n");
+        return 1;
+    }
     if (!app_smoke_check_response_state()) {
         return 1;
     }

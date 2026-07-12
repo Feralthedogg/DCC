@@ -18,7 +18,7 @@ void on_ready(dcc_client_t *client, const dcc_event_t *event, void *user_data) {
         state->ready_seen = 1;
         snprintf(state->session_id, sizeof(state->session_id), "%s", ready->session_id);
         if (state->voice_client != NULL &&
-            dcc_voice_client_connect(state->voice_client, 333, 222, 0, 0, 1) == DCC_OK) {
+            dcc_voice_client_connect(state->voice_client, 333, 222, 0, 0, 0) == DCC_OK) {
             state->voice_connect_seen = 1;
         }
     }
@@ -278,4 +278,3 @@ void on_typed_dispatch(dcc_client_t *client, const dcc_event_t *event, void *use
         }
     }
 }
-

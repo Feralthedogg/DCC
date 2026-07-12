@@ -50,7 +50,7 @@
 #define DCC_MODAL_V2_PARAGRAPH_INPUT_PLACEHOLDER(custom_id_, label_, placeholder_, required_) \
     DCC_V2_TEXT_INPUT_PLACEHOLDER((custom_id_), (label_), DCC_TEXT_INPUT_PARAGRAPH, (placeholder_), (required_))
 #define DCC_MODAL_V2_CHECKBOX(custom_id_, label_, checked_) \
-    DCC_V2_CHECKBOX((custom_id_), (label_), (checked_))
+    DCC_MODAL_V2_FIELD_CHECKBOX((custom_id_), (label_), (checked_))
 
 #define DCC_SLASH_COMMAND(name_, description_) \
     ((dcc_application_command_builder_t){ \
@@ -471,4 +471,3 @@
         .payload = (payload_), \
         .payload_len = (payload_len_) \
     })
-

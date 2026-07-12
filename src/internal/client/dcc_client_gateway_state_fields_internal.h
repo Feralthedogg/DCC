@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef struct dcc_cluster_identify_coordinator dcc_cluster_identify_coordinator_t;
+
 #define DCC_CLIENT_GATEWAY_STATE_FIELDS \
     char *token; \
     char *gateway_url; \
@@ -21,6 +23,7 @@
     uint32_t gateway_identify_delay_ms; \
     uint64_t gateway_session_reset_after_ms; \
     uint64_t gateway_session_reset_at_ms; \
+    dcc_cluster_identify_coordinator_t *gateway_identify_coordinator; \
     atomic_bool gateway_task_running; \
     atomic_bool gateway_task_completed; \
     atomic_int gateway_last_status; \

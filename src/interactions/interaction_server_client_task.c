@@ -10,7 +10,6 @@ void dcc_interaction_client_task_run(void *arg) {
     llam_fd_t fd = task->fd;
     free(task);
 
-    atomic_fetch_add_explicit(&server->active_requests, 1U, memory_order_acq_rel);
     dcc_interaction_request_t *request = (dcc_interaction_request_t *)calloc(1U, sizeof(*request));
     if (request == NULL) {
         atomic_fetch_add_explicit(&server->read_errors, 1U, memory_order_relaxed);
@@ -19,6 +18,9 @@ void dcc_interaction_client_task_run(void *arg) {
         return;
     }
     request->server = server;
+    request->started_at_ns = llam_now_ns();
+    request->deadline_at_ns = request->started_at_ns +
+        (uint64_t)server->response_deadline_ms * UINT64_C(1000000);
 
     dcc_status_t st = dcc_interaction_read_request(server, fd, request);
     if (st != DCC_OK) {
@@ -28,7 +30,9 @@ void dcc_interaction_client_task_run(void *arg) {
         st = dcc_interaction_handle_request(request);
     }
     if (st != DCC_OK && !request->response_set) {
-        if (st == DCC_ERR_INVALID_ARG) {
+        if (st == DCC_ERR_TIMEOUT) {
+            (void)dcc_interaction_request_reply_text(request, 504, "Interaction response deadline exceeded");
+        } else if (st == DCC_ERR_INVALID_ARG) {
             (void)dcc_interaction_request_reply_text(request, 413, "Payload too large");
         } else {
             (void)dcc_interaction_request_reply_text(request, 400, "Bad request");

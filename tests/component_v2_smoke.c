@@ -1,4 +1,5 @@
 #include <dcc/dcc.h>
+#include <dcc/sugar.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -121,8 +122,13 @@ static int run_component_v2_message_smoke(void) {
         return 1;
     }
     char *message_json = NULL;
-    if (dcc_message_builder_build_json(&message, &message_json) != DCC_OK) {
-        fprintf(stderr, "failed to serialize component v2 message\n");
+    dcc_status_t message_status = dcc_message_builder_build_json(&message, &message_json);
+    if (message_status != DCC_OK) {
+        fprintf(
+            stderr,
+            "failed to serialize component v2 message: %s\n",
+            dcc_status_string(message_status)
+        );
         return 1;
     }
     failed =
@@ -288,9 +294,13 @@ static int run_component_v2_modal_smoke(void) {
             (const dcc_select_option_t[]){{ .label = "Only", .value = "only" }},
             1U
         ) != DCC_OK ||
+        dcc_component_v2_builder_set_min_values(&checkbox_group, 1U) != DCC_OK ||
+        dcc_component_v2_builder_set_max_values(&checkbox_group, 1U) != DCC_OK ||
         dcc_component_v2_builder_build_json(&checkbox_group, &json) != DCC_OK ||
         require_contains(json, "\"type\":22") ||
-        require_contains(json, "\"options\":[{\"label\":\"Only\"")) {
+        require_contains(json, "\"options\":[{\"label\":\"Only\"") ||
+        require_contains(json, "\"min_values\":1") ||
+        require_contains(json, "\"max_values\":1")) {
         dcc_component_v2_builder_json_free(json);
         fprintf(stderr, "component v2 validator rejected one checkbox option\n");
         return 1;
@@ -305,12 +315,54 @@ static int run_component_v2_modal_smoke(void) {
         dcc_component_v2_builder_set_default(&checkbox, 1U) != DCC_OK ||
         dcc_component_v2_builder_build_json(&checkbox, &json) != DCC_OK ||
         require_contains(json, "\"default\":true") ||
-        strstr(json, "\"checked\"") != NULL) {
+        strstr(json, "\"checked\"") != NULL ||
+        strstr(json, "\"label\"") != NULL ||
+        strstr(json, "\"required\"") != NULL) {
         dcc_component_v2_builder_json_free(json);
         fprintf(stderr, "component v2 checkbox default serialization failed\n");
         return 1;
     }
     dcc_component_v2_builder_json_free(json);
+
+    dcc_component_v2_builder_t text_input = DCC_V2_TEXT_INPUT_REQUIRED(
+        "profile.name",
+        "Deprecated inner label",
+        DCC_TEXT_INPUT_SHORT,
+        1U
+    );
+    dcc_component_v2_builder_t text_label = DCC_V2_LABEL("Display name", text_input);
+    dcc_modal_builder_init(&modal);
+    if (dcc_modal_builder_set_custom_id(&modal, "profile-modal") != DCC_OK ||
+        dcc_modal_builder_set_title(&modal, "Profile") != DCC_OK ||
+        dcc_modal_builder_set_components_v2(&modal, &text_label, 1U) != DCC_OK ||
+        dcc_modal_builder_build_json(&modal, &json) != DCC_OK ||
+        require_contains(json, "\"label\":\"Display name\"") ||
+        strstr(json, "Deprecated inner label") != NULL) {
+        dcc_modal_builder_json_free(json);
+        fprintf(stderr, "component v2 text input emitted deprecated nested label\n");
+        return 1;
+    }
+    dcc_modal_builder_json_free(json);
+    json = NULL;
+
+    dcc_message_builder_t invalid_message;
+    dcc_message_builder_init(&invalid_message);
+    if (dcc_message_builder_set_components_v2(&invalid_message, &checkbox, 1U) != DCC_OK ||
+        dcc_message_builder_build_json(&invalid_message, &json) != DCC_ERR_INVALID_ARG) {
+        dcc_message_builder_json_free(json);
+        fprintf(stderr, "component v2 message allowed modal-only root\n");
+        return 1;
+    }
+
+    dcc_modal_builder_init(&modal);
+    if (dcc_modal_builder_set_custom_id(&modal, "bad-modal") != DCC_OK ||
+        dcc_modal_builder_set_title(&modal, "Bad") != DCC_OK ||
+        dcc_modal_builder_set_components_v2(&modal, &checkbox, 1U) != DCC_OK ||
+        dcc_modal_builder_build_json(&modal, &json) != DCC_ERR_INVALID_ARG) {
+        dcc_modal_builder_json_free(json);
+        fprintf(stderr, "component v2 modal allowed non-label root\n");
+        return 1;
+    }
 
     return failed;
 }

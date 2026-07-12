@@ -48,6 +48,11 @@ def main() -> int:
 
     required_cpack_excludes = {
         '"/build[^/]*/"': "build trees",
+        '"/CMakeFiles/"': "in-source CMakeFiles directories",
+        '"/CMakeCache\\\\.txt$"': "in-source CMake caches",
+        '"/cmake_install\\\\.cmake$"': "in-source install scripts",
+        '"/install_manifest\\\\.txt$"': "in-source install manifests",
+        '"/Testing/"': "in-source CTest output",
         '"/site/"': "MkDocs output",
         '"/target/"': "release artifacts",
         '"/dist/"': "distribution artifacts",
@@ -66,12 +71,20 @@ def main() -> int:
     for template in (
         "deploy/interaction-webhook/dcc-interaction-webhook.env",
         "deploy/hot-reload/dcc-hot-reload.env",
+        "deploy/bot/dcc-bot.env",
     ):
         if not (ROOT / template).is_file():
             errors.append(f"missing deployment env template: {template}")
 
     if "PATTERN \"*.env\"" not in cmake:
         errors.append("CMake install rules must keep deployment .env templates installed")
+    deploy_install_start = cmake.find("DIRECTORY deploy/")
+    deploy_install_end = cmake.find("\n)\n", deploy_install_start)
+    deploy_install = cmake[deploy_install_start:deploy_install_end]
+    if deploy_install_start < 0 or 'PATTERN "*.sh"' not in deploy_install:
+        errors.append("CMake install rules must keep deployment shell entrypoints installed")
+    if deploy_install_start < 0 or "USE_SOURCE_PERMISSIONS" not in deploy_install:
+        errors.append("CMake install rules must preserve deployment entrypoint permissions")
 
     official_surface_package_entries = (
         "/docs/reference/official-api-surface.md$",
@@ -93,6 +106,19 @@ def main() -> int:
     for entry in official_surface_package_entries:
         require_text("tools/release_check.sh", release_check, entry, errors)
         require_text("tools/package_release.sh", package_release, entry, errors)
+
+    require_text(
+        "tools/release_check.sh",
+        release_check,
+        "/deploy/bot/entrypoint.sh$",
+        errors,
+    )
+    require_text(
+        "tools/package_release.sh",
+        package_release,
+        "/share/dcc/deploy/bot/entrypoint.sh$",
+        errors,
+    )
 
     if errors:
         print("DCC source package audit failed:")

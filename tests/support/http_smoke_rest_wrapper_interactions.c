@@ -44,6 +44,41 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
     }
 
     if (start_server(&server, &thread) != 0) {
+        fprintf(stderr, "failed to start interaction callback response server: %s\n", strerror(errno));
+        return 1;
+    }
+    set_api_base_for_server(&server);
+    memset(&seen, 0, sizeof(seen));
+    st = dcc_rest_interaction_response_create_options(
+        client,
+        555,
+        "tok/en",
+        "{\"type\":12}",
+        1U,
+        rest_cb,
+        &seen
+    );
+    (void)pthread_join(thread, NULL);
+    close(server.fd);
+    if (st != DCC_OK ||
+        !seen.called ||
+        strcmp(server.method, "POST") != 0 ||
+        strcmp(server.path, "/interactions/555/tok%2Fen/callback?with_response=true") != 0 ||
+        strcmp(server.body, "{\"type\":12}") != 0 ||
+        dcc_rest_interaction_response_create_options(
+            client,
+            555,
+            "tok/en",
+            "{\"type\":12}",
+            2U,
+            rest_cb,
+            &seen
+        ) != DCC_ERR_INVALID_ARG) {
+        fprintf(stderr, "unexpected interaction callback with_response request\n");
+        return 1;
+    }
+
+    if (start_server(&server, &thread) != 0) {
         fprintf(stderr, "failed to start interaction callback type server: %s\n", strerror(errno));
         return 1;
     }

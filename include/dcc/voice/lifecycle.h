@@ -88,6 +88,12 @@ DCC_API dcc_status_t dcc_voice_client_health_snapshot_json(
     size_t out_size,
     size_t *out_len
 );
+DCC_API dcc_status_t dcc_voice_client_health_snapshot_prometheus(
+    const dcc_voice_health_snapshot_t *snapshot,
+    char *out,
+    size_t out_size,
+    size_t *out_len
+);
 DCC_API dcc_voice_session_state_t dcc_voice_client_session_state(const dcc_voice_client_t *voice_client);
 DCC_API uint8_t dcc_voice_client_session_ready(const dcc_voice_client_t *voice_client);
 DCC_API uint8_t dcc_voice_client_session_active(const dcc_voice_client_t *voice_client);

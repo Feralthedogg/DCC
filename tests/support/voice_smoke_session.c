@@ -65,6 +65,22 @@ int voice_session_state_smoke(dcc_client_t *client, dcc_voice_client_t *voice_cl
         fprintf(stderr, "voice health disconnected snapshot failed: %s\n", voice_health_json);
         return 1;
     }
+    _Alignas(dcc_voice_health_snapshot_t)
+        unsigned char legacy_storage[offsetof(dcc_voice_health_snapshot_t, dave)];
+    memset(legacy_storage, 0, sizeof(legacy_storage));
+    dcc_voice_health_snapshot_t *legacy = (dcc_voice_health_snapshot_t *)(void *)legacy_storage;
+    legacy->size = sizeof(legacy_storage);
+    if (dcc_voice_client_health_snapshot(voice_client, legacy) != DCC_OK ||
+        dcc_voice_client_health_snapshot_json(
+            legacy,
+            voice_health_json,
+            sizeof(voice_health_json),
+            &voice_health_json_len
+        ) != DCC_OK ||
+        strstr(voice_health_json, "\"health\":\"disconnected\"") == NULL) {
+        fprintf(stderr, "voice legacy health ABI failed\n");
+        return 1;
+    }
 
     voice_cancel_state_t cancel_state = {0};
     dcc_listener_id_t cancel_first_id = 0;
@@ -109,7 +125,13 @@ int voice_session_state_smoke(dcc_client_t *client, dcc_voice_client_t *voice_cl
         .user_id = 999,
         .session_id = "voice-session-moved",
     };
-    if (dcc_voice_client_start_session(voice_client, 333, 222, 1, 0, 1) != DCC_OK ||
+    voice_dave_mls_state_t external_dave = {0};
+    if (dcc_voice_client_set_dave_mls_handler(
+            voice_client,
+            voice_dave_mls_handler,
+            &external_dave
+        ) != DCC_OK ||
+        dcc_voice_client_start_session(voice_client, 333, 222, 1, 0, 1) != DCC_OK ||
         dcc_voice_client_session_state(voice_client) != DCC_VOICE_SESSION_REQUESTED ||
         !dcc_voice_client_dave_enabled(voice_client) ||
         dcc_voice_client_dave_version(voice_client) != DCC_VOICE_DAVE_VERSION_1 ||

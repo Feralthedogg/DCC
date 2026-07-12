@@ -513,6 +513,12 @@ static int check_preset_macros(void) {
             789ULL,
             DCC_APP_TASKS(DCC_TASK_LOOP_SECONDS_DATA(60U, on_task, &state))
         );
+    dcc_app_definition_t dev_guild_bot_definition =
+        DCC_DEV_GUILD_BOT(
+            "dx.dev_guild_bot",
+            789ULL,
+            DCC_APP_TASKS(DCC_TASK_LOOP_SECONDS_DATA(60U, on_task, &state))
+        );
     dcc_app_definition_t plan_definition =
         DCC_DEV_PLAN_APP(
             "dx.plan",
@@ -614,15 +620,15 @@ static int check_preset_macros(void) {
         definition.tasks[1].type == DCC_APP_EXTENSION_TASK_EVERY_DAY_AT_KST &&
         definition.tasks[1].hour == 9U &&
         definition.tasks[1].minute == 30U &&
-        bot_definition.command_sync != NULL &&
-        bot_definition.command_sync->apply == 1U &&
+        bot_definition.command_sync == NULL &&
         bot_definition.auto_defer_after_ms == 1500U &&
         bot_definition.auto_defer_ephemeral == 1U &&
         bot_definition.use_default_error_responses == 1U &&
         bot_definition.event_count == 1U &&
-        guild_bot_definition.command_sync != NULL &&
-        guild_bot_definition.command_sync->command_registry.guild_id == 789ULL &&
+        guild_bot_definition.command_sync == NULL &&
         guild_bot_definition.task_count == 1U &&
+        dev_guild_bot_definition.command_sync != NULL &&
+        dev_guild_bot_definition.command_sync->command_registry.guild_id == 789ULL &&
         plan_definition.command_sync != NULL &&
         plan_definition.command_sync->apply == 0U &&
         plan_definition.command_sync->infer_application_id == 1U &&

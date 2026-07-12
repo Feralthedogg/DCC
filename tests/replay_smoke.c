@@ -81,7 +81,9 @@ int main(void) {
             interaction_payload,
             sizeof(interaction_payload) - 1U
         ) != DCC_OK ||
-        dcc_replay_recorder_capture_interaction(&recorder, 12U, "not-json", 8U) != DCC_ERR_INVALID_ARG) {
+        dcc_replay_recorder_capture_interaction(&recorder, 12U, "not-json", 8U) != DCC_ERR_INVALID_ARG ||
+        dcc_replay_recorder_capture_interaction(&recorder, 12U, "{not-json}", 10U) != DCC_ERR_INVALID_ARG ||
+        dcc_replay_recorder_capture_interaction(&recorder, 12U, "{} trailing", 11U) != DCC_ERR_INVALID_ARG) {
         fprintf(stderr, "failed to write replay smoke file\n");
         dcc_replay_recorder_close(&recorder);
         unlink(path);
@@ -135,6 +137,21 @@ int main(void) {
         return 1;
     }
     dcc_replay_player_close(&player);
+
+    dcc_replay_validation_result_t validation = {
+        .size = sizeof(validation),
+    };
+    if (dcc_replay_validate_file(path, &validation) != DCC_OK ||
+        validation.records != 2U ||
+        validation.gateway_records != 1U ||
+        validation.interaction_records != 1U ||
+        validation.first_ts_ms != 10U ||
+        validation.last_ts_ms != 11U ||
+        validation.timestamps_monotonic != 1U) {
+        fprintf(stderr, "failed replay validation result\n");
+        unlink(path);
+        return 1;
+    }
     unlink(path);
     return 0;
 }

@@ -41,6 +41,7 @@ void dcc_voice_client_destroy(dcc_voice_client_t *voice_client) {
         (void)dcc_voice_client_stop_receive_jitter_timer(voice_client);
         dcc_voice_client_unregister_owner(voice_client);
         dcc_voice_client_disconnect_udp(voice_client);
+        dcc_voice_dave_backend_unload(voice_client);
         dcc_voice_opus_backend_destroy(voice_client);
         (void)dcc_voice_client_clear_send_queue(voice_client);
     }

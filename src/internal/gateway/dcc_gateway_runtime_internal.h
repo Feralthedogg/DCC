@@ -19,6 +19,7 @@ dcc_status_t dcc_gateway_run_once(
 dcc_status_t dcc_gateway_run(dcc_client_t *client);
 char *dcc_gateway_attempt_url(dcc_client_t *client, bool resume);
 uint32_t dcc_gateway_backoff_ms(unsigned attempt);
+uint32_t dcc_gateway_backoff_jitter_ms(unsigned attempt, uint64_t salt);
 void dcc_gateway_task(void *arg);
 
 #ifdef __cplusplus

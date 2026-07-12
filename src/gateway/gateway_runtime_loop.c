@@ -53,7 +53,11 @@ dcc_status_t dcc_gateway_run(dcc_client_t *client) {
         }
 
         resume = next == DCC_GATEWAY_NEXT_RECONNECT_RESUME;
-        uint32_t delay_ms = dcc_gateway_backoff_ms(attempt++);
+        uint32_t delay_ms = dcc_gateway_backoff_jitter_ms(
+            attempt,
+            ((uint64_t)client->shard_id << 32U) ^ (uint64_t)client->shard_count
+        );
+        attempt++;
         if (client->gateway_identify_delay_ms > delay_ms) {
             delay_ms = client->gateway_identify_delay_ms;
             client->gateway_identify_delay_ms = 0;

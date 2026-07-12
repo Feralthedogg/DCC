@@ -342,11 +342,19 @@
     DCC_APP_AUTO_DEFER_EPHEMERAL_MS((after_ms_)), \
     DCC_APP_DEFAULT_ERRORS()
 
+#define DCC_APP_PRODUCTION_MODE() \
+    DCC_APP_AUTO_DEFER_EPHEMERAL_MS(1500U), \
+    DCC_APP_DEFAULT_ERRORS()
+
+#define DCC_APP_PRODUCTION_MODE_MS(after_ms_) \
+    DCC_APP_AUTO_DEFER_EPHEMERAL_MS((after_ms_)), \
+    DCC_APP_DEFAULT_ERRORS()
+
 #define DCC_APP_PRESET_BOT() \
-    DCC_APP_DEV_MODE()
+    DCC_APP_PRODUCTION_MODE()
 
 #define DCC_APP_PRESET_BOT_MS(after_ms_) \
-    DCC_APP_DEV_MODE_MS((after_ms_))
+    DCC_APP_PRODUCTION_MODE_MS((after_ms_))
 
 #define DCC_APP_PRESET_DEV_GUILD(guild_id_) \
     DCC_APP_AUTO_SYNC_GUILD((guild_id_)), \
@@ -369,6 +377,12 @@
 #define DCC_DEV_APP_MS(name_, after_ms_, ...) \
     DCC_APP((name_), DCC_APP_DEV_MODE_MS((after_ms_)), __VA_ARGS__)
 
+#define DCC_PROD_APP(name_, ...) \
+    DCC_APP((name_), DCC_APP_PRODUCTION_MODE(), __VA_ARGS__)
+
+#define DCC_PROD_APP_MS(name_, after_ms_, ...) \
+    DCC_APP((name_), DCC_APP_PRODUCTION_MODE_MS((after_ms_)), __VA_ARGS__)
+
 #define DCC_DEV_PLAN_APP(name_, ...) \
     DCC_APP((name_), DCC_APP_DEV_MODE_PLAN(), __VA_ARGS__)
 
@@ -385,12 +399,24 @@
     DCC_APP((name_), DCC_APP_PRESET_DEV_GUILD_PLAN((guild_id_)), __VA_ARGS__)
 
 #define DCC_BOT(name_, ...) \
-    DCC_DEV_APP((name_), __VA_ARGS__)
+    DCC_PROD_APP((name_), __VA_ARGS__)
 
 #define DCC_BOT_APP(name_, ...) \
+    DCC_PROD_APP((name_), __VA_ARGS__)
+
+#define DCC_DEV_BOT(name_, ...) \
+    DCC_DEV_APP((name_), __VA_ARGS__)
+
+#define DCC_DEV_BOT_APP(name_, ...) \
     DCC_DEV_APP((name_), __VA_ARGS__)
 
 #define DCC_GUILD_BOT(name_, guild_id_, ...) \
+    DCC_PROD_APP((name_), __VA_ARGS__)
+
+#define DCC_DEV_GUILD_BOT(name_, guild_id_, ...) \
+    DCC_DEV_GUILD_APP((name_), (guild_id_), __VA_ARGS__)
+
+#define DCC_DEV_GUILD_BOT_APP(name_, guild_id_, ...) \
     DCC_DEV_GUILD_APP((name_), (guild_id_), __VA_ARGS__)
 
 #define DCC_BOT_GUILD(name_, guild_id_, ...) \
@@ -433,16 +459,16 @@
     DCC_GUILD_BOT_ROUTES((name_), (guild_id_), __VA_ARGS__)
 
 #define DCC_RUN_APP(definition_) \
-    dcc_app_run_dotenv_defined(NULL, &((dcc_app_definition_t[]){ (definition_) })[0])
+    dcc_app_run_dotenv_defined_with_signals(NULL, &((dcc_app_definition_t[]){ (definition_) })[0])
 
 #define DCC_RUN_APP_TOKEN(token_env_, definition_) \
-    dcc_app_run_dotenv_defined((token_env_), &((dcc_app_definition_t[]){ (definition_) })[0])
+    dcc_app_run_dotenv_defined_with_signals((token_env_), &((dcc_app_definition_t[]){ (definition_) })[0])
 
 #define DCC_RUN_APP_ENV(token_env_, definition_) \
-    dcc_app_run_from_env_defined((token_env_), &((dcc_app_definition_t[]){ (definition_) })[0])
+    dcc_app_run_from_env_defined_with_signals((token_env_), &((dcc_app_definition_t[]){ (definition_) })[0])
 
 #define DCC_RUN_APP_OPTIONS(options_, definition_) \
-    dcc_app_run_defined( \
+    dcc_app_run_defined_with_signals( \
         &((dcc_app_options_t[]){ (options_) })[0], \
         &((dcc_app_definition_t[]){ (definition_) })[0] \
     )
@@ -479,6 +505,24 @@
 
 #define DCC_RUN_DEV_APP(name_, ...) \
     DCC_RUN_APP(DCC_DEV_APP((name_), __VA_ARGS__))
+
+#define DCC_RUN_DEV_BOT(name_, ...) \
+    DCC_RUN_APP(DCC_DEV_BOT((name_), __VA_ARGS__))
+
+#define DCC_RUN_DEV_BOT_TOKEN(token_env_, name_, ...) \
+    DCC_RUN_APP_TOKEN((token_env_), DCC_DEV_BOT((name_), __VA_ARGS__))
+
+#define DCC_RUN_DEV_BOT_ENV(token_env_, name_, ...) \
+    DCC_RUN_APP_ENV((token_env_), DCC_DEV_BOT((name_), __VA_ARGS__))
+
+#define DCC_RUN_DEV_GUILD_BOT(name_, guild_id_, ...) \
+    DCC_RUN_APP(DCC_DEV_GUILD_BOT((name_), (guild_id_), __VA_ARGS__))
+
+#define DCC_RUN_DEV_GUILD_BOT_TOKEN(token_env_, name_, guild_id_, ...) \
+    DCC_RUN_APP_TOKEN((token_env_), DCC_DEV_GUILD_BOT((name_), (guild_id_), __VA_ARGS__))
+
+#define DCC_RUN_DEV_GUILD_BOT_ENV(token_env_, name_, guild_id_, ...) \
+    DCC_RUN_APP_ENV((token_env_), DCC_DEV_GUILD_BOT((name_), (guild_id_), __VA_ARGS__))
 
 #define DCC_RUN_BOT(name_, ...) \
     DCC_RUN_APP(DCC_BOT((name_), __VA_ARGS__))
@@ -518,6 +562,24 @@
 
 #define DCC_DEV_APP_MAIN(name_, ...) \
     DCC_APP_MAIN(DCC_DEV_APP((name_), __VA_ARGS__))
+
+#define DCC_DEV_BOT_MAIN(name_, ...) \
+    DCC_APP_MAIN(DCC_DEV_BOT((name_), __VA_ARGS__))
+
+#define DCC_DEV_BOT_MAIN_TOKEN(token_env_, name_, ...) \
+    DCC_APP_MAIN_TOKEN((token_env_), DCC_DEV_BOT((name_), __VA_ARGS__))
+
+#define DCC_DEV_BOT_MAIN_ENV(token_env_, name_, ...) \
+    DCC_APP_MAIN_ENV((token_env_), DCC_DEV_BOT((name_), __VA_ARGS__))
+
+#define DCC_DEV_GUILD_BOT_MAIN(name_, guild_id_, ...) \
+    DCC_APP_MAIN(DCC_DEV_GUILD_BOT((name_), (guild_id_), __VA_ARGS__))
+
+#define DCC_DEV_GUILD_BOT_MAIN_TOKEN(token_env_, name_, guild_id_, ...) \
+    DCC_APP_MAIN_TOKEN((token_env_), DCC_DEV_GUILD_BOT((name_), (guild_id_), __VA_ARGS__))
+
+#define DCC_DEV_GUILD_BOT_MAIN_ENV(token_env_, name_, guild_id_, ...) \
+    DCC_APP_MAIN_ENV((token_env_), DCC_DEV_GUILD_BOT((name_), (guild_id_), __VA_ARGS__))
 
 #define DCC_BOT_MAIN(name_, ...) \
     DCC_APP_MAIN(DCC_BOT((name_), __VA_ARGS__))

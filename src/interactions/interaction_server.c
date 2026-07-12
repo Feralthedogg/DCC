@@ -43,6 +43,18 @@ dcc_status_t dcc_interaction_server_create(
     server->max_body_size = DCC_INTERACTION_OPT_HAS(max_body_size) && options->max_body_size != 0U
         ? options->max_body_size
         : DCC_INTERACTION_DEFAULT_MAX_BODY_SIZE;
+    server->max_active_requests = DCC_INTERACTION_OPT_HAS(max_active_requests) &&
+        options->max_active_requests != 0U
+        ? options->max_active_requests
+        : DCC_INTERACTION_DEFAULT_MAX_ACTIVE_REQUESTS;
+    server->response_deadline_ms = DCC_INTERACTION_OPT_HAS(response_deadline_ms) &&
+        options->response_deadline_ms != 0U
+        ? options->response_deadline_ms
+        : DCC_INTERACTION_DEFAULT_RESPONSE_DEADLINE_MS;
+    server->replay_window_ms = DCC_INTERACTION_OPT_HAS(replay_window_ms) &&
+        options->replay_window_ms != 0U
+        ? options->replay_window_ms
+        : DCC_INTERACTION_DEFAULT_REPLAY_WINDOW_MS;
     server->callback = DCC_INTERACTION_OPT_HAS(callback) ? options->callback : NULL;
     server->user_data = DCC_INTERACTION_OPT_HAS(user_data) ? options->user_data : NULL;
     atomic_init(&server->listener_fd, LLAM_INVALID_FD);
@@ -63,6 +75,10 @@ dcc_status_t dcc_interaction_server_create(
     atomic_init(&server->not_found_responses, 0);
     atomic_init(&server->method_not_allowed_responses, 0);
     atomic_init(&server->payload_too_large_responses, 0);
+    atomic_init(&server->overloaded_responses, 0);
+    atomic_init(&server->replayed_requests, 0);
+    atomic_init(&server->deadline_exceeded_requests, 0);
+    atomic_flag_clear(&server->replay_lock);
     *out = server;
 #undef DCC_INTERACTION_OPT_HAS
     return DCC_OK;

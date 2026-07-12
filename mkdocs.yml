@@ -83,6 +83,11 @@ nav:
       - Production Playbooks: production-playbooks.md
       - Live Validation: live-validation.md
       - Release Checklist: release.md
+      - Versioning And Compatibility: versioning.md
       - GitHub Actions: deployment/github-actions.md
   - Development:
       - Coding Style: coding-style.md
+      - Contributing: https://github.com/Feralthedogg/DCC/blob/main/CONTRIBUTING.md
+      - Security: https://github.com/Feralthedogg/DCC/blob/main/SECURITY.md
+      - Support: https://github.com/Feralthedogg/DCC/blob/main/SUPPORT.md
+      - Roadmap: https://github.com/Feralthedogg/DCC/blob/main/ROADMAP.md

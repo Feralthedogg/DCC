@@ -10,6 +10,11 @@ if(NOT DEFINED DCC_GENERATED_APP_DIR OR NOT EXISTS "${DCC_GENERATED_APP_DIR}/src
     message(FATAL_ERROR "DCC_GENERATED_APP_DIR must point to a dcc_new_app output directory")
 endif()
 
+if(NOT DEFINED DCC_VERSION_INCLUDE_DIR OR
+   NOT EXISTS "${DCC_VERSION_INCLUDE_DIR}/dcc/version_generated.h")
+    message(FATAL_ERROR "DCC_VERSION_INCLUDE_DIR must contain dcc/version_generated.h")
+endif()
+
 file(GLOB DCC_GENERATED_APP_SOURCES CONFIGURE_DEPENDS
     "${DCC_GENERATED_APP_DIR}/src/*.c"
 )
@@ -18,6 +23,7 @@ add_library(dcc_generated_app_object OBJECT ${DCC_GENERATED_APP_SOURCES})
 target_include_directories(dcc_generated_app_object
     PRIVATE
         "${DCC_SOURCE_DIR}/include"
+        "${DCC_VERSION_INCLUDE_DIR}"
 )
 target_compile_features(dcc_generated_app_object PRIVATE c_std_11)
 if(MSVC)

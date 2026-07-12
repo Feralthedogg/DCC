@@ -17,6 +17,8 @@ typedef struct dcc_replay_player_state {
     FILE *file;
 } dcc_replay_player_state_t;
 
+#define DCC_REPLAY_MAX_LINE_SIZE (8U * 1024U * 1024U)
+
 dcc_status_t dcc_replay_json_escape(FILE *file, const char *text);
 dcc_status_t dcc_replay_read_line(FILE *file, char **out_line, size_t *out_len);
 dcc_status_t dcc_replay_parse_line(const char *line, size_t line_len, dcc_replay_record_t *out);

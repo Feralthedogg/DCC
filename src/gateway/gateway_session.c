@@ -18,6 +18,16 @@ dcc_status_t dcc_gateway_run_once(
     dcc_gateway_session_t session;
     dcc_gateway_session_init(&session, client, resume);
 
+    if (!session.resume && client->gateway_identify_coordinator != NULL) {
+        dcc_status_t slot_status = dcc_gateway_wait_identify_slot(client);
+        if (slot_status != DCC_OK) {
+            *next = dcc_gateway_should_stop(client)
+                ? DCC_GATEWAY_NEXT_STOP
+                : DCC_GATEWAY_NEXT_RECONNECT_IDENTIFY;
+            return slot_status;
+        }
+    }
+
     dcc_status_t status = dcc_ws_connect(&session.ws, url, 30000);
     if (status != DCC_OK) {
         dcc_set_error(client, "gateway websocket connect failed");
@@ -49,7 +59,7 @@ dcc_status_t dcc_gateway_run_once(
         return status;
     }
 
-    if (!session.resume) {
+    if (!session.resume && client->gateway_identify_coordinator == NULL) {
         status = dcc_gateway_wait_identify_slot(client);
         if (status != DCC_OK) {
             dcc_gateway_session_stop_heartbeat(&session, heartbeat);

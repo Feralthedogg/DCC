@@ -37,6 +37,17 @@ typedef struct dcc_cluster_health_summary {
     uint64_t log_errors;
 } dcc_cluster_health_summary_t;
 
+typedef struct dcc_cluster_identify_stats {
+    size_t size;
+    uint64_t waits;
+    uint64_t reservations;
+    uint32_t remaining;
+    uint32_t total;
+    uint32_t max_concurrency;
+    uint32_t reserved;
+    uint64_t reset_at_ms;
+} dcc_cluster_identify_stats_t;
+
 typedef struct dcc_cluster_health_wait_options {
     size_t size;
     dcc_cluster_health_state_t target_health;

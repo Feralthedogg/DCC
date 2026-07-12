@@ -217,6 +217,10 @@ int interaction_run_request_smoke(
         !expect_response("ping", &response, 200, "{\"type\":1}")) {
         return 0;
     }
+    if (!interaction_send_interaction_request(port, ping_body, timestamp, signature, &response) ||
+        !expect_response_contains("replayed ping", &response, 409, "replayed")) {
+        return 0;
+    }
 
     const char *slash_body =
         "{\"id\":\"558\",\"application_id\":\"123\",\"type\":2,\"token\":\"tok/en\","
@@ -312,14 +316,21 @@ int interaction_run_request_smoke(
     dcc_interaction_server_state_t server_state = {
         .size = sizeof(server_state),
     };
+    dcc_interaction_server_protection_stats_t protection = {
+        .size = sizeof(protection),
+    };
     if (dcc_interaction_server_get_state(server, &server_state) != DCC_OK ||
+        dcc_interaction_server_protection_stats(server, &protection) != DCC_OK ||
         server_state.started != 1U ||
         server_state.stopping != 0U ||
         server_state.listening != 1U ||
         server_state.draining != 0U ||
-        server_state.accepted_connections != 17U ||
+        server_state.accepted_connections != 18U ||
         server_state.active_requests != 0U ||
-        server_state.completed_requests != 17U) {
+        server_state.completed_requests != 18U ||
+        protection.max_active_requests != 1024U ||
+        protection.response_deadline_ms != 2800U ||
+        protection.replay_window_ms != 300000U) {
         fprintf(
             stderr,
             "interaction steady state mismatch: started=%u stopping=%u listening=%u draining=%u "

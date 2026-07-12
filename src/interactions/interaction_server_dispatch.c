@@ -32,6 +32,10 @@ dcc_status_t dcc_interaction_handle_request(dcc_interaction_request_t *request) 
     if (route == NULL && dcc_interaction_has_signed_route_for_method(request->server, request->method)) {
         return dcc_interaction_request_reply_text(request, 404, "Interaction route not found");
     }
+    if (dcc_interaction_server_replay_seen(request->server, timestamp, signature)) {
+        atomic_fetch_add_explicit(&request->server->replayed_requests, 1U, memory_order_relaxed);
+        return dcc_interaction_request_reply_text(request, 409, "Interaction request replayed");
+    }
 
     request->payload = &dcc_interaction_payload_scratch;
     dcc_status_t st = dcc_json_parse_interaction_payload(request->body, request->body_len, request->payload);

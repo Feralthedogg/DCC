@@ -16,6 +16,16 @@ DCC_API dcc_status_t dcc_rest_interaction_response_create(
     void *user_data
 );
 
+DCC_API dcc_status_t dcc_rest_interaction_response_create_options(
+    dcc_client_t *client,
+    dcc_snowflake_t interaction_id,
+    const char *interaction_token,
+    const char *json_body,
+    uint8_t with_response,
+    dcc_rest_cb cb,
+    void *user_data
+);
+
 DCC_API dcc_status_t dcc_rest_interaction_response_create_message_builder(
     dcc_client_t *client,
     dcc_snowflake_t interaction_id,

@@ -36,6 +36,17 @@ typedef struct dcc_replay_player {
     void *state;
 } dcc_replay_player_t;
 
+typedef struct dcc_replay_validation_result {
+    size_t size;
+    uint64_t records;
+    uint64_t gateway_records;
+    uint64_t interaction_records;
+    uint64_t first_ts_ms;
+    uint64_t last_ts_ms;
+    uint8_t timestamps_monotonic;
+    uint8_t reserved[7];
+} dcc_replay_validation_result_t;
+
 typedef dcc_status_t (*dcc_replay_event_cb)(
     dcc_client_t *client,
     const dcc_replay_record_t *record,
@@ -84,6 +95,10 @@ DCC_API dcc_status_t dcc_replay_player_run(
     void *user_data
 );
 DCC_API void dcc_replay_record_deinit(dcc_replay_record_t *record);
+DCC_API dcc_status_t dcc_replay_validate_file(
+    const char *path,
+    dcc_replay_validation_result_t *out
+);
 
 #ifdef __cplusplus
 }

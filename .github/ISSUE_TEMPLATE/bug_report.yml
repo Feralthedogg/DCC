@@ -1,0 +1,44 @@
+name: Bug report
+description: Report a reproducible DCC defect
+title: "[bug] "
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: DCC / LLAM versions
+      placeholder: DCC 1.5.0, LLAM 2.2.0
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform and compiler
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include public API code, CMake options, status, and sanitized output.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Sanitized dcc_doctor --json
+      description: Never include tokens, signatures, or private replay payloads.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed tokens, user data, signatures, and private guild data.
+          required: true

@@ -2,10 +2,7 @@
 #define DCC_VERSION_H
 
 #include <dcc/export.h>
-
-#define DCC_VERSION_MAJOR 1
-#define DCC_VERSION_MINOR 4
-#define DCC_VERSION_PATCH 1
+#include <dcc/version_generated.h>
 
 #ifdef __cplusplus
 extern "C" {

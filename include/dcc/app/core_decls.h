@@ -734,11 +734,23 @@ DCC_API dcc_status_t dcc_app_run_defined(
     const dcc_app_options_t *options,
     const dcc_app_definition_t *definition
 );
+DCC_API dcc_status_t dcc_app_run_defined_with_signals(
+    const dcc_app_options_t *options,
+    const dcc_app_definition_t *definition
+);
 DCC_API dcc_status_t dcc_app_run_from_env_defined(
     const char *token_env,
     const dcc_app_definition_t *definition
 );
+DCC_API dcc_status_t dcc_app_run_from_env_defined_with_signals(
+    const char *token_env,
+    const dcc_app_definition_t *definition
+);
 DCC_API dcc_status_t dcc_app_run_dotenv_defined(
+    const char *token_env,
+    const dcc_app_definition_t *definition
+);
+DCC_API dcc_status_t dcc_app_run_dotenv_defined_with_signals(
     const char *token_env,
     const dcc_app_definition_t *definition
 );

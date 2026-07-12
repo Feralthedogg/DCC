@@ -330,7 +330,7 @@ static int check_simple_bot_definition(void) {
         bot.auto_defer_after_ms != 1500U ||
         bot.auto_defer_ephemeral != 1U ||
         bot.use_default_error_responses != 1U ||
-        bot.command_sync == NULL) {
+        bot.command_sync != NULL) {
         fprintf(stderr, "DCC_SIMPLE_BOT definition mismatch\n");
         return 1;
     }
@@ -415,6 +415,14 @@ static int check_route_table_aliases(void) {
             123ULL,
             DCC_ROUTE_COMMAND("route-guild", "Reply with pong", listener_slash)
         );
+    dcc_app_definition_t dev_guild_bot =
+        DCC_DEV_GUILD_BOT(
+            "route.dev.guild",
+            123ULL,
+            DCC_APP_ROUTES(
+                DCC_ROUTE_COMMAND("route-dev-guild", "Reply with pong", listener_slash)
+            )
+        );
 
     if (strcmp(bot.name, "route.bot") != 0 ||
         bot.listener_count != 2U ||
@@ -424,9 +432,11 @@ static int check_route_table_aliases(void) {
         bot.auto_defer_after_ms != 1500U ||
         bot.auto_defer_ephemeral != 1U ||
         bot.use_default_error_responses != 1U ||
-        guild_bot.command_sync == NULL ||
-        guild_bot.command_sync->command_registry.guild_id != 123ULL ||
-        guild_bot.listener_count != 1U) {
+        guild_bot.command_sync != NULL ||
+        guild_bot.listener_count != 1U ||
+        dev_guild_bot.command_sync == NULL ||
+        dev_guild_bot.command_sync->command_registry.guild_id != 123ULL ||
+        dev_guild_bot.listener_count != 1U) {
         fprintf(stderr, "DCC_BOT_ROUTES definition mismatch\n");
         return 1;
     }

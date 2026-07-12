@@ -32,6 +32,24 @@ dcc_status_t dcc_interaction_server_stats(
     return DCC_OK;
 }
 
+dcc_status_t dcc_interaction_server_protection_stats(
+    const dcc_interaction_server_t *server,
+    dcc_interaction_server_protection_stats_t *out
+) {
+    if (server == NULL || out == NULL || out->size < sizeof(*out)) return DCC_ERR_INVALID_ARG;
+    size_t size = out->size;
+    memset(out, 0, sizeof(*out));
+    out->size = size;
+    out->max_active_requests = server->max_active_requests;
+    out->response_deadline_ms = server->response_deadline_ms;
+    out->replay_window_ms = server->replay_window_ms;
+    out->overloaded_responses = atomic_load_explicit(&server->overloaded_responses, memory_order_acquire);
+    out->replayed_requests = atomic_load_explicit(&server->replayed_requests, memory_order_acquire);
+    out->deadline_exceeded_requests =
+        atomic_load_explicit(&server->deadline_exceeded_requests, memory_order_acquire);
+    return DCC_OK;
+}
+
 dcc_status_t dcc_interaction_server_get_state(
     const dcc_interaction_server_t *server,
     dcc_interaction_server_state_t *out

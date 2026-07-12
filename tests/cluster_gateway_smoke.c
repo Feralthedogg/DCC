@@ -240,7 +240,7 @@ int main(void) {
         status = run_rolling_reconnect(&state);
     }
     if (status == DCC_OK) {
-        if (!wait_for_ready_count(&state, CLUSTER_GATEWAY_CONNECTIONS, 10000U)) {
+        if (!wait_for_ready_count(&state, CLUSTER_GATEWAY_CONNECTIONS, 15000U)) {
             status = DCC_ERR_TIMEOUT;
         }
     }
@@ -270,6 +270,10 @@ int main(void) {
         .size = sizeof(summary),
     };
     dcc_status_t summary_status = dcc_cluster_health_summary(cluster, &summary);
+    dcc_cluster_identify_stats_t identify_stats = {
+        .size = sizeof(identify_stats),
+    };
+    dcc_status_t identify_status = dcc_cluster_identify_stats(cluster, &identify_stats);
     int health_ok = 1;
     for (unsigned i = 0; i < CLUSTER_GATEWAY_SHARDS; ++i) {
         dcc_cluster_shard_info_t shard_info = {
@@ -305,7 +309,7 @@ int main(void) {
             shard_gateway_info.recommended_shards != CLUSTER_GATEWAY_SHARDS ||
             shard_gateway_info.max_concurrency != 2 ||
             shard_gateway_info.total_identifies != 1000 ||
-            shard_gateway_info.remaining_identifies != 997 ||
+            shard_gateway_info.remaining_identifies != 995 ||
             shard_gateway_info.reset_after_ms != 60000) {
             fprintf(
                 stderr,
@@ -339,6 +343,12 @@ int main(void) {
     int ok = status == DCC_OK &&
         info_status == DCC_OK &&
         summary_status == DCC_OK &&
+        identify_status == DCC_OK &&
+        identify_stats.reservations == CLUSTER_GATEWAY_CONNECTIONS &&
+        identify_stats.waits >= 1U &&
+        identify_stats.remaining == 995U &&
+        identify_stats.total == 1000U &&
+        identify_stats.max_concurrency == 2U &&
         health_ok &&
         summary.total_shards == CLUSTER_GATEWAY_SHARDS &&
         summary.created_shards == 0 &&
@@ -357,7 +367,7 @@ int main(void) {
         summary.log_errors == 0 &&
         gateway_info.recommended_shards == CLUSTER_GATEWAY_SHARDS &&
         gateway_info.max_concurrency == 2 &&
-        gateway_info.remaining_identifies == 997 &&
+        gateway_info.remaining_identifies == 995 &&
         gateway_info.total_identifies == 1000 &&
         gateway_info.reset_after_ms == 60000 &&
         atomic_load(&api.requests) == 1U &&

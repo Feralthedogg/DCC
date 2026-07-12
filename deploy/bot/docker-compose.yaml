@@ -1,0 +1,18 @@
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Containerfile
+    restart: unless-stopped
+    env_file: dcc-bot.env
+    volumes:
+      - bot-state:/var/lib/dcc/bot
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+
+volumes:
+  bot-state:

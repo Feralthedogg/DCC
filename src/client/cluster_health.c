@@ -15,6 +15,7 @@ dcc_status_t dcc_cluster_shard_info(
     dcc_cluster_health_lock(mutable_cluster);
     dcc_cluster_shard_info_t snapshot = cluster->health[index];
     dcc_cluster_health_unlock(mutable_cluster);
+
     snapshot.size = sizeof(snapshot);
     *out = snapshot;
     return DCC_OK;
@@ -51,5 +52,33 @@ dcc_status_t dcc_cluster_health_summary(
     dcc_cluster_health_unlock(mutable_cluster);
 
     *out = summary;
+    return DCC_OK;
+}
+
+dcc_status_t dcc_cluster_identify_stats(
+    const dcc_cluster_t *cluster,
+    dcc_cluster_identify_stats_t *out
+) {
+    if (cluster == NULL || out == NULL || out->size < sizeof(*out)) return DCC_ERR_INVALID_ARG;
+    dcc_cluster_t *mutable_cluster = (dcc_cluster_t *)cluster;
+    dcc_cluster_identify_stats_t stats;
+    memset(&stats, 0, sizeof(stats));
+    stats.size = sizeof(stats);
+    stats.waits = atomic_load_explicit(&mutable_cluster->identify_coordinator.waits, memory_order_acquire);
+    stats.reservations = atomic_load_explicit(
+        &mutable_cluster->identify_coordinator.reservations,
+        memory_order_acquire
+    );
+    while (atomic_flag_test_and_set_explicit(
+        &mutable_cluster->identify_coordinator.lock,
+        memory_order_acquire
+    )) {
+    }
+    stats.remaining = mutable_cluster->identify_coordinator.remaining;
+    stats.total = mutable_cluster->identify_coordinator.total;
+    stats.max_concurrency = mutable_cluster->identify_coordinator.max_concurrency;
+    stats.reset_at_ms = mutable_cluster->identify_coordinator.reset_at_ms;
+    atomic_flag_clear_explicit(&mutable_cluster->identify_coordinator.lock, memory_order_release);
+    *out = stats;
     return DCC_OK;
 }

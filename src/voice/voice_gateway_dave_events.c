@@ -19,13 +19,18 @@ dcc_status_t dcc_voice_gateway_handle_dave_prepare_transition(
         voice_client->dave_pending_version = DCC_VOICE_DAVE_NONE;
         voice_client->dave_transition_pending = 0;
         voice_client->dave_transition_ready = 0;
+        if (voice_client->dave_backend != NULL) {
+            dcc_status_t status = dcc_voice_dave_backend_set_protocol(
+                voice_client,
+                voice_client->dave_version,
+                voice_client->dave_version == DCC_VOICE_DAVE_NONE ? 1U : 0U
+            );
+            if (status != DCC_OK) return status;
+        }
     } else {
         voice_client->dave_transition_pending = 1;
-        voice_client->dave_transition_ready = 1;
-        dcc_status_t ready_status = dcc_voice_client_send_dave_transition_ready(voice_client, transition_id);
-        if (ready_status != DCC_OK && ready_status != DCC_ERR_STATE) {
-            return ready_status;
-        }
+        voice_client->dave_transition_ready = 0;
+        voice_client->dave_media_ready = 0;
     }
     return DCC_OK;
 }
@@ -54,6 +59,18 @@ dcc_status_t dcc_voice_gateway_handle_dave_execute_transition(
     }
     voice_client->dave_pending_version = DCC_VOICE_DAVE_NONE;
     voice_client->dave_transition_pending = 0;
+    if (voice_client->dave_backend != NULL) {
+        if (voice_client->dave_version != DCC_VOICE_DAVE_NONE &&
+            (!voice_client->dave_transition_ready || !voice_client->dave_media_ready)) {
+            return DCC_ERR_STATE;
+        }
+        dcc_status_t status = dcc_voice_dave_backend_set_protocol(
+            voice_client,
+            voice_client->dave_version,
+            1U
+        );
+        if (status != DCC_OK) return status;
+    }
     voice_client->dave_transition_ready = 0;
     return DCC_OK;
 }
@@ -65,12 +82,18 @@ dcc_status_t dcc_voice_gateway_handle_dave_session_update(dcc_voice_client_t *vo
         dcc_voice_gateway_json_u32(dcc_json_object_get(d, "epoch"), &epoch) != 0) {
         return DCC_ERR_JSON;
     }
-    if (epoch == 1U) {
-        voice_client->dave_version = dcc_voice_gateway_dave_version_from_u32(protocol_version);
-        voice_client->dave_enabled = voice_client->dave_version != DCC_VOICE_DAVE_NONE ? 1U : 0U;
-        voice_client->dave_pending_version = DCC_VOICE_DAVE_NONE;
-        voice_client->dave_transition_pending = 0;
-        voice_client->dave_transition_ready = 0;
+    voice_client->dave_epoch = epoch;
+    voice_client->dave_pending_version = dcc_voice_gateway_dave_version_from_u32(protocol_version);
+    voice_client->dave_transition_pending = 1U;
+    voice_client->dave_transition_ready = 0U;
+    voice_client->dave_media_ready = 0U;
+    if (voice_client->dave_backend != NULL) {
+        dcc_status_t status = dcc_voice_dave_backend_set_protocol(
+            voice_client,
+            voice_client->dave_pending_version,
+            0U
+        );
+        if (status != DCC_OK) return status;
     }
     return DCC_OK;
 }

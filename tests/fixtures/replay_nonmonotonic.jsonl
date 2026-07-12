@@ -1,0 +1,2 @@
+{"kind":"gateway","event":"READY","ts":20,"payload":{"op":0}}
+{"kind":"interaction","ts":10,"payload":{"id":"1","type":2}}

@@ -1,5 +1,7 @@
 #include "package_consumer_checks.h"
 
+#include <string.h>
+
 int main(void) {
     const char *version = dcc_version_string();
     const dcc_application_role_connection_metadata_params_t metadata = {
@@ -503,7 +505,7 @@ int main(void) {
 
 
     return version != NULL &&
-                   version[0] != '\0' &&
+                   strcmp(version, DCC_VERSION_STRING) == 0 &&
                    metadata.type == DCC_APPLICATION_ROLE_CONNECTION_METADATA_BOOLEAN_EQUAL &&
                    connection.metadata_field_count == 1U &&
                    automod.trigger_type == DCC_AUTO_MODERATION_TRIGGER_SPAM &&

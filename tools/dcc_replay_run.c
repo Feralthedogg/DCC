@@ -8,16 +8,38 @@
 
 static void dcc_replay_tool_sleep_gap(
     uint64_t previous_ts,
-    uint64_t current_ts
+    uint64_t current_ts,
+    uint32_t max_gap_ms
 ) {
     if (current_ts <= previous_ts) {
         return;
     }
     uint64_t gap_ms = current_ts - previous_ts;
+    if (gap_ms > max_gap_ms) gap_ms = max_gap_ms;
     if (gap_ms > UINT64_MAX / UINT64_C(1000000)) {
         return;
     }
     (void)llam_sleep_ns(gap_ms * UINT64_C(1000000));
+}
+
+static dcc_status_t dcc_replay_tool_check_expectations(
+    const dcc_replay_tool_options_t *options,
+    const dcc_replay_tool_stats_t *stats
+) {
+    if ((options->has_expect_records && stats->records != options->expect_records) ||
+        (options->has_expect_gateway && stats->gateway_records != options->expect_gateway) ||
+        (options->has_expect_interactions &&
+            stats->interaction_records != options->expect_interactions)) {
+        fprintf(
+            stderr,
+            "replay expectation failed: records=%zu gateway=%zu interactions=%zu\n",
+            stats->records,
+            stats->gateway_records,
+            stats->interaction_records
+        );
+        return DCC_ERR_STATE;
+    }
+    return DCC_OK;
 }
 
 dcc_status_t dcc_replay_tool_run(const dcc_replay_tool_options_t *options) {
@@ -43,8 +65,18 @@ dcc_status_t dcc_replay_tool_run(const dcc_replay_tool_options_t *options) {
         if (status != DCC_OK) {
             break;
         }
+        if (stats.records >= options->max_records) {
+            dcc_replay_record_deinit(&record);
+            status = DCC_ERR_STATE;
+            break;
+        }
+        if (!options->allow_nonmonotonic && stats.records != 0U && record.ts_ms < previous_ts) {
+            dcc_replay_record_deinit(&record);
+            status = DCC_ERR_STATE;
+            break;
+        }
         if (options->realtime && stats.records != 0U) {
-            dcc_replay_tool_sleep_gap(previous_ts, record.ts_ms);
+            dcc_replay_tool_sleep_gap(previous_ts, record.ts_ms, options->max_gap_ms);
         }
         previous_ts = record.ts_ms;
         dcc_replay_tool_stats_record(&stats, &record);
@@ -61,6 +93,7 @@ dcc_status_t dcc_replay_tool_run(const dcc_replay_tool_options_t *options) {
     }
     dcc_replay_player_close(&player);
     dcc_replay_tool_runtime_deinit(&runtime);
+    if (status == DCC_OK) status = dcc_replay_tool_check_expectations(options, &stats);
     if (status == DCC_OK && (options->summary || options->validate)) {
         dcc_replay_tool_stats_print(options, &stats);
         if (options->validate) {

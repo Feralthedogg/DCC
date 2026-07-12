@@ -2,6 +2,7 @@
 #define DCC_CLUSTER_STATE_INTERNAL_H
 
 #include "internal/client/dcc_client_state_internal.h"
+#include "internal/client/dcc_cluster_identify_coordinator_internal.h"
 
 #include <dcc/cluster.h>
 
@@ -27,6 +28,7 @@ struct dcc_cluster {
     void *supervisor_decision_user_data;
     atomic_bool supervisor_stop;
     atomic_bool gateway_admission_open;
+    dcc_cluster_identify_coordinator_t identify_coordinator;
     bool started;
     bool gateway_info_loaded;
 };

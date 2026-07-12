@@ -1,0 +1,27 @@
+[Unit]
+Description=DCC Discord bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dcc
+Group=dcc
+WorkingDirectory=/var/lib/dcc/bot
+EnvironmentFile=/etc/dcc/dcc-bot.env
+ExecStartPre=/usr/local/bin/dcc_doctor --require-token
+ExecStart=/opt/dcc-bot/bin/bot
+Restart=on-failure
+RestartSec=5s
+KillSignal=SIGTERM
+TimeoutStopSec=30s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/dcc/bot /var/log/dcc
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

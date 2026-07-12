@@ -66,7 +66,7 @@ wired into CTest when Python is available.
   `DCC_USE_FEATURE(...)`,
   `DCC_FEATURE_COMMAND_ROUTES(...)`, `DCC_COMMAND_ROUTE_NO_OPTIONS*`, `DCC_COMMAND_ROUTE*`, `DCC_ON_*`,
   `DCC_CTX_*` replies, `DCC_CTX_TRY(...)` for status-returning handler calls,
-  `DCC_UI_*` Components v2 builders, `DCC_APP_DEV_MODE()`, and app-owned store
+  `DCC_UI_*` Components v2 builders, `DCC_DEV_BOT()`, and app-owned store
   access through `DCC_CTX_STORE_*`/`DCC_APP_STORE_*` with the same
   `DCC_TOKEN` environment convention as the other runtime tools.
 - `dcc_command_sync` reconciles local application-command JSON with Discord
@@ -75,6 +75,8 @@ wired into CTest when Python is available.
 - `dcc_replay` validates/summarizes replay JSONL files and can feed captured
   gateway/interaction records into a hot-reload module through isolated worker
   mode.
+- `dcc_doctor` performs no-network DCC/LLAM/OpenSSL/token/certificate/libdave
+  preflight checks and emits human or JSON output.
 - `dcc_hot_reload_host` and `dcc_hot_reload_worker` provide the installed
   isolated hot-reload runtime.
 - `dcc_interaction_webhook` provides the installed shardless interaction
@@ -93,6 +95,8 @@ wired into CTest when Python is available.
   metadata are excluded without dropping deployment env templates.
 - `audit_deploy_templates.py` checks systemd, env, reverse-proxy, Kubernetes,
   and hot reload deployment template contracts.
+- `audit_workflow_pins.py` rejects mutable GitHub Action and LLAM checkout refs.
+- `generate_sbom.py` emits deterministic CycloneDX release SBOMs.
 - `release_check.sh` runs the full release validation flow.
   It also dry-runs the token-backed hot reload live-soak helper without opening
   a network connection and builds the installed hot reload example Makefile

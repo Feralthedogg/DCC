@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if !defined(_WIN32)
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 dcc_status_t dcc_replay_recorder_open(
     const char *path,
     dcc_replay_recorder_t *out
@@ -16,7 +21,13 @@ dcc_status_t dcc_replay_recorder_open(
     if (state == NULL) {
         return DCC_ERR_NOMEM;
     }
+#if defined(_WIN32)
     state->file = fopen(path, "ab");
+#else
+    int fd = open(path, O_WRONLY | O_CREAT | O_APPEND, 0600);
+    state->file = fd >= 0 ? fdopen(fd, "ab") : NULL;
+    if (state->file == NULL && fd >= 0) (void)close(fd);
+#endif
     if (state->file == NULL) {
         free(state);
         return DCC_ERR_RUNTIME;

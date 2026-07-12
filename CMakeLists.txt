@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 1.4.1
+    VERSION 1.5.0
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )
@@ -24,8 +24,16 @@ if(MSVC)
 endif()
 
 set(DCC_PUBLIC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(DCC_GENERATED_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated/include")
 set(DCC_PRIVATE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(DCC_TEST_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
+
+file(MAKE_DIRECTORY "${DCC_GENERATED_INCLUDE_DIR}/dcc")
+configure_file(
+    cmake/dcc-version-generated.h.in
+    "${DCC_GENERATED_INCLUDE_DIR}/dcc/version_generated.h"
+    @ONLY
+)
 
 option(DCC_BUILD_SHARED "Build DCC as a shared library" OFF)
 option(DCC_BUILD_EXAMPLES "Build DCC examples" OFF)
@@ -38,6 +46,7 @@ option(DCC_LLAM_USE_SUBDIRECTORY "Build LLAM from source through add_subdirector
 option(DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS "Keep LLAM tests enabled when LLAM is added as a subdirectory" OFF)
 option(DCC_BUNDLE_LLAM "Install LLAM runtime files with DCC packages when LLAM is built as a subdirectory" OFF)
 option(DCC_WITH_OPUS "Build the optional libopus voice codec backend when libopus is available" ON)
+option(DCC_WITH_DAVE "Enable the runtime-loaded official libdave backend" ON)
 set(DCC_LLAM_REQUIRED_VERSION "2.2.0" CACHE STRING "Minimum LLAM runtime version required by DCC")
 set(DCC_LLAM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../LLAM" CACHE PATH "Path to the LLAM runtime source tree")
 set(DCC_LLAM_LIBRARY "${DCC_LLAM_ROOT}/libllam_runtime.a" CACHE FILEPATH "Path to a prebuilt LLAM static library")
@@ -347,6 +356,7 @@ target_sources(dcc
         src/app/app_route_group.c
         src/app/app_routes.c
         src/app/app_scheduler.c
+        src/app/app_signal.c
         src/app/app_state.c
         src/app/app_subcommands.c
         src/app/app_typed_routes.c
@@ -426,6 +436,7 @@ target_sources(dcc
         src/client/cluster_health_json_shard.c
         src/client/cluster_health_json_status.c
         src/client/cluster_health_json_summary.c
+        src/client/cluster_health_prometheus.c
         src/client/cluster_health_state.c
         src/client/cluster_health.c
         src/client/cluster_json_buffer.c
@@ -681,6 +692,7 @@ target_sources(dcc
         src/interactions/interaction_server_error.c
         src/interactions/interaction_server_health.c
         src/interactions/interaction_server_health_json.c
+        src/interactions/interaction_server_health_prometheus.c
         src/interactions/interaction_server_health_route.c
         src/interactions/interaction_server_json_escape.c
         src/interactions/interaction_server_http_header_scan.c
@@ -1286,6 +1298,7 @@ target_sources(dcc
         src/replay/replay_parse.c
         src/replay/replay_player.c
         src/replay/replay_recorder.c
+        src/replay/replay_validate.c
         src/rest/rest_application_command_builders.c
         src/rest/rest_application_command_permission_builders.c
         src/rest/rest_application_command_permission_json.c
@@ -1548,6 +1561,7 @@ target_sources(dcc
         src/store/store_managed_message.c
         src/voice/voice_crypto.c
         src/voice/voice_dave.c
+        src/voice/voice_dave_backend.c
         src/voice/voice_dave_client.c
         src/voice/voice_dave_client_binary.c
         src/voice/voice_dave_client_builders.c
@@ -1566,6 +1580,7 @@ target_sources(dcc
         src/voice/voice_gateway_ready.c
         src/voice/voice_hchacha20.c
         src/voice/voice_health_json.c
+        src/voice/voice_health_prometheus.c
         src/voice/voice_health_snapshot.c
         src/voice/voice_health_state.c
         src/voice/voice_health_strings.c
@@ -1649,6 +1664,7 @@ target_sources(dcc
 
 target_include_directories(dcc
     PUBLIC
+        $<BUILD_INTERFACE:${DCC_GENERATED_INCLUDE_DIR}>
         $<BUILD_INTERFACE:${DCC_PUBLIC_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include>
     PRIVATE
@@ -1698,6 +1714,7 @@ target_compile_definitions(dcc
         $<$<BOOL:${DCC_BUILD_SHARED}>:DCC_SHARED>
     PRIVATE
         DCC_BUILD
+        $<$<BOOL:${DCC_WITH_DAVE}>:DCC_WITH_DAVE=1>
 )
 
 if(MSVC)
@@ -1722,6 +1739,14 @@ if(DCC_BUILD_TOOLS OR DCC_BUILD_EXAMPLES OR DCC_BUILD_TESTS)
 endif()
 
 if(DCC_BUILD_TOOLS)
+    add_executable(dcc_doctor tools/dcc_doctor.c)
+    target_link_libraries(dcc_doctor PRIVATE dcc::dcc OpenSSL::Crypto)
+    dcc_target_enable_sanitizers(dcc_doctor)
+    install(
+        TARGETS dcc_doctor
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
     add_executable(dcc_command_sync
         tools/dcc_command_sync.c
         tools/dcc_command_sync_file.c
@@ -1925,6 +1950,16 @@ if(DCC_BUILD_TESTS)
     target_link_libraries(dcc_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_smoke)
     add_test(NAME dcc_smoke COMMAND dcc_smoke)
+
+    add_executable(dcc_metrics_smoke tests/metrics_smoke.c)
+    target_link_libraries(dcc_metrics_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_metrics_smoke)
+    add_test(NAME dcc_metrics_smoke COMMAND dcc_metrics_smoke)
+
+    add_executable(dcc_legacy_abi_layout_smoke tests/legacy_abi_layout_smoke.c)
+    target_link_libraries(dcc_legacy_abi_layout_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_legacy_abi_layout_smoke)
+    add_test(NAME dcc_legacy_abi_layout_smoke COMMAND dcc_legacy_abi_layout_smoke)
 
     add_executable(dcc_pkg_config_consumer_smoke tests/pkg_config_consumer/main.c)
     target_link_libraries(dcc_pkg_config_consumer_smoke PRIVATE dcc::dcc)
@@ -2378,6 +2413,21 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_voice_smoke)
     add_test(NAME dcc_voice_smoke COMMAND dcc_voice_smoke)
 
+    add_library(dcc_fake_dave SHARED tests/fake_dave.c)
+    set_target_properties(dcc_fake_dave PROPERTIES
+        OUTPUT_NAME dcc_fake_dave
+        C_VISIBILITY_PRESET hidden
+    )
+    add_executable(dcc_voice_dave_backend_smoke tests/voice_dave_backend_smoke.c)
+    dcc_target_use_private_headers(dcc_voice_dave_backend_smoke)
+    target_compile_definitions(dcc_voice_dave_backend_smoke PRIVATE
+        "DCC_FAKE_DAVE_PATH=\"$<TARGET_FILE:dcc_fake_dave>\""
+    )
+    target_link_libraries(dcc_voice_dave_backend_smoke PRIVATE dcc::dcc)
+    add_dependencies(dcc_voice_dave_backend_smoke dcc_fake_dave)
+    dcc_target_enable_sanitizers(dcc_voice_dave_backend_smoke)
+    add_test(NAME dcc_voice_dave_backend_smoke COMMAND dcc_voice_dave_backend_smoke)
+
     add_executable(dcc_voice_wait_smoke tests/voice_wait_smoke.c)
     target_link_libraries(dcc_voice_wait_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_voice_wait_smoke)
@@ -2800,6 +2850,34 @@ if(DCC_BUILD_TESTS)
                 --file "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/replay_events.jsonl"
                 --summary
                 --validate
+                --expect-records 2
+                --expect-gateway 1
+                --expect-interactions 1
+        )
+
+        add_test(NAME dcc_replay_tool_malformed_rejected
+            COMMAND "$<TARGET_FILE:dcc_replay>"
+                --file "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/replay_malformed.jsonl"
+                --validate
+        )
+        set_tests_properties(dcc_replay_tool_malformed_rejected PROPERTIES WILL_FAIL TRUE)
+
+        add_test(NAME dcc_replay_tool_nonmonotonic_rejected
+            COMMAND "$<TARGET_FILE:dcc_replay>"
+                --file "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/replay_nonmonotonic.jsonl"
+                --validate
+        )
+        set_tests_properties(dcc_replay_tool_nonmonotonic_rejected PROPERTIES WILL_FAIL TRUE)
+
+        add_test(NAME dcc_replay_tool_nonmonotonic_allowed
+            COMMAND "$<TARGET_FILE:dcc_replay>"
+                --file "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/replay_nonmonotonic.jsonl"
+                --validate
+                --allow-nonmonotonic
+                --expect-records 2
+        )
+        set_tests_properties(dcc_replay_tool_nonmonotonic_allowed PROPERTIES
+            PASS_REGULAR_EXPRESSION "validate=ok"
         )
         set_tests_properties(dcc_replay_tool_summary PROPERTIES
             PASS_REGULAR_EXPRESSION "records=2 gateway=1 interactions=1"
@@ -2817,6 +2895,20 @@ if(DCC_BUILD_TESTS)
                 PASS_REGULAR_EXPRESSION "records=1 gateway=1 interactions=0"
             )
         endif()
+    endif()
+
+    if(TARGET dcc_doctor)
+        add_test(NAME dcc_doctor_help COMMAND dcc_doctor --help)
+        set_tests_properties(dcc_doctor_help PROPERTIES PASS_REGULAR_EXPRESSION "--require-dave")
+        add_test(NAME dcc_doctor_json COMMAND dcc_doctor --json)
+        set_tests_properties(dcc_doctor_json PROPERTIES
+            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"1.5.0\""
+        )
+        add_test(NAME dcc_doctor_require_token COMMAND dcc_doctor --json --require-token)
+        set_tests_properties(dcc_doctor_require_token PROPERTIES
+            ENVIRONMENT "DCC_TOKEN=doctor-test-token"
+            PASS_REGULAR_EXPRESSION "\"token_present\":true"
+        )
     endif()
 
     if(TARGET dcc_new_app)
@@ -3432,6 +3524,7 @@ if(DCC_BUILD_TESTS)
                 -S "${CMAKE_CURRENT_SOURCE_DIR}/tests/generated_app_compile"
                 -B "${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke/compile-check"
                 -DDCC_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+                -DDCC_VERSION_INCLUDE_DIR=${DCC_GENERATED_INCLUDE_DIR}
                 -DDCC_GENERATED_APP_DIR=${CMAKE_CURRENT_BINARY_DIR}/new_app_smoke
         )
         set_tests_properties(dcc_new_app_generated_compile_configure PROPERTIES
@@ -3646,6 +3739,46 @@ if(DCC_BUILD_TESTS)
         )
         set_tests_properties(dcc_deploy_template_audit PROPERTIES
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+        add_test(
+            NAME dcc_release_contract_audit
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_release_contract.py
+                --source ${CMAKE_CURRENT_SOURCE_DIR}
+                --build ${CMAKE_CURRENT_BINARY_DIR}
+        )
+        add_test(
+            NAME dcc_sbom_generation
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_sbom.py
+                --version 1.5.0
+                --artifacts ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures
+                --output ${CMAKE_CURRENT_BINARY_DIR}/dcc-test-sbom.cdx.json
+        )
+        set_tests_properties(dcc_sbom_generation PROPERTIES
+            PASS_REGULAR_EXPRESSION "wrote CycloneDX SBOM"
+        )
+        add_test(
+            NAME dcc_workflow_pin_audit
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_workflow_pins.py
+        )
+        set_tests_properties(dcc_workflow_pin_audit PROPERTIES
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+        set_tests_properties(dcc_release_contract_audit PROPERTIES
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+        add_test(
+            NAME dcc_public_api_audit
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_public_api.py
+                --source ${CMAKE_CURRENT_SOURCE_DIR}
+                --build ${CMAKE_CURRENT_BINARY_DIR}
+                --library $<TARGET_FILE:dcc>
+        )
+        set_tests_properties(dcc_public_api_audit PROPERTIES
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            TIMEOUT 180
         )
     else()
         message(WARNING "Python3 interpreter not found; source audit tests are disabled")
@@ -3869,9 +4002,20 @@ install(
 )
 
 install(
+    FILES "${DCC_GENERATED_INCLUDE_DIR}/dcc/version_generated.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dcc
+)
+
+install(
     FILES
         LICENSE
         README.md
+        CHANGELOG.md
+        CONTRIBUTING.md
+        CODE_OF_CONDUCT.md
+        ROADMAP.md
+        SECURITY.md
+        SUPPORT.md
     DESTINATION ${CMAKE_INSTALL_DATADIR}/dcc
 )
 
@@ -3899,11 +4043,13 @@ install(
 install(
     DIRECTORY deploy/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/dcc/deploy
+    USE_SOURCE_PERMISSIONS
     FILES_MATCHING
         PATTERN "*.md"
         PATTERN "*.env"
         PATTERN "*.service"
         PATTERN "*.conf"
+        PATTERN "*.sh"
         PATTERN "*.yaml"
         PATTERN "Caddyfile"
         PATTERN "Containerfile"
@@ -3935,6 +4081,11 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_SOURCE_IGNORE_FILES
     "/build[^/]*/"
+    "/CMakeFiles/"
+    "/CMakeCache\\.txt$"
+    "/cmake_install\\.cmake$"
+    "/install_manifest\\.txt$"
+    "/Testing/"
     "/site/"
     "/target/"
     "/dist/"
