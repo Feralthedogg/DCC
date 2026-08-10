@@ -29,6 +29,7 @@ FRAGMENT_HEADERS = frozenset({
 })
 IDENTIFIER = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*\b")
 MACRO = re.compile(r"^\s*#\s*define\s+(DCC_[A-Za-z0-9_]*)\b", re.MULTILINE)
+PUBLIC_INCLUDE = re.compile(r"^\s*#\s*include\s*<((?:dcc/)[A-Za-z0-9_./-]+)>", re.MULTILINE)
 API = re.compile(r"\bDCC_API\b")
 
 
@@ -208,24 +209,49 @@ def forbidden_identifiers(headers: list[Path], banned: list[str]) -> list[str]:
     return sorted(found)
 
 
+def bot_macro_candidates(bot_header: Path, include_root: Path) -> set[str]:
+    candidates: set[str] = set()
+    pending = [bot_header]
+    seen: set[Path] = set()
+    while pending:
+        header = pending.pop()
+        if header in seen:
+            continue
+        seen.add(header)
+        text = header.read_text(encoding="utf-8")
+        candidates.update(match.group(1) for match in MACRO.finditer(text))
+        for match in PUBLIC_INCLUDE.finditer(text):
+            child = include_root / match.group(1)
+            if child.is_file():
+                pending.append(child)
+    return candidates
+
+
 def bot_macro_count(
     bot_header: Path, compiler: list[str], includes: list[Path], temp: Path
 ) -> tuple[int | None, str | None]:
     if not bot_header.is_file():
         return None, "<dcc/bot.h> is missing"
-    if is_msvc(compiler):
-        return None, "MSVC cannot emit a macro table; configure a clang-compatible C compiler"
+    candidates = bot_macro_candidates(bot_header, includes[1])
     probe = temp / "bot_macros.c"
-    probe.write_text("#include <dcc/bot.h>\n", encoding="utf-8")
+    markers = "\n".join(
+        f"#ifdef {name}\nDCC_V2_AUDIT_PRESENT_{name}\n#endif" for name in sorted(candidates)
+    )
+    probe.write_text(f"#include <dcc/bot.h>\n{markers}\n", encoding="utf-8")
+    command = [*compiler, *(f"-I{item}" for item in includes), str(probe)]
+    if is_msvc(compiler):
+        command[1:1] = ["/nologo", "/EP"]
+    else:
+        command[1:1] = ["-E"]
     result = subprocess.run(
-        [*compiler, "-dM", "-E", *(f"-I{item}" for item in includes), str(probe)],
+        command,
         capture_output=True,
         text=True,
     )
     if result.returncode != 0:
         detail = (result.stderr or result.stdout).strip().splitlines()
         return None, detail[-1] if detail else "failed to preprocess <dcc/bot.h>"
-    names = {match.group(1) for match in MACRO.finditer(result.stdout)}
+    names = set(re.findall(r"\bDCC_V2_AUDIT_PRESENT_(DCC_[A-Za-z0-9_]*)\b", result.stdout))
     return len(names), None
 
 
