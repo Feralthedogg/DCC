@@ -54,4 +54,4 @@
 - Modify: `.superpowers/sdd/2026-08-11-dcc-2.0-api-redesign/task-2-implementer-report.md`
 
 - [x] Run focused `4/4`, the full enabled CTest set, ASan/UBSan `4/4`, TSan `2/2`, strict C11/C++17/header/audit probes, MinGW C11, the Windows fixture, and `git diff --check`.
-- [ ] Commit implementation and report separately, append exact RED/GREEN evidence, and finish with a clean worktree.
+- [x] Commit implementation and report separately, append exact RED/GREEN evidence, and finish with a clean worktree.

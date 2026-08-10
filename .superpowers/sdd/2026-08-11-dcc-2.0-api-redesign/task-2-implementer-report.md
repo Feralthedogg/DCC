@@ -313,3 +313,79 @@
   creates the task group.
 - The final voice-stop refinement performs no waits while preventing an
   unregister/destroy race around a borrowed voice-client pointer.
+
+## Final cleanup — teardown callbacks and consumed-object result
+
+### Root causes and fixes
+
+- Destroy previously freed the legacy schedule array while retaining its
+  pointer/count/capacity. A later module or state cleanup that called
+  `dcc_app_stop` entered schedule cancellation and traversed that freed array.
+- Destroy now publishes a private teardown state under the App lock immediately
+  after successful schedule reap and before any listener, route, module, or
+  state cleanup. Stop observes this state first and returns idempotent
+  `DCC_OK` without touching schedule, client, or stopping state.
+- Legacy schedule ownership is moved to locals and the App's schedule
+  pointer/count/capacity are cleared before the storage is freed and before
+  module/state cleanup callbacks run.
+- Destroy previously returned an earlier stop-request error even after reaping,
+  tearing down, and freeing the App. It now has one ownership rule: a reap
+  failure returns non-OK before teardown with the App intact; every path that
+  consumes and frees the App returns `DCC_OK`. The public lifecycle contract
+  documents this distinction.
+- Added a private one-shot task-cancel/request-stop failure hook and external
+  test-status sink. It reports `DCC_ERR_RUNTIME` without canceling the group so
+  the owner reaper can succeed, then clears itself. This keeps the consumed-App
+  result path deterministic without exposing a public failpoint.
+
+### TDD evidence
+
+- RED module cleanup: with a public legacy schedule installed, ASan reported
+  `heap-use-after-free` in `dcc_app_request_stop_schedules` at
+  `app_scheduler.c:371`, called from the module cleanup after `dcc_app_destroy`
+  freed the schedule array at `app.c:235`.
+- RED state cleanup: the separate state-cleanup path produced the same ASan
+  UAF, with the stack passing through `dcc_app_clear_state`.
+- RED consumed result: the deterministic request-stop failure was observed as
+  status `3` (`DCC_ERR_RUNTIME`), and the old destroy returned `3` after
+  consuming the App instead of returning `DCC_OK`.
+- GREEN module and state probes each install their own public legacy schedule,
+  run cleanup exactly once, receive `DCC_OK` from cleanup-side stop, and receive
+  `DCC_OK` from destroy under ASan. The consumed-object probe runs a real
+  one-millisecond scheduled task, verifies the injected failure was exercised,
+  observes successful owner reap/cleanup, and never retries the consumed App.
+- The pre-existing reap-failure probe remains green: its first destroy returns
+  `DCC_ERR_TIMEOUT` with the exact task group, App, listener, client, and cleanup
+  ownership preserved, then a clean retry succeeds with cleanup exactly once.
+
+### Verification and exact results
+
+- Implementation commit: `7ed5cb8` (`fix: make App teardown callbacks safe`).
+  Commit `b8f1e80` and earlier history were not rewritten.
+- Focused listener, concurrency, contract, and context-header CTest passed
+  `4/4` in 1.17s.
+- Full configured build passed. Full CTest passed `174/174` enabled tests in
+  25.21s; the configured 24 LLAM subdirectory tests remained disabled.
+- ASan/UBSan focused CTest passed `4/4` in 1.42s with
+  `ASAN_OPTIONS=halt_on_error=1:detect_leaks=0` and
+  `UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1`, with no report.
+- TSan concurrency/contract CTest passed `2/2` in 1.85s with
+  `TSAN_OPTIONS=halt_on_error=1`, with no race report.
+- All 16 explicitly selected enabled audit/header tests passed in 34.15s,
+  including V2 surface, public API, project layout, release contract, official
+  surface, source package, workflow pin, and capacity-growth audits.
+- Strict native C11 `-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror`
+  syntax checks passed for the changed sources and focused test. Standalone
+  `<dcc/app.h>` probes passed under strict C11 and C++17.
+- Strict MinGW C11 syntax passed for App lifecycle, scheduler, and the Windows
+  include-order fixture; the native fixture executable passed. `git diff
+  --check` passed.
+
+### Cleanup-order audit
+
+- Teardown state is established before canonical listener cleanup, component
+  session/event detachment, route and middleware cleanup, legacy schedule
+  release, module cleanup, state cleanup, store closure, and client destruction.
+- Every cleanup-side `dcc_app_stop` therefore returns before reading freed or
+  partially torn-down App resources. Callback-side `dcc_app_wait` and recursive
+  destroy remain rejected by the existing callback-frame guard.
