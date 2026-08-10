@@ -1,0 +1,6 @@
+DCC_ROUTE_*
+DCC_DECORATE_*
+DCC_RESPOND*
+DCC_SIMPLE_BOT*
+DCC_V2_*
+dcc_rest_future_t

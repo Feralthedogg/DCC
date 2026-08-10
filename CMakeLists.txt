@@ -1942,24 +1942,48 @@ if(DCC_BUILD_EXAMPLES)
     dcc_target_enable_sanitizers(dcc_hot_reload_test_bot)
 endif()
 
+function(dcc_resolve_llam_include out_var)
+    get_target_property(DCC_LLAM_AUDIT_INCLUDE_DIRS llam::runtime INTERFACE_INCLUDE_DIRECTORIES)
+    foreach(DCC_LLAM_AUDIT_INCLUDE_DIR IN LISTS DCC_LLAM_AUDIT_INCLUDE_DIRS)
+        if(DCC_LLAM_AUDIT_INCLUDE_DIR MATCHES "^\\$<")
+            continue()
+        endif()
+        if(EXISTS "${DCC_LLAM_AUDIT_INCLUDE_DIR}/llam/runtime.h")
+            set(${out_var} "${DCC_LLAM_AUDIT_INCLUDE_DIR}" PARENT_SCOPE)
+            return()
+        endif()
+    endforeach()
+    if(EXISTS "${DCC_LLAM_ROOT}/include/llam/runtime.h")
+        set(${out_var} "${DCC_LLAM_ROOT}/include" PARENT_SCOPE)
+        return()
+    endif()
+    message(FATAL_ERROR "DCC v2 surface audit requires a concrete LLAM include directory containing llam/runtime.h")
+endfunction()
+
 if(DCC_BUILD_TESTS)
     enable_testing()
-    find_package(Python3 COMPONENTS Interpreter)
-
-    if(Python3_Interpreter_FOUND)
-        add_test(
-            NAME dcc_v2_surface_audit
-            COMMAND ${Python3_EXECUTABLE}
-                ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_v2_surface.py
-                --source ${CMAKE_CURRENT_SOURCE_DIR}
-                --compiler ${CMAKE_C_COMPILER}
-                --transition
-        )
-        set_tests_properties(dcc_v2_surface_audit PROPERTIES
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            TIMEOUT 180
-        )
+    include(CheckLanguage)
+    check_language(CXX)
+    if(NOT CMAKE_CXX_COMPILER OR NOT EXISTS "${CMAKE_CXX_COMPILER}")
+        message(FATAL_ERROR "DCC_BUILD_TESTS requires a configured C++ compiler for the public-header audit")
     endif()
+    enable_language(CXX)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    dcc_resolve_llam_include(DCC_V2_SURFACE_LLAM_INCLUDE)
+    add_test(
+        NAME dcc_v2_surface_audit
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_v2_surface.py
+            --source ${CMAKE_CURRENT_SOURCE_DIR}
+            --compiler ${CMAKE_C_COMPILER}
+            --cxx-compiler ${CMAKE_CXX_COMPILER}
+            --llam-include ${DCC_V2_SURFACE_LLAM_INCLUDE}
+            --transition
+    )
+    set_tests_properties(dcc_v2_surface_audit PROPERTIES
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        TIMEOUT 180
+    )
 
     add_executable(dcc_smoke tests/smoke.c)
     target_link_libraries(dcc_smoke PRIVATE dcc::dcc)
