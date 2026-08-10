@@ -15,6 +15,16 @@ typedef struct dcc_command_registry_state {
     size_t entry_cap;
 } dcc_command_registry_state_t;
 
+typedef struct dcc_command_registry_add_transaction {
+    dcc_command_registry_t *registry;
+    dcc_command_registry_state_t *state;
+    dcc_command_registry_state_t *new_state;
+    dcc_command_registry_entry_t *staged_entries;
+    size_t staged_entry_cap;
+    dcc_application_command_builder_t command;
+    uint8_t prepared;
+} dcc_command_registry_add_transaction_t;
+
 typedef struct dcc_command_registry_plan_state {
     dcc_command_registry_diff_t *diffs;
     size_t diff_count;
@@ -39,6 +49,18 @@ dcc_status_t dcc_command_registry_builder_copy(
     const dcc_application_command_builder_t *src
 );
 void dcc_command_registry_builder_deinit(dcc_application_command_builder_t *builder);
+dcc_status_t dcc_command_registry_add_prepare(
+    dcc_command_registry_add_transaction_t *transaction,
+    dcc_command_registry_t *registry,
+    const dcc_application_command_builder_t *command
+);
+void dcc_command_registry_add_commit(
+    dcc_command_registry_add_transaction_t *transaction
+);
+void dcc_command_registry_add_abort(
+    dcc_command_registry_add_transaction_t *transaction
+);
+void dcc_command_registry_test_fail_next_growth(void);
 dcc_snowflake_t dcc_command_registry_options_guild_id(
     const dcc_command_registry_options_t *options
 );

@@ -70,7 +70,10 @@ static void dcc_app_message_command_dispatch(
         ? dcc_app_message_command_match(state, message->content)
         : NULL;
     if (args != NULL) {
+        dcc_app_callback_frame_t callback_frame;
+        dcc_app_callback_frame_enter(&callback_frame, state->app, NULL);
         state->handler(state->app, message, args, event, state->user_data);
+        dcc_app_callback_frame_leave(&callback_frame);
     }
 }
 

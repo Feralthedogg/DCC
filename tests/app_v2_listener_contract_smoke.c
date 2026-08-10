@@ -2,6 +2,7 @@
 
 #include "internal/app/dcc_app_internal.h"
 #include "internal/client/dcc_client_state_internal.h"
+#include "internal/command_registry/dcc_command_registry_internal.h"
 #include "internal/events/dcc_event_state_internal.h"
 
 #include <stddef.h>
@@ -27,7 +28,62 @@ typedef struct contract_state {
     unsigned message_update_count;
     unsigned message_delete_count;
     unsigned message_command_count;
+    unsigned failed_cleanup_count;
 } contract_state_t;
+
+typedef struct exact_app_snapshot {
+    dcc_app_listener_entry_t **listeners;
+    size_t listener_count;
+    size_t listener_cap;
+    dcc_app_route_t *routes;
+    size_t route_count;
+    size_t route_cap;
+    dcc_app_schedule_t **schedules;
+    size_t schedule_count;
+    size_t schedule_cap;
+    dcc_listener_id_t next_listener_id;
+    dcc_app_route_id_t next_route_id;
+    size_t registry_size;
+    void *registry_state;
+    dcc_command_registry_entry_t *registry_entries;
+    size_t registry_entry_count;
+    size_t registry_entry_cap;
+} exact_app_snapshot_t;
+
+static exact_app_snapshot_t exact_app_snapshot(const dcc_app_t *app) {
+    const dcc_command_registry_state_t *registry =
+        dcc_command_registry_state_const(&app->registry);
+    return (exact_app_snapshot_t){
+        .listeners = app->listeners,
+        .listener_count = app->listener_count,
+        .listener_cap = app->listener_cap,
+        .routes = app->routes,
+        .route_count = app->route_count,
+        .route_cap = app->route_cap,
+        .schedules = app->schedules,
+        .schedule_count = app->schedule_count,
+        .schedule_cap = app->schedule_cap,
+        .next_listener_id = app->next_listener_id,
+        .next_route_id = app->next_route_id,
+        .registry_size = app->registry.size,
+        .registry_state = app->registry.state,
+        .registry_entries = registry != NULL ? registry->entries : NULL,
+        .registry_entry_count = registry != NULL ? registry->entry_count : 0U,
+        .registry_entry_cap = registry != NULL ? registry->entry_cap : 0U,
+    };
+}
+
+static int exact_app_snapshot_equal(
+    const exact_app_snapshot_t *left,
+    const exact_app_snapshot_t *right
+) {
+    return memcmp(left, right, sizeof(*left)) == 0;
+}
+
+static void failed_listener_cleanup(void *user_data) {
+    contract_state_t *state = (contract_state_t *)user_data;
+    state->failed_cleanup_count++;
+}
 
 static dcc_status_t plain_handler(dcc_ctx_t *ctx, void *user_data) {
     contract_state_t *state = (contract_state_t *)user_data;
@@ -116,6 +172,18 @@ static dcc_status_t message_command_handler(
 
 static dcc_status_t task_handler(dcc_app_t *app, void *user_data) {
     return app != NULL && user_data != NULL ? DCC_OK : DCC_ERR_INVALID_ARG;
+}
+
+static dcc_status_t policy_middleware(dcc_ctx_t *ctx, void *user_data) {
+    return ctx != NULL && user_data != NULL ? DCC_OK : DCC_ERR_INVALID_ARG;
+}
+
+static dcc_status_t create_app(dcc_app_t **out) {
+    dcc_app_options_t options;
+    dcc_app_options_init(&options);
+    options.client.token = "";
+    options.client.intents = DCC_INTENT_GUILDS;
+    return dcc_app_create(&options, out);
 }
 
 static dcc_listener_t slash_listener(const char *name, void *user_data) {
@@ -359,6 +427,8 @@ static int test_transactional_retry(dcc_app_t *app, contract_state_t *state) {
     invalid_command.name = "schema-rollback";
     invalid_command.type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
     invalid_command.has_type = 1U;
+    invalid_command.description = "schema rollback";
+    invalid_command.has_description = 1U;
     dcc_listener_t invalid_listener = slash_listener("ignored", state);
     invalid_listener.target.route.command = &invalid_command;
     invalid_listener.target.route.name = NULL;
@@ -445,6 +515,426 @@ static int test_transactional_retry(dcc_app_t *app, contract_state_t *state) {
         return 1;
     }
     return 0;
+}
+
+static int expect_failed_listen_exact(
+    dcc_app_t *app,
+    const dcc_listener_t *listener,
+    dcc_status_t expected_status,
+    const char *label
+) {
+    exact_app_snapshot_t before = exact_app_snapshot(app);
+    dcc_listener_id_t id = UINT64_C(99);
+    dcc_status_t status = dcc_app_listen(app, listener, &id);
+    exact_app_snapshot_t after = exact_app_snapshot(app);
+    if (status != expected_status || id != 0U ||
+        !exact_app_snapshot_equal(&before, &after)) {
+        fprintf(
+            stderr,
+            "%s changed transaction state: status=%d/%d id=%llu "
+            "listeners=%p/%p %zu/%zu %zu/%zu routes=%p/%p %zu/%zu %zu/%zu "
+            "registry=%p/%p entries=%p/%p %zu/%zu %zu/%zu\n",
+            label,
+            status,
+            expected_status,
+            (unsigned long long)id,
+            (void *)before.listeners,
+            (void *)after.listeners,
+            before.listener_count,
+            after.listener_count,
+            before.listener_cap,
+            after.listener_cap,
+            (void *)before.routes,
+            (void *)after.routes,
+            before.route_count,
+            after.route_count,
+            before.route_cap,
+            after.route_cap,
+            before.registry_state,
+            after.registry_state,
+            (void *)before.registry_entries,
+            (void *)after.registry_entries,
+            before.registry_entry_count,
+            after.registry_entry_count,
+            before.registry_entry_cap,
+            after.registry_entry_cap
+        );
+        return 1;
+    }
+    return 0;
+}
+
+static int test_exact_failure_transactions(contract_state_t *state) {
+    dcc_app_t *app = NULL;
+    if (create_app(&app) != DCC_OK) {
+        return 1;
+    }
+    dcc_listener_middleware_t middleware = {
+        .size = sizeof(middleware),
+        .version = DCC_LISTENER_MIDDLEWARE_VERSION,
+        .callback = policy_middleware,
+        .user_data = state,
+    };
+    dcc_listener_t policy_listener = slash_listener("policy-oom", state);
+    policy_listener.cleanup = failed_listener_cleanup;
+    policy_listener.policy.middlewares = &middleware;
+    policy_listener.policy.middleware_count = 1U;
+    app->listener_test_fail_policy_allocation = 1U;
+    if (expect_failed_listen_exact(
+            app,
+            &policy_listener,
+            DCC_ERR_NOMEM,
+            "route policy allocation failure"
+        ) != 0 || state->failed_cleanup_count != 0U) {
+        return 1;
+    }
+
+    dcc_listener_t schedule_listener;
+    dcc_listener_init(&schedule_listener, DCC_LISTENER_TASK);
+    schedule_listener.handler.task = task_handler;
+    schedule_listener.user_data = state;
+    schedule_listener.cleanup = failed_listener_cleanup;
+    schedule_listener.target.schedule.kind = DCC_LISTENER_SCHEDULE_INTERVAL;
+    schedule_listener.target.schedule.interval_ms = 1U;
+    app->listener_test_fail_schedule_allocation = 1U;
+    if (expect_failed_listen_exact(
+            app,
+            &schedule_listener,
+            DCC_ERR_NOMEM,
+            "schedule allocation failure"
+        ) != 0 || state->failed_cleanup_count != 0U) {
+        return 1;
+    }
+
+    dcc_app_route_id_t saved_route_id = app->next_route_id;
+    app->next_route_id = UINT64_MAX;
+    dcc_listener_t route_id_listener = slash_listener("route-id-oom", state);
+    route_id_listener.cleanup = failed_listener_cleanup;
+    if (expect_failed_listen_exact(
+            app,
+            &route_id_listener,
+            DCC_ERR_NOMEM,
+            "route ID exhaustion"
+        ) != 0 || state->failed_cleanup_count != 0U) {
+        return 1;
+    }
+    app->next_route_id = saved_route_id;
+
+    for (size_t i = 0U; i < 4U; ++i) {
+        char name[32];
+        (void)snprintf(name, sizeof(name), "seed-%zu", i);
+        dcc_application_command_builder_t seed;
+        dcc_application_command_builder_init(&seed);
+        if (dcc_application_command_builder_set_name(&seed, name) != DCC_OK ||
+            dcc_application_command_builder_set_description(&seed, "seed") != DCC_OK ||
+            dcc_application_command_builder_set_type(
+                &seed,
+                DCC_APPLICATION_COMMAND_CHAT_INPUT
+            ) != DCC_OK ||
+            dcc_command_registry_add_builder(&app->registry, &seed) != DCC_OK) {
+            return 1;
+        }
+    }
+    dcc_application_command_builder_t growth_command;
+    dcc_application_command_builder_init(&growth_command);
+    growth_command.name = "registry-growth-oom";
+    growth_command.has_name = 1U;
+    growth_command.description = "registry growth oom";
+    growth_command.has_description = 1U;
+    growth_command.type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
+    growth_command.has_type = 1U;
+    dcc_listener_t growth_listener = slash_listener("ignored", state);
+    growth_listener.target.route.name = NULL;
+    growth_listener.target.route.description = NULL;
+    growth_listener.target.route.command = &growth_command;
+    growth_listener.cleanup = failed_listener_cleanup;
+    dcc_command_registry_test_fail_next_growth();
+    if (expect_failed_listen_exact(
+            app,
+            &growth_listener,
+            DCC_ERR_NOMEM,
+            "command registry growth allocation failure"
+        ) != 0 || state->failed_cleanup_count != 0U) {
+        return 1;
+    }
+
+    dcc_application_command_option_builder_t placeholder_option = {0};
+    dcc_application_command_builder_t oversized;
+    dcc_application_command_builder_init(&oversized);
+    oversized.name = "schema-copy-overflow";
+    oversized.has_name = 1U;
+    oversized.description = "registry growth oom";
+    oversized.has_description = 1U;
+    oversized.type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
+    oversized.has_type = 1U;
+    oversized.options = &placeholder_option;
+    oversized.options_count = SIZE_MAX / sizeof(placeholder_option) + 1U;
+    dcc_listener_t registry_listener = slash_listener("ignored", state);
+    registry_listener.target.route.name = NULL;
+    registry_listener.target.route.description = NULL;
+    registry_listener.target.route.command = &oversized;
+    registry_listener.cleanup = failed_listener_cleanup;
+    if (expect_failed_listen_exact(
+            app,
+            &registry_listener,
+            DCC_ERR_INVALID_ARG,
+            "command schema deep-copy failure"
+        ) != 0 || state->failed_cleanup_count != 0U) {
+        return 1;
+    }
+
+
+    const char *partial_fallbacks[2] = {"partial-a", "partial-b"};
+    dcc_listener_binding_t partial_binding = {
+        .size = sizeof(partial_binding),
+        .version = DCC_LISTENER_BINDING_VERSION,
+        .name = "values",
+        .type = DCC_CTX_FORM_BIND_VALUES,
+        .field_offset = offsetof(owned_values_args_t, values),
+        .count_offset = offsetof(owned_values_args_t, value_count),
+        .has_count_offset = 1U,
+        .fallback_values = partial_fallbacks,
+        .fallback_values_count = 2U,
+    };
+    dcc_listener_t partial_listener;
+    dcc_listener_init(&partial_listener, DCC_LISTENER_MODAL);
+    partial_listener.handler.typed = typed_owned_values_handler;
+    partial_listener.user_data = state;
+    partial_listener.cleanup = failed_listener_cleanup;
+    partial_listener.args_size = sizeof(owned_values_args_t);
+    partial_listener.bindings.kind = DCC_LISTENER_BIND_FORM;
+    partial_listener.bindings.items.forms = &partial_binding;
+    partial_listener.bindings.count = 1U;
+    partial_listener.target.route.name = "partial-metadata-oom";
+    app->listener_test_fail_metadata_copy_after = 1U;
+    if (expect_failed_listen_exact(
+            app,
+            &partial_listener,
+            DCC_ERR_NOMEM,
+            "partial metadata ownership failure"
+        ) != 0 || state->failed_cleanup_count != 0U) {
+        return 1;
+    }
+
+    const char *one_fallback = "fallback";
+    dcc_listener_binding_t huge_binding = {
+        .size = sizeof(huge_binding),
+        .version = DCC_LISTENER_BINDING_VERSION,
+        .name = "values",
+        .type = DCC_CTX_FORM_BIND_VALUES,
+        .field_offset = offsetof(owned_values_args_t, values),
+        .count_offset = offsetof(owned_values_args_t, value_count),
+        .has_count_offset = 1U,
+        .fallback_values = &one_fallback,
+        .fallback_values_count = SIZE_MAX / sizeof(const char *) + 1U,
+    };
+    dcc_listener_t metadata_listener;
+    dcc_listener_init(&metadata_listener, DCC_LISTENER_MODAL);
+    metadata_listener.handler.typed = typed_owned_values_handler;
+    metadata_listener.user_data = state;
+    metadata_listener.cleanup = failed_listener_cleanup;
+    metadata_listener.args_size = sizeof(owned_values_args_t);
+    metadata_listener.bindings.kind = DCC_LISTENER_BIND_FORM;
+    metadata_listener.bindings.items.forms = &huge_binding;
+    metadata_listener.bindings.count = 1U;
+    metadata_listener.target.route.name = "metadata-oom";
+    if (expect_failed_listen_exact(
+            app,
+            &metadata_listener,
+            DCC_ERR_NOMEM,
+            "partial metadata copy failure"
+        ) != 0 || state->failed_cleanup_count != 0U) {
+        return 1;
+    }
+    return dcc_app_destroy(app) == DCC_OK ? 0 : 1;
+}
+
+static dcc_listener_t command_schema_listener(
+    dcc_listener_kind_t kind,
+    const dcc_application_command_builder_t *command,
+    contract_state_t *state
+) {
+    dcc_listener_t listener;
+    dcc_listener_init(&listener, kind);
+    listener.handler.plain = plain_handler;
+    listener.user_data = state;
+    listener.target.route.command = command;
+    if (kind == DCC_LISTENER_SUBCOMMAND) {
+        listener.target.route.command_name = command->name;
+        listener.target.route.subcommand_path = "leaf";
+    }
+    return listener;
+}
+
+static int expect_command_schema_case(
+    dcc_app_t *app,
+    dcc_listener_kind_t kind,
+    const dcc_application_command_builder_t *command,
+    contract_state_t *state,
+    uint8_t accepted,
+    const char *label
+) {
+    dcc_listener_t listener = command_schema_listener(kind, command, state);
+    if (!accepted) {
+        return expect_failed_listen_exact(app, &listener, DCC_ERR_INVALID_ARG, label);
+    }
+    size_t command_count = dcc_command_registry_count(&app->registry);
+    dcc_listener_id_t id = 0U;
+    dcc_status_t status = dcc_app_listen(app, &listener, &id);
+    if (status != DCC_OK || id == 0U ||
+        dcc_command_registry_count(&app->registry) != command_count + 1U ||
+        dcc_app_unlisten(app, id) != DCC_OK) {
+        fprintf(stderr, "%s command schema was not accepted exactly once: status=%d\n", label, status);
+        return 1;
+    }
+    return 0;
+}
+
+static dcc_application_command_builder_t command_builder(
+    const char *name,
+    dcc_application_command_type_t type,
+    uint8_t has_type,
+    const char *description
+) {
+    dcc_application_command_builder_t command;
+    dcc_application_command_builder_init(&command);
+    command.name = name;
+    command.has_name = 1U;
+    command.type = (uint32_t)type;
+    command.has_type = has_type;
+    command.description = description;
+    command.has_description = description != NULL;
+    return command;
+}
+
+static int test_command_type_matrix(contract_state_t *state) {
+    dcc_app_t *app = NULL;
+    if (create_app(&app) != DCC_OK) {
+        return 1;
+    }
+    dcc_application_command_builder_t slash = command_builder(
+        "matrix-slash",
+        DCC_APPLICATION_COMMAND_CHAT_INPUT,
+        1U,
+        "slash"
+    );
+    dcc_application_command_builder_t default_slash = command_builder(
+        "matrix-default-slash",
+        DCC_APPLICATION_COMMAND_CHAT_INPUT,
+        0U,
+        "default slash"
+    );
+    dcc_application_command_builder_t subcommand = command_builder(
+        "matrix-subcommand",
+        DCC_APPLICATION_COMMAND_CHAT_INPUT,
+        1U,
+        "subcommand"
+    );
+    dcc_application_command_builder_t autocomplete = command_builder(
+        "matrix-autocomplete",
+        DCC_APPLICATION_COMMAND_CHAT_INPUT,
+        1U,
+        "autocomplete"
+    );
+    dcc_application_command_builder_t user = command_builder(
+        "matrix-user",
+        DCC_APPLICATION_COMMAND_USER,
+        1U,
+        NULL
+    );
+    dcc_application_command_builder_t message = command_builder(
+        "matrix-message",
+        DCC_APPLICATION_COMMAND_MESSAGE,
+        1U,
+        NULL
+    );
+    if (expect_command_schema_case(app, DCC_LISTENER_SLASH, &slash, state, 1U, "slash/chat") ||
+        expect_command_schema_case(app, DCC_LISTENER_SLASH, &default_slash, state, 1U, "slash/default-chat") ||
+        expect_command_schema_case(app, DCC_LISTENER_SUBCOMMAND, &subcommand, state, 1U, "subcommand/chat") ||
+        expect_command_schema_case(app, DCC_LISTENER_AUTOCOMPLETE, &autocomplete, state, 1U, "autocomplete/chat") ||
+        expect_command_schema_case(app, DCC_LISTENER_USER_CONTEXT_MENU, &user, state, 1U, "user-menu/user") ||
+        expect_command_schema_case(app, DCC_LISTENER_MESSAGE_CONTEXT_MENU, &message, state, 1U, "message-menu/message")) {
+        return 1;
+    }
+
+    dcc_application_command_builder_t slash_user = command_builder(
+        "reject-slash-user",
+        DCC_APPLICATION_COMMAND_USER,
+        1U,
+        NULL
+    );
+    dcc_application_command_builder_t sub_message = command_builder(
+        "reject-sub-message",
+        DCC_APPLICATION_COMMAND_MESSAGE,
+        1U,
+        NULL
+    );
+    dcc_application_command_builder_t autocomplete_user = command_builder(
+        "reject-autocomplete-user",
+        DCC_APPLICATION_COMMAND_USER,
+        1U,
+        NULL
+    );
+    dcc_application_command_builder_t user_default = command_builder(
+        "reject-user-default",
+        DCC_APPLICATION_COMMAND_CHAT_INPUT,
+        0U,
+        "default chat"
+    );
+    dcc_application_command_builder_t message_chat = command_builder(
+        "reject-message-chat",
+        DCC_APPLICATION_COMMAND_CHAT_INPUT,
+        1U,
+        "chat"
+    );
+    dcc_application_command_builder_t menu_description = command_builder(
+        "reject-menu-description",
+        DCC_APPLICATION_COMMAND_USER,
+        1U,
+        "not allowed"
+    );
+    dcc_application_command_builder_t menu_options = command_builder(
+        "reject-menu-options",
+        DCC_APPLICATION_COMMAND_MESSAGE,
+        1U,
+        NULL
+    );
+    menu_options.options_json = "[]";
+    dcc_application_command_builder_t missing_description = command_builder(
+        "reject-missing-description",
+        DCC_APPLICATION_COMMAND_CHAT_INPUT,
+        1U,
+        NULL
+    );
+    dcc_application_command_builder_t empty_description = command_builder(
+        "reject-empty-description",
+        DCC_APPLICATION_COMMAND_CHAT_INPUT,
+        1U,
+        ""
+    );
+    dcc_application_command_builder_t non_boolean_type = slash;
+    non_boolean_type.name = "reject-has-type";
+    non_boolean_type.has_type = 2U;
+    dcc_application_command_builder_t non_boolean_name = slash;
+    non_boolean_name.name = "reject-has-name";
+    non_boolean_name.has_name = 2U;
+    dcc_application_command_builder_t component_schema = slash;
+    component_schema.name = "reject-component-schema";
+    if (expect_command_schema_case(app, DCC_LISTENER_SLASH, &slash_user, state, 0U, "slash/user") ||
+        expect_command_schema_case(app, DCC_LISTENER_SUBCOMMAND, &sub_message, state, 0U, "subcommand/message") ||
+        expect_command_schema_case(app, DCC_LISTENER_AUTOCOMPLETE, &autocomplete_user, state, 0U, "autocomplete/user") ||
+        expect_command_schema_case(app, DCC_LISTENER_USER_CONTEXT_MENU, &user_default, state, 0U, "user-menu/default-chat") ||
+        expect_command_schema_case(app, DCC_LISTENER_MESSAGE_CONTEXT_MENU, &message_chat, state, 0U, "message-menu/chat") ||
+        expect_command_schema_case(app, DCC_LISTENER_USER_CONTEXT_MENU, &menu_description, state, 0U, "user-menu/description") ||
+        expect_command_schema_case(app, DCC_LISTENER_MESSAGE_CONTEXT_MENU, &menu_options, state, 0U, "message-menu/options") ||
+        expect_command_schema_case(app, DCC_LISTENER_SLASH, &missing_description, state, 0U, "chat/missing-description") ||
+        expect_command_schema_case(app, DCC_LISTENER_SLASH, &empty_description, state, 0U, "chat/empty-description") ||
+        expect_command_schema_case(app, DCC_LISTENER_SLASH, &non_boolean_type, state, 0U, "command/non-boolean-has-type") ||
+        expect_command_schema_case(app, DCC_LISTENER_SLASH, &non_boolean_name, state, 0U, "command/non-boolean-has-name") ||
+        expect_command_schema_case(app, DCC_LISTENER_BUTTON, &component_schema, state, 0U, "component/schema")) {
+        return 1;
+    }
+    return dcc_app_destroy(app) == DCC_OK ? 0 : 1;
 }
 
 static int test_metadata_ownership(dcc_app_t *app, contract_state_t *state) {
@@ -548,6 +1038,8 @@ int main(void) {
     }
     contract_state_t state = {0};
     int failed = test_validation_matrix(app, &state) != 0 ||
+                 test_exact_failure_transactions(&state) != 0 ||
+                 test_command_type_matrix(&state) != 0 ||
                  test_transactional_retry(app, &state) != 0 ||
                  test_metadata_ownership(app, &state) != 0 ||
                  test_listener_kind_coverage(app, &state) != 0;

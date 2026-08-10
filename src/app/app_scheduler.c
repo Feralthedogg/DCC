@@ -92,7 +92,10 @@ static void dcc_app_schedule_task(void *arg) {
             break;
         }
         if (!dcc_app_stopping(schedule->app) && schedule->fn != NULL) {
+            dcc_app_callback_frame_t callback_frame;
+            dcc_app_callback_frame_enter(&callback_frame, schedule->app, NULL);
             schedule->fn(schedule->app, schedule->user_data);
+            dcc_app_callback_frame_leave(&callback_frame);
         } else if (!dcc_app_stopping(schedule->app) && schedule->canonical_fn != NULL &&
                    !atomic_load_explicit(&schedule->cancelled, memory_order_acquire)) {
             (void)schedule->canonical_fn(schedule->listener_state, schedule->app);
@@ -124,6 +127,10 @@ dcc_status_t dcc_app_add_canonical_schedule(
     dcc_status_t status = dcc_app_schedules_reserve(app, app->schedule_count + 1U);
     if (status != DCC_OK) {
         return status;
+    }
+    if (app->listener_test_fail_schedule_allocation) {
+        app->listener_test_fail_schedule_allocation = 0U;
+        return DCC_ERR_NOMEM;
     }
     dcc_app_schedule_t *schedule = (dcc_app_schedule_t *)calloc(1U, sizeof(*schedule));
     if (schedule == NULL) {

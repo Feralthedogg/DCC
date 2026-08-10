@@ -86,17 +86,21 @@ dcc_status_t dcc_app_use_internal(
     if (app == NULL || middleware == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
+    dcc_app_listener_lock(app);
     if (app->middleware_count == SIZE_MAX) {
+        dcc_app_listener_unlock(app);
         return DCC_ERR_NOMEM;
     }
     dcc_status_t status = dcc_app_middlewares_reserve(app, app->middleware_count + 1U);
     if (status != DCC_OK) {
+        dcc_app_listener_unlock(app);
         return status;
     }
     app->middlewares[app->middleware_count].fn = middleware;
     app->middlewares[app->middleware_count].user_data = user_data;
     app->middlewares[app->middleware_count].cleanup = cleanup;
     app->middleware_count++;
+    dcc_app_listener_unlock(app);
     return DCC_OK;
 }
 
@@ -245,17 +249,7 @@ dcc_status_t dcc_app_remove_route_internal(dcc_app_t *app, dcc_app_route_id_t ro
         return DCC_ERR_INVALID_ARG;
     }
 
-    dcc_app_route_t *route = &app->routes[index];
-    free(route->key);
-    if (route->user_data_cleanup != NULL) {
-        route->user_data_cleanup(route->user_data);
-    }
-    for (size_t i = 0U; i < route->middleware_count; ++i) {
-        if (route->middlewares[i].cleanup != NULL) {
-            route->middlewares[i].cleanup(route->middlewares[i].user_data);
-        }
-    }
-    free(route->middlewares);
+    dcc_app_route_t removed = app->routes[index];
     if (index + 1U < app->route_count) {
         memmove(
             &app->routes[index],
@@ -264,7 +258,22 @@ dcc_status_t dcc_app_remove_route_internal(dcc_app_t *app, dcc_app_route_id_t ro
         );
     }
     app->route_count--;
+    memset(&app->routes[app->route_count], 0, sizeof(*app->routes));
     dcc_app_listener_unlock(app);
+
+    free(removed.key);
+    dcc_app_callback_frame_t cleanup_frame;
+    dcc_app_callback_frame_enter(&cleanup_frame, app, removed.listener_state);
+    if (removed.user_data_cleanup != NULL) {
+        removed.user_data_cleanup(removed.user_data);
+    }
+    for (size_t i = 0U; i < removed.middleware_count; ++i) {
+        if (removed.middlewares[i].cleanup != NULL) {
+            removed.middlewares[i].cleanup(removed.middlewares[i].user_data);
+        }
+    }
+    free(removed.middlewares);
+    dcc_app_callback_frame_leave(&cleanup_frame);
     return DCC_OK;
 }
 
@@ -373,6 +382,39 @@ static dcc_status_t dcc_app_run_middlewares(
     return DCC_OK;
 }
 
+static dcc_status_t dcc_app_snapshot_middlewares(
+    dcc_app_t *app,
+    dcc_app_middleware_t **out_middlewares,
+    size_t *out_middleware_count
+) {
+    if (app == NULL || out_middlewares == NULL || out_middleware_count == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out_middlewares = NULL;
+    *out_middleware_count = 0U;
+    dcc_app_listener_lock(app);
+    size_t middleware_count = app->middleware_count;
+    if (middleware_count > SIZE_MAX / sizeof(*app->middlewares)) {
+        dcc_app_listener_unlock(app);
+        return DCC_ERR_NOMEM;
+    }
+    dcc_app_middleware_t *middlewares = NULL;
+    if (middleware_count != 0U) {
+        middlewares = (dcc_app_middleware_t *)malloc(
+            middleware_count * sizeof(*middlewares)
+        );
+        if (middlewares == NULL) {
+            dcc_app_listener_unlock(app);
+            return DCC_ERR_NOMEM;
+        }
+        memcpy(middlewares, app->middlewares, middleware_count * sizeof(*middlewares));
+    }
+    dcc_app_listener_unlock(app);
+    *out_middlewares = middlewares;
+    *out_middleware_count = middleware_count;
+    return DCC_OK;
+}
+
 dcc_status_t dcc_app_dispatch_handler(
     dcc_app_t *app,
     dcc_client_t *client,
@@ -395,11 +437,24 @@ dcc_status_t dcc_app_dispatch_handler(
         .component_session = component_session,
         .user_data = user_data,
     };
+    dcc_app_callback_frame_t callback_frame;
+    dcc_app_callback_frame_enter(&callback_frame, app, NULL);
+    dcc_app_middleware_t *app_middlewares = NULL;
+    size_t app_middleware_count = 0U;
+    dcc_status_t status = dcc_app_snapshot_middlewares(
+        app,
+        &app_middlewares,
+        &app_middleware_count
+    );
+    if (status != DCC_OK) {
+        dcc_app_callback_frame_leave(&callback_frame);
+        return status;
+    }
     dcc_flow_init(&ctx.flow, client, interaction);
     if (dcc_event_type(event) != DCC_EVENT_AUTOCOMPLETE) {
         (void)dcc_app_auto_defer_start(&ctx);
     }
-    dcc_status_t status = dcc_app_run_middlewares(&ctx, app->middlewares, app->middleware_count);
+    status = dcc_app_run_middlewares(&ctx, app_middlewares, app_middleware_count);
     if (status == DCC_OK) {
         status = dcc_app_run_middlewares(&ctx, route_middlewares, route_middleware_count);
     }
@@ -408,10 +463,14 @@ dcc_status_t dcc_app_dispatch_handler(
             app->error_handler(&ctx, status, dcc_status_string(status), app->error_user_data);
         }
         dcc_app_auto_defer_finish(&ctx);
+        free(app_middlewares);
+        dcc_app_callback_frame_leave(&callback_frame);
         return status;
     }
     handler(&ctx, user_data);
     dcc_app_auto_defer_finish(&ctx);
+    free(app_middlewares);
+    dcc_app_callback_frame_leave(&callback_frame);
     return DCC_OK;
 }
 
@@ -438,11 +497,24 @@ dcc_status_t dcc_app_dispatch_canonical_handler(
         .component_session = component_session,
         .user_data = context_user_data,
     };
+    dcc_app_callback_frame_t callback_frame;
+    dcc_app_callback_frame_enter(&callback_frame, app, NULL);
+    dcc_app_middleware_t *app_middlewares = NULL;
+    size_t app_middleware_count = 0U;
+    dcc_status_t status = dcc_app_snapshot_middlewares(
+        app,
+        &app_middlewares,
+        &app_middleware_count
+    );
+    if (status != DCC_OK) {
+        dcc_app_callback_frame_leave(&callback_frame);
+        return status;
+    }
     dcc_flow_init(&ctx.flow, client, interaction);
     if (dcc_event_type(event) != DCC_EVENT_AUTOCOMPLETE) {
         (void)dcc_app_auto_defer_start(&ctx);
     }
-    dcc_status_t status = dcc_app_run_middlewares(&ctx, app->middlewares, app->middleware_count);
+    status = dcc_app_run_middlewares(&ctx, app_middlewares, app_middleware_count);
     if (status == DCC_OK) {
         status = dcc_app_run_middlewares(&ctx, route_middlewares, route_middleware_count);
     }
@@ -453,6 +525,8 @@ dcc_status_t dcc_app_dispatch_canonical_handler(
         (void)dcc_ctx_handle_error(&ctx, status, dcc_status_string(status));
     }
     dcc_app_auto_defer_finish(&ctx);
+    free(app_middlewares);
+    dcc_app_callback_frame_leave(&callback_frame);
     return status;
 }
 
@@ -467,6 +541,7 @@ void dcc_app_dispatch_event(dcc_client_t *client, const dcc_event_t *event, void
     const char *key = dcc_app_event_uses_interaction_name(type) ? interaction->name : interaction->custom_id;
     dcc_app_route_t *route = NULL;
     dcc_app_route_t route_snapshot;
+    dcc_app_middleware_t *route_middlewares = NULL;
     uint8_t listener_acquired = 0U;
     char subcommand_path[128];
     char subcommand_key[256];
@@ -499,7 +574,35 @@ void dcc_app_dispatch_event(dcc_client_t *client, const dcc_event_t *event, void
             return;
         }
     }
+    if (route->middleware_count > SIZE_MAX / sizeof(*route->middlewares)) {
+        void *listener_state = route->listener_state;
+        dcc_app_listener_unlock(app);
+        if (listener_acquired) {
+            dcc_app_listener_release(listener_state);
+        }
+        return;
+    }
+    if (route->middleware_count != 0U) {
+        route_middlewares = (dcc_app_middleware_t *)malloc(
+            route->middleware_count * sizeof(*route_middlewares)
+        );
+        if (route_middlewares == NULL) {
+            void *listener_state = route->listener_state;
+            dcc_app_listener_unlock(app);
+            if (listener_acquired) {
+                dcc_app_listener_release(listener_state);
+            }
+            return;
+        }
+        memcpy(
+            route_middlewares,
+            route->middlewares,
+            route->middleware_count * sizeof(*route_middlewares)
+        );
+    }
     route_snapshot = *route;
+    route_snapshot.middlewares = route_middlewares;
+    route_snapshot.middleware_cap = route_snapshot.middleware_count;
     dcc_app_listener_unlock(app);
     if (route_snapshot.handler != NULL) {
         (void)dcc_app_dispatch_canonical_handler(
@@ -514,6 +617,7 @@ void dcc_app_dispatch_event(dcc_client_t *client, const dcc_event_t *event, void
             route_snapshot.user_data
         );
     }
+    free(route_middlewares);
     if (listener_acquired) {
         dcc_app_listener_release(route_snapshot.listener_state);
     }

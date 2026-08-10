@@ -171,9 +171,12 @@ dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out) {
     return DCC_OK;
 }
 
-void dcc_app_destroy(dcc_app_t *app) {
+dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     if (app == NULL) {
-        return;
+        return DCC_OK;
+    }
+    if (dcc_app_callback_frame_active(app)) {
+        return DCC_ERR_STATE;
     }
     (void)dcc_app_stop(app);
     dcc_app_stop_schedules(app);
@@ -203,6 +206,8 @@ void dcc_app_destroy(dcc_app_t *app) {
     dcc_client_destroy(app->client);
     dcc_app_listener_reclaim_all(app);
     dcc_command_registry_deinit(&app->registry);
+    dcc_app_callback_frame_t cleanup_frame;
+    dcc_app_callback_frame_enter(&cleanup_frame, app, NULL);
     for (size_t i = 0; i < app->route_count; ++i) {
         free(app->routes[i].key);
         if (app->routes[i].user_data_cleanup != NULL) {
@@ -234,8 +239,10 @@ void dcc_app_destroy(dcc_app_t *app) {
     free(app->modules);
     dcc_app_clear_state(app);
     dcc_app_store_close(app);
+    dcc_app_callback_frame_leave(&cleanup_frame);
     dcc_app_listener_sync_deinit(app);
     free(app);
+    return DCC_OK;
 }
 
 dcc_client_t *dcc_app_client(dcc_app_t *app) {

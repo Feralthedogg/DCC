@@ -13,8 +13,14 @@ extern "C" {
 /** Creates an application that owns its client until destruction. */
 DCC_API dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out);
 
-/** Stops and destroys an application; null is accepted. */
-DCC_API void dcc_app_destroy(dcc_app_t *app);
+/**
+ * Stops and destroys an application; null is accepted.
+ *
+ * Returns `DCC_ERR_STATE` without mutation when called from an App-owned
+ * callback or cleanup. Callbacks should request `dcc_app_stop()` and let the
+ * owner destroy the application after dispatch returns.
+ */
+DCC_API dcc_status_t dcc_app_destroy(dcc_app_t *app);
 
 /** Returns the client borrowed from the application. */
 DCC_API dcc_client_t *dcc_app_client(dcc_app_t *app);

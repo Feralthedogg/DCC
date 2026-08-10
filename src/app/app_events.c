@@ -59,24 +59,26 @@ static void dcc_app_event_listener_dispatch(
         return;
     }
 
+    dcc_app_callback_frame_t callback_frame;
+    dcc_app_callback_frame_enter(&callback_frame, state->app, NULL);
     switch (state->kind) {
         case DCC_APP_EVENT_LISTENER_GENERIC:
             if (state->event_handler != NULL) {
                 state->event_handler(state->app, event, state->user_data);
             }
-            return;
+            break;
 
         case DCC_APP_EVENT_LISTENER_READY:
             if (state->ready_handler != NULL) {
                 const dcc_ready_event_t *ready = dcc_event_ready(event);
                 if (ready != NULL) {
                     if (state->once && atomic_exchange(&state->fired, true)) {
-                        return;
+                        break;
                     }
                     state->ready_handler(state->app, ready, state->user_data);
                 }
             }
-            return;
+            break;
 
         case DCC_APP_EVENT_LISTENER_MESSAGE:
             if (state->message_handler != NULL) {
@@ -85,8 +87,9 @@ static void dcc_app_event_listener_dispatch(
                     state->message_handler(state->app, message, event, state->user_data);
                 }
             }
-            return;
+            break;
     }
+    dcc_app_callback_frame_leave(&callback_frame);
 }
 
 dcc_status_t dcc_app_on_event_listener_internal(

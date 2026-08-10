@@ -83,6 +83,12 @@ typedef struct dcc_app_schedule {
 
 typedef struct dcc_app_listener_entry dcc_app_listener_entry_t;
 
+typedef struct dcc_app_callback_frame {
+    dcc_app_t *app;
+    void *listener_state;
+    struct dcc_app_callback_frame *previous;
+} dcc_app_callback_frame_t;
+
 typedef struct dcc_app_component_session_listener_entry {
     dcc_component_session_listener_t listener;
     void *state;
@@ -144,6 +150,11 @@ struct dcc_app {
     uint8_t store_open;
     uint8_t listener_sync_initialized;
     uint8_t listener_destroying;
+    void (*listener_test_before_route_remove)(void *user_data);
+    void *listener_test_before_route_remove_data;
+    uint8_t listener_test_fail_policy_allocation;
+    uint8_t listener_test_fail_schedule_allocation;
+    size_t listener_test_fail_metadata_copy_after;
 #if defined(_WIN32)
     CRITICAL_SECTION listener_mutex;
     CONDITION_VARIABLE listener_cond;
@@ -273,6 +284,13 @@ void dcc_app_listener_lock(dcc_app_t *app);
 void dcc_app_listener_unlock(dcc_app_t *app);
 void dcc_app_listener_wait(dcc_app_t *app);
 void dcc_app_listener_wake_all(dcc_app_t *app);
+void dcc_app_callback_frame_enter(
+    dcc_app_callback_frame_t *frame,
+    dcc_app_t *app,
+    void *listener_state
+);
+void dcc_app_callback_frame_leave(dcc_app_callback_frame_t *frame);
+uint8_t dcc_app_callback_frame_active(const dcc_app_t *app);
 uint8_t dcc_app_listener_acquire(void *listener_state);
 void dcc_app_listener_release(void *listener_state);
 uint8_t dcc_app_listener_active(const void *listener_state);
