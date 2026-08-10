@@ -4,6 +4,7 @@
 #include "internal/dcc_core_internal.h"
 #include "internal/json/dcc_json_dom_api.h"
 #include "internal/rest/dcc_rest_runtime_internal.h"
+#include "internal/rest/dcc_rest_rate_limit_internal.h"
 
 #include <limits.h>
 #include <stdatomic.h>
@@ -29,10 +30,15 @@ typedef struct dcc_rest_terminal_frame {
 
 static _Thread_local dcc_rest_terminal_frame_t *dcc_rest_current_terminal_frame;
 
-static void dcc_rest_terminal_enter(
+static int dcc_rest_terminal_enter(
     dcc_rest_terminal_frame_t *frame,
     dcc_client_t *client
 ) {
+    dcc_rest_lock(client);
+    if (!client->rest_initialized || client->rest_terminal_closed) {
+        dcc_rest_unlock(client);
+        return 0;
+    }
     frame->client = client;
     frame->previous = dcc_rest_current_terminal_frame;
     atomic_fetch_add_explicit(
@@ -40,7 +46,9 @@ static void dcc_rest_terminal_enter(
         1U,
         memory_order_acq_rel
     );
+    dcc_rest_unlock(client);
     dcc_rest_current_terminal_frame = frame;
+    return 1;
 }
 
 static void dcc_rest_terminal_leave(dcc_rest_terminal_frame_t *frame) {
@@ -76,6 +84,16 @@ void dcc_rest_terminal_wait(dcc_client_t *client) {
         ) != 0U) {
         dcc_rest_sleep_ms(1U);
     }
+}
+
+void dcc_rest_terminal_close_and_wait(dcc_client_t *client) {
+    if (client == NULL) {
+        return;
+    }
+    dcc_rest_lock(client);
+    client->rest_terminal_closed = 1U;
+    dcc_rest_unlock(client);
+    dcc_rest_terminal_wait(client);
 }
 
 static void dcc_rest_error_observer_lock(dcc_client_t *client) {
@@ -223,7 +241,9 @@ void dcc_rest_deliver_terminal(
     }
 
     dcc_rest_terminal_frame_t terminal_frame;
-    dcc_rest_terminal_enter(&terminal_frame, client);
+    if (!dcc_rest_terminal_enter(&terminal_frame, client)) {
+        return;
+    }
     dcc_rest_result_view_t view;
     dcc_rest_result_view_init(&view, completion);
     dcc_status_t mapped_status = dcc_rest_result_status(&view.result);
@@ -289,7 +309,9 @@ void dcc_rest_deliver_terminal_callback_only(
         return;
     }
     dcc_rest_terminal_frame_t terminal_frame;
-    dcc_rest_terminal_enter(&terminal_frame, client);
+    if (!dcc_rest_terminal_enter(&terminal_frame, client)) {
+        return;
+    }
     dcc_rest_response_t response = {
         .size = sizeof(response),
         .status = http_status,

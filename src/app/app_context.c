@@ -455,11 +455,15 @@ static dcc_status_t dcc_ctx_flow_reply_auto(
                 return status;
             }
             status = dcc_flow_reply(&ctx->flow, message, cb, user_data);
-            dcc_app_auto_defer_mark_initial(
-                ctx,
-                DCC_APP_RESPONSE_REPLIED,
-                status
-            );
+            if (status != DCC_OK && dcc_flow_initial_claimed(&ctx->flow)) {
+                dcc_app_auto_defer_release_initial_claim(ctx);
+            } else {
+                dcc_app_auto_defer_mark_initial(
+                    ctx,
+                    DCC_APP_RESPONSE_REPLIED,
+                    status
+                );
+            }
             return status;
         }
         if (response_state == DCC_APP_RESPONSE_DEFERRED) {
@@ -496,6 +500,18 @@ static dcc_status_t dcc_ctx_claim_initial_auto(
         return DCC_OK;
     }
     return dcc_app_auto_defer_claim_initial(ctx, response_state);
+}
+
+static void dcc_ctx_finish_initial_auto_claim(
+    dcc_ctx_t *ctx,
+    dcc_app_response_state_t response_state,
+    dcc_status_t status
+) {
+    if (status != DCC_OK && dcc_flow_initial_claimed(&ctx->flow)) {
+        dcc_app_auto_defer_release_initial_claim(ctx);
+        return;
+    }
+    dcc_app_auto_defer_mark_initial(ctx, response_state, status);
 }
 
 dcc_status_t dcc_ctx_reply(
@@ -612,7 +628,7 @@ dcc_status_t dcc_ctx_defer(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_data) {
         return status;
     }
     status = dcc_flow_defer(&ctx->flow, cb, user_data);
-    dcc_app_auto_defer_mark_initial(ctx, DCC_APP_RESPONSE_DEFERRED, status);
+    dcc_ctx_finish_initial_auto_claim(ctx, DCC_APP_RESPONSE_DEFERRED, status);
     return status;
 }
 
@@ -622,7 +638,7 @@ dcc_status_t dcc_ctx_defer_ephemeral(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_
         return status;
     }
     status = dcc_flow_defer_ephemeral(&ctx->flow, cb, user_data);
-    dcc_app_auto_defer_mark_initial(ctx, DCC_APP_RESPONSE_DEFERRED, status);
+    dcc_ctx_finish_initial_auto_claim(ctx, DCC_APP_RESPONSE_DEFERRED, status);
     return status;
 }
 
@@ -639,7 +655,18 @@ dcc_status_t dcc_ctx_update_message(
     if (status != DCC_OK) {
         return status;
     }
-    status = dcc_interaction_update_message(ctx->client, ctx->interaction, message, cb, user_data);
+    status = dcc_flow_claim_initial(&ctx->flow);
+    if (status != DCC_OK) {
+        dcc_app_auto_defer_release_initial_claim(ctx);
+        return status;
+    }
+    status = dcc_interaction_update_message(
+        ctx->client,
+        ctx->interaction,
+        message,
+        cb,
+        user_data
+    );
     (void)dcc_flow_mark_initial(&ctx->flow, DCC_INTERACTION_FLOW_REPLIED, status);
     dcc_app_auto_defer_mark_initial(ctx, DCC_APP_RESPONSE_REPLIED, status);
     return status;
@@ -656,7 +683,7 @@ dcc_status_t dcc_ctx_show_modal(
         return status;
     }
     status = dcc_flow_show_modal(&ctx->flow, modal, cb, user_data);
-    dcc_app_auto_defer_mark_initial(ctx, DCC_APP_RESPONSE_REPLIED, status);
+    dcc_ctx_finish_initial_auto_claim(ctx, DCC_APP_RESPONSE_REPLIED, status);
     return status;
 }
 
@@ -696,18 +723,21 @@ dcc_status_t dcc_ctx_reply_autocomplete(
         ctx,
         DCC_APP_RESPONSE_REPLIED
     );
-    if (status == DCC_OK) {
-        status = dcc_flow_require_ready(&ctx->flow);
+    if (status != DCC_OK) {
+        return status;
     }
-    if (status == DCC_OK) {
-        status = dcc_rest_interaction_response_create_autocomplete_from_interaction(
-            ctx->client,
-            ctx->interaction,
-            autocomplete,
-            cb,
-            user_data
-        );
+    status = dcc_flow_claim_initial(&ctx->flow);
+    if (status != DCC_OK) {
+        dcc_app_auto_defer_release_initial_claim(ctx);
+        return status;
     }
+    status = dcc_rest_interaction_response_create_autocomplete_from_interaction(
+        ctx->client,
+        ctx->interaction,
+        autocomplete,
+        cb,
+        user_data
+    );
     status = dcc_flow_mark_initial(
         &ctx->flow,
         DCC_INTERACTION_FLOW_REPLIED,

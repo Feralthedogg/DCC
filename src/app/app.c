@@ -1,5 +1,6 @@
 #include "internal/app/dcc_app_internal.h"
 
+#include "internal/client/dcc_client_lifecycle_internal.h"
 #include "internal/dcc_core_internal.h"
 #include "internal/rest/dcc_rest_error_observer_internal.h"
 
@@ -198,13 +199,19 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     dcc_app_listener_lock(app);
     app->tearing_down = 1U;
     dcc_app_listener_unlock(app);
-    /* Stop new App-owned REST delivery and wait for any sink callback that was
-     * already copied before reclaiming listeners or observer user data. */
+
+    /* Close REST admission, cancel queued work, and wait until every accepted
+     * producer has delivered its terminal result before reclaiming App-owned
+     * callback data. Active requests remain worker-owned through completion. */
+    dcc_status_t prepare_status = dcc_client_prepare_destroy(app->client);
+    if (prepare_status != DCC_OK) {
+        return prepare_status;
+    }
+
+    /* No producer remains. Detach the App sink, then permanently close terminal
+     * entry before beginning any App-owned cleanup. */
     dcc_app_detach_error_sink(app);
-    /* Successful terminal callbacks do not hold an App error-sink snapshot,
-     * but may still be using App-owned callback data. Drain every terminal
-     * frame before beginning any App-owned cleanup. */
-    dcc_rest_terminal_wait(app->client);
+    dcc_client_close_rest(app->client);
     dcc_app_listener_destroy_all(app);
     for (size_t i = 0; i < app->component_session_listener_count; ++i) {
         if (app->component_session_listeners[i].listener.state != NULL) {

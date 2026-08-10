@@ -35,35 +35,46 @@ dcc_status_t dcc_client_start(dcc_client_t *client) {
         return DCC_ERR_INVALID_ARG;
     }
 
+    dcc_status_t st = dcc_client_lifecycle_admission_enter(
+        &client->start_admission
+    );
+    if (st != DCC_OK) {
+        dcc_set_error(client, "client teardown has started");
+        return st;
+    }
+
     bool expected = false;
     if (!atomic_compare_exchange_strong(&client->started, &expected, true)) {
         dcc_set_error(client, "client is already started");
-        return DCC_ERR_STATE;
+        st = DCC_ERR_STATE;
+        goto done;
     }
 
     atomic_store_explicit(&client->stopping, false, memory_order_release);
 
-    dcc_status_t st = dcc_runtime_init(&client->runtime);
+    st = dcc_runtime_init(&client->runtime);
     if (st != DCC_OK) {
         atomic_store(&client->started, false);
         dcc_set_error(client, "failed to initialize LLAM runtime");
-        return st;
+        goto done;
     }
 
     st = dcc_gateway_start(client);
     if (st != DCC_OK) {
         atomic_store(&client->started, false);
-        return st;
+        goto done;
     }
 
     st = dcc_runtime_spawn(&client->runtime, dcc_client_main_task, client);
     if (st != DCC_OK) {
         atomic_store(&client->started, false);
         dcc_set_error(client, "failed to spawn client runtime task");
-        return st;
+        goto done;
     }
 
-    return DCC_OK;
+done:
+    dcc_client_lifecycle_admission_leave(&client->start_admission);
+    return st;
 }
 
 dcc_status_t dcc_client_stop(dcc_client_t *client) {
@@ -80,10 +91,19 @@ dcc_status_t dcc_client_wait(dcc_client_t *client) {
     if (client == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
+    dcc_status_t admission_status = dcc_client_lifecycle_admission_enter(
+        &client->wait_admission
+    );
+    if (admission_status != DCC_OK) {
+        dcc_set_error(client, "client teardown has started");
+        return admission_status;
+    }
     if (!atomic_load(&client->started)) {
+        dcc_client_lifecycle_admission_leave(&client->wait_admission);
         return DCC_ERR_STATE;
     }
     dcc_status_t st = dcc_runtime_run(&client->runtime);
     atomic_store(&client->started, false);
+    dcc_client_lifecycle_admission_leave(&client->wait_admission);
     return st == DCC_ERR_CANCELED ? DCC_OK : st;
 }

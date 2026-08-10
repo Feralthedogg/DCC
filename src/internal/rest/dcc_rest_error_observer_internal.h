@@ -30,6 +30,7 @@ dcc_status_t dcc_rest_set_app_error_sink(
 void dcc_rest_clear_app_error_sink_and_wait(dcc_client_t *client);
 uint8_t dcc_rest_terminal_callback_active(const dcc_client_t *client);
 void dcc_rest_terminal_wait(dcc_client_t *client);
+void dcc_rest_terminal_close_and_wait(dcc_client_t *client);
 
 void dcc_rest_deliver_terminal(
     dcc_client_t *client,

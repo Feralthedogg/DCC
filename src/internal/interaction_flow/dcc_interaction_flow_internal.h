@@ -10,8 +10,11 @@ extern "C" {
 
 #define DCC_INTERACTION_FLOW_FLAG_EPHEMERAL UINT64_C(64)
 #define DCC_INTERACTION_FLOW_RESPONSE_INITIAL_ADMITTED UINT64_C(1)
+#define DCC_INTERACTION_FLOW_RESPONSE_INITIAL_CLAIMED UINT64_C(2)
 
 uint8_t dcc_flow_initial_sent(const dcc_interaction_flow_t *flow);
+uint8_t dcc_flow_initial_claimed(const dcc_interaction_flow_t *flow);
+dcc_status_t dcc_flow_claim_initial(dcc_interaction_flow_t *flow);
 dcc_status_t dcc_flow_mark_initial(
     dcc_interaction_flow_t *flow,
     dcc_interaction_flow_state_t state,

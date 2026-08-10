@@ -6,6 +6,7 @@
 #include "internal/rest/dcc_rest_intercept_internal.h"
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
 #include "internal/rest/dcc_rest_request_raw_internal.h"
+#include "internal/rest/dcc_rest_state_internal.h"
 
 #include <string.h>
 
@@ -49,10 +50,24 @@ dcc_status_t dcc_rest_request_async_priority(
     if (client == NULL || method == NULL || path == NULL || !dcc_rest_priority_valid(priority)) {
         return DCC_ERR_INVALID_ARG;
     }
+    dcc_status_t operation_status = dcc_rest_operation_begin(client);
+    if (operation_status != DCC_OK) {
+        return operation_status;
+    }
     if (client->rest_intercept != NULL) {
-        return dcc_rest_async_intercept(client, method, path, body, cb, user_data);
+        dcc_status_t status = dcc_rest_async_intercept(
+            client,
+            method,
+            path,
+            body,
+            cb,
+            user_data
+        );
+        dcc_rest_operation_end(client);
+        return status;
     }
     if (!client->runtime.initialized || atomic_load_explicit(&client->stopping, memory_order_acquire)) {
+        dcc_rest_operation_end(client);
         return DCC_ERR_STATE;
     }
 
@@ -66,6 +81,7 @@ dcc_status_t dcc_rest_request_async_priority(
         user_data
     );
     if (request == NULL) {
+        dcc_rest_operation_end(client);
         return DCC_ERR_NOMEM;
     }
 
@@ -81,6 +97,8 @@ dcc_status_t dcc_rest_request_async_priority(
     dcc_rest_async_signal(client);
 
     dcc_rest_async_request_free(rejected);
+
+    dcc_rest_operation_end(client);
 
     return status;
 }

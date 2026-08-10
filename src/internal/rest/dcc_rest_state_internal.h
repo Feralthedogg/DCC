@@ -25,6 +25,10 @@ typedef struct dcc_rest_async_request dcc_rest_async_request_t;
 
 dcc_status_t dcc_rest_init(dcc_client_t *client);
 void dcc_rest_deinit(dcc_client_t *client);
+dcc_status_t dcc_rest_operation_begin(dcc_client_t *client);
+void dcc_rest_operation_end(dcc_client_t *client);
+void dcc_rest_close_admission(dcc_client_t *client);
+void dcc_rest_operations_wait(dcc_client_t *client);
 
 #ifdef __cplusplus
 }

@@ -7,10 +7,15 @@ dcc_status_t dcc_flow_show_modal(
     void *user_data
 ) {
     dcc_status_t status = dcc_flow_require_context(flow);
-    if (status == DCC_OK) {
-        status = dcc_flow_require_ready(flow);
+    if (status != DCC_OK) {
+        dcc_flow_mark(flow, DCC_INTERACTION_FLOW_FAILED, status);
+        return status;
     }
-    if (status == DCC_OK && modal == NULL) {
+    status = dcc_flow_claim_initial(flow);
+    if (status != DCC_OK) {
+        return status;
+    }
+    if (modal == NULL) {
         status = DCC_ERR_INVALID_ARG;
     }
     if (status == DCC_OK) {

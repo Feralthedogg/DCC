@@ -4,35 +4,10 @@
 #include "internal/rest/dcc_rest_async_signal_internal.h"
 #include "internal/rest/dcc_rest_firewall_internal.h"
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
+#include "internal/rest/dcc_rest_runtime_internal.h"
 
 #include <stdatomic.h>
 #include <string.h>
-
-static void dcc_rest_async_cancel_shutdown_active_list(
-    dcc_client_t *client,
-    dcc_rest_async_request_t *request
-) {
-    while (request != NULL) {
-        dcc_rest_async_request_t *next = request->active_next;
-        request->active_next = NULL;
-        if (!request->callback_called) {
-            dcc_rest_terminal_completion_t completion = {
-                .operation = request->path,
-                .transport_status = DCC_ERR_CANCELED,
-                .legacy_error = DCC_ERR_CANCELED,
-            };
-            request->callback_called = 1;
-            dcc_rest_deliver_terminal(
-                client,
-                &completion,
-                request->cb,
-                request->user_data
-            );
-        }
-        dcc_rest_async_request_free(request);
-        request = next;
-    }
-}
 
 dcc_status_t dcc_rest_init(dcc_client_t *client) {
     if (client == NULL) {
@@ -46,6 +21,11 @@ dcc_status_t dcc_rest_init(dcc_client_t *client) {
     client->rest_app_error_sink_user_data = NULL;
     atomic_init(&client->rest_app_error_sink_in_flight, 0U);
     atomic_init(&client->rest_terminal_in_flight, 0U);
+    client->rest_operations_in_flight = 0U;
+    client->rest_initialized = 0U;
+    client->rest_admission_closed = 0U;
+    client->rest_terminal_closed = 0U;
+    client->rest_quiesced = 0U;
     client->rest_intercept = NULL;
     client->rest_intercept_user_data = NULL;
     client->rest_firewall = NULL;
@@ -69,27 +49,82 @@ dcc_status_t dcc_rest_init(dcc_client_t *client) {
     client->rest_async_active_route_count = 0;
     client->rest_async_active = 0;
     client->rest_test_fail_next_worker_spawn = 0U;
+    client->rest_initialized = 1U;
     return DCC_OK;
+}
+
+dcc_status_t dcc_rest_operation_begin(dcc_client_t *client) {
+    if (client == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_rest_lock(client);
+    if (!client->rest_initialized || client->rest_admission_closed) {
+        dcc_rest_unlock(client);
+        return DCC_ERR_STATE;
+    }
+    if (client->rest_operations_in_flight == UINT32_MAX) {
+        dcc_rest_unlock(client);
+        return DCC_ERR_RUNTIME;
+    }
+    client->rest_operations_in_flight++;
+    dcc_rest_unlock(client);
+    return DCC_OK;
+}
+
+void dcc_rest_operation_end(dcc_client_t *client) {
+    if (client == NULL) {
+        return;
+    }
+    dcc_rest_lock(client);
+    if (client->rest_operations_in_flight > 0U) {
+        client->rest_operations_in_flight--;
+    }
+    dcc_rest_unlock(client);
+    dcc_rest_async_signal(client);
+}
+
+void dcc_rest_close_admission(dcc_client_t *client) {
+    if (client == NULL) {
+        return;
+    }
+    dcc_rest_lock(client);
+    client->rest_admission_closed = 1U;
+    dcc_rest_unlock(client);
+}
+
+void dcc_rest_operations_wait(dcc_client_t *client) {
+    if (client == NULL) {
+        return;
+    }
+    for (;;) {
+        dcc_rest_lock(client);
+        uint32_t in_flight = client->rest_operations_in_flight;
+        dcc_rest_unlock(client);
+        if (in_flight == 0U) {
+            return;
+        }
+        dcc_rest_sleep_ms(1U);
+    }
 }
 
 void dcc_rest_deinit(dcc_client_t *client) {
     if (client != NULL) {
         dcc_rest_async_request_t *pending = NULL;
-        dcc_rest_async_request_t *active = NULL;
         dcc_rest_lock(client);
+        if (!client->rest_initialized) {
+            dcc_rest_unlock(client);
+            return;
+        }
+        client->rest_initialized = 0U;
+        client->rest_admission_closed = 1U;
+        client->rest_terminal_closed = 1U;
         dcc_rest_firewall_state_t *firewall = client->rest_firewall;
         client->rest_firewall = NULL;
         client->rest_global_reset_at_ms = 0;
         memset(client->rest_buckets, 0, sizeof(client->rest_buckets));
         pending = dcc_rest_async_detach_pending_all_locked(client);
-        active = client->rest_async_active_head;
-        client->rest_async_active_head = NULL;
-        memset(client->rest_async_active_routes, 0, sizeof(client->rest_async_active_routes));
-        client->rest_async_active_route_count = 0;
-        client->rest_async_active = 0;
         dcc_rest_unlock(client);
         (void)dcc_rest_async_cancel_pending_list(client, pending);
-        dcc_rest_async_cancel_shutdown_active_list(client, active);
         dcc_rest_firewall_state_free(firewall);
         dcc_rest_async_signal(client);
 #if !defined(_WIN32)

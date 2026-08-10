@@ -78,6 +78,10 @@ dcc_status_t dcc_flow_reply(
     }
 
     if (!dcc_flow_initial_sent(flow)) {
+        status = dcc_flow_claim_initial(flow);
+        if (status != DCC_OK) {
+            return status;
+        }
         status = dcc_rest_interaction_response_create_from_interaction_message_builder(
             flow->client,
             flow->interaction,

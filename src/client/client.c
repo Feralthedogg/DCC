@@ -1,6 +1,11 @@
 #include "internal/client/dcc_client_state_internal.h"
+#include "internal/client/dcc_client_lifecycle_internal.h"
 #include "internal/dcc_core_internal.h"
+#include "internal/rest/dcc_rest_async_wait_internal.h"
 #include "internal/rest/dcc_rest_error_observer_internal.h"
+#include "internal/rest/dcc_rest_state_internal.h"
+
+#include <llam/runtime.h>
 
 #include <stdlib.h>
 
@@ -59,6 +64,8 @@ dcc_status_t dcc_client_create(const dcc_client_options_t *options, dcc_client_t
     atomic_init(&client->inferred_guild_id, 0U);
     atomic_init(&client->started, false);
     atomic_init(&client->stopping, false);
+    atomic_init(&client->start_admission, 0U);
+    atomic_init(&client->wait_admission, 0U);
     atomic_init(&client->gateway_task_running, false);
     atomic_init(&client->gateway_task_completed, false);
     atomic_init(&client->gateway_last_status, DCC_OK);
@@ -86,20 +93,105 @@ dcc_status_t dcc_client_create(const dcc_client_options_t *options, dcc_client_t
     return DCC_OK;
 }
 
+dcc_status_t dcc_client_prepare_destroy(dcc_client_t *client) {
+    if (client == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_rest_lock(client);
+    uint8_t already_quiesced = client->rest_quiesced;
+    dcc_rest_unlock(client);
+    if (already_quiesced) {
+        return DCC_OK;
+    }
+
+    /* Stop new REST work before any teardown wait. Then close long-running
+     * wait registration and drain the short start path before requesting stop.
+     * A start admitted before this point must finish publishing its runtime
+     * tasks before stop/quiesce. */
+    dcc_rest_close_admission(client);
+    dcc_client_lifecycle_admission_close(&client->wait_admission);
+    dcc_client_lifecycle_admission_close(&client->start_admission);
+    while (dcc_client_lifecycle_admission_count(
+            &client->start_admission
+        ) != 0U) {
+        dcc_rest_sleep_ms(1U);
+    }
+
+    dcc_voice_client_stop_owned(client);
+    dcc_status_t status = dcc_client_stop(client);
+    dcc_voice_client_unbind_owner(client);
+    if (status != DCC_OK) {
+        return status;
+    }
+
+    (void)dcc_rest_async_cancel_all(client, NULL);
+    dcc_rest_operations_wait(client);
+    (void)dcc_rest_async_cancel_all(client, NULL);
+
+    status = dcc_runtime_quiesce(&client->runtime);
+    if (status != DCC_OK) {
+        return status;
+    }
+    while (dcc_client_lifecycle_admission_count(
+            &client->wait_admission
+        ) != 0U) {
+        dcc_rest_sleep_ms(1U);
+    }
+    if (client->runtime.initialized) {
+        status = dcc_rest_async_wait(client, 0U);
+        if (status != DCC_OK) {
+            return status;
+        }
+    }
+    dcc_rest_lock(client);
+    uint8_t rest_workers_quiesced =
+        client->rest_async_active == 0U &&
+        client->rest_async_active_head == NULL &&
+        dcc_rest_async_pending_count_locked(client) == 0U;
+    dcc_rest_unlock(client);
+    if (!rest_workers_quiesced) {
+        return DCC_ERR_RUNTIME;
+    }
+    dcc_runtime_shutdown(&client->runtime);
+
+    dcc_rest_lock(client);
+    client->rest_quiesced = 1U;
+    dcc_rest_unlock(client);
+    return DCC_OK;
+}
+
+void dcc_client_close_rest(dcc_client_t *client) {
+    if (client == NULL) {
+        return;
+    }
+    dcc_rest_terminal_close_and_wait(client);
+    dcc_rest_deinit(client);
+}
+
 void dcc_client_destroy(dcc_client_t *client) {
     if (client == NULL) {
         return;
     }
-    if (dcc_rest_terminal_callback_active(client)) {
+    /* A managed LLAM task cannot synchronously wait for the scheduler that is
+     * currently executing it. Preserve the documented callback-local
+     * stop-only behavior for every managed runtime callback, including REST
+     * terminal callbacks. */
+    if (dcc_rest_terminal_callback_active(client) ||
+        llam_current_task() != NULL) {
         (void)dcc_client_stop(client);
         return;
     }
-    dcc_voice_client_stop_owned(client);
-    (void)dcc_client_stop(client);
-    dcc_voice_client_unbind_owner(client);
-    dcc_runtime_shutdown(&client->runtime);
-    dcc_rest_terminal_wait(client);
-    dcc_rest_deinit(client);
+    dcc_status_t status = dcc_client_prepare_destroy(client);
+    if (status != DCC_OK) {
+        dcc_set_error(client, "client destroy could not safely quiesce runtime");
+        dcc_emit_log(
+            client,
+            DCC_LOG_ERROR,
+            "client destroy deferred because runtime quiescence failed; retry destroy"
+        );
+        return;
+    }
+    dcc_client_close_rest(client);
     dcc_cache_deinit(&client->cache);
     dcc_event_bus_deinit(&client->events);
     dcc_client_interaction_listeners_deinit(client);

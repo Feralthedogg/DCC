@@ -6,17 +6,20 @@ dcc_status_t dcc_flow_defer(
     void *user_data
 ) {
     dcc_status_t status = dcc_flow_require_context(flow);
-    if (status == DCC_OK) {
-        status = dcc_flow_require_ready(flow);
+    if (status != DCC_OK) {
+        dcc_flow_mark(flow, DCC_INTERACTION_FLOW_FAILED, status);
+        return status;
     }
-    if (status == DCC_OK) {
-        status = dcc_rest_interaction_response_create_deferred_message_from_interaction(
-            flow->client,
-            flow->interaction,
-            cb,
-            user_data
-        );
+    status = dcc_flow_claim_initial(flow);
+    if (status != DCC_OK) {
+        return status;
     }
+    status = dcc_rest_interaction_response_create_deferred_message_from_interaction(
+        flow->client,
+        flow->interaction,
+        cb,
+        user_data
+    );
     return dcc_flow_mark_initial(flow, DCC_INTERACTION_FLOW_DEFERRED, status);
 }
 
@@ -26,8 +29,13 @@ dcc_status_t dcc_flow_defer_ephemeral(
     void *user_data
 ) {
     dcc_status_t status = dcc_flow_require_context(flow);
-    if (status == DCC_OK) {
-        status = dcc_flow_require_ready(flow);
+    if (status != DCC_OK) {
+        dcc_flow_mark(flow, DCC_INTERACTION_FLOW_FAILED, status);
+        return status;
+    }
+    status = dcc_flow_claim_initial(flow);
+    if (status != DCC_OK) {
+        return status;
     }
     dcc_message_builder_t message;
     if (status == DCC_OK) {
@@ -57,17 +65,20 @@ dcc_status_t dcc_flow_defer_update(
     void *user_data
 ) {
     dcc_status_t status = dcc_flow_require_context(flow);
-    if (status == DCC_OK) {
-        status = dcc_flow_require_ready(flow);
+    if (status != DCC_OK) {
+        dcc_flow_mark(flow, DCC_INTERACTION_FLOW_FAILED, status);
+        return status;
     }
-    if (status == DCC_OK) {
-        status = dcc_rest_interaction_response_create_deferred_update_from_interaction(
-            flow->client,
-            flow->interaction,
-            cb,
-            user_data
-        );
+    status = dcc_flow_claim_initial(flow);
+    if (status != DCC_OK) {
+        return status;
     }
+    status = dcc_rest_interaction_response_create_deferred_update_from_interaction(
+        flow->client,
+        flow->interaction,
+        cb,
+        user_data
+    );
     return dcc_flow_mark_initial(
         flow,
         DCC_INTERACTION_FLOW_DEFERRED_UPDATE,

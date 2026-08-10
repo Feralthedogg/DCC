@@ -171,12 +171,19 @@ DCC_API dcc_status_t dcc_client_on_error(
 /**
  * @brief Stops and releases a client.
  *
- * Passing `NULL` is allowed and has no effect. When called from a REST
- * terminal callback, terminal error log callback, or structured REST error
- * observer for this client, this function requests stop and returns without
- * releasing memory. The owning thread must call it again after that callback
- * returns. Callers must otherwise synchronize destruction with their own
- * concurrent client API calls.
+ * Passing `NULL` is allowed and has no effect. When called from a managed LLAM
+ * task, including a REST terminal callback, terminal error log callback, or
+ * structured REST error observer for this client, this function requests stop
+ * and returns without releasing memory. The owning unmanaged thread must call
+ * it again after that task or callback returns.
+ *
+ * If the configured log callback reports that destruction was deferred because
+ * runtime quiescence failed, the allocation is likewise preserved with new
+ * start, wait, and REST admission closed. Let any existing runtime driver and
+ * client wait call return, then retry destruction from the owning unmanaged
+ * thread. In all other cases, treat the pointer as invalid after this function
+ * returns. Callers must synchronize destruction with any concurrent client API
+ * calls they own.
  */
 DCC_API void dcc_client_destroy(dcc_client_t *client);
 

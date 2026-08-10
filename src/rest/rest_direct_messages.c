@@ -1,8 +1,11 @@
 #include "internal/dcc_core_internal.h"
 #include "internal/rest/dcc_rest_capture_internal.h"
+#include "internal/rest/dcc_rest_config_internal.h"
 #include "internal/rest/dcc_rest_direct_messages_internal.h"
 #include "internal/rest/dcc_rest_error_observer_internal.h"
+#include "internal/rest/dcc_rest_paths_internal.h"
 #include "internal/rest/dcc_rest_request_internal.h"
+#include "internal/rest/dcc_rest_state_internal.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -25,7 +28,53 @@ static void dcc_rest_deliver_direct_message_failure(
     dcc_rest_deliver_terminal(client, &completion, cb, user_data);
 }
 
-dcc_status_t dcc_rest_create_direct_message(
+static dcc_status_t dcc_rest_direct_message_request(
+    dcc_client_t *client,
+    const char *path,
+    const char *json_body,
+    dcc_rest_cb cb,
+    void *user_data
+) {
+    size_t body_len = strlen(json_body);
+    return dcc_rest_request_raw_impl(
+        client,
+        "POST",
+        path,
+        json_body,
+        body_len,
+        "application/json",
+        DCC_REST_MAX_RATE_LIMIT_RETRIES,
+        1,
+        cb,
+        user_data,
+        NULL,
+        NULL,
+        NULL,
+        1,
+        0
+    );
+}
+
+static dcc_status_t dcc_rest_direct_message_send(
+    dcc_client_t *client,
+    dcc_snowflake_t channel_id,
+    const char *json_body,
+    dcc_rest_cb cb,
+    void *user_data
+) {
+    char path[80];
+    dcc_status_t status = dcc_rest_format_path(
+        path,
+        sizeof(path),
+        "/channels/%llu/messages",
+        (unsigned long long)channel_id
+    );
+    return status == DCC_OK
+        ? dcc_rest_direct_message_request(client, path, json_body, cb, user_data)
+        : status;
+}
+
+static dcc_status_t dcc_rest_create_direct_message_admitted(
     dcc_client_t *client,
     dcc_snowflake_t user_id,
     const char *json_body,
@@ -38,7 +87,13 @@ dcc_status_t dcc_rest_create_direct_message(
 
     dcc_snowflake_t channel_id = dcc_client_get_dm_channel(client, user_id);
     if (channel_id != 0) {
-        return dcc_rest_create_message(client, channel_id, json_body, cb, user_data);
+        return dcc_rest_direct_message_send(
+            client,
+            channel_id,
+            json_body,
+            cb,
+            user_data
+        );
     }
 
     char create_body[64];
@@ -49,7 +104,13 @@ dcc_status_t dcc_rest_create_direct_message(
 
     dcc_rest_captured_response_t captured;
     memset(&captured, 0, sizeof(captured));
-    dcc_status_t status = dcc_rest_create_dm_channel(client, create_body, dcc_rest_capture_cb, &captured);
+    dcc_status_t status = dcc_rest_direct_message_request(
+        client,
+        "/users/@me/channels",
+        create_body,
+        dcc_rest_capture_cb,
+        &captured
+    );
     if (status != DCC_OK) {
         if (captured.called && captured.status >= 200U &&
             captured.status < 300U) {
@@ -146,7 +207,38 @@ dcc_status_t dcc_rest_create_direct_message(
 
     (void)dcc_client_set_dm_channel(client, user_id, channel_id);
     dcc_rest_captured_response_deinit(&captured);
-    return dcc_rest_create_message(client, channel_id, json_body, cb, user_data);
+    return dcc_rest_direct_message_send(
+        client,
+        channel_id,
+        json_body,
+        cb,
+        user_data
+    );
+}
+
+dcc_status_t dcc_rest_create_direct_message(
+    dcc_client_t *client,
+    dcc_snowflake_t user_id,
+    const char *json_body,
+    dcc_rest_cb cb,
+    void *user_data
+) {
+    if (client == NULL || user_id == 0U || json_body == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_status_t status = dcc_rest_operation_begin(client);
+    if (status != DCC_OK) {
+        return status;
+    }
+    status = dcc_rest_create_direct_message_admitted(
+        client,
+        user_id,
+        json_body,
+        cb,
+        user_data
+    );
+    dcc_rest_operation_end(client);
+    return status;
 }
 
 dcc_status_t dcc_rest_create_direct_message_builder(

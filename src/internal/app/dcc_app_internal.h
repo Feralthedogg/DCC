@@ -281,6 +281,7 @@ dcc_status_t dcc_app_auto_defer_start(dcc_ctx_t *ctx);
 void dcc_app_auto_defer_finish(dcc_ctx_t *ctx);
 dcc_app_response_state_t dcc_app_auto_defer_response_state(const dcc_ctx_t *ctx);
 dcc_status_t dcc_app_auto_defer_claim_initial(dcc_ctx_t *ctx, dcc_app_response_state_t state);
+void dcc_app_auto_defer_release_initial_claim(dcc_ctx_t *ctx);
 void dcc_app_auto_defer_mark_initial(
     dcc_ctx_t *ctx,
     dcc_app_response_state_t state,

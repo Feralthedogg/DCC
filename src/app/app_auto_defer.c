@@ -145,6 +145,20 @@ dcc_status_t dcc_app_auto_defer_claim_initial(dcc_ctx_t *ctx, dcc_app_response_s
     }
 }
 
+void dcc_app_auto_defer_release_initial_claim(dcc_ctx_t *ctx) {
+    if (ctx == NULL || ctx->auto_defer == NULL) {
+        return;
+    }
+    int expected = DCC_APP_RESPONSE_CLAIMED;
+    (void)atomic_compare_exchange_strong_explicit(
+        &ctx->auto_defer->response_state,
+        &expected,
+        DCC_APP_RESPONSE_READY,
+        memory_order_acq_rel,
+        memory_order_acquire
+    );
+}
+
 void dcc_app_auto_defer_mark_initial(
     dcc_ctx_t *ctx,
     dcc_app_response_state_t state,

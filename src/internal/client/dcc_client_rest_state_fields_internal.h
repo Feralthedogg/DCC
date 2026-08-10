@@ -32,6 +32,11 @@ struct dcc_rest_firewall_state;
     void *rest_app_error_sink_user_data; \
     atomic_uint rest_app_error_sink_in_flight; \
     atomic_uint rest_terminal_in_flight; \
+    uint32_t rest_operations_in_flight; \
+    uint8_t rest_initialized; \
+    uint8_t rest_admission_closed; \
+    uint8_t rest_terminal_closed; \
+    uint8_t rest_quiesced; \
     dcc_rest_intercept_fn rest_intercept; \
     void *rest_intercept_user_data; \
     struct dcc_rest_firewall_state *rest_firewall; \
