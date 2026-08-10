@@ -26,7 +26,8 @@ dcc_status_t dcc_rest_request(
         NULL,
         NULL,
         NULL,
-        1
+        1,
+        0
     );
 }
 
@@ -54,7 +55,8 @@ dcc_status_t dcc_rest_request_raw(
         NULL,
         NULL,
         NULL,
-        1
+        1,
+        0
     );
 }
 

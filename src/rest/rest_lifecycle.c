@@ -45,6 +45,7 @@ dcc_status_t dcc_rest_init(dcc_client_t *client) {
     client->rest_app_error_sink = NULL;
     client->rest_app_error_sink_user_data = NULL;
     atomic_init(&client->rest_app_error_sink_in_flight, 0U);
+    atomic_init(&client->rest_terminal_in_flight, 0U);
     client->rest_intercept = NULL;
     client->rest_intercept_user_data = NULL;
     client->rest_firewall = NULL;
@@ -67,6 +68,7 @@ dcc_status_t dcc_rest_init(dcc_client_t *client) {
     memset(client->rest_async_active_routes, 0, sizeof(client->rest_async_active_routes));
     client->rest_async_active_route_count = 0;
     client->rest_async_active = 0;
+    client->rest_test_fail_next_worker_spawn = 0U;
     return DCC_OK;
 }
 

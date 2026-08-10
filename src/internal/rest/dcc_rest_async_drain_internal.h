@@ -8,6 +8,12 @@ extern "C" {
 #endif
 
 dcc_status_t dcc_rest_async_drain_locked(dcc_client_t *client);
+dcc_status_t dcc_rest_async_drain_admission_locked(
+    dcc_client_t *client,
+    dcc_rest_async_request_t *admission,
+    dcc_rest_async_request_t **out_rejected
+);
+void dcc_rest_test_fail_next_worker_spawn(dcc_client_t *client);
 
 #ifdef __cplusplus
 }

@@ -32,7 +32,8 @@ typedef enum dcc_app_response_state {
     DCC_APP_RESPONSE_READY = 0,
     DCC_APP_RESPONSE_DEFERRED = 1,
     DCC_APP_RESPONSE_REPLIED = 2,
-    DCC_APP_RESPONSE_FAILED = 3
+    DCC_APP_RESPONSE_FAILED = 3,
+    DCC_APP_RESPONSE_CLAIMED = 4
 } dcc_app_response_state_t;
 
 typedef struct dcc_app_auto_defer {
@@ -41,6 +42,7 @@ typedef struct dcc_app_auto_defer {
     char *token;
     atomic_uint refs;
     atomic_bool done;
+    atomic_bool initial_response_admitted;
     atomic_int response_state;
     uint64_t after_ms;
     uint8_t ephemeral;
@@ -279,7 +281,13 @@ dcc_status_t dcc_app_auto_defer_start(dcc_ctx_t *ctx);
 void dcc_app_auto_defer_finish(dcc_ctx_t *ctx);
 dcc_app_response_state_t dcc_app_auto_defer_response_state(const dcc_ctx_t *ctx);
 dcc_status_t dcc_app_auto_defer_claim_initial(dcc_ctx_t *ctx, dcc_app_response_state_t state);
+void dcc_app_auto_defer_mark_initial(
+    dcc_ctx_t *ctx,
+    dcc_app_response_state_t state,
+    dcc_status_t status
+);
 void dcc_app_auto_defer_mark(dcc_ctx_t *ctx, dcc_app_response_state_t state, dcc_status_t status);
+uint8_t dcc_ctx_initial_response_admitted(const dcc_ctx_t *ctx);
 dcc_status_t dcc_app_start_schedules(dcc_app_t *app);
 dcc_status_t dcc_app_request_stop_schedules(dcc_app_t *app);
 dcc_status_t dcc_app_reap_schedules(dcc_app_t *app);

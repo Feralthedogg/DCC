@@ -11,6 +11,7 @@ static uint8_t dcc_flow_can_edit_original(const dcc_interaction_flow_t *flow) {
 
 static uint8_t dcc_flow_can_followup(const dcc_interaction_flow_t *flow) {
     return flow != NULL &&
+        dcc_flow_initial_sent(flow) &&
         flow->state != DCC_INTERACTION_FLOW_READY &&
         flow->state != DCC_INTERACTION_FLOW_FAILED;
 }
@@ -76,7 +77,7 @@ dcc_status_t dcc_flow_reply(
         return status;
     }
 
-    if (flow->state == DCC_INTERACTION_FLOW_READY) {
+    if (!dcc_flow_initial_sent(flow)) {
         status = dcc_rest_interaction_response_create_from_interaction_message_builder(
             flow->client,
             flow->interaction,
@@ -85,8 +86,11 @@ dcc_status_t dcc_flow_reply(
             cb,
             user_data
         );
-        dcc_flow_mark(flow, DCC_INTERACTION_FLOW_REPLIED, status);
-        return status;
+        return dcc_flow_mark_initial(
+            flow,
+            DCC_INTERACTION_FLOW_REPLIED,
+            status
+        );
     }
     if (flow->state == DCC_INTERACTION_FLOW_DEFERRED ||
         flow->state == DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL ||

@@ -32,6 +32,7 @@ static dcc_status_t dcc_rest_async_intercept(
         NULL,
         NULL,
         NULL,
+        1,
         1
     );
 }
@@ -70,9 +71,16 @@ dcc_status_t dcc_rest_request_async_priority(
 
     dcc_rest_lock(client);
     dcc_rest_async_push_tail_locked(client, request);
-    dcc_status_t status = dcc_rest_async_drain_locked(client);
+    dcc_rest_async_request_t *rejected = NULL;
+    dcc_status_t status = dcc_rest_async_drain_admission_locked(
+        client,
+        request,
+        &rejected
+    );
     dcc_rest_unlock(client);
     dcc_rest_async_signal(client);
+
+    dcc_rest_async_request_free(rejected);
 
     return status;
 }

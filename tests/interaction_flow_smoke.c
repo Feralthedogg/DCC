@@ -15,6 +15,19 @@ int main(void) {
 #include <string.h>
 #include <unistd.h>
 
+#define DCC_FLOW_PRE_ADMISSION_END \
+    (offsetof(dcc_interaction_flow_t, auto_defer_ephemeral) + \
+        sizeof(((dcc_interaction_flow_t *)0)->auto_defer_ephemeral))
+#define DCC_FLOW_PRE_ADMISSION_SIZE \
+    ((DCC_FLOW_PRE_ADMISSION_END + _Alignof(dcc_interaction_flow_t) - 1U) / \
+        _Alignof(dcc_interaction_flow_t) * _Alignof(dcc_interaction_flow_t))
+_Static_assert(
+    sizeof(dcc_interaction_flow_t) == DCC_FLOW_PRE_ADMISSION_SIZE,
+    "initial admission tracking must preserve the previous flow ABI size"
+);
+#undef DCC_FLOW_PRE_ADMISSION_SIZE
+#undef DCC_FLOW_PRE_ADMISSION_END
+
 typedef struct flow_seen {
     int called;
     uint16_t status;
@@ -197,6 +210,37 @@ int main(void) {
         ) ||
         dcc_flow_state(&flow) != DCC_INTERACTION_FLOW_ORIGINAL_EDITED ||
         strcmp(dcc_flow_state_string(dcc_flow_state(&flow)), "original_edited") != 0) {
+        (void)unsetenv("DCC_DISCORD_API_BASE");
+        dcc_client_destroy(client);
+        return 1;
+    }
+
+    dcc_flow_init(&flow, client, &interaction);
+    dcc_message_builder_t invalid_message;
+    dcc_message_builder_init(&invalid_message);
+    invalid_message.has_content = 1U;
+    invalid_message.content = NULL;
+    if (dcc_flow_reply(&flow, &invalid_message, flow_rest_cb, &seen) !=
+            DCC_ERR_INVALID_ARG ||
+        dcc_flow_state(&flow) != DCC_INTERACTION_FLOW_FAILED ||
+        set_message(&message, "recovered") != DCC_OK ||
+        !start_flow_server(&server, &thread)) {
+        (void)unsetenv("DCC_DISCORD_API_BASE");
+        dcc_client_destroy(client);
+        return 1;
+    }
+    memset(&seen, 0, sizeof(seen));
+    status = dcc_flow_reply(&flow, &message, flow_rest_cb, &seen);
+    if (!expect_request(
+            &server,
+            thread,
+            status,
+            &seen,
+            "POST",
+            "/interactions/555/tok/callback",
+            "{\"type\":4,\"data\":{\"content\":\"recovered\"}}"
+        ) ||
+        dcc_flow_state(&flow) != DCC_INTERACTION_FLOW_REPLIED) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
         dcc_client_destroy(client);
         return 1;

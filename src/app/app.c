@@ -1,6 +1,7 @@
 #include "internal/app/dcc_app_internal.h"
 
 #include "internal/dcc_core_internal.h"
+#include "internal/rest/dcc_rest_error_observer_internal.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -185,7 +186,8 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     if (app == NULL) {
         return DCC_OK;
     }
-    if (dcc_app_callback_frame_active(app)) {
+    if (dcc_app_callback_frame_active(app) ||
+        dcc_rest_terminal_callback_active(app->client)) {
         return DCC_ERR_STATE;
     }
     dcc_status_t status = dcc_app_stop(app);
@@ -317,7 +319,8 @@ dcc_status_t dcc_app_wait(dcc_app_t *app) {
     if (app == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    if (dcc_app_callback_frame_active(app)) {
+    if (dcc_app_callback_frame_active(app) ||
+        dcc_rest_terminal_callback_active(app->client)) {
         return DCC_ERR_STATE;
     }
     dcc_app_listener_lock(app);

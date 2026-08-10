@@ -7,6 +7,14 @@
 extern "C" {
 #endif
 
+/**
+ * Submits an asynchronous REST request.
+ *
+ * A non-OK return rejects admission: DCC retains neither the request nor its
+ * callback/user data and will not deliver a terminal callback or observation
+ * for that submission. DCC_OK transfers callback/user-data lifetime to DCC
+ * until exactly one terminal completion.
+ */
 DCC_API dcc_status_t dcc_rest_request_async(
     dcc_client_t *client,
     const char *method,
@@ -16,6 +24,7 @@ DCC_API dcc_status_t dcc_rest_request_async(
     void *user_data
 );
 
+/** Same admission and ownership contract as dcc_rest_request_async(). */
 DCC_API dcc_status_t dcc_rest_request_async_priority(
     dcc_client_t *client,
     const char *method,

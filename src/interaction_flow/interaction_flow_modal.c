@@ -22,6 +22,5 @@ dcc_status_t dcc_flow_show_modal(
             user_data
         );
     }
-    dcc_flow_mark(flow, DCC_INTERACTION_FLOW_MODAL, status);
-    return status;
+    return dcc_flow_mark_initial(flow, DCC_INTERACTION_FLOW_MODAL, status);
 }

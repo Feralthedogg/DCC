@@ -17,8 +17,7 @@ dcc_status_t dcc_flow_defer(
             user_data
         );
     }
-    dcc_flow_mark(flow, DCC_INTERACTION_FLOW_DEFERRED, status);
-    return status;
+    return dcc_flow_mark_initial(flow, DCC_INTERACTION_FLOW_DEFERRED, status);
 }
 
 dcc_status_t dcc_flow_defer_ephemeral(
@@ -45,8 +44,11 @@ dcc_status_t dcc_flow_defer_ephemeral(
             user_data
         );
     }
-    dcc_flow_mark(flow, DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL, status);
-    return status;
+    return dcc_flow_mark_initial(
+        flow,
+        DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL,
+        status
+    );
 }
 
 dcc_status_t dcc_flow_defer_update(
@@ -66,6 +68,9 @@ dcc_status_t dcc_flow_defer_update(
             user_data
         );
     }
-    dcc_flow_mark(flow, DCC_INTERACTION_FLOW_DEFERRED_UPDATE, status);
-    return status;
+    return dcc_flow_mark_initial(
+        flow,
+        DCC_INTERACTION_FLOW_DEFERRED_UPDATE,
+        status
+    );
 }

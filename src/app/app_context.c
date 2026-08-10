@@ -1,4 +1,5 @@
 #include "internal/app/dcc_app_internal.h"
+#include "internal/interaction_flow/dcc_interaction_flow_internal.h"
 
 #include <dcc/cache.h>
 #include <dcc/rest/interactions/responses.h>
@@ -352,6 +353,8 @@ dcc_interaction_flow_state_t dcc_ctx_response_state(const dcc_ctx_t *ctx) {
                 : DCC_INTERACTION_FLOW_REPLIED;
         case DCC_APP_RESPONSE_FAILED:
             return DCC_INTERACTION_FLOW_FAILED;
+        case DCC_APP_RESPONSE_CLAIMED:
+            return dcc_flow_state(&ctx->flow);
     }
 
     return DCC_INTERACTION_FLOW_FAILED;
@@ -362,8 +365,20 @@ const char *dcc_ctx_response_state_string(const dcc_ctx_t *ctx) {
 }
 
 uint8_t dcc_ctx_response_sent(const dcc_ctx_t *ctx) {
-    dcc_interaction_flow_state_t state = dcc_ctx_response_state(ctx);
-    return state != DCC_INTERACTION_FLOW_READY && state != DCC_INTERACTION_FLOW_FAILED ? 1U : 0U;
+    return dcc_ctx_initial_response_admitted(ctx);
+}
+
+uint8_t dcc_ctx_initial_response_admitted(const dcc_ctx_t *ctx) {
+    if (ctx == NULL) {
+        return 0U;
+    }
+    if (dcc_flow_initial_sent(&ctx->flow)) {
+        return 1U;
+    }
+    return ctx->auto_defer != NULL && atomic_load_explicit(
+        &ctx->auto_defer->initial_response_admitted,
+        memory_order_acquire
+    ) ? 1U : 0U;
 }
 
 uint8_t dcc_ctx_deferred(const dcc_ctx_t *ctx) {
@@ -422,28 +437,52 @@ static dcc_status_t dcc_ctx_flow_reply_auto(
         return dcc_flow_reply(&ctx->flow, message, cb, user_data);
     }
 
-    dcc_app_response_state_t response_state = dcc_app_auto_defer_response_state(ctx);
-    if (response_state == DCC_APP_RESPONSE_READY) {
-        dcc_status_t status = dcc_app_auto_defer_claim_initial(ctx, DCC_APP_RESPONSE_REPLIED);
-        if (status != DCC_OK) {
-            return dcc_ctx_flow_reply_auto(ctx, message, cb, user_data);
+    for (;;) {
+        dcc_app_response_state_t response_state =
+            dcc_app_auto_defer_response_state(ctx);
+        if (response_state == DCC_APP_RESPONSE_FAILED &&
+            dcc_ctx_initial_response_admitted(ctx)) {
+            return DCC_ERR_STATE;
         }
-        ctx->flow.state = DCC_INTERACTION_FLOW_READY;
-        status = dcc_flow_reply(&ctx->flow, message, cb, user_data);
-        dcc_app_auto_defer_mark(ctx, DCC_APP_RESPONSE_REPLIED, status);
-        return status;
+        if (response_state == DCC_APP_RESPONSE_READY ||
+            response_state == DCC_APP_RESPONSE_FAILED ||
+            response_state == DCC_APP_RESPONSE_CLAIMED) {
+            dcc_status_t status = dcc_app_auto_defer_claim_initial(
+                ctx,
+                DCC_APP_RESPONSE_REPLIED
+            );
+            if (status != DCC_OK) {
+                continue;
+            }
+            status = dcc_flow_reply(&ctx->flow, message, cb, user_data);
+            dcc_app_auto_defer_mark_initial(
+                ctx,
+                DCC_APP_RESPONSE_REPLIED,
+                status
+            );
+            return status;
+        }
+        if (response_state == DCC_APP_RESPONSE_DEFERRED) {
+            (void)dcc_flow_mark_initial(
+                &ctx->flow,
+                dcc_ctx_auto_deferred_flow_state(ctx),
+                DCC_OK
+            );
+            dcc_status_t status = dcc_flow_reply(&ctx->flow, message, cb, user_data);
+            dcc_app_auto_defer_mark(ctx, DCC_APP_RESPONSE_REPLIED, status);
+            return status;
+        }
+        if (response_state == DCC_APP_RESPONSE_REPLIED) {
+            dcc_interaction_flow_state_t state = ctx->flow.state;
+            if (state == DCC_INTERACTION_FLOW_READY ||
+                state == DCC_INTERACTION_FLOW_FAILED) {
+                state = DCC_INTERACTION_FLOW_REPLIED;
+            }
+            (void)dcc_flow_mark_initial(&ctx->flow, state, DCC_OK);
+            return dcc_flow_reply(&ctx->flow, message, cb, user_data);
+        }
+        return DCC_ERR_STATE;
     }
-    if (response_state == DCC_APP_RESPONSE_DEFERRED) {
-        ctx->flow.state = dcc_ctx_auto_deferred_flow_state(ctx);
-        dcc_status_t status = dcc_flow_reply(&ctx->flow, message, cb, user_data);
-        dcc_app_auto_defer_mark(ctx, DCC_APP_RESPONSE_REPLIED, status);
-        return status;
-    }
-    if (response_state == DCC_APP_RESPONSE_REPLIED) {
-        ctx->flow.state = DCC_INTERACTION_FLOW_REPLIED;
-        return dcc_flow_reply(&ctx->flow, message, cb, user_data);
-    }
-    return DCC_ERR_STATE;
 }
 
 static dcc_status_t dcc_ctx_claim_initial_auto(
@@ -573,7 +612,7 @@ dcc_status_t dcc_ctx_defer(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_data) {
         return status;
     }
     status = dcc_flow_defer(&ctx->flow, cb, user_data);
-    dcc_app_auto_defer_mark(ctx, DCC_APP_RESPONSE_DEFERRED, status);
+    dcc_app_auto_defer_mark_initial(ctx, DCC_APP_RESPONSE_DEFERRED, status);
     return status;
 }
 
@@ -583,7 +622,7 @@ dcc_status_t dcc_ctx_defer_ephemeral(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_
         return status;
     }
     status = dcc_flow_defer_ephemeral(&ctx->flow, cb, user_data);
-    dcc_app_auto_defer_mark(ctx, DCC_APP_RESPONSE_DEFERRED, status);
+    dcc_app_auto_defer_mark_initial(ctx, DCC_APP_RESPONSE_DEFERRED, status);
     return status;
 }
 
@@ -601,8 +640,8 @@ dcc_status_t dcc_ctx_update_message(
         return status;
     }
     status = dcc_interaction_update_message(ctx->client, ctx->interaction, message, cb, user_data);
-    ctx->flow.state = status == DCC_OK ? DCC_INTERACTION_FLOW_REPLIED : DCC_INTERACTION_FLOW_FAILED;
-    dcc_app_auto_defer_mark(ctx, DCC_APP_RESPONSE_REPLIED, status);
+    (void)dcc_flow_mark_initial(&ctx->flow, DCC_INTERACTION_FLOW_REPLIED, status);
+    dcc_app_auto_defer_mark_initial(ctx, DCC_APP_RESPONSE_REPLIED, status);
     return status;
 }
 
@@ -617,7 +656,7 @@ dcc_status_t dcc_ctx_show_modal(
         return status;
     }
     status = dcc_flow_show_modal(&ctx->flow, modal, cb, user_data);
-    dcc_app_auto_defer_mark(ctx, DCC_APP_RESPONSE_REPLIED, status);
+    dcc_app_auto_defer_mark_initial(ctx, DCC_APP_RESPONSE_REPLIED, status);
     return status;
 }
 
@@ -653,13 +692,29 @@ dcc_status_t dcc_ctx_reply_autocomplete(
     if (ctx == NULL || autocomplete == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_interaction_response_create_autocomplete_from_interaction(
-        ctx->client,
-        ctx->interaction,
-        autocomplete,
-        cb,
-        user_data
+    dcc_status_t status = dcc_ctx_claim_initial_auto(
+        ctx,
+        DCC_APP_RESPONSE_REPLIED
     );
+    if (status == DCC_OK) {
+        status = dcc_flow_require_ready(&ctx->flow);
+    }
+    if (status == DCC_OK) {
+        status = dcc_rest_interaction_response_create_autocomplete_from_interaction(
+            ctx->client,
+            ctx->interaction,
+            autocomplete,
+            cb,
+            user_data
+        );
+    }
+    status = dcc_flow_mark_initial(
+        &ctx->flow,
+        DCC_INTERACTION_FLOW_REPLIED,
+        status
+    );
+    dcc_app_auto_defer_mark_initial(ctx, DCC_APP_RESPONSE_REPLIED, status);
+    return status;
 }
 
 dcc_status_t dcc_ctx_reply_autocomplete_matching(
@@ -705,7 +760,11 @@ dcc_status_t dcc_ctx_edit_original(
         return DCC_ERR_INVALID_ARG;
     }
     if (dcc_app_auto_defer_response_state(ctx) == DCC_APP_RESPONSE_DEFERRED) {
-        ctx->flow.state = dcc_ctx_auto_deferred_flow_state(ctx);
+        (void)dcc_flow_mark_initial(
+            &ctx->flow,
+            dcc_ctx_auto_deferred_flow_state(ctx),
+            DCC_OK
+        );
     }
     dcc_status_t status = dcc_flow_edit_original(&ctx->flow, message, cb, user_data);
     dcc_app_auto_defer_mark(ctx, DCC_APP_RESPONSE_REPLIED, status);
@@ -734,9 +793,18 @@ dcc_status_t dcc_ctx_followup(
     }
     dcc_app_response_state_t response_state = dcc_app_auto_defer_response_state(ctx);
     if (response_state == DCC_APP_RESPONSE_DEFERRED) {
-        ctx->flow.state = dcc_ctx_auto_deferred_flow_state(ctx);
+        (void)dcc_flow_mark_initial(
+            &ctx->flow,
+            dcc_ctx_auto_deferred_flow_state(ctx),
+            DCC_OK
+        );
     } else if (response_state == DCC_APP_RESPONSE_REPLIED) {
-        ctx->flow.state = DCC_INTERACTION_FLOW_REPLIED;
+        dcc_interaction_flow_state_t state = ctx->flow.state;
+        if (state == DCC_INTERACTION_FLOW_READY ||
+            state == DCC_INTERACTION_FLOW_FAILED) {
+            state = DCC_INTERACTION_FLOW_REPLIED;
+        }
+        (void)dcc_flow_mark_initial(&ctx->flow, state, DCC_OK);
     }
     return dcc_flow_followup(&ctx->flow, message, cb, user_data);
 }

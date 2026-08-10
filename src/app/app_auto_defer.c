@@ -2,6 +2,7 @@
 
 #include "internal/client/dcc_client_state_internal.h"
 #include "internal/dcc_core_internal.h"
+#include "internal/interaction_flow/dcc_interaction_flow_internal.h"
 #include "internal/runtime/dcc_runtime_internal.h"
 
 #include <llam/runtime.h>
@@ -30,16 +31,27 @@ static void dcc_app_auto_defer_task(void *arg) {
         if (atomic_compare_exchange_strong_explicit(
                 &state->response_state,
                 &expected,
-                DCC_APP_RESPONSE_DEFERRED,
+                DCC_APP_RESPONSE_CLAIMED,
                 memory_order_acq_rel,
                 memory_order_acquire
             )) {
             dcc_status_t status = state->ephemeral
                 ? dcc_interaction_defer_ephemeral(state->client, &state->interaction, NULL, NULL)
                 : dcc_interaction_defer(state->client, &state->interaction, NULL, NULL);
-            if (status != DCC_OK) {
-                atomic_store_explicit(&state->response_state, DCC_APP_RESPONSE_FAILED, memory_order_release);
+            if (status == DCC_OK) {
+                atomic_store_explicit(
+                    &state->initial_response_admitted,
+                    true,
+                    memory_order_release
+                );
             }
+            atomic_store_explicit(
+                &state->response_state,
+                status == DCC_OK
+                    ? DCC_APP_RESPONSE_DEFERRED
+                    : DCC_APP_RESPONSE_FAILED,
+                memory_order_release
+            );
         }
     }
 
@@ -70,6 +82,7 @@ dcc_status_t dcc_app_auto_defer_start(dcc_ctx_t *ctx) {
     state->interaction.token = state->token;
     atomic_init(&state->refs, 2U);
     atomic_init(&state->done, false);
+    atomic_init(&state->initial_response_admitted, false);
     atomic_init(&state->response_state, DCC_APP_RESPONSE_READY);
     state->after_ms = ctx->app->auto_defer_after_ms;
     state->ephemeral = ctx->app->auto_defer_ephemeral != 0U;
@@ -107,17 +120,62 @@ dcc_status_t dcc_app_auto_defer_claim_initial(dcc_ctx_t *ctx, dcc_app_response_s
     if (ctx == NULL || ctx->auto_defer == NULL) {
         return DCC_OK;
     }
-    int expected = DCC_APP_RESPONSE_READY;
-    return atomic_compare_exchange_strong_explicit(
-        &ctx->auto_defer->response_state,
-        &expected,
-        state,
-        memory_order_acq_rel,
-        memory_order_acquire
-    ) ? DCC_OK : DCC_ERR_STATE;
+    if (state != DCC_APP_RESPONSE_DEFERRED && state != DCC_APP_RESPONSE_REPLIED) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    for (;;) {
+        int expected = atomic_load_explicit(
+            &ctx->auto_defer->response_state,
+            memory_order_acquire
+        );
+        if (expected == DCC_APP_RESPONSE_CLAIMED) {
+            (void)llam_sleep_ns(UINT64_C(1000000));
+            continue;
+        }
+        if (expected != DCC_APP_RESPONSE_READY &&
+            (expected != DCC_APP_RESPONSE_FAILED ||
+             dcc_ctx_initial_response_admitted(ctx))) {
+            return DCC_ERR_STATE;
+        }
+        if (atomic_compare_exchange_weak_explicit(
+                &ctx->auto_defer->response_state,
+                &expected,
+                DCC_APP_RESPONSE_CLAIMED,
+                memory_order_acq_rel,
+                memory_order_acquire
+            )) {
+            return DCC_OK;
+        }
+    }
 }
 
-void dcc_app_auto_defer_mark(dcc_ctx_t *ctx, dcc_app_response_state_t state, dcc_status_t status) {
+void dcc_app_auto_defer_mark_initial(
+    dcc_ctx_t *ctx,
+    dcc_app_response_state_t state,
+    dcc_status_t status
+) {
+    if (ctx == NULL || ctx->auto_defer == NULL) {
+        return;
+    }
+    if (status == DCC_OK) {
+        atomic_store_explicit(
+            &ctx->auto_defer->initial_response_admitted,
+            true,
+            memory_order_release
+        );
+    }
+    atomic_store_explicit(
+        &ctx->auto_defer->response_state,
+        status == DCC_OK ? state : DCC_APP_RESPONSE_FAILED,
+        memory_order_release
+    );
+}
+
+void dcc_app_auto_defer_mark(
+    dcc_ctx_t *ctx,
+    dcc_app_response_state_t state,
+    dcc_status_t status
+) {
     if (ctx == NULL || ctx->auto_defer == NULL) {
         return;
     }

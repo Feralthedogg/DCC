@@ -21,7 +21,10 @@ void dcc_rest_async_push_head_locked(dcc_client_t *client, dcc_rest_async_reques
     }
 }
 
-dcc_rest_async_request_t *dcc_rest_async_take_next_locked(dcc_client_t *client) {
+dcc_rest_async_request_t *dcc_rest_async_take_next_locked(
+    dcc_client_t *client,
+    dcc_rest_async_queue_position_t *position
+) {
     uint64_t now = dcc_rest_now_ms();
     for (int priority = (int)DCC_REST_PRIORITY_HIGH; priority >= (int)DCC_REST_PRIORITY_LOW; --priority) {
         dcc_rest_async_request_t *prev = NULL;
@@ -29,6 +32,11 @@ dcc_rest_async_request_t *dcc_rest_async_take_next_locked(dcc_client_t *client) 
         while (request != NULL) {
             if (!dcc_rest_async_route_active_locked(client, request->route) &&
                 dcc_rest_async_request_wait_ms_locked(client, request, now, 1) == 0) {
+                if (position != NULL) {
+                    position->priority = (uint32_t)priority;
+                    position->previous = prev;
+                    position->next = request->next;
+                }
                 if (prev != NULL) {
                     prev->next = request->next;
                 } else {
@@ -45,4 +53,24 @@ dcc_rest_async_request_t *dcc_rest_async_take_next_locked(dcc_client_t *client) 
         }
     }
     return NULL;
+}
+
+void dcc_rest_async_restore_locked(
+    dcc_client_t *client,
+    dcc_rest_async_request_t *request,
+    const dcc_rest_async_queue_position_t *position
+) {
+    if (client == NULL || request == NULL || position == NULL ||
+        position->priority >= DCC_REST_PRIORITY_LEVELS) {
+        return;
+    }
+    request->next = position->next;
+    if (position->previous != NULL) {
+        position->previous->next = request;
+    } else {
+        client->rest_async_heads[position->priority] = request;
+    }
+    if (position->next == NULL) {
+        client->rest_async_tails[position->priority] = request;
+    }
 }

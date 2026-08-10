@@ -31,6 +31,7 @@ struct dcc_rest_firewall_state;
     dcc_client_error_fn rest_app_error_sink; \
     void *rest_app_error_sink_user_data; \
     atomic_uint rest_app_error_sink_in_flight; \
+    atomic_uint rest_terminal_in_flight; \
     dcc_rest_intercept_fn rest_intercept; \
     void *rest_intercept_user_data; \
     struct dcc_rest_firewall_state *rest_firewall; \
@@ -42,6 +43,7 @@ struct dcc_rest_firewall_state;
     char rest_async_active_routes[DCC_REST_BUCKET_CAP][DCC_REST_ROUTE_KEY_CAP]; \
     uint32_t rest_async_active_route_count; \
     uint32_t rest_async_active; \
+    uint8_t rest_test_fail_next_worker_spawn; \
     DCC_CLIENT_REST_WAIT_STATE_FIELDS
 
 #endif

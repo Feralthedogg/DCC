@@ -98,6 +98,7 @@ int run_public_rest_async_smoke(void);
 int run_public_rest_future_smoke(void);
 int run_public_rest_async_priority_smoke(void);
 int run_public_rest_async_route_serial_smoke(void);
+int run_public_rest_async_spawn_admission_smoke(void);
 int run_public_rest_async_control_smoke(void);
 int run_public_rest_async_active_cancel_smoke(void);
 int run_public_rest_async_retry_queue_smoke(void);

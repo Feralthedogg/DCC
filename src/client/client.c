@@ -1,5 +1,6 @@
 #include "internal/client/dcc_client_state_internal.h"
 #include "internal/dcc_core_internal.h"
+#include "internal/rest/dcc_rest_error_observer_internal.h"
 
 #include <stdlib.h>
 
@@ -89,10 +90,15 @@ void dcc_client_destroy(dcc_client_t *client) {
     if (client == NULL) {
         return;
     }
+    if (dcc_rest_terminal_callback_active(client)) {
+        (void)dcc_client_stop(client);
+        return;
+    }
     dcc_voice_client_stop_owned(client);
     (void)dcc_client_stop(client);
     dcc_voice_client_unbind_owner(client);
     dcc_runtime_shutdown(&client->runtime);
+    dcc_rest_terminal_wait(client);
     dcc_rest_deinit(client);
     dcc_cache_deinit(&client->cache);
     dcc_event_bus_deinit(&client->events);

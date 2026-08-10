@@ -33,6 +33,7 @@ typedef struct dcc_interaction_flow {
     uint64_t started_at_ms;
     uint64_t auto_defer_after_ms;
     uint8_t auto_defer_ephemeral;
+    uint8_t initial_response_admitted;
 } dcc_interaction_flow_t;
 
 DCC_API void dcc_flow_init(

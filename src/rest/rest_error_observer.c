@@ -22,6 +22,62 @@ typedef struct dcc_rest_result_view {
     dcc_json_t *json;
 } dcc_rest_result_view_t;
 
+typedef struct dcc_rest_terminal_frame {
+    dcc_client_t *client;
+    struct dcc_rest_terminal_frame *previous;
+} dcc_rest_terminal_frame_t;
+
+static _Thread_local dcc_rest_terminal_frame_t *dcc_rest_current_terminal_frame;
+
+static void dcc_rest_terminal_enter(
+    dcc_rest_terminal_frame_t *frame,
+    dcc_client_t *client
+) {
+    frame->client = client;
+    frame->previous = dcc_rest_current_terminal_frame;
+    atomic_fetch_add_explicit(
+        &client->rest_terminal_in_flight,
+        1U,
+        memory_order_acq_rel
+    );
+    dcc_rest_current_terminal_frame = frame;
+}
+
+static void dcc_rest_terminal_leave(dcc_rest_terminal_frame_t *frame) {
+    if (frame == NULL || dcc_rest_current_terminal_frame != frame) {
+        return;
+    }
+    dcc_rest_current_terminal_frame = frame->previous;
+    atomic_fetch_sub_explicit(
+        &frame->client->rest_terminal_in_flight,
+        1U,
+        memory_order_acq_rel
+    );
+}
+
+uint8_t dcc_rest_terminal_callback_active(const dcc_client_t *client) {
+    for (dcc_rest_terminal_frame_t *frame = dcc_rest_current_terminal_frame;
+         frame != NULL;
+         frame = frame->previous) {
+        if (frame->client == client) {
+            return 1U;
+        }
+    }
+    return 0U;
+}
+
+void dcc_rest_terminal_wait(dcc_client_t *client) {
+    if (client == NULL) {
+        return;
+    }
+    while (atomic_load_explicit(
+            &client->rest_terminal_in_flight,
+            memory_order_acquire
+        ) != 0U) {
+        dcc_rest_sleep_ms(1U);
+    }
+}
+
 static void dcc_rest_error_observer_lock(dcc_client_t *client) {
     while (atomic_flag_test_and_set_explicit(
             &client->rest_error_observer_lock,
@@ -166,9 +222,16 @@ void dcc_rest_deliver_terminal(
         return;
     }
 
+    dcc_rest_terminal_frame_t terminal_frame;
+    dcc_rest_terminal_enter(&terminal_frame, client);
     dcc_rest_result_view_t view;
     dcc_rest_result_view_init(&view, completion);
-    dcc_rest_observer_snapshot_t observers = dcc_rest_error_observer_snapshot(client);
+    dcc_status_t mapped_status = dcc_rest_result_status(&view.result);
+    dcc_rest_observer_snapshot_t observers;
+    memset(&observers, 0, sizeof(observers));
+    if (mapped_status != DCC_OK) {
+        observers = dcc_rest_error_observer_snapshot(client);
+    }
 
     if (callback != NULL) {
         dcc_rest_response_t response = {
@@ -181,7 +244,6 @@ void dcc_rest_deliver_terminal(
         callback(client, &response, callback_user_data);
     }
 
-    dcc_status_t mapped_status = dcc_rest_result_status(&view.result);
     if (mapped_status != DCC_OK) {
         dcc_error_t error = {
             .size = sizeof(error),
@@ -211,4 +273,5 @@ void dcc_rest_deliver_terminal(
             memory_order_acq_rel
         );
     }
+    dcc_rest_terminal_leave(&terminal_frame);
 }

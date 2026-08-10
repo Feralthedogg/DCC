@@ -36,6 +36,7 @@ void dcc_rest_async_worker_task(void *arg) {
             dcc_rest_async_request_canceled,
             dcc_rest_async_request_swap_fd,
             request,
+            0,
             0
         );
     }

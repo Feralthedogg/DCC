@@ -42,6 +42,14 @@ typedef struct dcc_rest_response {
     size_t body_len;
 } dcc_rest_response_t;
 
+/**
+ * Receives one borrowed terminal REST response.
+ *
+ * The response and its body are valid only for the duration of the call.
+ * Calling dcc_client_destroy() from this callback requests client stop but
+ * intentionally defers memory release; the owning thread must call destroy
+ * again after the callback has returned. Nested REST calls are allowed.
+ */
 typedef void (*dcc_rest_cb)(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data);
 
 typedef struct dcc_rest_async_status {

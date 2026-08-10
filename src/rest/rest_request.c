@@ -5,6 +5,7 @@
 #include "internal/rest/dcc_rest_request_internal.h"
 #include "internal/rest/dcc_rest_runtime_internal.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct dcc_rest_intercept_delivery {
@@ -22,20 +23,34 @@ static void dcc_rest_intercept_delivery_cb(
 ) {
     dcc_rest_intercept_delivery_t *delivery =
         (dcc_rest_intercept_delivery_t *)user_data;
-    if (delivery == NULL || response == NULL || delivery->called) {
+    if (delivery == NULL || delivery->called) {
         return;
     }
     delivery->called = 1U;
     dcc_rest_terminal_completion_t completion = {
         .operation = delivery->operation,
-        .transport_status = DCC_OK,
-        .http_status = response->status,
-        .legacy_error = response->error,
-        .body = response->body,
-        .body_len = response->body_len,
     };
+    const size_t required_response_size =
+        offsetof(dcc_rest_response_t, body_len) + sizeof(response->body_len);
+    if (client != delivery->client || response == NULL ||
+        response->size < required_response_size ||
+        (response->body_len != 0U && response->body == NULL)) {
+        completion.transport_status = DCC_ERR_RUNTIME;
+        completion.legacy_error = DCC_ERR_RUNTIME;
+    } else if (response->status == 0U) {
+        completion.transport_status = response->error != DCC_OK
+            ? response->error
+            : DCC_ERR_RUNTIME;
+        completion.legacy_error = completion.transport_status;
+    } else {
+        completion.transport_status = DCC_OK;
+        completion.http_status = response->status;
+        completion.legacy_error = response->error;
+        completion.body = response->body;
+        completion.body_len = response->body_len;
+    }
     dcc_rest_deliver_terminal(
-        client != NULL ? client : delivery->client,
+        delivery->client,
         &completion,
         delivery->callback,
         delivery->callback_user_data
@@ -56,7 +71,8 @@ dcc_status_t dcc_rest_request_raw_impl(
     int (*is_canceled)(void *user_data),
     llam_fd_t (*swap_fd)(void *user_data, llam_fd_t fd),
     void *cancel_user_data,
-    int observe_terminal
+    int observe_terminal,
+    int silent_admission_failure
 ) {
     if (client == NULL || method == NULL || path == NULL || (body_len != 0 && body == NULL)) {
         return DCC_ERR_INVALID_ARG;
@@ -93,13 +109,19 @@ dcc_status_t dcc_rest_request_raw_impl(
             &delivery,
             client->rest_intercept_user_data
         );
-        if (intercept_status != DCC_OK && !delivery.called) {
+        if (intercept_status != DCC_OK && !delivery.called &&
+            !silent_admission_failure) {
             dcc_rest_terminal_completion_t completion = {
                 .operation = path,
                 .transport_status = intercept_status,
                 .legacy_error = intercept_status,
             };
             dcc_rest_deliver_terminal(client, &completion, NULL, NULL);
+        }
+        if (silent_admission_failure) {
+            return delivery.called
+                ? DCC_OK
+                : intercept_status != DCC_OK ? intercept_status : DCC_ERR_RUNTIME;
         }
         return intercept_status;
     }

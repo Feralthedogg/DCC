@@ -16,6 +16,10 @@ int main(void) {
     if (run_internal_http_chunked_smoke() != 0) {
         return 1;
     }
+    /* Exercise admission rollback before the independently tracked event-wait TSan path. */
+    if (run_public_rest_async_spawn_admission_smoke() != 0) {
+        return 1;
+    }
     if (run_public_event_wait_smoke() != 0) {
         return 1;
     }

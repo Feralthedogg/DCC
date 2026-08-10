@@ -113,7 +113,7 @@ dcc_status_t dcc_app_report_handler_error(
         dcc_app_callback_frame_leave(&frame);
     }
     if (ctx != NULL && snapshot.default_responses &&
-        dcc_ctx_response_state(ctx) == DCC_INTERACTION_FLOW_READY) {
+        !dcc_ctx_initial_response_admitted(ctx)) {
         (void)dcc_ctx_reply_ephemeral_text(
             ctx,
             dcc_app_generic_error_text,

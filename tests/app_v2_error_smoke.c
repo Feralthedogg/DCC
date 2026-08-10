@@ -34,6 +34,12 @@ typedef struct error_seen {
     uint8_t valid_metadata;
 } error_seen_t;
 
+typedef struct legacy_seen {
+    unsigned count;
+    uint16_t status;
+    dcc_status_t error;
+} legacy_seen_t;
+
 typedef struct intercept_step {
     dcc_status_t transport_status;
     uint16_t http_status;
@@ -67,6 +73,35 @@ typedef struct reentrant_observer_state {
     unsigned replacement_count;
     dcc_status_t mutation_status;
 } reentrant_observer_state_t;
+
+typedef struct client_terminal_destroy_state {
+    dcc_client_t *client;
+    unsigned legacy_count;
+    unsigned log_count;
+    unsigned observer_count;
+} client_terminal_destroy_state_t;
+
+typedef struct app_terminal_destroy_state {
+    dcc_app_t *app;
+    unsigned legacy_count;
+    unsigned app_observer_count;
+    unsigned client_observer_count;
+    unsigned app_sink_in_flight;
+    dcc_status_t legacy_destroy_status;
+    dcc_status_t app_observer_destroy_status;
+    dcc_status_t client_observer_destroy_status;
+} app_terminal_destroy_state_t;
+
+typedef struct nested_terminal_state {
+    unsigned outer_count;
+    unsigned inner_count;
+    dcc_status_t nested_status;
+} nested_terminal_state_t;
+
+typedef struct adversarial_intercept_state {
+    dcc_client_t *foreign_client;
+    unsigned callback_attempts;
+} adversarial_intercept_state_t;
 
 #if !defined(_WIN32)
 typedef struct async_error_seen {
@@ -144,6 +179,7 @@ static dcc_status_t scripted_intercept(
     }
     script->request_count++;
     snprintf(script->last_path, sizeof(script->last_path), "%s", path != NULL ? path : "");
+    memset(script->last_body, 0, sizeof(script->last_body));
     script->last_body_len = body_len < sizeof(script->last_body)
         ? body_len
         : sizeof(script->last_body);
@@ -188,6 +224,177 @@ static void legacy_response_cb(
     if (response != NULL && count != NULL) {
         (*count)++;
     }
+}
+
+static void legacy_capture_cb(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    (void)client;
+    legacy_seen_t *seen = (legacy_seen_t *)user_data;
+    if (seen == NULL || response == NULL) {
+        return;
+    }
+    seen->count++;
+    seen->status = response->status;
+    seen->error = response->error;
+}
+
+static void client_terminal_destroy_log(
+    dcc_log_level_t level,
+    const char *message,
+    void *user_data
+) {
+    client_terminal_destroy_state_t *state =
+        (client_terminal_destroy_state_t *)user_data;
+    if (state == NULL || state->client == NULL || level != DCC_LOG_ERROR ||
+        message == NULL || strstr(message, "REST failure") == NULL) {
+        return;
+    }
+    state->log_count++;
+    dcc_client_destroy(state->client);
+}
+
+static void client_terminal_destroy_legacy(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    client_terminal_destroy_state_t *state =
+        (client_terminal_destroy_state_t *)user_data;
+    if (state == NULL || response == NULL) {
+        return;
+    }
+    state->legacy_count++;
+    dcc_client_destroy(client);
+}
+
+static void client_terminal_destroy_observer(
+    dcc_client_t *client,
+    const dcc_error_t *error,
+    void *user_data
+) {
+    client_terminal_destroy_state_t *state =
+        (client_terminal_destroy_state_t *)user_data;
+    if (state == NULL || error == NULL) {
+        return;
+    }
+    state->observer_count++;
+    dcc_client_destroy(client);
+}
+
+static void app_terminal_destroy_legacy(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    app_terminal_destroy_state_t *state =
+        (app_terminal_destroy_state_t *)user_data;
+    if (state == NULL || response == NULL) {
+        return;
+    }
+    state->legacy_count++;
+    state->app_sink_in_flight = atomic_load_explicit(
+        &client->rest_app_error_sink_in_flight,
+        memory_order_acquire
+    );
+    state->legacy_destroy_status = dcc_app_destroy(state->app);
+}
+
+static void app_terminal_destroy_observer(
+    dcc_app_t *app,
+    const dcc_error_t *error,
+    void *user_data
+) {
+    app_terminal_destroy_state_t *state =
+        (app_terminal_destroy_state_t *)user_data;
+    if (state == NULL || error == NULL) {
+        return;
+    }
+    state->app_observer_count++;
+    state->app_observer_destroy_status = dcc_app_destroy(app);
+}
+
+static void app_terminal_destroy_client_observer(
+    dcc_client_t *client,
+    const dcc_error_t *error,
+    void *user_data
+) {
+    (void)client;
+    app_terminal_destroy_state_t *state =
+        (app_terminal_destroy_state_t *)user_data;
+    if (state == NULL || error == NULL) {
+        return;
+    }
+    state->client_observer_count++;
+    state->client_observer_destroy_status = dcc_app_destroy(state->app);
+}
+
+static void nested_terminal_inner_cb(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    (void)client;
+    nested_terminal_state_t *state = (nested_terminal_state_t *)user_data;
+    if (state != NULL && response != NULL && response->status == 204U) {
+        state->inner_count++;
+    }
+}
+
+static void nested_terminal_outer_cb(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    nested_terminal_state_t *state = (nested_terminal_state_t *)user_data;
+    if (state == NULL || response == NULL || response->status != 400U) {
+        return;
+    }
+    state->outer_count++;
+    state->nested_status = dcc_rest_request(
+        client,
+        "GET",
+        "/lifetime/nested-inner",
+        NULL,
+        nested_terminal_inner_cb,
+        state
+    );
+}
+
+static dcc_status_t adversarial_intercept(
+    dcc_client_t *client,
+    const char *method,
+    const char *path,
+    const void *body,
+    size_t body_len,
+    const char *content_type,
+    dcc_rest_cb cb,
+    void *user_data,
+    void *intercept_user_data
+) {
+    (void)client;
+    (void)method;
+    (void)path;
+    (void)body;
+    (void)body_len;
+    (void)content_type;
+    adversarial_intercept_state_t *state =
+        (adversarial_intercept_state_t *)intercept_user_data;
+    if (state == NULL || cb == NULL) {
+        return DCC_ERR_STATE;
+    }
+    dcc_rest_response_t response = {
+        .size = sizeof(response),
+        .status = 204U,
+        .error = DCC_OK,
+    };
+    state->callback_attempts++;
+    cb(state->foreign_client, &response, user_data);
+    state->callback_attempts++;
+    cb(client, &response, user_data);
+    return DCC_ERR_STATE;
 }
 
 #if !defined(_WIN32)
@@ -527,6 +734,266 @@ static int check_rest_terminal_matrix(void) {
     }
     if (dcc_client_on_error(client, NULL, NULL) != DCC_OK) {
         fprintf(stderr, "client observer clear failed\n");
+        dcc_client_destroy(client);
+        return 1;
+    }
+    dcc_client_destroy(client);
+    return 0;
+}
+
+static int check_interceptor_transport_mapping(void) {
+    static const char http_body[] = "{\"code\":9,\"message\":\"http\"}";
+    dcc_client_options_t options = {
+        .size = sizeof(options),
+        .token = "",
+        .intents = DCC_INTENT_GUILDS,
+    };
+    dcc_client_t *client = NULL;
+    if (dcc_client_create(&options, &client) != DCC_OK) {
+        return 1;
+    }
+
+    intercept_script_t script;
+    memset(&script, 0, sizeof(script));
+    script.steps[0] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .legacy_error = DCC_ERR_NETWORK,
+    };
+    script.steps[1] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .legacy_error = DCC_ERR_TIMEOUT,
+    };
+    script.steps[2] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .legacy_error = DCC_ERR_CANCELED,
+    };
+    script.steps[3] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .http_status = 400U,
+        .legacy_error = DCC_ERR_NETWORK,
+        .body = http_body,
+        .body_len = sizeof(http_body) - 1U,
+    };
+    script.steps[4] = (intercept_step_t){
+        .transport_status = DCC_ERR_NETWORK,
+    };
+    script.step_count = 5U;
+    dcc_rest_set_interceptor(client, scripted_intercept, &script);
+
+    error_seen_t seen;
+    legacy_seen_t legacy;
+    memset(&seen, 0, sizeof(seen));
+    memset(&legacy, 0, sizeof(legacy));
+    if (dcc_client_on_error(client, public_error_observer, &seen) != DCC_OK ||
+        dcc_rest_request(client, "GET", "/mapping/network", NULL,
+            legacy_capture_cb, &legacy) != DCC_OK ||
+        seen.count != 1U || seen.status != DCC_ERR_NETWORK ||
+        seen.http_status != 0U || legacy.count != 1U ||
+        legacy.status != 0U || legacy.error != DCC_ERR_NETWORK ||
+        dcc_rest_request(client, "GET", "/mapping/timeout", NULL,
+            legacy_capture_cb, &legacy) != DCC_OK ||
+        seen.count != 2U || seen.status != DCC_ERR_TIMEOUT ||
+        seen.http_status != 0U || legacy.count != 2U ||
+        legacy.error != DCC_ERR_TIMEOUT ||
+        dcc_rest_request(client, "GET", "/mapping/canceled", NULL,
+            legacy_capture_cb, &legacy) != DCC_OK ||
+        seen.count != 3U || seen.status != DCC_ERR_CANCELED ||
+        seen.http_status != 0U || legacy.count != 3U ||
+        legacy.error != DCC_ERR_CANCELED ||
+        dcc_rest_request(client, "GET", "/mapping/http", NULL,
+            legacy_capture_cb, &legacy) != DCC_OK ||
+        seen.count != 4U || seen.status != DCC_ERR_DISCORD ||
+        seen.http_status != 400U || seen.discord_code != 9 ||
+        legacy.count != 4U || legacy.status != 400U ||
+        legacy.error != DCC_ERR_NETWORK ||
+        dcc_rest_request(client, "GET", "/mapping/no-callback", NULL,
+            legacy_capture_cb, &legacy) != DCC_ERR_NETWORK ||
+        seen.count != 5U || seen.status != DCC_ERR_NETWORK ||
+        seen.http_status != 0U || legacy.count != 4U) {
+        fprintf(stderr, "interceptor transport/HTTP mapping failed\n");
+        dcc_client_destroy(client);
+        return 1;
+    }
+    script.steps[script.next_step] = (intercept_step_t){
+        .transport_status = DCC_ERR_NETWORK,
+    };
+    script.step_count = script.next_step + 1U;
+    if (dcc_rest_request_async(client, "GET", "/mapping/async-admission", NULL,
+            legacy_capture_cb, &legacy) != DCC_ERR_NETWORK ||
+        seen.count != 5U || legacy.count != 4U) {
+        fprintf(stderr, "async interceptor admission failure was observed\n");
+        dcc_client_destroy(client);
+        return 1;
+    }
+    dcc_client_destroy(client);
+
+    dcc_client_t *foreign = NULL;
+    client = NULL;
+    if (dcc_client_create(&options, &client) != DCC_OK ||
+        dcc_client_create(&options, &foreign) != DCC_OK) {
+        dcc_client_destroy(client);
+        dcc_client_destroy(foreign);
+        return 1;
+    }
+    error_seen_t original_seen;
+    error_seen_t foreign_seen;
+    memset(&original_seen, 0, sizeof(original_seen));
+    memset(&foreign_seen, 0, sizeof(foreign_seen));
+    memset(&legacy, 0, sizeof(legacy));
+    adversarial_intercept_state_t adversarial = {
+        .foreign_client = foreign,
+    };
+    dcc_rest_set_interceptor(client, adversarial_intercept, &adversarial);
+    if (dcc_client_on_error(client, public_error_observer, &original_seen) != DCC_OK ||
+        dcc_client_on_error(foreign, public_error_observer, &foreign_seen) != DCC_OK ||
+        dcc_rest_request(client, "GET", "/mapping/mismatch", NULL,
+            legacy_capture_cb, &legacy) != DCC_ERR_STATE ||
+        adversarial.callback_attempts != 2U || legacy.count != 1U ||
+        legacy.status != 0U || legacy.error != DCC_ERR_RUNTIME ||
+        original_seen.count != 1U || original_seen.status != DCC_ERR_RUNTIME ||
+        foreign_seen.count != 0U) {
+        fprintf(stderr, "interceptor mismatch/duplicate fail-closed contract failed\n");
+        dcc_client_destroy(client);
+        dcc_client_destroy(foreign);
+        return 1;
+    }
+    dcc_client_destroy(client);
+    dcc_client_destroy(foreign);
+    return 0;
+}
+
+static int check_terminal_destroy_lifetime(void) {
+    static const char body[] = "{\"code\":17,\"message\":\"terminal\"}";
+    client_terminal_destroy_state_t client_state;
+    memset(&client_state, 0, sizeof(client_state));
+    dcc_client_options_t client_options = {
+        .size = sizeof(client_options),
+        .token = "",
+        .intents = DCC_INTENT_GUILDS,
+        .log_fn = client_terminal_destroy_log,
+        .log_user_data = &client_state,
+    };
+    dcc_client_t *client = NULL;
+    if (dcc_client_create(&client_options, &client) != DCC_OK) {
+        return 1;
+    }
+    client_state.client = client;
+    intercept_script_t script;
+    memset(&script, 0, sizeof(script));
+    script.steps[0] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .http_status = 400U,
+        .legacy_error = DCC_OK,
+        .body = body,
+        .body_len = sizeof(body) - 1U,
+    };
+    script.step_count = 1U;
+    dcc_rest_set_interceptor(client, scripted_intercept, &script);
+    if (dcc_client_on_error(client, client_terminal_destroy_observer, &client_state) != DCC_OK ||
+        dcc_rest_request(client, "GET", "/lifetime/client", NULL,
+            client_terminal_destroy_legacy, &client_state) != DCC_OK ||
+        script.callback_count != 1U || client_state.legacy_count != 1U ||
+        client_state.log_count != 1U || client_state.observer_count != 1U) {
+        fprintf(stderr, "terminal client destroy deferral failed\n");
+        return 1;
+    }
+    dcc_client_destroy(client);
+
+    for (unsigned error_case = 0U; error_case < 2U; ++error_case) {
+        dcc_app_options_t app_options;
+        dcc_app_options_init(&app_options);
+        app_options.client.token = "";
+        app_options.client.intents = DCC_INTENT_GUILDS;
+        dcc_app_t *app = NULL;
+        if (dcc_app_create(&app_options, &app) != DCC_OK) {
+            return 1;
+        }
+        app_terminal_destroy_state_t app_state;
+        memset(&app_state, 0, sizeof(app_state));
+        app_state.app = app;
+        app_state.legacy_destroy_status = DCC_OK;
+        app_state.app_observer_destroy_status = DCC_OK;
+        app_state.client_observer_destroy_status = DCC_OK;
+        memset(&script, 0, sizeof(script));
+        script.steps[0] = (intercept_step_t){
+            .transport_status = DCC_OK,
+            .http_status = error_case ? 400U : 204U,
+            .legacy_error = DCC_OK,
+            .body = error_case ? body : NULL,
+            .body_len = error_case ? sizeof(body) - 1U : 0U,
+        };
+        script.step_count = 1U;
+        client = dcc_app_client(app);
+        dcc_rest_set_interceptor(client, scripted_intercept, &script);
+        if (dcc_app_on_error(app, app_terminal_destroy_observer, &app_state) != DCC_OK ||
+            dcc_client_on_error(client, app_terminal_destroy_client_observer, &app_state) != DCC_OK ||
+            dcc_rest_request(client, "GET", error_case ? "/lifetime/app-error" :
+                "/lifetime/app-success", NULL, app_terminal_destroy_legacy,
+                &app_state) != DCC_OK ||
+            script.callback_count != 1U || app_state.legacy_count != 1U ||
+            app_state.legacy_destroy_status != DCC_ERR_STATE ||
+            (!error_case && (app_state.app_sink_in_flight != 0U ||
+                app_state.app_observer_count != 0U ||
+                app_state.client_observer_count != 0U)) ||
+            (error_case && (app_state.app_sink_in_flight != 1U ||
+                app_state.app_observer_count != 1U ||
+                app_state.client_observer_count != 1U ||
+                app_state.app_observer_destroy_status != DCC_ERR_STATE ||
+                app_state.client_observer_destroy_status != DCC_ERR_STATE))) {
+            fprintf(stderr, "terminal App %s destroy rejection failed\n",
+                error_case ? "error" : "success");
+            return 1;
+        }
+        if (dcc_app_destroy(app) != DCC_OK) {
+            fprintf(stderr, "owner App destroy after terminal callback failed\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int check_terminal_nested_rest(void) {
+    static const char body[] = "{\"code\":17,\"message\":\"outer\"}";
+    dcc_client_options_t options = {
+        .size = sizeof(options),
+        .token = "",
+        .intents = DCC_INTENT_GUILDS,
+    };
+    dcc_client_t *client = NULL;
+    if (dcc_client_create(&options, &client) != DCC_OK) {
+        return 1;
+    }
+
+    intercept_script_t script;
+    memset(&script, 0, sizeof(script));
+    script.steps[0] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .http_status = 400U,
+        .legacy_error = DCC_OK,
+        .body = body,
+        .body_len = sizeof(body) - 1U,
+    };
+    script.steps[1] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .http_status = 204U,
+        .legacy_error = DCC_OK,
+    };
+    script.step_count = 2U;
+    nested_terminal_state_t nested = {
+        .nested_status = DCC_ERR_STATE,
+    };
+    error_seen_t seen;
+    memset(&seen, 0, sizeof(seen));
+    dcc_rest_set_interceptor(client, scripted_intercept, &script);
+    if (dcc_client_on_error(client, public_error_observer, &seen) != DCC_OK ||
+        dcc_rest_request(client, "GET", "/lifetime/nested-outer", NULL,
+            nested_terminal_outer_cb, &nested) != DCC_OK ||
+        nested.nested_status != DCC_OK || nested.outer_count != 1U ||
+        nested.inner_count != 1U || script.request_count != 2U ||
+        script.callback_count != 2U || script.next_step != 2U ||
+        seen.count != 1U || seen.status != DCC_ERR_DISCORD ||
+        seen.http_status != 400U) {
+        fprintf(stderr, "nested terminal REST delivery failed\n");
         dcc_client_destroy(client);
         return 1;
     }
@@ -930,6 +1397,61 @@ static dcc_status_t responded_route(dcc_ctx_t *ctx, void *user_data) {
     return DCC_ERR_STATE;
 }
 
+static dcc_message_builder_t invalid_message_builder(void) {
+    dcc_message_builder_t message;
+    dcc_message_builder_init(&message);
+    message.has_content = 1U;
+    message.content = NULL;
+    return message;
+}
+
+static dcc_status_t invalid_initial_reply_route(dcc_ctx_t *ctx, void *user_data) {
+    app_error_state_t *state = (app_error_state_t *)user_data;
+    if (ctx == NULL || state == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    state->route_calls++;
+    dcc_message_builder_t invalid = invalid_message_builder();
+    return dcc_ctx_reply(ctx, &invalid, NULL, NULL);
+}
+
+static dcc_status_t failed_initial_admission_route(dcc_ctx_t *ctx, void *user_data) {
+    app_error_state_t *state = (app_error_state_t *)user_data;
+    if (ctx == NULL || state == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    state->route_calls++;
+    return dcc_ctx_reply_text(ctx, "initial admission", NULL, NULL);
+}
+
+static dcc_status_t admitted_then_local_failure_route(dcc_ctx_t *ctx, void *user_data) {
+    app_error_state_t *state = (app_error_state_t *)user_data;
+    if (ctx == NULL || state == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    state->route_calls++;
+    dcc_status_t status = dcc_ctx_reply_text(ctx, "admitted initial", NULL, NULL);
+    if (status != DCC_OK) {
+        return status;
+    }
+    dcc_message_builder_t invalid = invalid_message_builder();
+    return dcc_ctx_edit_original(ctx, &invalid, NULL, NULL);
+}
+
+static dcc_status_t deferred_then_local_failure_route(dcc_ctx_t *ctx, void *user_data) {
+    app_error_state_t *state = (app_error_state_t *)user_data;
+    if (ctx == NULL || state == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    state->route_calls++;
+    dcc_status_t status = dcc_ctx_defer_ephemeral(ctx, NULL, NULL);
+    if (status != DCC_OK) {
+        return status;
+    }
+    dcc_message_builder_t invalid = invalid_message_builder();
+    return dcc_ctx_edit_original(ctx, &invalid, NULL, NULL);
+}
+
 static dcc_status_t failing_event(
     dcc_app_t *app,
     const dcc_event_t *event,
@@ -1181,8 +1703,38 @@ static int check_app_error_policy(void) {
 
     dcc_listener_t listener = route_listener("fails", failing_route, &state);
     dcc_listener_t responded = route_listener("responded", responded_route, &state);
+    dcc_listener_t invalid_initial = route_listener(
+        "invalid-initial",
+        invalid_initial_reply_route,
+        &state
+    );
+    dcc_listener_t failed_admission = route_listener(
+        "failed-admission",
+        failed_initial_admission_route,
+        &state
+    );
+    dcc_listener_t admitted_local = route_listener(
+        "admitted-local",
+        admitted_then_local_failure_route,
+        &state
+    );
+    dcc_listener_t deferred_local = route_listener(
+        "deferred-local",
+        deferred_then_local_failure_route,
+        &state
+    );
+    dcc_listener_t generic_failure = route_listener(
+        "generic-failure",
+        invalid_initial_reply_route,
+        &state
+    );
     if (dcc_app_listen(app, &listener, NULL) != DCC_OK ||
         dcc_app_listen(app, &responded, NULL) != DCC_OK ||
+        dcc_app_listen(app, &invalid_initial, NULL) != DCC_OK ||
+        dcc_app_listen(app, &failed_admission, NULL) != DCC_OK ||
+        dcc_app_listen(app, &admitted_local, NULL) != DCC_OK ||
+        dcc_app_listen(app, &deferred_local, NULL) != DCC_OK ||
+        dcc_app_listen(app, &generic_failure, NULL) != DCC_OK ||
         dispatch_slash(app, "fails", "secret-token") != DCC_OK ||
         state.route_calls != 1U || state.seen.count != 1U ||
         state.seen.origin != DCC_ERROR_HANDLER || state.seen.status != DCC_ERR_STATE ||
@@ -1207,6 +1759,89 @@ static int check_app_error_policy(void) {
         return 1;
     }
 
+    size_t previous_requests = script.request_count;
+    script.step_count = script.next_step + 1U;
+    if (dispatch_slash(app, "invalid-initial", "invalid-secret") != DCC_OK ||
+        script.request_count != previous_requests + 1U ||
+        strstr(script.last_body, "Something went wrong. Please try again.") == NULL ||
+        strstr(script.last_body, "invalid-secret") != NULL) {
+        fprintf(stderr, "invalid initial reply did not emit one safe fallback\n");
+        (void)dcc_app_destroy(app);
+        return 1;
+    }
+
+    previous_requests = script.request_count;
+    unsigned previous_app_errors = state.seen.count;
+    unsigned previous_client_errors = state.client_seen;
+    script.steps[script.next_step] = (intercept_step_t){
+        .transport_status = DCC_ERR_NETWORK,
+    };
+    script.steps[script.next_step + 1U] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .http_status = 204U,
+        .legacy_error = DCC_OK,
+    };
+    script.step_count = script.next_step + 2U;
+    if (dispatch_slash(app, "failed-admission", "admission-secret") != DCC_OK ||
+        script.request_count != previous_requests + 2U ||
+        state.seen.count != previous_app_errors + 2U ||
+        state.client_seen != previous_client_errors + 1U ||
+        strstr(script.last_body, "Something went wrong. Please try again.") == NULL ||
+        strstr(script.last_body, "admission-secret") != NULL) {
+        fprintf(stderr, "failed initial admission did not emit one safe fallback\n");
+        (void)dcc_app_destroy(app);
+        return 1;
+    }
+
+    previous_requests = script.request_count;
+    script.steps[script.next_step] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .http_status = 204U,
+        .legacy_error = DCC_OK,
+    };
+    script.step_count = script.next_step + 1U;
+    if (dispatch_slash(app, "admitted-local", "admitted-secret") != DCC_OK ||
+        script.request_count != previous_requests + 1U ||
+        strstr(script.last_body, "admitted initial") == NULL) {
+        fprintf(stderr, "admitted initial local failure emitted fallback\n");
+        (void)dcc_app_destroy(app);
+        return 1;
+    }
+
+    previous_requests = script.request_count;
+    script.steps[script.next_step] = (intercept_step_t){
+        .transport_status = DCC_OK,
+        .http_status = 204U,
+        .legacy_error = DCC_OK,
+    };
+    script.step_count = script.next_step + 1U;
+    if (dispatch_slash(app, "deferred-local", "deferred-secret") != DCC_OK ||
+        script.request_count != previous_requests + 1U ||
+        strstr(script.last_body, "\"type\":5") == NULL) {
+        fprintf(stderr, "admitted defer local failure emitted fallback\n");
+        (void)dcc_app_destroy(app);
+        return 1;
+    }
+
+    previous_requests = script.request_count;
+    previous_app_errors = state.seen.count;
+    previous_client_errors = state.client_seen;
+    script.steps[script.next_step] = (intercept_step_t){
+        .transport_status = DCC_ERR_NETWORK,
+    };
+    script.step_count = script.next_step + 1U;
+    if (dispatch_slash(app, "generic-failure", "generic-secret") != DCC_OK ||
+        script.request_count != previous_requests + 1U ||
+        state.seen.count != previous_app_errors + 2U ||
+        state.client_seen != previous_client_errors + 1U ||
+        strstr(script.last_body, "Something went wrong. Please try again.") == NULL ||
+        strstr(script.last_body, "generic-secret") != NULL ||
+        strstr(script.last_body, "invalid argument") != NULL) {
+        fprintf(stderr, "failing generic fallback recursed, duplicated, or leaked data\n");
+        (void)dcc_app_destroy(app);
+        return 1;
+    }
+
     static const char rest_body[] = "{\"code\":7,\"message\":\"app rest\"}";
     script.steps[script.next_step] = (intercept_step_t){
         .transport_status = DCC_OK,
@@ -1217,8 +1852,10 @@ static int check_app_error_policy(void) {
     };
     script.step_count = script.next_step + 1U;
     previous_errors = state.seen.count;
+    previous_client_errors = state.client_seen;
     if (dcc_rest_request(dcc_app_client(app), "GET", "/app/rest", NULL, NULL, NULL) != DCC_OK ||
-        state.client_seen != 1U || state.seen.count != previous_errors + 1U ||
+        state.client_seen != previous_client_errors + 1U ||
+        state.seen.count != previous_errors + 1U ||
         state.seen.origin != DCC_ERROR_REST) {
         fprintf(stderr, "public client observer and private App sink did not coexist\n");
         (void)dcc_app_destroy(app);
@@ -1285,6 +1922,9 @@ int main(void) {
 #endif
     if (check_result_values() != 0 ||
         check_rest_terminal_matrix() != 0 ||
+        check_terminal_destroy_lifetime() != 0 ||
+        check_terminal_nested_rest() != 0 ||
+        check_interceptor_transport_mapping() != 0 ||
         check_async_terminal_matrix() != 0 ||
         check_observer_reentrancy() != 0 ||
         check_app_sink_destroy_wait() != 0 ||

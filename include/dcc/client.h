@@ -37,7 +37,9 @@ typedef void (*dcc_log_fn)(dcc_log_level_t level, const char *message, void *use
  * returns. Replacing or clearing an observer does not revoke a callback that
  * another thread already copied for delivery; keep old user data alive until
  * every in-flight callback has returned. Clearing/replacing from the callback
- * is allowed. Destroy the client only after observer callbacks have returned.
+ * is allowed. Calling dcc_client_destroy() from a REST terminal observer only
+ * requests stop; the owning thread must call destroy again after the callback
+ * returns to release the client.
  */
 typedef void (*dcc_client_error_fn)(
     dcc_client_t *client,
@@ -169,7 +171,12 @@ DCC_API dcc_status_t dcc_client_on_error(
 /**
  * @brief Stops and releases a client.
  *
- * Passing `NULL` is allowed and has no effect.
+ * Passing `NULL` is allowed and has no effect. When called from a REST
+ * terminal callback, terminal error log callback, or structured REST error
+ * observer for this client, this function requests stop and returns without
+ * releasing memory. The owning thread must call it again after that callback
+ * returns. Callers must otherwise synchronize destruction with their own
+ * concurrent client API calls.
  */
 DCC_API void dcc_client_destroy(dcc_client_t *client);
 
