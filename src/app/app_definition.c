@@ -16,7 +16,7 @@
 #define DCC_APP_DEFINITION_COMPONENT_SESSION_MIN_SIZE \
     (offsetof(dcc_app_component_session_route_t, user_data) + \
      sizeof(((dcc_app_component_session_route_t *)0)->user_data))
-#define DCC_APP_DEFINITION_LISTENER_MIN_SIZE \
+#define DCC_APP_DEFINITION_LEGACY_LISTENER_MIN_SIZE \
     (offsetof(dcc_app_listener_t, kind) + sizeof(((dcc_app_listener_t *)0)->kind))
 
 static uint8_t dcc_app_definition_has_field(
@@ -124,11 +124,12 @@ static dcc_status_t dcc_app_definition_apply_task(
     return DCC_ERR_INVALID_ARG;
 }
 
-static dcc_status_t dcc_app_definition_apply_listener(
+static dcc_status_t dcc_app_definition_apply_legacy_listener(
     dcc_app_t *app,
     const dcc_app_listener_t *listener
 ) {
-    if (app == NULL || listener == NULL || listener->size < DCC_APP_DEFINITION_LISTENER_MIN_SIZE) {
+    if (app == NULL || listener == NULL ||
+        listener->size < DCC_APP_DEFINITION_LEGACY_LISTENER_MIN_SIZE) {
         return DCC_ERR_INVALID_ARG;
     }
 
@@ -280,8 +281,8 @@ dcc_status_t dcc_app_apply(dcc_app_t *app, const dcc_app_definition_t *definitio
     size_t component_session_count = 0U;
     const dcc_app_extension_event_t *events = NULL;
     size_t event_count = 0U;
-    const dcc_app_listener_t *listeners = NULL;
-    size_t listener_count = 0U;
+    const dcc_app_listener_t *legacy_listeners = NULL;
+    size_t legacy_listener_count = 0U;
     dcc_app_error_fn error_handler = NULL;
     void *error_user_data = NULL;
     dcc_permission_t required_permissions = 0U;
@@ -426,8 +427,8 @@ dcc_status_t dcc_app_apply(dcc_app_t *app, const dcc_app_definition_t *definitio
             offsetof(dcc_app_definition_t, listener_count),
             sizeof(definition->listener_count)
         )) {
-        listeners = definition->listeners;
-        listener_count = definition->listener_count;
+        legacy_listeners = definition->listeners;
+        legacy_listener_count = definition->listener_count;
     }
     if (dcc_app_definition_has_field(
             definition,
@@ -516,7 +517,7 @@ dcc_status_t dcc_app_apply(dcc_app_t *app, const dcc_app_definition_t *definitio
         status = dcc_app_definition_check_array(events, event_count);
     }
     if (status == DCC_OK) {
-        status = dcc_app_definition_check_array(listeners, listener_count);
+        status = dcc_app_definition_check_array(legacy_listeners, legacy_listener_count);
     }
     if (status != DCC_OK) {
         return status;
@@ -668,8 +669,8 @@ dcc_status_t dcc_app_apply(dcc_app_t *app, const dcc_app_definition_t *definitio
             return status;
         }
     }
-    for (size_t i = 0; i < listener_count; ++i) {
-        status = dcc_app_definition_apply_listener(app, &listeners[i]);
+    for (size_t i = 0; i < legacy_listener_count; ++i) {
+        status = dcc_app_definition_apply_legacy_listener(app, &legacy_listeners[i]);
         if (status != DCC_OK) {
             return status;
         }

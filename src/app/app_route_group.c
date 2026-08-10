@@ -80,7 +80,7 @@ static dcc_status_t dcc_app_route_group_add(
     dcc_event_type_t type,
     const char *action,
     uint8_t prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -113,7 +113,7 @@ dcc_status_t dcc_app_route_group_init(
 dcc_status_t dcc_app_route_group_button(
     const dcc_app_route_group_t *group,
     const char *action,
-    dcc_app_handler_fn handler
+    dcc_app_legacy_handler_fn handler
 ) {
     return dcc_app_route_group_button_route(group, action, handler, NULL);
 }
@@ -121,7 +121,7 @@ dcc_status_t dcc_app_route_group_button(
 dcc_status_t dcc_app_route_group_button_route(
     const dcc_app_route_group_t *group,
     const char *action,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 ) {
     return dcc_app_route_group_add(
@@ -138,7 +138,7 @@ dcc_status_t dcc_app_route_group_button_route(
 dcc_status_t dcc_app_route_group_button_prefix(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
-    dcc_app_handler_fn handler
+    dcc_app_legacy_handler_fn handler
 ) {
     return dcc_app_route_group_button_prefix_route(group, action_prefix, handler, NULL);
 }
@@ -146,7 +146,7 @@ dcc_status_t dcc_app_route_group_button_prefix(
 dcc_status_t dcc_app_route_group_button_prefix_route(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 ) {
     return dcc_app_route_group_add(
@@ -163,7 +163,7 @@ dcc_status_t dcc_app_route_group_button_prefix_route(
 dcc_status_t dcc_app_route_group_select(
     const dcc_app_route_group_t *group,
     const char *action,
-    dcc_app_handler_fn handler
+    dcc_app_legacy_handler_fn handler
 ) {
     return dcc_app_route_group_select_route(group, action, handler, NULL);
 }
@@ -171,7 +171,7 @@ dcc_status_t dcc_app_route_group_select(
 dcc_status_t dcc_app_route_group_select_route(
     const dcc_app_route_group_t *group,
     const char *action,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 ) {
     return dcc_app_route_group_add(
@@ -188,7 +188,7 @@ dcc_status_t dcc_app_route_group_select_route(
 dcc_status_t dcc_app_route_group_select_prefix(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
-    dcc_app_handler_fn handler
+    dcc_app_legacy_handler_fn handler
 ) {
     return dcc_app_route_group_select_prefix_route(group, action_prefix, handler, NULL);
 }
@@ -196,7 +196,7 @@ dcc_status_t dcc_app_route_group_select_prefix(
 dcc_status_t dcc_app_route_group_select_prefix_route(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 ) {
     return dcc_app_route_group_add(
@@ -213,7 +213,7 @@ dcc_status_t dcc_app_route_group_select_prefix_route(
 dcc_status_t dcc_app_route_group_modal(
     const dcc_app_route_group_t *group,
     const char *action,
-    dcc_app_handler_fn handler
+    dcc_app_legacy_handler_fn handler
 ) {
     return dcc_app_route_group_modal_route(group, action, handler, NULL);
 }
@@ -221,7 +221,7 @@ dcc_status_t dcc_app_route_group_modal(
 dcc_status_t dcc_app_route_group_modal_route(
     const dcc_app_route_group_t *group,
     const char *action,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 ) {
     return dcc_app_route_group_add(
@@ -238,7 +238,7 @@ dcc_status_t dcc_app_route_group_modal_route(
 dcc_status_t dcc_app_route_group_modal_prefix(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
-    dcc_app_handler_fn handler
+    dcc_app_legacy_handler_fn handler
 ) {
     return dcc_app_route_group_modal_prefix_route(group, action_prefix, handler, NULL);
 }
@@ -246,7 +246,7 @@ dcc_status_t dcc_app_route_group_modal_prefix(
 dcc_status_t dcc_app_route_group_modal_prefix_route(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 ) {
     return dcc_app_route_group_add(

@@ -22,7 +22,7 @@ typedef struct dcc_app_typed_route_state {
     size_t component_binding_count;
     dcc_ctx_field_validator_t *validators;
     size_t validator_count;
-    dcc_app_typed_handler_fn handler;
+    dcc_app_legacy_typed_handler_fn handler;
     void *user_data;
     uint8_t suppress_validation_response;
 } dcc_app_typed_route_state_t;

@@ -18,7 +18,7 @@ static inline dcc_status_t dcc_sugar_app_on_slash_policy(
     dcc_app_t *app,
     const char *name,
     const char *description,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -31,7 +31,7 @@ static inline dcc_status_t dcc_sugar_app_on_slash_policy(
 static inline dcc_status_t dcc_sugar_app_on_slash_builder_policy(
     dcc_app_t *app,
     const dcc_application_command_builder_t *builder,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -45,7 +45,7 @@ static inline dcc_status_t dcc_sugar_app_on_subcommand_policy(
     dcc_app_t *app,
     const char *command_name,
     const char *subcommand_path,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -64,7 +64,7 @@ static inline dcc_status_t dcc_sugar_app_on_subcommand_policy(
 static inline dcc_status_t dcc_sugar_app_on_autocomplete_policy(
     dcc_app_t *app,
     const char *name,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -77,7 +77,7 @@ static inline dcc_status_t dcc_sugar_app_on_autocomplete_policy(
 static inline dcc_status_t dcc_sugar_app_on_user_context_menu_policy(
     dcc_app_t *app,
     const char *name,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -90,7 +90,7 @@ static inline dcc_status_t dcc_sugar_app_on_user_context_menu_policy(
 static inline dcc_status_t dcc_sugar_app_on_message_context_menu_policy(
     dcc_app_t *app,
     const char *name,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -103,7 +103,7 @@ static inline dcc_status_t dcc_sugar_app_on_message_context_menu_policy(
 static inline dcc_status_t dcc_sugar_app_on_button_policy(
     dcc_app_t *app,
     const char *custom_id,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -115,7 +115,7 @@ static inline dcc_status_t dcc_sugar_app_on_button_policy(
 static inline dcc_status_t dcc_sugar_app_on_button_prefix_policy(
     dcc_app_t *app,
     const char *custom_id_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -128,7 +128,7 @@ static inline dcc_status_t dcc_sugar_app_on_button_prefix_policy(
 static inline dcc_status_t dcc_sugar_app_on_select_policy(
     dcc_app_t *app,
     const char *custom_id,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -140,7 +140,7 @@ static inline dcc_status_t dcc_sugar_app_on_select_policy(
 static inline dcc_status_t dcc_sugar_app_on_select_prefix_policy(
     dcc_app_t *app,
     const char *custom_id_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -153,7 +153,7 @@ static inline dcc_status_t dcc_sugar_app_on_select_prefix_policy(
 static inline dcc_status_t dcc_sugar_app_on_modal_policy(
     dcc_app_t *app,
     const char *custom_id,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {
@@ -165,7 +165,7 @@ static inline dcc_status_t dcc_sugar_app_on_modal_policy(
 static inline dcc_status_t dcc_sugar_app_on_modal_prefix_policy(
     dcc_app_t *app,
     const char *custom_id_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     const dcc_app_route_policy_t *policy
 ) {

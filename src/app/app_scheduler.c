@@ -70,7 +70,8 @@ static uint64_t dcc_app_daily_kst_delay_ms(uint8_t hour, uint8_t minute) {
 
 static void dcc_app_schedule_task(void *arg) {
     dcc_app_schedule_t *schedule = (dcc_app_schedule_t *)arg;
-    if (schedule == NULL || schedule->app == NULL || schedule->fn == NULL) {
+    if (schedule == NULL || schedule->app == NULL ||
+        (schedule->fn == NULL && schedule->canonical_fn == NULL)) {
         return;
     }
     while (!dcc_app_stopping(schedule->app)) {
@@ -83,10 +84,81 @@ static void dcc_app_schedule_task(void *arg) {
         if (dcc_app_sleep_interruptible(schedule->app, delay_ms) != 0) {
             break;
         }
-        if (!dcc_app_stopping(schedule->app)) {
+        if (!dcc_app_stopping(schedule->app) && schedule->fn != NULL) {
             schedule->fn(schedule->app, schedule->user_data);
+        } else if (!dcc_app_stopping(schedule->app) && schedule->canonical_fn != NULL &&
+                   dcc_app_listener_active(schedule->listener_state)) {
+            (void)schedule->canonical_fn(schedule->listener_state, schedule->app);
         }
     }
+}
+
+dcc_status_t dcc_app_add_canonical_schedule(
+    dcc_app_t *app,
+    dcc_app_schedule_kind_t kind,
+    uint64_t interval_ms,
+    uint8_t hour,
+    uint8_t minute,
+    dcc_app_canonical_schedule_fn fn,
+    void *listener_state,
+    dcc_app_schedule_t **out_schedule
+) {
+    if (out_schedule != NULL) {
+        *out_schedule = NULL;
+    }
+    if (app == NULL || fn == NULL || listener_state == NULL ||
+        (kind == DCC_APP_SCHEDULE_INTERVAL && interval_ms == 0U) ||
+        (kind == DCC_APP_SCHEDULE_DAILY_KST && (hour > 23U || minute > 59U))) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (app->schedule_count == SIZE_MAX) {
+        return DCC_ERR_NOMEM;
+    }
+    dcc_status_t status = dcc_app_schedules_reserve(app, app->schedule_count + 1U);
+    if (status != DCC_OK) {
+        return status;
+    }
+    dcc_app_schedule_t *schedule = (dcc_app_schedule_t *)calloc(1U, sizeof(*schedule));
+    if (schedule == NULL) {
+        return DCC_ERR_NOMEM;
+    }
+    schedule->app = app;
+    schedule->kind = kind;
+    schedule->interval_ms = interval_ms;
+    schedule->hour = hour;
+    schedule->minute = minute;
+    schedule->canonical_fn = fn;
+    schedule->listener_state = listener_state;
+    app->schedules[app->schedule_count++] = schedule;
+
+    uint8_t created_tasks = 0U;
+    if (app->started && app->tasks == NULL) {
+        status = dcc_task_group_create(app->client, &app->tasks);
+        if (status != DCC_OK) {
+            app->schedule_count--;
+            app->schedules[app->schedule_count] = NULL;
+            free(schedule);
+            return status;
+        }
+        created_tasks = 1U;
+    }
+    if (app->tasks != NULL && app->started) {
+        status = dcc_task_group_spawn(app->tasks, dcc_app_schedule_task, schedule, NULL);
+        if (status != DCC_OK) {
+            app->schedule_count--;
+            app->schedules[app->schedule_count] = NULL;
+            free(schedule);
+            if (created_tasks) {
+                (void)dcc_task_group_destroy(app->tasks);
+                app->tasks = NULL;
+            }
+            return status;
+        }
+    }
+    if (out_schedule != NULL) {
+        *out_schedule = schedule;
+    }
+    return DCC_OK;
 }
 
 static dcc_status_t dcc_app_add_schedule(
@@ -95,7 +167,7 @@ static dcc_status_t dcc_app_add_schedule(
     uint64_t interval_ms,
     uint8_t hour,
     uint8_t minute,
-    dcc_app_task_fn fn,
+    dcc_app_legacy_task_fn fn,
     void *user_data
 ) {
     if (app == NULL || fn == NULL || (kind == DCC_APP_SCHEDULE_INTERVAL && interval_ms == 0U)) {
@@ -136,7 +208,7 @@ static dcc_status_t dcc_app_add_schedule(
 dcc_status_t dcc_app_every_ms(
     dcc_app_t *app,
     uint64_t interval_ms,
-    dcc_app_task_fn fn,
+    dcc_app_legacy_task_fn fn,
     void *user_data
 ) {
     return dcc_app_add_schedule(app, DCC_APP_SCHEDULE_INTERVAL, interval_ms, 0U, 0U, fn, user_data);
@@ -145,7 +217,7 @@ dcc_status_t dcc_app_every_ms(
 dcc_status_t dcc_app_every_seconds(
     dcc_app_t *app,
     uint64_t interval_seconds,
-    dcc_app_task_fn fn,
+    dcc_app_legacy_task_fn fn,
     void *user_data
 ) {
     if (interval_seconds > UINT64_MAX / UINT64_C(1000)) {
@@ -157,7 +229,7 @@ dcc_status_t dcc_app_every_seconds(
 dcc_status_t dcc_app_every_minutes(
     dcc_app_t *app,
     uint64_t interval_minutes,
-    dcc_app_task_fn fn,
+    dcc_app_legacy_task_fn fn,
     void *user_data
 ) {
     if (interval_minutes > UINT64_MAX / UINT64_C(60000)) {
@@ -169,7 +241,7 @@ dcc_status_t dcc_app_every_minutes(
 dcc_status_t dcc_app_every_hours(
     dcc_app_t *app,
     uint64_t interval_hours,
-    dcc_app_task_fn fn,
+    dcc_app_legacy_task_fn fn,
     void *user_data
 ) {
     if (interval_hours > UINT64_MAX / UINT64_C(3600000)) {
@@ -181,7 +253,7 @@ dcc_status_t dcc_app_every_hours(
 dcc_status_t dcc_app_every_kst(
     dcc_app_t *app,
     const char *hhmm,
-    dcc_app_task_fn fn,
+    dcc_app_legacy_task_fn fn,
     void *user_data
 ) {
     if (hhmm == NULL ||
@@ -202,7 +274,7 @@ dcc_status_t dcc_app_every_day_at_kst(
     dcc_app_t *app,
     uint8_t hour,
     uint8_t minute,
-    dcc_app_task_fn fn,
+    dcc_app_legacy_task_fn fn,
     void *user_data
 ) {
     return dcc_app_add_schedule(app, DCC_APP_SCHEDULE_DAILY_KST, 0U, hour, minute, fn, user_data);

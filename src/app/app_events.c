@@ -13,9 +13,9 @@ typedef enum dcc_app_event_listener_kind {
 typedef struct dcc_app_event_listener_state {
     dcc_app_t *app;
     dcc_app_event_listener_kind_t kind;
-    dcc_app_event_fn event_handler;
-    dcc_app_ready_fn ready_handler;
-    dcc_app_message_fn message_handler;
+    dcc_app_legacy_event_fn event_handler;
+    dcc_app_legacy_ready_fn ready_handler;
+    dcc_app_legacy_message_fn message_handler;
     void *user_data;
     uint8_t once;
     atomic_bool fired;
@@ -135,7 +135,7 @@ static dcc_status_t dcc_app_on_internal(
 dcc_status_t dcc_app_on(
     dcc_app_t *app,
     dcc_event_type_t type,
-    dcc_app_event_fn handler,
+    dcc_app_legacy_event_fn handler,
     void *user_data
 ) {
     if (app == NULL || handler == NULL) {
@@ -155,7 +155,7 @@ dcc_status_t dcc_app_on(
 
 static dcc_status_t dcc_app_on_ready_internal(
     dcc_app_t *app,
-    dcc_app_ready_fn handler,
+    dcc_app_legacy_ready_fn handler,
     void *user_data,
     uint8_t once
 ) {
@@ -178,7 +178,7 @@ static dcc_status_t dcc_app_on_ready_internal(
 
 dcc_status_t dcc_app_on_ready(
     dcc_app_t *app,
-    dcc_app_ready_fn handler,
+    dcc_app_legacy_ready_fn handler,
     void *user_data
 ) {
     return dcc_app_on_ready_internal(app, handler, user_data, 0U);
@@ -186,7 +186,7 @@ dcc_status_t dcc_app_on_ready(
 
 dcc_status_t dcc_app_on_ready_once(
     dcc_app_t *app,
-    dcc_app_ready_fn handler,
+    dcc_app_legacy_ready_fn handler,
     void *user_data
 ) {
     return dcc_app_on_ready_internal(app, handler, user_data, 1U);
@@ -195,7 +195,7 @@ dcc_status_t dcc_app_on_ready_once(
 static dcc_status_t dcc_app_on_message_event(
     dcc_app_t *app,
     dcc_event_type_t type,
-    dcc_app_message_fn handler,
+    dcc_app_legacy_message_fn handler,
     void *user_data
 ) {
     if (app == NULL || handler == NULL) {
@@ -215,7 +215,7 @@ static dcc_status_t dcc_app_on_message_event(
 
 dcc_status_t dcc_app_on_message_create(
     dcc_app_t *app,
-    dcc_app_message_fn handler,
+    dcc_app_legacy_message_fn handler,
     void *user_data
 ) {
     return dcc_app_on_message_event(app, DCC_EVENT_MESSAGE_CREATE, handler, user_data);
@@ -223,7 +223,7 @@ dcc_status_t dcc_app_on_message_create(
 
 dcc_status_t dcc_app_on_message_update(
     dcc_app_t *app,
-    dcc_app_message_fn handler,
+    dcc_app_legacy_message_fn handler,
     void *user_data
 ) {
     return dcc_app_on_message_event(app, DCC_EVENT_MESSAGE_UPDATE, handler, user_data);
@@ -231,7 +231,7 @@ dcc_status_t dcc_app_on_message_update(
 
 dcc_status_t dcc_app_on_message_delete(
     dcc_app_t *app,
-    dcc_app_message_fn handler,
+    dcc_app_legacy_message_fn handler,
     void *user_data
 ) {
     return dcc_app_on_message_event(app, DCC_EVENT_MESSAGE_DELETE, handler, user_data);

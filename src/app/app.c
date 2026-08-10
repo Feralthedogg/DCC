@@ -168,6 +168,7 @@ void dcc_app_destroy(dcc_app_t *app) {
     }
     (void)dcc_app_stop(app);
     dcc_app_stop_schedules(app);
+    dcc_app_listener_destroy_all(app);
     for (size_t i = 0; i < app->component_session_listener_count; ++i) {
         if (app->component_session_listeners[i].listener.state != NULL) {
             (void)dcc_client_off_component_session(

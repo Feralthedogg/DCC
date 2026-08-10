@@ -18,6 +18,11 @@ typedef enum dcc_app_schedule_kind {
     DCC_APP_SCHEDULE_DAILY_KST
 } dcc_app_schedule_kind_t;
 
+typedef dcc_status_t (*dcc_app_canonical_schedule_fn)(
+    void *listener_state,
+    dcc_app_t *app
+);
+
 typedef enum dcc_app_response_state {
     DCC_APP_RESPONSE_READY = 0,
     DCC_APP_RESPONSE_DEFERRED = 1,
@@ -48,7 +53,9 @@ typedef struct dcc_app_route {
     char *key;
     uint8_t prefix;
     dcc_app_handler_fn handler;
+    dcc_app_legacy_handler_fn legacy_handler;
     void *user_data;
+    void *context_user_data;
     void (*user_data_cleanup)(void *user_data);
     dcc_app_middleware_t *middlewares;
     size_t middleware_count;
@@ -61,9 +68,13 @@ typedef struct dcc_app_schedule {
     uint64_t interval_ms;
     uint8_t hour;
     uint8_t minute;
-    dcc_app_task_fn fn;
+    dcc_app_legacy_task_fn fn;
+    dcc_app_canonical_schedule_fn canonical_fn;
     void *user_data;
+    void *listener_state;
 } dcc_app_schedule_t;
+
+typedef struct dcc_app_listener_entry dcc_app_listener_entry_t;
 
 typedef struct dcc_app_component_session_listener_entry {
     dcc_component_session_listener_t listener;
@@ -105,6 +116,10 @@ struct dcc_app {
     dcc_app_module_entry_t *modules;
     size_t module_count;
     size_t module_cap;
+    dcc_app_listener_entry_t **listeners;
+    size_t listener_count;
+    size_t listener_cap;
+    dcc_listener_id_t next_listener_id;
     dcc_app_route_id_t next_route_id;
     dcc_task_group_t *tasks;
     dcc_app_error_fn error_handler;
@@ -139,7 +154,7 @@ dcc_status_t dcc_app_add_route(
     dcc_event_type_t type,
     const char *key,
     uint8_t prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 );
@@ -148,11 +163,23 @@ dcc_status_t dcc_app_add_route_with_cleanup(
     dcc_event_type_t type,
     const char *key,
     uint8_t prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     void (*user_data_cleanup)(void *user_data),
     dcc_app_route_id_t *out_route
 );
+dcc_status_t dcc_app_add_canonical_route_with_cleanup(
+    dcc_app_t *app,
+    dcc_event_type_t type,
+    const char *key,
+    uint8_t prefix,
+    dcc_app_handler_fn handler,
+    void *user_data,
+    void *context_user_data,
+    void (*user_data_cleanup)(void *user_data),
+    dcc_app_route_id_t *out_route
+);
+dcc_status_t dcc_app_remove_route_internal(dcc_app_t *app, dcc_app_route_id_t route_id);
 dcc_status_t dcc_app_use_internal(
     dcc_app_t *app,
     dcc_app_middleware_fn middleware,
@@ -174,8 +201,20 @@ dcc_status_t dcc_app_dispatch_handler(
     const dcc_component_session_result_t *component_session,
     const dcc_app_middleware_t *route_middlewares,
     size_t route_middleware_count,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
+);
+dcc_status_t dcc_app_dispatch_canonical_handler(
+    dcc_app_t *app,
+    dcc_client_t *client,
+    const dcc_event_t *event,
+    const dcc_interaction_t *interaction,
+    const dcc_component_session_result_t *component_session,
+    const dcc_app_middleware_t *route_middlewares,
+    size_t route_middleware_count,
+    dcc_app_handler_fn handler,
+    void *user_data,
+    void *context_user_data
 );
 dcc_status_t dcc_app_route_use_internal(
     dcc_app_t *app,
@@ -208,6 +247,19 @@ void dcc_app_auto_defer_mark(dcc_ctx_t *ctx, dcc_app_response_state_t state, dcc
 dcc_status_t dcc_app_start_schedules(dcc_app_t *app);
 void dcc_app_stop_schedules(dcc_app_t *app);
 dcc_status_t dcc_app_register_command_sync_listener(dcc_app_t *app);
+void dcc_app_listener_destroy_all(dcc_app_t *app);
+uint8_t dcc_app_listener_active(const void *listener_state);
+dcc_status_t dcc_app_listener_run_task(void *listener_state, dcc_app_t *app);
+dcc_status_t dcc_app_add_canonical_schedule(
+    dcc_app_t *app,
+    dcc_app_schedule_kind_t kind,
+    uint64_t interval_ms,
+    uint8_t hour,
+    uint8_t minute,
+    dcc_app_canonical_schedule_fn fn,
+    void *listener_state,
+    dcc_app_schedule_t **out_schedule
+);
 
 #ifdef __cplusplus
 }

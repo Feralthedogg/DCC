@@ -16,10 +16,7 @@ import tempfile
 
 MAX_BOT_MACROS = 300
 COMMAND_TIMEOUT_SECONDS = 30
-TRANSITION_FRAGMENT_ALLOWANCES = frozenset({
-    "dcc/app/core_decls.h", "dcc/app/rest_decls_a.h",
-    "dcc/app/rest_decls_b.h", "dcc/app/context_decls.h",
-})
+TRANSITION_FRAGMENT_ALLOWANCES = frozenset()
 REQUIRED_BANNED_PATTERNS = frozenset({
     "DCC_ON_*", "DCC_ROUTE_*", "DCC_DECORATE_*", "DCC_RESPOND*",
     "DCC_SIMPLE_BOT*", "DCC_V2_*", "dcc_rest_future_t",

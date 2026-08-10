@@ -5,7 +5,7 @@
 
 typedef struct dcc_app_component_session_state {
     dcc_app_t *app;
-    dcc_app_handler_fn handler;
+    dcc_app_legacy_handler_fn handler;
     void *user_data;
 } dcc_app_component_session_state_t;
 
@@ -66,7 +66,7 @@ dcc_status_t dcc_app_component_session_store(
     dcc_app_t *app,
     const dcc_component_session_store_t *store,
     const dcc_component_session_listener_options_t *options,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     if (app == NULL || store == NULL || handler == NULL) {
@@ -115,7 +115,7 @@ dcc_status_t dcc_app_component_session(
     dcc_app_t *app,
     const dcc_component_session_t *session,
     const dcc_component_session_listener_options_t *options,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     if (app == NULL || session == NULL || handler == NULL) {

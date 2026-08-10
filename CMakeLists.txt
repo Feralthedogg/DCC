@@ -344,6 +344,7 @@ target_sources(dcc
         src/app/app_extensions.c
         src/app/app_form_bind.c
         src/app/app_guards.c
+        src/app/app_listener.c
         src/app/app_message_commands.c
         src/app/app_messages.c
         src/app/app_modules.c
@@ -2225,6 +2226,12 @@ if(DCC_BUILD_TESTS)
     dcc_target_use_private_headers(dcc_app_smoke)
     dcc_target_enable_sanitizers(dcc_app_smoke)
     add_test(NAME dcc_app_smoke COMMAND dcc_app_smoke)
+
+    add_executable(dcc_app_v2_listener_smoke tests/app_v2_listener_smoke.c)
+    target_link_libraries(dcc_app_v2_listener_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_v2_listener_smoke)
+    dcc_target_enable_sanitizers(dcc_app_v2_listener_smoke)
+    add_test(NAME dcc_app_v2_listener_smoke COMMAND dcc_app_v2_listener_smoke)
 
     add_executable(dcc_app_message_command_smoke tests/app_message_command_smoke.c)
     target_link_libraries(dcc_app_message_command_smoke PRIVATE dcc::dcc)

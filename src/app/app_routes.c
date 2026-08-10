@@ -113,7 +113,7 @@ dcc_status_t dcc_app_add_route(
     dcc_event_type_t type,
     const char *key,
     uint8_t prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -134,8 +134,53 @@ dcc_status_t dcc_app_add_route_with_cleanup(
     dcc_event_type_t type,
     const char *key,
     uint8_t prefix,
+    dcc_app_legacy_handler_fn handler,
+    void *user_data,
+    void (*user_data_cleanup)(void *user_data),
+    dcc_app_route_id_t *out_route
+) {
+    if (app == NULL || key == NULL || key[0] == '\0' || handler == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (app->route_count == SIZE_MAX || app->next_route_id == UINT64_MAX) {
+        return DCC_ERR_NOMEM;
+    }
+    if (out_route != NULL) {
+        *out_route = DCC_APP_ROUTE_INVALID;
+    }
+    dcc_status_t status = dcc_app_routes_reserve(app, app->route_count + 1U);
+    if (status != DCC_OK) {
+        return status;
+    }
+    char *copy = dcc_strdup(key);
+    if (copy == NULL) {
+        return DCC_ERR_NOMEM;
+    }
+
+    dcc_app_route_t *route = &app->routes[app->route_count++];
+    memset(route, 0, sizeof(*route));
+    route->id = ++app->next_route_id;
+    route->type = type;
+    route->key = copy;
+    route->prefix = prefix != 0U;
+    route->legacy_handler = handler;
+    route->user_data = user_data;
+    route->context_user_data = user_data;
+    route->user_data_cleanup = user_data_cleanup;
+    if (out_route != NULL) {
+        *out_route = route->id;
+    }
+    return DCC_OK;
+}
+
+dcc_status_t dcc_app_add_canonical_route_with_cleanup(
+    dcc_app_t *app,
+    dcc_event_type_t type,
+    const char *key,
+    uint8_t prefix,
     dcc_app_handler_fn handler,
     void *user_data,
+    void *context_user_data,
     void (*user_data_cleanup)(void *user_data),
     dcc_app_route_id_t *out_route
 ) {
@@ -165,10 +210,48 @@ dcc_status_t dcc_app_add_route_with_cleanup(
     route->prefix = prefix != 0U;
     route->handler = handler;
     route->user_data = user_data;
+    route->context_user_data = context_user_data;
     route->user_data_cleanup = user_data_cleanup;
     if (out_route != NULL) {
         *out_route = route->id;
     }
+    return DCC_OK;
+}
+
+dcc_status_t dcc_app_remove_route_internal(dcc_app_t *app, dcc_app_route_id_t route_id) {
+    if (app == NULL || route_id == DCC_APP_ROUTE_INVALID) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    size_t index = app->route_count;
+    for (size_t i = 0U; i < app->route_count; ++i) {
+        if (app->routes[i].id == route_id) {
+            index = i;
+            break;
+        }
+    }
+    if (index == app->route_count) {
+        return DCC_ERR_INVALID_ARG;
+    }
+
+    dcc_app_route_t *route = &app->routes[index];
+    free(route->key);
+    if (route->user_data_cleanup != NULL) {
+        route->user_data_cleanup(route->user_data);
+    }
+    for (size_t i = 0U; i < route->middleware_count; ++i) {
+        if (route->middlewares[i].cleanup != NULL) {
+            route->middlewares[i].cleanup(route->middlewares[i].user_data);
+        }
+    }
+    free(route->middlewares);
+    if (index + 1U < app->route_count) {
+        memmove(
+            &app->routes[index],
+            &app->routes[index + 1U],
+            (app->route_count - index - 1U) * sizeof(*app->routes)
+        );
+    }
+    app->route_count--;
     return DCC_OK;
 }
 
@@ -280,7 +363,7 @@ dcc_status_t dcc_app_dispatch_handler(
     const dcc_component_session_result_t *component_session,
     const dcc_app_middleware_t *route_middlewares,
     size_t route_middleware_count,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     if (app == NULL || client == NULL || event == NULL || interaction == NULL || handler == NULL) {
@@ -314,6 +397,47 @@ dcc_status_t dcc_app_dispatch_handler(
     return DCC_OK;
 }
 
+dcc_status_t dcc_app_dispatch_canonical_handler(
+    dcc_app_t *app,
+    dcc_client_t *client,
+    const dcc_event_t *event,
+    const dcc_interaction_t *interaction,
+    const dcc_component_session_result_t *component_session,
+    const dcc_app_middleware_t *route_middlewares,
+    size_t route_middleware_count,
+    dcc_app_handler_fn handler,
+    void *user_data,
+    void *context_user_data
+) {
+    if (app == NULL || client == NULL || event == NULL || interaction == NULL || handler == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_ctx_t ctx = {
+        .app = app,
+        .client = client,
+        .event = event,
+        .interaction = interaction,
+        .component_session = component_session,
+        .user_data = context_user_data,
+    };
+    dcc_flow_init(&ctx.flow, client, interaction);
+    if (dcc_event_type(event) != DCC_EVENT_AUTOCOMPLETE) {
+        (void)dcc_app_auto_defer_start(&ctx);
+    }
+    dcc_status_t status = dcc_app_run_middlewares(&ctx, app->middlewares, app->middleware_count);
+    if (status == DCC_OK) {
+        status = dcc_app_run_middlewares(&ctx, route_middlewares, route_middleware_count);
+    }
+    if (status == DCC_OK) {
+        status = handler(&ctx, user_data);
+    }
+    if (status != DCC_OK) {
+        (void)dcc_ctx_handle_error(&ctx, status, dcc_status_string(status));
+    }
+    dcc_app_auto_defer_finish(&ctx);
+    return status;
+}
+
 void dcc_app_dispatch_event(dcc_client_t *client, const dcc_event_t *event, void *user_data) {
     dcc_app_t *app = (dcc_app_t *)user_data;
     const dcc_interaction_t *interaction = dcc_event_interaction(event);
@@ -343,27 +467,27 @@ void dcc_app_dispatch_event(dcc_client_t *client, const dcc_event_t *event, void
     if (route == NULL) {
         route = dcc_app_find_route(app, type, key);
     }
-    if (route == NULL || route->handler == NULL) {
+    if (route == NULL || (route->handler == NULL && route->legacy_handler == NULL)) {
         return;
     }
-
-    (void)dcc_app_dispatch_handler(
-        app,
-        client,
-        event,
-        interaction,
-        NULL,
-        route->middlewares,
-        route->middleware_count,
-        route->handler,
-        route->user_data
-    );
+    if (route->handler != NULL) {
+        (void)dcc_app_dispatch_canonical_handler(
+            app, client, event, interaction, NULL, route->middlewares,
+            route->middleware_count, route->handler, route->user_data,
+            route->context_user_data
+        );
+    } else {
+        (void)dcc_app_dispatch_handler(
+            app, client, event, interaction, NULL, route->middlewares,
+            route->middleware_count, route->legacy_handler, route->user_data
+        );
+    }
 }
 
 dcc_status_t dcc_app_slash_builder(
     dcc_app_t *app,
     const dcc_application_command_builder_t *command,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_slash_builder_route(app, command, handler, user_data, NULL);
@@ -372,7 +496,7 @@ dcc_status_t dcc_app_slash_builder(
 dcc_status_t dcc_app_slash_builder_route(
     dcc_app_t *app,
     const dcc_application_command_builder_t *command,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -390,7 +514,7 @@ dcc_status_t dcc_app_slash(
     dcc_app_t *app,
     const char *name,
     const char *description,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_slash_route(app, name, description, handler, user_data, NULL);
@@ -400,7 +524,7 @@ dcc_status_t dcc_app_slash_route(
     dcc_app_t *app,
     const char *name,
     const char *description,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -424,7 +548,7 @@ static dcc_status_t dcc_app_context_menu_route(
     const char *name,
     dcc_application_command_type_t command_type,
     dcc_event_type_t event_type,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -450,7 +574,7 @@ static dcc_status_t dcc_app_context_menu_route(
 dcc_status_t dcc_app_user_context_menu(
     dcc_app_t *app,
     const char *name,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_user_context_menu_route(app, name, handler, user_data, NULL);
@@ -459,7 +583,7 @@ dcc_status_t dcc_app_user_context_menu(
 dcc_status_t dcc_app_user_context_menu_route(
     dcc_app_t *app,
     const char *name,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -477,7 +601,7 @@ dcc_status_t dcc_app_user_context_menu_route(
 dcc_status_t dcc_app_message_context_menu(
     dcc_app_t *app,
     const char *name,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_message_context_menu_route(app, name, handler, user_data, NULL);
@@ -486,7 +610,7 @@ dcc_status_t dcc_app_message_context_menu(
 dcc_status_t dcc_app_message_context_menu_route(
     dcc_app_t *app,
     const char *name,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -504,7 +628,7 @@ dcc_status_t dcc_app_message_context_menu_route(
 dcc_status_t dcc_app_autocomplete(
     dcc_app_t *app,
     const char *name,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_autocomplete_route(app, name, handler, user_data, NULL);
@@ -513,7 +637,7 @@ dcc_status_t dcc_app_autocomplete(
 dcc_status_t dcc_app_autocomplete_route(
     dcc_app_t *app,
     const char *name,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -523,7 +647,7 @@ dcc_status_t dcc_app_autocomplete_route(
 dcc_status_t dcc_app_button(
     dcc_app_t *app,
     const char *custom_id,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_button_route(app, custom_id, handler, user_data, NULL);
@@ -532,7 +656,7 @@ dcc_status_t dcc_app_button(
 dcc_status_t dcc_app_button_route(
     dcc_app_t *app,
     const char *custom_id,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -542,7 +666,7 @@ dcc_status_t dcc_app_button_route(
 dcc_status_t dcc_app_button_prefix(
     dcc_app_t *app,
     const char *custom_id_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_button_prefix_route(app, custom_id_prefix, handler, user_data, NULL);
@@ -551,7 +675,7 @@ dcc_status_t dcc_app_button_prefix(
 dcc_status_t dcc_app_button_prefix_route(
     dcc_app_t *app,
     const char *custom_id_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -561,7 +685,7 @@ dcc_status_t dcc_app_button_prefix_route(
 dcc_status_t dcc_app_select(
     dcc_app_t *app,
     const char *custom_id,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_select_route(app, custom_id, handler, user_data, NULL);
@@ -570,7 +694,7 @@ dcc_status_t dcc_app_select(
 dcc_status_t dcc_app_select_route(
     dcc_app_t *app,
     const char *custom_id,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -580,7 +704,7 @@ dcc_status_t dcc_app_select_route(
 dcc_status_t dcc_app_select_prefix(
     dcc_app_t *app,
     const char *custom_id_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_select_prefix_route(app, custom_id_prefix, handler, user_data, NULL);
@@ -589,7 +713,7 @@ dcc_status_t dcc_app_select_prefix(
 dcc_status_t dcc_app_select_prefix_route(
     dcc_app_t *app,
     const char *custom_id_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -599,7 +723,7 @@ dcc_status_t dcc_app_select_prefix_route(
 dcc_status_t dcc_app_modal(
     dcc_app_t *app,
     const char *custom_id,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_modal_route(app, custom_id, handler, user_data, NULL);
@@ -608,7 +732,7 @@ dcc_status_t dcc_app_modal(
 dcc_status_t dcc_app_modal_route(
     dcc_app_t *app,
     const char *custom_id,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -618,7 +742,7 @@ dcc_status_t dcc_app_modal_route(
 dcc_status_t dcc_app_modal_prefix(
     dcc_app_t *app,
     const char *custom_id_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_modal_prefix_route(app, custom_id_prefix, handler, user_data, NULL);
@@ -627,7 +751,7 @@ dcc_status_t dcc_app_modal_prefix(
 dcc_status_t dcc_app_modal_prefix_route(
     dcc_app_t *app,
     const char *custom_id_prefix,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {

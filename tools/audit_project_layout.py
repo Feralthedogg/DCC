@@ -21,6 +21,10 @@ KNOWN_LARGE_FILE_LIMITS = {
     "tests/package_consumer/package_consumer_app.c": 3000,
     "tests/sugar_smoke.c": 5000,
 }
+TRANSITION_LARGE_FILE_LIMITS = {
+    # Task 2 consolidates the 1.x App surface here; Task 14 deletes this file and exception.
+    "include/dcc/app/legacy.h": 3200,
+}
 
 
 def rel(path: Path) -> str:
@@ -33,10 +37,18 @@ def line_count(path: Path) -> int:
 
 def audit_file_size(path: Path, limit: int, errors: list[str]) -> None:
     relative = rel(path)
-    budget = KNOWN_LARGE_FILE_LIMITS.get(relative, limit)
+    budget = TRANSITION_LARGE_FILE_LIMITS.get(
+        relative,
+        KNOWN_LARGE_FILE_LIMITS.get(relative, limit),
+    )
     lines = line_count(path)
     if lines > budget:
-        if relative in KNOWN_LARGE_FILE_LIMITS:
+        if relative in TRANSITION_LARGE_FILE_LIMITS:
+            errors.append(
+                f"transition-only App compatibility header grew past its Task 14 removal budget: "
+                f"{relative} ({lines} lines > {budget}); delete the file and this exception in Task 14"
+            )
+        elif relative in KNOWN_LARGE_FILE_LIMITS:
             errors.append(
                 f"known oversized file grew past its split budget: {relative} "
                 f"({lines} lines > {budget})"

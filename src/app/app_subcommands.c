@@ -59,7 +59,7 @@ dcc_status_t dcc_app_subcommand_route(
     dcc_app_t *app,
     const char *command_name,
     const char *subcommand_path,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
@@ -84,7 +84,7 @@ dcc_status_t dcc_app_subcommand(
     dcc_app_t *app,
     const char *command_name,
     const char *subcommand_path,
-    dcc_app_handler_fn handler,
+    dcc_app_legacy_handler_fn handler,
     void *user_data
 ) {
     return dcc_app_subcommand_route(

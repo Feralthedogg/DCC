@@ -25,7 +25,7 @@ typedef struct dcc_sugar_view_button_action {
     const char *label;
     const char *custom_id;
     dcc_button_style_t style;
-    dcc_app_handler_fn handler;
+    dcc_app_legacy_handler_fn handler;
     void *user_data;
     uint8_t disabled;
 } dcc_sugar_view_button_action_t;

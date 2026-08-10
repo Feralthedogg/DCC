@@ -5,7 +5,7 @@
 
 typedef struct dcc_app_message_command_state {
     dcc_app_t *app;
-    dcc_app_message_command_fn handler;
+    dcc_app_legacy_message_command_fn handler;
     void *user_data;
     size_t prefix_len;
     size_t name_len;
@@ -78,7 +78,7 @@ dcc_status_t dcc_app_on_message_command(
     dcc_app_t *app,
     const char *prefix,
     const char *name,
-    dcc_app_message_command_fn handler,
+    dcc_app_legacy_message_command_fn handler,
     void *user_data
 ) {
     if (app == NULL || prefix == NULL || prefix[0] == '\0' || name == NULL ||

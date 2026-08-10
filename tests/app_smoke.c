@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-
+_Static_assert(DCC_LISTENER_VERSION == 1U, "listener ABI starts at version 1");
 typedef struct app_smoke_state {
     unsigned middleware_count;
     unsigned route_middleware_count;
