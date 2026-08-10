@@ -201,6 +201,10 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     /* Stop new App-owned REST delivery and wait for any sink callback that was
      * already copied before reclaiming listeners or observer user data. */
     dcc_app_detach_error_sink(app);
+    /* Successful terminal callbacks do not hold an App error-sink snapshot,
+     * but may still be using App-owned callback data. Drain every terminal
+     * frame before beginning any App-owned cleanup. */
+    dcc_rest_terminal_wait(app->client);
     dcc_app_listener_destroy_all(app);
     for (size_t i = 0; i < app->component_session_listener_count; ++i) {
         if (app->component_session_listeners[i].listener.state != NULL) {

@@ -11,9 +11,25 @@
 #include <stdio.h>
 #include <string.h>
 
+#if !defined(_WIN32)
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
 typedef struct response_state_intercept_seen {
     unsigned requests;
 } response_state_intercept_seen_t;
+
+#if !defined(_WIN32)
+typedef struct response_state_reentrant_seen {
+    dcc_ctx_t *ctx;
+    dcc_app_auto_defer_t *auto_defer;
+    atomic_uint nested_done;
+    atomic_uint watchdog_timed_out;
+    unsigned outer_callbacks;
+    dcc_status_t nested_status;
+} response_state_reentrant_seen_t;
+#endif
 
 static dcc_status_t response_state_intercept(
     dcc_client_t *client,
@@ -46,6 +62,116 @@ static dcc_status_t response_state_intercept(
     }
     return DCC_OK;
 }
+
+#if !defined(_WIN32)
+static void response_state_reentrant_cb(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    (void)client;
+    response_state_reentrant_seen_t *seen =
+        (response_state_reentrant_seen_t *)user_data;
+    if (seen == NULL || response == NULL || response->status != 204U) {
+        return;
+    }
+    seen->outer_callbacks++;
+    seen->nested_status = dcc_ctx_reply_text(
+        seen->ctx,
+        "nested reply",
+        NULL,
+        NULL
+    );
+    atomic_store_explicit(&seen->nested_done, 1U, memory_order_release);
+}
+
+static void *response_state_reentrant_watchdog(void *user_data) {
+    response_state_reentrant_seen_t *seen =
+        (response_state_reentrant_seen_t *)user_data;
+    for (unsigned elapsed_ms = 0U; elapsed_ms < 100U; ++elapsed_ms) {
+        if (atomic_load_explicit(&seen->nested_done, memory_order_acquire) != 0U) {
+            return NULL;
+        }
+        usleep(1000U);
+    }
+    atomic_store_explicit(&seen->watchdog_timed_out, 1U, memory_order_release);
+    atomic_store_explicit(
+        &seen->auto_defer->response_state,
+        DCC_APP_RESPONSE_READY,
+        memory_order_release
+    );
+    return NULL;
+}
+
+static int app_smoke_check_same_context_reentry(void) {
+    dcc_client_options_t options = {
+        .size = sizeof(options),
+        .token = "",
+        .intents = DCC_INTENT_GUILDS,
+    };
+    dcc_client_t *client = NULL;
+    if (dcc_client_create(&options, &client) != DCC_OK) {
+        return 0;
+    }
+    response_state_intercept_seen_t intercept_seen = {0};
+    dcc_rest_set_interceptor(client, response_state_intercept, &intercept_seen);
+    dcc_interaction_t interaction = {
+        .id = 11U,
+        .application_id = 12U,
+        .token = "reentrant-response-token",
+    };
+    dcc_ctx_t ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.client = client;
+    ctx.interaction = &interaction;
+    dcc_flow_init(&ctx.flow, client, &interaction);
+    dcc_app_auto_defer_t auto_defer;
+    memset(&auto_defer, 0, sizeof(auto_defer));
+    atomic_init(&auto_defer.initial_response_admitted, false);
+    atomic_init(&auto_defer.response_state, DCC_APP_RESPONSE_READY);
+    ctx.auto_defer = &auto_defer;
+
+    response_state_reentrant_seen_t seen = {
+        .ctx = &ctx,
+        .auto_defer = &auto_defer,
+        .nested_status = DCC_OK,
+    };
+    atomic_init(&seen.nested_done, 0U);
+    atomic_init(&seen.watchdog_timed_out, 0U);
+    pthread_t watchdog;
+    if (pthread_create(
+            &watchdog,
+            NULL,
+            response_state_reentrant_watchdog,
+            &seen
+        ) != 0) {
+        ctx.auto_defer = NULL;
+        dcc_client_destroy(client);
+        return 0;
+    }
+    dcc_status_t status = dcc_ctx_reply_text(
+        &ctx,
+        "outer reply",
+        response_state_reentrant_cb,
+        &seen
+    );
+    int join_status = pthread_join(watchdog, NULL);
+    int passed = status == DCC_OK && join_status == 0 &&
+        atomic_load_explicit(&seen.watchdog_timed_out, memory_order_acquire) == 0U &&
+        seen.nested_status == DCC_ERR_STATE && seen.outer_callbacks == 1U &&
+        intercept_seen.requests == 1U && dcc_ctx_response_sent(&ctx);
+    ctx.auto_defer = NULL;
+    dcc_client_destroy(client);
+    if (!passed) {
+        fprintf(stderr, "same-context synchronous reply reentry did not fail fast\n");
+    }
+    return passed;
+}
+#else
+static int app_smoke_check_same_context_reentry(void) {
+    return 1;
+}
+#endif
 
 static int app_smoke_check_auto_defer_local_retry(void) {
     dcc_client_options_t options = {
@@ -266,5 +392,6 @@ int app_smoke_check_response_state(void) {
         return 0;
     }
 
-    return app_smoke_check_auto_defer_local_retry();
+    return app_smoke_check_auto_defer_local_retry() &&
+        app_smoke_check_same_context_reentry();
 }

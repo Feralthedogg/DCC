@@ -3,6 +3,7 @@
 #include "internal/app/dcc_app_internal.h"
 #include "internal/client/dcc_client_state_internal.h"
 #include "internal/events/dcc_event_state_internal.h"
+#include "internal/rest/dcc_rest_intercept_internal.h"
 #include "internal/runtime/dcc_runtime_internal.h"
 
 #include <stdatomic.h>
@@ -161,6 +162,18 @@ typedef struct cleanup_stop_case {
     atomic_uint calls;
     atomic_int status;
 } cleanup_stop_case_t;
+
+typedef struct timer_claim_case {
+    dcc_app_t *app;
+    dcc_client_t *client;
+    dcc_ctx_t ctx;
+    atomic_bool timer_request_entered;
+    atomic_bool timer_request_release;
+    atomic_bool handler_done;
+    atomic_uint request_count;
+    atomic_uint_fast64_t handler_elapsed_ms;
+    atomic_int handler_status;
+} timer_claim_case_t;
 
 static void concurrent_case_init(concurrent_case_t *state, concurrent_kind_t kind) {
     memset(state, 0, sizeof(*state));
@@ -498,6 +511,77 @@ static int run_client_runtime(void *arg) {
     concurrent_case_t *state = (concurrent_case_t *)arg;
     dcc_status_t status = dcc_runtime_run(&state->client->runtime);
     return status == DCC_OK || status == DCC_ERR_CANCELED ? 0 : 1;
+}
+
+static int run_timer_claim_runtime(void *arg) {
+    timer_claim_case_t *state = (timer_claim_case_t *)arg;
+    dcc_status_t status = dcc_runtime_run(&state->client->runtime);
+    return status == DCC_OK || status == DCC_ERR_CANCELED ? 0 : 1;
+}
+
+static int run_timer_claim_handler(void *arg) {
+    timer_claim_case_t *state = (timer_claim_case_t *)arg;
+    uint64_t started_at = test_now_ms();
+    dcc_status_t status = dcc_ctx_reply_text(
+        &state->ctx,
+        "handler reply",
+        NULL,
+        NULL
+    );
+    atomic_store_explicit(&state->handler_status, status, memory_order_release);
+    atomic_store_explicit(
+        &state->handler_elapsed_ms,
+        test_now_ms() - started_at,
+        memory_order_release
+    );
+    atomic_store_explicit(&state->handler_done, true, memory_order_release);
+    return 0;
+}
+
+static dcc_status_t timer_claim_intercept(
+    dcc_client_t *client,
+    const char *method,
+    const char *path,
+    const void *body,
+    size_t body_len,
+    const char *content_type,
+    dcc_rest_cb cb,
+    void *user_data,
+    void *intercept_user_data
+) {
+    (void)method;
+    (void)path;
+    (void)body;
+    (void)body_len;
+    (void)content_type;
+    timer_claim_case_t *state = (timer_claim_case_t *)intercept_user_data;
+    unsigned request_number = atomic_fetch_add_explicit(
+        &state->request_count,
+        1U,
+        memory_order_acq_rel
+    ) + 1U;
+    if (request_number == 1U) {
+        atomic_store_explicit(
+            &state->timer_request_entered,
+            true,
+            memory_order_release
+        );
+        while (!atomic_load_explicit(
+                &state->timer_request_release,
+                memory_order_acquire
+            )) {
+            test_yield();
+        }
+    }
+    if (cb != NULL) {
+        dcc_rest_response_t response = {
+            .size = sizeof(response),
+            .status = 204U,
+            .error = DCC_OK,
+        };
+        cb(client, &response, user_data);
+    }
+    return DCC_OK;
 }
 
 static int run_app_wait_for_stop(void *arg) {
@@ -1266,8 +1350,133 @@ static int test_stop_from_state_cleanup(void) {
     return 0;
 }
 
+static int test_auto_defer_claim_race_fails_fast(void) {
+    timer_claim_case_t state;
+    memset(&state, 0, sizeof(state));
+    atomic_init(&state.timer_request_entered, false);
+    atomic_init(&state.timer_request_release, false);
+    atomic_init(&state.handler_done, false);
+    atomic_init(&state.request_count, 0U);
+    atomic_init(&state.handler_elapsed_ms, 0U);
+    atomic_init(&state.handler_status, DCC_OK);
+    if (create_app(&state.app) != DCC_OK) {
+        fprintf(stderr, "timer claim App create failed\n");
+        return 1;
+    }
+    state.client = dcc_app_client(state.app);
+    dcc_rest_set_interceptor(state.client, timer_claim_intercept, &state);
+    dcc_interaction_t interaction;
+    memset(&interaction, 0, sizeof(interaction));
+    interaction.id = 71U;
+    interaction.application_id = 72U;
+    interaction.token = "timer-claim-token";
+    memset(&state.ctx, 0, sizeof(state.ctx));
+    state.ctx.app = state.app;
+    state.ctx.client = state.client;
+    state.ctx.interaction = &interaction;
+    dcc_flow_init(&state.ctx.flow, state.client, &interaction);
+    dcc_status_t configure_status = dcc_app_auto_defer(state.app, 1U);
+    dcc_status_t client_start_status = configure_status == DCC_OK
+        ? dcc_client_start(state.client)
+        : configure_status;
+    dcc_status_t start_status = client_start_status == DCC_OK
+        ? dcc_app_auto_defer_start(&state.ctx)
+        : client_start_status;
+    if (configure_status != DCC_OK || client_start_status != DCC_OK ||
+        start_status != DCC_OK ||
+        state.ctx.auto_defer == NULL) {
+        fprintf(stderr, "timer claim auto-defer start failed: configure=%d client=%d start=%d state=%p\n",
+                configure_status, client_start_status, start_status,
+                (void *)state.ctx.auto_defer);
+        dcc_app_auto_defer_finish(&state.ctx);
+        (void)dcc_app_destroy(state.app);
+        return 1;
+    }
+
+    test_thread_t runtime_thread;
+    if (test_thread_start(
+            &runtime_thread,
+            run_timer_claim_runtime,
+            &state
+        ) != 0) {
+        fprintf(stderr, "timer claim runtime thread start failed\n");
+        dcc_app_auto_defer_finish(&state.ctx);
+        (void)dcc_app_destroy(state.app);
+        return 1;
+    }
+    if (!test_wait_true(&state.timer_request_entered, 2000U)) {
+        atomic_store_explicit(&state.timer_request_release, true, memory_order_release);
+        (void)dcc_client_stop(state.client);
+        (void)test_thread_join(&runtime_thread);
+        dcc_app_auto_defer_finish(&state.ctx);
+        (void)dcc_app_destroy(state.app);
+        fprintf(stderr, "auto-defer timer did not claim the initial response\n");
+        return 1;
+    }
+
+    test_thread_t handler_thread;
+    if (test_thread_start(
+            &handler_thread,
+            run_timer_claim_handler,
+            &state
+        ) != 0) {
+        fprintf(stderr, "timer claim handler thread start failed\n");
+        atomic_store_explicit(&state.timer_request_release, true, memory_order_release);
+        (void)dcc_client_stop(state.client);
+        (void)test_thread_join(&runtime_thread);
+        dcc_app_auto_defer_finish(&state.ctx);
+        (void)dcc_app_destroy(state.app);
+        return 1;
+    }
+    int handler_failed_fast = test_wait_true(&state.handler_done, 100U);
+    atomic_store_explicit(&state.timer_request_release, true, memory_order_release);
+    int handler_result = test_thread_join(&handler_thread);
+
+    uint64_t deadline = test_now_ms() + 2000U;
+    while (dcc_app_auto_defer_response_state(&state.ctx) ==
+           DCC_APP_RESPONSE_CLAIMED && test_now_ms() < deadline) {
+        test_yield();
+    }
+    dcc_app_response_state_t final_state =
+        dcc_app_auto_defer_response_state(&state.ctx);
+    dcc_app_auto_defer_finish(&state.ctx);
+    dcc_status_t stop_status = dcc_client_stop(state.client);
+    int runtime_result = test_thread_join(&runtime_thread);
+    dcc_status_t destroy_status = dcc_app_destroy(state.app);
+    unsigned request_count = atomic_load_explicit(
+        &state.request_count,
+        memory_order_acquire
+    );
+    dcc_status_t handler_status = (dcc_status_t)atomic_load_explicit(
+        &state.handler_status,
+        memory_order_acquire
+    );
+    uint64_t elapsed_ms = atomic_load_explicit(
+        &state.handler_elapsed_ms,
+        memory_order_acquire
+    );
+    if (!handler_failed_fast || handler_result != 0 || runtime_result != 0 ||
+        handler_status != DCC_ERR_STATE || elapsed_ms >= 100U ||
+        request_count != 1U || final_state != DCC_APP_RESPONSE_DEFERRED ||
+        (stop_status != DCC_OK && stop_status != DCC_ERR_CANCELED) ||
+        destroy_status != DCC_OK) {
+        fprintf(
+            stderr,
+            "auto-defer CLAIMED race did not fail fast: fast=%d status=%d elapsed=%llu requests=%u state=%d\n",
+            handler_failed_fast,
+            handler_status,
+            (unsigned long long)elapsed_ms,
+            request_count,
+            final_state
+        );
+        return 1;
+    }
+    return 0;
+}
+
 int main(void) {
-    return test_detach_completion_precedes_listener_cleanup() != 0 ||
+    return test_auto_defer_claim_race_fails_fast() != 0 ||
+           test_detach_completion_precedes_listener_cleanup() != 0 ||
            test_concurrent_unlisten(CONCURRENT_ROUTE) != 0 ||
            test_concurrent_unlisten(CONCURRENT_EVENT) != 0 ||
            test_concurrent_unlisten(CONCURRENT_TASK) != 0 ||

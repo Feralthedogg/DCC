@@ -1,4 +1,5 @@
 #include "internal/rest/dcc_rest_capture_internal.h"
+#include "internal/rest/dcc_rest_error_observer_internal.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -45,16 +46,16 @@ void dcc_rest_forward_captured_response(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (cb == NULL || captured == NULL) {
+    if (captured == NULL) {
         return;
     }
-
-    dcc_rest_response_t response = {
-        .size = sizeof(response),
-        .status = captured->status,
-        .error = error,
-        .body = captured->body,
-        .body_len = captured->body_len,
-    };
-    cb(client, &response, user_data);
+    dcc_rest_deliver_terminal_callback_only(
+        client,
+        captured->status,
+        error,
+        captured->body,
+        captured->body_len,
+        cb,
+        user_data
+    );
 }

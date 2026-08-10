@@ -34,11 +34,12 @@ uint8_t dcc_flow_initial_sent(const dcc_interaction_flow_t *flow) {
     }
     const size_t field_offset = offsetof(
         dcc_interaction_flow_t,
-        initial_response_admitted
+        response_flags
     );
     if (flow->size >= field_offset &&
-        sizeof(flow->initial_response_admitted) <= flow->size - field_offset) {
-        return flow->initial_response_admitted != 0U ? 1U : 0U;
+        sizeof(flow->response_flags) <= flow->size - field_offset) {
+        return (flow->response_flags &
+            DCC_INTERACTION_FLOW_RESPONSE_INITIAL_ADMITTED) != 0U ? 1U : 0U;
     }
     return flow->state != DCC_INTERACTION_FLOW_READY ? 1U : 0U;
 }
@@ -54,11 +55,12 @@ dcc_status_t dcc_flow_mark_initial(
     if (status == DCC_OK) {
         const size_t field_offset = offsetof(
             dcc_interaction_flow_t,
-            initial_response_admitted
+            response_flags
         );
         if (flow->size >= field_offset &&
-            sizeof(flow->initial_response_admitted) <= flow->size - field_offset) {
-            flow->initial_response_admitted = 1U;
+            sizeof(flow->response_flags) <= flow->size - field_offset) {
+            flow->response_flags |=
+                DCC_INTERACTION_FLOW_RESPONSE_INITIAL_ADMITTED;
         }
         flow->state = state;
     } else {

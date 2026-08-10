@@ -8,6 +8,7 @@
 #include "internal/client/dcc_client_state_internal.h"
 #include "internal/events/dcc_event_state_internal.h"
 #include "internal/rest/dcc_rest_intercept_internal.h"
+#include "support/app_v2_error_lifetime_smoke.h"
 #include "support/http_smoke_server.h"
 
 #include <stdio.h>
@@ -128,6 +129,7 @@ typedef struct app_destroy_observer_state {
     dcc_status_t request_status;
     dcc_status_t destroy_status;
 } app_destroy_observer_state_t;
+
 #endif
 
 static void copy_error(error_seen_t *seen, const dcc_error_t *error) {
@@ -1310,6 +1312,7 @@ static void *app_destroy_main(void *user_data) {
     atomic_store_explicit(&state->destroy_finished, 1U, memory_order_release);
     return NULL;
 }
+
 #endif
 
 static void app_client_observer(dcc_client_t *client, const dcc_error_t *error, void *user_data) {
@@ -1661,6 +1664,7 @@ static int check_app_sink_destroy_wait(void) {
     }
     return 0;
 }
+
 #else
 static int check_app_sink_destroy_wait(void) {
     return 0;
@@ -1924,6 +1928,7 @@ int main(void) {
         check_rest_terminal_matrix() != 0 ||
         check_terminal_destroy_lifetime() != 0 ||
         check_terminal_nested_rest() != 0 ||
+        app_v2_error_lifetime_smoke() != 0 ||
         check_interceptor_transport_mapping() != 0 ||
         check_async_terminal_matrix() != 0 ||
         check_observer_reentrancy() != 0 ||

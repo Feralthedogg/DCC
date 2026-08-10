@@ -2238,6 +2238,7 @@ if(DCC_BUILD_TESTS)
     add_executable(
         dcc_app_v2_error_smoke
         tests/app_v2_error_smoke.c
+        tests/support/app_v2_error_lifetime_smoke.c
         tests/support/http_smoke_server.c
     )
     target_link_libraries(dcc_app_v2_error_smoke PRIVATE dcc::dcc)
@@ -2306,8 +2307,21 @@ if(DCC_BUILD_TESTS)
         tests/support/http_smoke_server.c
     )
     target_link_libraries(dcc_interaction_flow_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_interaction_flow_smoke)
     dcc_target_enable_sanitizers(dcc_interaction_flow_smoke)
     add_test(NAME dcc_interaction_flow_smoke COMMAND dcc_interaction_flow_smoke)
+
+    add_executable(
+        dcc_interaction_flow_layout_smoke
+        tests/interaction_flow_layout_smoke.cpp
+    )
+    target_compile_features(dcc_interaction_flow_layout_smoke PRIVATE cxx_std_17)
+    target_link_libraries(dcc_interaction_flow_layout_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_interaction_flow_layout_smoke)
+    add_test(
+        NAME dcc_interaction_flow_layout_smoke
+        COMMAND dcc_interaction_flow_layout_smoke
+    )
 
     add_executable(dcc_replay_smoke tests/replay_smoke.c)
     target_link_libraries(dcc_replay_smoke PRIVATE dcc::dcc)

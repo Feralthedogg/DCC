@@ -21,6 +21,10 @@ typedef dcc_status_t (*dcc_rest_intercept_fn)(
     void *intercept_user_data
 );
 
+/* Interceptors must invoke `cb`, when they invoke it at all, synchronously
+ * before returning. The delivery wrapper and callback user data are stack
+ * scoped to the intercepted request. */
+
 void dcc_rest_set_interceptor(
     dcc_client_t *client,
     dcc_rest_intercept_fn intercept,

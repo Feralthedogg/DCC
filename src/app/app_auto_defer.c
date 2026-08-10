@@ -128,10 +128,6 @@ dcc_status_t dcc_app_auto_defer_claim_initial(dcc_ctx_t *ctx, dcc_app_response_s
             &ctx->auto_defer->response_state,
             memory_order_acquire
         );
-        if (expected == DCC_APP_RESPONSE_CLAIMED) {
-            (void)llam_sleep_ns(UINT64_C(1000000));
-            continue;
-        }
         if (expected != DCC_APP_RESPONSE_READY &&
             (expected != DCC_APP_RESPONSE_FAILED ||
              dcc_ctx_initial_response_admitted(ctx))) {

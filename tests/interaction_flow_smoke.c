@@ -2,6 +2,8 @@
 
 #include <dcc/dcc.h>
 
+#include "internal/interaction_flow/dcc_interaction_flow_internal.h"
+
 #if defined(_WIN32)
 int main(void) {
     return 0;
@@ -15,18 +17,19 @@ int main(void) {
 #include <string.h>
 #include <unistd.h>
 
-#define DCC_FLOW_PRE_ADMISSION_END \
-    (offsetof(dcc_interaction_flow_t, auto_defer_ephemeral) + \
-        sizeof(((dcc_interaction_flow_t *)0)->auto_defer_ephemeral))
-#define DCC_FLOW_PRE_ADMISSION_SIZE \
-    ((DCC_FLOW_PRE_ADMISSION_END + _Alignof(dcc_interaction_flow_t) - 1U) / \
-        _Alignof(dcc_interaction_flow_t) * _Alignof(dcc_interaction_flow_t))
 _Static_assert(
-    sizeof(dcc_interaction_flow_t) == DCC_FLOW_PRE_ADMISSION_SIZE,
-    "initial admission tracking must preserve the previous flow ABI size"
+    offsetof(dcc_interaction_flow_t, response_flags) >= 56U,
+    "response flags must not reuse the historical 56-byte flow object"
 );
-#undef DCC_FLOW_PRE_ADMISSION_SIZE
-#undef DCC_FLOW_PRE_ADMISSION_END
+_Static_assert(
+    offsetof(dcc_interaction_flow_t, response_flags) +
+        sizeof(((dcc_interaction_flow_t *)0)->response_flags) > 56U,
+    "response flags must extend beyond the historical flow object"
+);
+_Static_assert(
+    sizeof(dcc_interaction_flow_t) > 56U,
+    "the current flow layout must honestly advertise its larger allocation"
+);
 
 typedef struct flow_seen {
     int called;
@@ -93,6 +96,24 @@ static dcc_status_t set_message(dcc_message_builder_t *message, const char *cont
 
 int main(void) {
     (void)signal(SIGPIPE, SIG_IGN);
+
+    struct historical_flow_storage {
+        _Alignas(dcc_interaction_flow_t) unsigned char bytes[56U];
+        unsigned char canary[16U];
+    } historical;
+    memset(&historical, 0xA5, sizeof(historical));
+    dcc_interaction_flow_t *historical_flow =
+        (dcc_interaction_flow_t *)(void *)historical.bytes;
+    historical_flow->size = sizeof(historical.bytes);
+    historical_flow->state = DCC_INTERACTION_FLOW_READY;
+    unsigned char expected_canary[sizeof(historical.canary)];
+    memcpy(expected_canary, historical.canary, sizeof(expected_canary));
+    if (dcc_flow_initial_sent(historical_flow) != 0U ||
+        dcc_flow_require_ready(historical_flow) != DCC_OK ||
+        memcmp(historical.canary, expected_canary, sizeof(expected_canary)) != 0) {
+        fprintf(stderr, "historical flow padding was mistaken for response state\n");
+        return 1;
+    }
 
     dcc_client_t *client = NULL;
     dcc_client_options_t opts = {

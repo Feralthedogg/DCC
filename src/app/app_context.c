@@ -452,7 +452,7 @@ static dcc_status_t dcc_ctx_flow_reply_auto(
                 DCC_APP_RESPONSE_REPLIED
             );
             if (status != DCC_OK) {
-                continue;
+                return status;
             }
             status = dcc_flow_reply(&ctx->flow, message, cb, user_data);
             dcc_app_auto_defer_mark_initial(

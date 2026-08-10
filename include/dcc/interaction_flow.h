@@ -33,9 +33,20 @@ typedef struct dcc_interaction_flow {
     uint64_t started_at_ms;
     uint64_t auto_defer_after_ms;
     uint8_t auto_defer_ephemeral;
-    uint8_t initial_response_admitted;
+    /* Reserved for layout stability; initialize with dcc_flow_init(). */
+    uint8_t reserved[7];
+    uint64_t response_flags;
 } dcc_interaction_flow_t;
 
+/**
+ * Initialize a current-layout flow object.
+ *
+ * This function clears and writes `sizeof(dcc_interaction_flow_t)`. Programs
+ * built against an older, smaller definition must be recompiled before using
+ * this DCC version. The `size` member lets current code inspect a manually
+ * supplied historical prefix safely; it cannot make an old binary allocation
+ * large enough for this initializer.
+ */
 DCC_API void dcc_flow_init(
     dcc_interaction_flow_t *flow,
     dcc_client_t *client,

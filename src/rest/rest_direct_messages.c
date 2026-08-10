@@ -1,10 +1,29 @@
 #include "internal/dcc_core_internal.h"
 #include "internal/rest/dcc_rest_capture_internal.h"
 #include "internal/rest/dcc_rest_direct_messages_internal.h"
+#include "internal/rest/dcc_rest_error_observer_internal.h"
 #include "internal/rest/dcc_rest_request_internal.h"
 
 #include <stdio.h>
 #include <string.h>
+
+static void dcc_rest_deliver_direct_message_failure(
+    dcc_client_t *client,
+    const dcc_rest_captured_response_t *captured,
+    dcc_status_t status,
+    dcc_rest_cb cb,
+    void *user_data
+) {
+    dcc_rest_terminal_completion_t completion = {
+        .operation = "create direct message",
+        .transport_status = status,
+        .http_status = captured != NULL ? captured->status : 0U,
+        .legacy_error = status,
+        .body = captured != NULL ? captured->body : NULL,
+        .body_len = captured != NULL ? captured->body_len : 0U,
+    };
+    dcc_rest_deliver_terminal(client, &completion, cb, user_data);
+}
 
 dcc_status_t dcc_rest_create_direct_message(
     dcc_client_t *client,
@@ -32,21 +51,81 @@ dcc_status_t dcc_rest_create_direct_message(
     memset(&captured, 0, sizeof(captured));
     dcc_status_t status = dcc_rest_create_dm_channel(client, create_body, dcc_rest_capture_cb, &captured);
     if (status != DCC_OK) {
+        if (captured.called && captured.status >= 200U &&
+            captured.status < 300U) {
+            dcc_rest_deliver_direct_message_failure(
+                client,
+                &captured,
+                status,
+                cb,
+                user_data
+            );
+        } else {
+            dcc_rest_forward_captured_response(
+                client,
+                &captured,
+                status,
+                cb,
+                user_data
+            );
+        }
         dcc_rest_captured_response_deinit(&captured);
         return status;
     }
     if (captured.copy_error != DCC_OK) {
+        if (captured.called &&
+            (captured.status < 200U || captured.status >= 300U)) {
+            dcc_rest_forward_captured_response(
+                client,
+                &captured,
+                captured.copy_error,
+                cb,
+                user_data
+            );
+        } else {
+            dcc_rest_deliver_direct_message_failure(
+                client,
+                &captured,
+                captured.copy_error,
+                cb,
+                user_data
+            );
+        }
+        status = captured.copy_error;
         dcc_rest_captured_response_deinit(&captured);
-        return captured.copy_error;
+        return status;
     }
     if (!captured.called) {
+        dcc_rest_deliver_direct_message_failure(
+            client,
+            &captured,
+            DCC_ERR_STATE,
+            cb,
+            user_data
+        );
         dcc_rest_captured_response_deinit(&captured);
         return DCC_ERR_STATE;
     }
 
     if (captured.error != DCC_OK || captured.status < 200U || captured.status >= 300U) {
         dcc_status_t response_error = captured.error != DCC_OK ? captured.error : DCC_ERR_DISCORD;
-        dcc_rest_forward_captured_response(client, &captured, response_error, cb, user_data);
+        if (captured.status >= 200U && captured.status < 300U) {
+            dcc_rest_deliver_direct_message_failure(
+                client,
+                &captured,
+                response_error,
+                cb,
+                user_data
+            );
+        } else {
+            dcc_rest_forward_captured_response(
+                client,
+                &captured,
+                response_error,
+                cb,
+                user_data
+            );
+        }
         dcc_rest_captured_response_deinit(&captured);
         return DCC_OK;
     }
@@ -54,7 +133,13 @@ dcc_status_t dcc_rest_create_direct_message(
     status = dcc_rest_parse_channel_id_from_json(captured.body, captured.body_len, &channel_id);
     if (status != DCC_OK) {
         dcc_set_error(client, dcc_status_string(status));
-        dcc_rest_forward_captured_response(client, &captured, status, cb, user_data);
+        dcc_rest_deliver_direct_message_failure(
+            client,
+            &captured,
+            status,
+            cb,
+            user_data
+        );
         dcc_rest_captured_response_deinit(&captured);
         return status;
     }

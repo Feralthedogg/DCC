@@ -275,3 +275,28 @@ void dcc_rest_deliver_terminal(
     }
     dcc_rest_terminal_leave(&terminal_frame);
 }
+
+void dcc_rest_deliver_terminal_callback_only(
+    dcc_client_t *client,
+    uint16_t http_status,
+    dcc_status_t legacy_error,
+    const char *body,
+    size_t body_len,
+    dcc_rest_cb callback,
+    void *callback_user_data
+) {
+    if (client == NULL || callback == NULL) {
+        return;
+    }
+    dcc_rest_terminal_frame_t terminal_frame;
+    dcc_rest_terminal_enter(&terminal_frame, client);
+    dcc_rest_response_t response = {
+        .size = sizeof(response),
+        .status = http_status,
+        .error = legacy_error,
+        .body = body,
+        .body_len = body_len,
+    };
+    callback(client, &response, callback_user_data);
+    dcc_rest_terminal_leave(&terminal_frame);
+}
