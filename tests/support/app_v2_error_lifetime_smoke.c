@@ -4,11 +4,13 @@
 #include <dcc/client.h>
 #include <dcc/error_details.h>
 #include <dcc/rest.h>
+#include <dcc/tasks.h>
 
 #include "internal/app/dcc_app_internal.h"
 #include "internal/client/dcc_client_state_internal.h"
 #include "internal/rest/dcc_rest_error_observer_internal.h"
 #include "internal/rest/dcc_rest_intercept_internal.h"
+#include "internal/rest/dcc_rest_rate_limit_internal.h"
 #include "internal/runtime/dcc_runtime_internal.h"
 #include "http_smoke_server.h"
 
@@ -380,6 +382,50 @@ typedef struct app_async_destroy_state {
     dcc_status_t destroy_status;
 } app_async_destroy_state_t;
 
+typedef enum app_managed_lifecycle_action {
+    APP_MANAGED_LIFECYCLE_DESTROY,
+    APP_MANAGED_LIFECYCLE_WAIT,
+} app_managed_lifecycle_action_t;
+
+typedef struct app_managed_lifecycle_snapshot {
+    void *state;
+    dcc_app_cleanup_fn state_cleanup;
+    dcc_app_listener_entry_t **listeners;
+    dcc_task_group_t *app_tasks;
+    size_t listener_count;
+    size_t schedule_count;
+    unsigned start_admission;
+    unsigned wait_admission;
+    uint32_t rest_operations_in_flight;
+    uint8_t tearing_down;
+    uint8_t task_reaping;
+    uint8_t app_started;
+    uint8_t rest_admission_closed;
+    uint8_t rest_terminal_closed;
+    uint8_t runtime_initialized;
+    uint8_t app_stopping;
+    uint8_t client_started;
+    uint8_t client_stopping;
+} app_managed_lifecycle_snapshot_t;
+
+typedef struct app_managed_lifecycle_control {
+    dcc_app_t *app;
+    dcc_client_t *client;
+    app_managed_lifecycle_action_t action;
+    app_managed_lifecycle_snapshot_t before;
+    app_managed_lifecycle_snapshot_t after;
+    atomic_uint returned;
+    atomic_uint cleanup_count;
+    dcc_status_t action_status;
+    uint64_t elapsed_ms;
+    uint8_t app_consumed;
+} app_managed_lifecycle_control_t;
+
+typedef struct app_managed_owner_wait {
+    dcc_app_t *app;
+    dcc_status_t status;
+} app_managed_owner_wait_t;
+
 static int wait_for_atomic_nonzero(atomic_uint *value, uint64_t timeout_ms) {
     uint64_t start = test_now_ms();
     while (atomic_load_explicit(value, memory_order_acquire) == 0U &&
@@ -421,6 +467,310 @@ static int wait_for_start_admission_close(
                 &client->start_admission,
                 memory_order_acquire
             ) & DCC_CLIENT_LIFECYCLE_ADMISSION_CLOSED) != 0U;
+}
+
+static app_managed_lifecycle_snapshot_t app_managed_lifecycle_snapshot(
+    dcc_app_t *app,
+    dcc_client_t *client
+) {
+    app_managed_lifecycle_snapshot_t snapshot;
+    memset(&snapshot, 0, sizeof(snapshot));
+    dcc_app_listener_lock(app);
+    snapshot.state = app->state;
+    snapshot.state_cleanup = app->state_cleanup;
+    snapshot.listeners = app->listeners;
+    snapshot.app_tasks = app->tasks;
+    snapshot.listener_count = app->listener_count;
+    snapshot.schedule_count = app->schedule_count;
+    snapshot.tearing_down = app->tearing_down;
+    snapshot.task_reaping = app->task_reaping;
+    snapshot.app_started = app->started;
+    dcc_app_listener_unlock(app);
+    snapshot.app_stopping = atomic_load_explicit(
+        &app->stopping,
+        memory_order_acquire
+    ) ? 1U : 0U;
+    snapshot.client_started = atomic_load_explicit(
+        &client->started,
+        memory_order_acquire
+    ) ? 1U : 0U;
+    snapshot.client_stopping = atomic_load_explicit(
+        &client->stopping,
+        memory_order_acquire
+    ) ? 1U : 0U;
+    snapshot.start_admission = atomic_load_explicit(
+        &client->start_admission,
+        memory_order_acquire
+    );
+    snapshot.wait_admission = atomic_load_explicit(
+        &client->wait_admission,
+        memory_order_acquire
+    );
+    snapshot.runtime_initialized = client->runtime.initialized;
+    dcc_rest_lock(client);
+    snapshot.rest_operations_in_flight = client->rest_operations_in_flight;
+    snapshot.rest_admission_closed = client->rest_admission_closed;
+    snapshot.rest_terminal_closed = client->rest_terminal_closed;
+    dcc_rest_unlock(client);
+    return snapshot;
+}
+
+static int app_managed_lifecycle_snapshot_equal(
+    const app_managed_lifecycle_snapshot_t *left,
+    const app_managed_lifecycle_snapshot_t *right
+) {
+    return left->state == right->state &&
+        left->state_cleanup == right->state_cleanup &&
+        left->listeners == right->listeners &&
+        left->app_tasks == right->app_tasks &&
+        left->listener_count == right->listener_count &&
+        left->schedule_count == right->schedule_count &&
+        left->start_admission == right->start_admission &&
+        left->wait_admission == right->wait_admission &&
+        left->rest_operations_in_flight == right->rest_operations_in_flight &&
+        left->tearing_down == right->tearing_down &&
+        left->task_reaping == right->task_reaping &&
+        left->app_started == right->app_started &&
+        left->rest_admission_closed == right->rest_admission_closed &&
+        left->rest_terminal_closed == right->rest_terminal_closed &&
+        left->runtime_initialized == right->runtime_initialized &&
+        left->app_stopping == right->app_stopping &&
+        left->client_started == right->client_started &&
+        left->client_stopping == right->client_stopping;
+}
+
+static dcc_status_t app_managed_lifecycle_noop_event(
+    dcc_app_t *app,
+    const dcc_event_t *event,
+    void *user_data
+) {
+    (void)app;
+    (void)event;
+    (void)user_data;
+    return DCC_OK;
+}
+
+static void app_managed_lifecycle_cleanup(void *user_data) {
+    app_managed_lifecycle_control_t *control =
+        (app_managed_lifecycle_control_t *)user_data;
+    if (control != NULL) {
+        atomic_fetch_add_explicit(
+            &control->cleanup_count,
+            1U,
+            memory_order_release
+        );
+    }
+}
+
+static void app_managed_lifecycle_task(void *user_data) {
+    app_managed_lifecycle_control_t *control =
+        (app_managed_lifecycle_control_t *)user_data;
+    if (control == NULL) {
+        return;
+    }
+    control->before = app_managed_lifecycle_snapshot(
+        control->app,
+        control->client
+    );
+    uint64_t started_ms = test_now_ms();
+    control->action_status = control->action == APP_MANAGED_LIFECYCLE_DESTROY
+        ? dcc_app_destroy(control->app)
+        : dcc_app_wait(control->app);
+    control->elapsed_ms = test_now_ms() - started_ms;
+    if (control->action_status == DCC_OK &&
+        control->action == APP_MANAGED_LIFECYCLE_DESTROY) {
+        control->app_consumed = 1U;
+    } else {
+        control->after = app_managed_lifecycle_snapshot(
+            control->app,
+            control->client
+        );
+    }
+    atomic_store_explicit(&control->returned, 1U, memory_order_release);
+}
+
+static void *app_managed_owner_wait_main(void *user_data) {
+    app_managed_owner_wait_t *wait =
+        (app_managed_owner_wait_t *)user_data;
+    wait->status = dcc_app_wait(wait->app);
+    return NULL;
+}
+
+static int run_app_managed_lifecycle_case(
+    app_managed_lifecycle_action_t action
+) {
+    dcc_app_options_t options;
+    dcc_app_options_init(&options);
+    options.client.token = "";
+    options.client.intents = DCC_INTENT_GUILDS;
+    dcc_app_t *app = NULL;
+    if (dcc_app_create(&options, &app) != DCC_OK) {
+        return 1;
+    }
+
+    app_managed_lifecycle_control_t control;
+    memset(&control, 0, sizeof(control));
+    control.app = app;
+    control.client = dcc_app_client(app);
+    control.action = action;
+    control.action_status = DCC_ERR_RUNTIME;
+    atomic_init(&control.returned, 0U);
+    atomic_init(&control.cleanup_count, 0U);
+
+    dcc_listener_t listener;
+    dcc_listener_init(&listener, DCC_LISTENER_EVENT);
+    listener.handler.event = app_managed_lifecycle_noop_event;
+    listener.user_data = &control;
+    listener.target.event.type = DCC_EVENT_LOG;
+    dcc_listener_id_t listener_id = 0U;
+    lifetime_intercept_t intercept = {
+        .transport_status = DCC_OK,
+        .http_status = 204U,
+        .legacy_error = DCC_OK,
+    };
+    if (dcc_app_set_state(
+            app,
+            &control,
+            app_managed_lifecycle_cleanup
+        ) != DCC_OK ||
+        dcc_app_listen(app, &listener, &listener_id) != DCC_OK ||
+        listener_id == 0U || app->listener_count != 1U) {
+        (void)dcc_app_destroy(app);
+        return 1;
+    }
+    dcc_rest_set_interceptor(control.client, lifetime_intercept, &intercept);
+    if (dcc_app_start(app) != DCC_OK) {
+        (void)dcc_app_destroy(app);
+        return 1;
+    }
+
+    dcc_task_group_t *group = NULL;
+    if (dcc_task_group_create(control.client, &group) != DCC_OK ||
+        group == NULL ||
+        dcc_task_group_spawn(
+            group,
+            app_managed_lifecycle_task,
+            &control,
+            NULL
+        ) != DCC_OK) {
+        (void)dcc_task_group_destroy(group);
+        (void)dcc_app_stop(app);
+        (void)dcc_app_wait(app);
+        (void)dcc_app_destroy(app);
+        return 1;
+    }
+
+    app_managed_owner_wait_t owner_wait = {
+        .app = app,
+        .status = DCC_ERR_RUNTIME,
+    };
+    pthread_t wait_thread;
+    if (pthread_create(
+            &wait_thread,
+            NULL,
+            app_managed_owner_wait_main,
+            &owner_wait
+        ) != 0) {
+        (void)dcc_app_stop(app);
+        (void)dcc_app_wait(app);
+        (void)dcc_task_group_wait(group, 2000U);
+        (void)dcc_task_group_destroy(group);
+        (void)dcc_app_destroy(app);
+        return 1;
+    }
+
+    if (!wait_for_atomic_nonzero(&control.returned, 3000U)) {
+        fprintf(
+            stderr,
+            "managed App %s did not fail fast\n",
+            action == APP_MANAGED_LIFECYCLE_DESTROY ? "destroy" : "wait"
+        );
+        fflush(stderr);
+        _Exit(124);
+    }
+    if (control.app_consumed) {
+        fprintf(stderr, "managed App destroy consumed the application\n");
+        fflush(stderr);
+        _Exit(1);
+    }
+
+    int snapshot_unchanged = app_managed_lifecycle_snapshot_equal(
+        &control.before,
+        &control.after
+    );
+    dcc_status_t rest_status = dcc_rest_request(
+        control.client,
+        "GET",
+        action == APP_MANAGED_LIFECYCLE_DESTROY
+            ? "/app/owner-after-managed-destroy"
+            : "/app/owner-after-managed-wait",
+        NULL,
+        NULL,
+        NULL
+    );
+    dcc_status_t stop_status = dcc_app_stop(app);
+    int wait_join = pthread_join(wait_thread, NULL);
+    dcc_task_group_wait_result_t result = {
+        .size = sizeof(result),
+    };
+    dcc_status_t group_wait_status = dcc_task_group_wait_result(
+        group,
+        2000U,
+        &result
+    );
+    dcc_status_t group_destroy_status = dcc_task_group_destroy(group);
+    dcc_status_t destroy_status = dcc_app_destroy(app);
+    unsigned cleanup_count = atomic_load_explicit(
+        &control.cleanup_count,
+        memory_order_acquire
+    );
+
+    if (control.action_status != DCC_ERR_STATE || control.elapsed_ms >= 100U ||
+        !snapshot_unchanged || rest_status != DCC_OK ||
+        stop_status != DCC_OK || wait_join != 0 ||
+        owner_wait.status != DCC_OK || group_wait_status != DCC_OK ||
+        result.task_count != 1U || result.completed_count != 1U ||
+        result.pending_count != 0U || result.first_completed_index != 0U ||
+        result.last_completed_index != 0U || result.cancel_requested != 0U ||
+        group_destroy_status != DCC_OK || destroy_status != DCC_OK ||
+        cleanup_count != 1U || intercept.request_count != 1U ||
+        intercept.callback_count != 1U) {
+        fprintf(
+            stderr,
+            "managed App %s contract failed: action=%d elapsed=%llu "
+            "unchanged=%d rest=%d stop=%d owner_wait=%d join=%d group=%d/%d "
+            "tasks=%zu/%zu/%zu destroy=%d cleanup=%u requests=%u/%u\n",
+            action == APP_MANAGED_LIFECYCLE_DESTROY ? "destroy" : "wait",
+            (int)control.action_status,
+            (unsigned long long)control.elapsed_ms,
+            snapshot_unchanged,
+            (int)rest_status,
+            (int)stop_status,
+            (int)owner_wait.status,
+            wait_join,
+            (int)group_wait_status,
+            (int)group_destroy_status,
+            result.task_count,
+            result.completed_count,
+            result.pending_count,
+            (int)destroy_status,
+            cleanup_count,
+            intercept.request_count,
+            intercept.callback_count
+        );
+        return 1;
+    }
+    return 0;
+}
+
+static int check_app_managed_lifecycle_rejected(void) {
+    int wait_failed = run_app_managed_lifecycle_case(
+        APP_MANAGED_LIFECYCLE_WAIT
+    );
+    int destroy_failed = run_app_managed_lifecycle_case(
+        APP_MANAGED_LIFECYCLE_DESTROY
+    );
+    return wait_failed || destroy_failed;
 }
 
 static void app_success_owned_cleanup(void *user_data) {
@@ -1212,6 +1562,10 @@ static int check_app_destroy_closes_rest_admission(void) {
     return 0;
 }
 
+static int check_app_managed_lifecycle_rejected(void) {
+    return 0;
+}
+
 static int check_app_destroy_closes_rest_before_start_drain(void) {
     return 0;
 }
@@ -1223,6 +1577,7 @@ static int check_app_async_terminals_precede_owned_cleanup(void) {
 
 int app_v2_error_lifetime_smoke(void) {
     return check_managed_destroy_defers_to_owner() ||
+        check_app_managed_lifecycle_rejected() ||
         check_app_success_callback_destroy_wait() ||
         check_app_destroy_closes_rest_before_start_drain() ||
         check_app_destroy_closes_rest_admission() ||

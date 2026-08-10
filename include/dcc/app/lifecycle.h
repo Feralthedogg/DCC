@@ -16,10 +16,11 @@ DCC_API dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t 
 /**
  * Stops and destroys an application; null is accepted.
  *
- * Returns `DCC_ERR_STATE` without mutation when called from an App-owned
- * callback, cleanup, or any REST terminal callback running on the App's
- * client. Callbacks should request `dcc_app_stop()` and let the owner destroy
- * the application after dispatch returns.
+ * Returns `DCC_ERR_STATE` without mutation when called from any managed LLAM
+ * task, an App-owned callback or cleanup, or any REST terminal callback
+ * running on the App's client. Such callers should request `dcc_app_stop()`
+ * and let the owning unmanaged thread destroy the application after the task
+ * or callback returns.
  *
  * `DCC_OK` means the application was consumed. Any non-OK result leaves the
  * application alive and owned by the caller so destruction may be retried.
@@ -43,8 +44,9 @@ DCC_API dcc_status_t dcc_app_stop(dcc_app_t *app);
 
 /**
  * Waits for a started application to stop and reaps schedule workers.
- * Returns `DCC_ERR_STATE` without mutation from an App-owned callback or any
- * REST terminal callback running on the App's client.
+ * Returns `DCC_ERR_STATE` without mutation from any managed LLAM task, an
+ * App-owned callback, or any REST terminal callback running on the App's
+ * client. The owning unmanaged thread must perform the wait.
  */
 DCC_API dcc_status_t dcc_app_wait(dcc_app_t *app);
 
