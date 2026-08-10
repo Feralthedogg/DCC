@@ -183,9 +183,16 @@ static int check_error_handler_sugar(void) {
         return 1;
     }
 
-    sugar_status_friendly_error(NULL, DCC_ERR_INVALID_ARG, NULL, NULL);
-    sugar_status_simple_error(NULL, DCC_ERR_STATE, "custom", NULL);
-    sugar_status_verbose_error(NULL, DCC_OK, NULL, NULL);
+    dcc_error_t error = {
+        .size = sizeof(error),
+        .version = DCC_ERROR_VERSION,
+        .origin = DCC_ERROR_HANDLER,
+        .status = DCC_ERR_STATE,
+        .message = "custom",
+    };
+    sugar_status_friendly_error(NULL, &error, NULL);
+    sugar_status_simple_error(NULL, &error, NULL);
+    sugar_status_verbose_error(NULL, &error, NULL);
     return 0;
 }
 

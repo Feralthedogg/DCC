@@ -3,6 +3,7 @@
 #include "internal/rest/dcc_rest_async_worker_task_internal.h"
 #include "internal/rest/dcc_rest_capture_internal.h"
 #include "internal/rest/dcc_rest_config_internal.h"
+#include "internal/rest/dcc_rest_error_observer_internal.h"
 #include "internal/rest/dcc_rest_request_raw_internal.h"
 
 #include <string.h>
@@ -34,7 +35,8 @@ void dcc_rest_async_worker_task(void *arg) {
             &captured,
             dcc_rest_async_request_canceled,
             dcc_rest_async_request_swap_fd,
-            request
+            request,
+            0
         );
     }
 
@@ -56,19 +58,22 @@ void dcc_rest_async_worker_task(void *arg) {
         status = DCC_ERR_CANCELED;
     }
 
-    if (status == DCC_OK && captured.called && !request->callback_called && request->cb != NULL) {
-        request->callback_called = 1;
-        dcc_rest_forward_captured_response(client, &captured, captured.error, request->cb, request->user_data);
-    } else if (status != DCC_OK && !request->callback_called && request->cb != NULL) {
-        dcc_rest_response_t response = {
-            .size = sizeof(response),
-            .status = 0,
-            .error = status,
-            .body = NULL,
-            .body_len = 0,
+    if (!request->callback_called && (status != DCC_OK || captured.called)) {
+        dcc_rest_terminal_completion_t completion = {
+            .operation = request->path,
+            .transport_status = status,
+            .http_status = status == DCC_OK ? captured.status : 0U,
+            .legacy_error = status == DCC_OK ? captured.error : status,
+            .body = status == DCC_OK ? captured.body : NULL,
+            .body_len = status == DCC_OK ? captured.body_len : 0U,
         };
         request->callback_called = 1;
-        request->cb(client, &response, request->user_data);
+        dcc_rest_deliver_terminal(
+            client,
+            &completion,
+            request->cb,
+            request->user_data
+        );
     }
 
     (void)atomic_exchange_explicit(&request->active_fd, LLAM_INVALID_FD, memory_order_acq_rel);

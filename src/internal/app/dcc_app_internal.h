@@ -139,6 +139,7 @@ struct dcc_app {
     dcc_status_t task_reap_status;
     dcc_app_error_fn error_handler;
     void *error_user_data;
+    uint8_t default_error_responses;
     void *state;
     dcc_app_cleanup_fn state_cleanup;
     dcc_app_command_sync_options_t command_sync_options;
@@ -313,6 +314,16 @@ dcc_status_t dcc_app_add_canonical_schedule(
     dcc_app_schedule_t **out_schedule
 );
 void dcc_app_cancel_canonical_schedule(dcc_app_t *app, dcc_app_schedule_t *schedule);
+dcc_status_t dcc_app_attach_error_sink(dcc_app_t *app);
+void dcc_app_detach_error_sink(dcc_app_t *app);
+void dcc_app_notify_error(dcc_app_t *app, const dcc_error_t *error);
+dcc_status_t dcc_app_report_handler_error(
+    dcc_app_t *app,
+    dcc_ctx_t *ctx,
+    dcc_status_t status,
+    const char *operation,
+    const char *message
+);
 
 #ifdef __cplusplus
 }

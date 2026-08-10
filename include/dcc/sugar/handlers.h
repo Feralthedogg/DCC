@@ -249,9 +249,9 @@
 #define DCC_CHECK_FN(name_) static dcc_status_t name_(dcc_ctx_t *ctx, void *user_data)
 #define DCC_PUBLIC_CHECK_FN(name_) dcc_status_t name_(dcc_ctx_t *ctx, void *user_data)
 #define DCC_ERROR_FN(name_) \
-    static void name_(dcc_ctx_t *ctx, dcc_status_t status, const char *message, void *user_data)
+    static void name_(dcc_app_t *app, const dcc_error_t *error, void *user_data)
 #define DCC_PUBLIC_ERROR_FN(name_) \
-    void name_(dcc_ctx_t *ctx, dcc_status_t status, const char *message, void *user_data)
+    void name_(dcc_app_t *app, const dcc_error_t *error, void *user_data)
 
 #define DCC_EVENT_FN(name_) \
     static void name_(dcc_app_t *app, const dcc_event_t *event, void *user_data)

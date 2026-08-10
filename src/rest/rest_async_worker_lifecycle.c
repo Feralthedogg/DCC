@@ -1,4 +1,5 @@
 #include "internal/rest/dcc_rest_async_drain_internal.h"
+#include "internal/rest/dcc_rest_async_cancel_internal.h"
 #include "internal/rest/dcc_rest_async_signal_internal.h"
 #include "internal/rest/dcc_rest_async_worker_lifecycle_internal.h"
 #include "internal/rest/dcc_rest_config_internal.h"
@@ -21,13 +22,15 @@ void dcc_rest_async_complete(dcc_rest_async_request_t *request) {
         return;
     }
 
+    dcc_rest_async_request_t *pending = NULL;
     dcc_rest_lock(client);
     dcc_rest_async_finish_active_locked(client, request);
     if (atomic_load_explicit(&client->stopping, memory_order_acquire)) {
-        dcc_rest_async_pending_free_all(client);
+        pending = dcc_rest_async_detach_pending_all_locked(client);
     } else {
         (void)dcc_rest_async_drain_locked(client);
     }
     dcc_rest_unlock(client);
     dcc_rest_async_signal(client);
+    (void)dcc_rest_async_cancel_pending_list(client, pending);
 }

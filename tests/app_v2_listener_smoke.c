@@ -83,18 +83,19 @@ static dcc_status_t failing_task_handler(dcc_app_t *app, void *user_data) {
 }
 
 static void on_error(
-    dcc_ctx_t *ctx,
-    dcc_status_t status,
-    const char *message,
+    dcc_app_t *app,
+    const dcc_error_t *error,
     void *user_data
 ) {
     listener_smoke_state_t *state = (listener_smoke_state_t *)user_data;
-    if (ctx == NULL || state == NULL || dcc_ctx_user_data(ctx) != state ||
-        message == NULL || message[0] == '\0') {
+    if (app == NULL || state == NULL || error == NULL ||
+        error->size != sizeof(*error) || error->version != DCC_ERROR_VERSION ||
+        error->origin != DCC_ERROR_HANDLER || error->message == NULL ||
+        error->message[0] == '\0') {
         return;
     }
     state->error_count++;
-    state->error_status = status;
+    state->error_status = error->status;
 }
 
 static void cleanup_listener(void *user_data) {

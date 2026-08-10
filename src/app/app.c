@@ -167,6 +167,16 @@ dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out) {
         }
     }
 
+    status = dcc_app_attach_error_sink(app);
+    if (status != DCC_OK) {
+        dcc_client_destroy(app->client);
+        dcc_app_store_close(app);
+        dcc_command_registry_deinit(&app->registry);
+        dcc_app_listener_sync_deinit(app);
+        free(app);
+        return status;
+    }
+
     *out = app;
     return DCC_OK;
 }
@@ -186,6 +196,9 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     dcc_app_listener_lock(app);
     app->tearing_down = 1U;
     dcc_app_listener_unlock(app);
+    /* Stop new App-owned REST delivery and wait for any sink callback that was
+     * already copied before reclaiming listeners or observer user data. */
+    dcc_app_detach_error_sink(app);
     dcc_app_listener_destroy_all(app);
     for (size_t i = 0; i < app->component_session_listener_count; ++i) {
         if (app->component_session_listeners[i].listener.state != NULL) {

@@ -323,6 +323,21 @@ static int dcc_app_event_uses_interaction_name(dcc_event_type_t type) {
            type == DCC_EVENT_MESSAGE_CONTEXT_MENU;
 }
 
+static const char *dcc_app_interaction_operation(
+    const dcc_event_t *event,
+    const dcc_interaction_t *interaction
+) {
+    if (interaction != NULL) {
+        if (interaction->name != NULL && interaction->name[0] != '\0') {
+            return interaction->name;
+        }
+        if (interaction->custom_id != NULL && interaction->custom_id[0] != '\0') {
+            return interaction->custom_id;
+        }
+    }
+    return event != NULL ? dcc_event_type_name(dcc_event_type(event)) : "interaction handler";
+}
+
 dcc_status_t dcc_app_route_use_internal(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
@@ -459,9 +474,13 @@ dcc_status_t dcc_app_dispatch_handler(
         status = dcc_app_run_middlewares(&ctx, route_middlewares, route_middleware_count);
     }
     if (status != DCC_OK) {
-        if (app->error_handler != NULL) {
-            app->error_handler(&ctx, status, dcc_status_string(status), app->error_user_data);
-        }
+        (void)dcc_app_report_handler_error(
+            app,
+            &ctx,
+            status,
+            dcc_app_interaction_operation(event, interaction),
+            dcc_status_string(status)
+        );
         dcc_app_auto_defer_finish(&ctx);
         free(app_middlewares);
         dcc_app_callback_frame_leave(&callback_frame);
@@ -522,7 +541,13 @@ dcc_status_t dcc_app_dispatch_canonical_handler(
         status = handler(&ctx, user_data);
     }
     if (status != DCC_OK) {
-        (void)dcc_ctx_handle_error(&ctx, status, dcc_status_string(status));
+        (void)dcc_app_report_handler_error(
+            app,
+            &ctx,
+            status,
+            dcc_app_interaction_operation(event, interaction),
+            dcc_status_string(status)
+        );
     }
     dcc_app_auto_defer_finish(&ctx);
     free(app_middlewares);

@@ -5,6 +5,7 @@
 #include <dcc/export.h>
 #include <dcc/message.h>
 #include <dcc/error.h>
+#include <dcc/error_details.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,22 +37,39 @@ typedef dcc_status_t (*dcc_app_middleware_fn)(dcc_ctx_t *ctx, void *user_data);
 typedef dcc_status_t (*dcc_app_check_fn)(dcc_ctx_t *ctx, void *user_data);
 typedef dcc_status_t (*dcc_app_module_setup_fn)(dcc_app_t *app, void *user_data);
 
-/* Temporary DCC 1-style observer; Task 3 replaces it with structured errors. */
+/**
+ * Receives one borrowed structured App error.
+ *
+ * The view and all pointed-to data remain valid only until the callback
+ * returns. Replacing or clearing an observer does not revoke a callback that
+ * another thread already copied, so old user data must outlive in-flight
+ * calls. The observer may clear or replace itself. App destruction from this
+ * callback is rejected; request stop and destroy from an owner thread.
+ */
 typedef void (*dcc_app_error_fn)(
-    dcc_ctx_t *ctx,
-    dcc_status_t status,
-    const char *message,
+    dcc_app_t *app,
+    const dcc_error_t *error,
     void *user_data
 );
 
-/** Installs the temporary application error observer. */
+/**
+ * Installs or clears the App structured error observer.
+ *
+ * `(NULL, NULL)` clears the observer. A NULL callback with non-NULL user data
+ * is invalid. Telemetry registration is independent from default responses.
+ */
 DCC_API dcc_status_t dcc_app_on_error(
     dcc_app_t *app,
     dcc_app_error_fn handler,
     void *user_data
 );
 
-/** Installs the default temporary interaction error observer. */
+/**
+ * Enables the safe default interaction failure response policy.
+ *
+ * Before a response starts, handler failure queues one fixed generic
+ * ephemeral reply. It never exposes handler, Discord, body, or token details.
+ */
 DCC_API dcc_status_t dcc_app_use_default_error_responses(dcc_app_t *app);
 
 #ifdef __cplusplus

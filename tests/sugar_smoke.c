@@ -69,22 +69,26 @@ typedef struct sugar_error_state {
     uint32_t count;
     uint8_t after_try;
     dcc_status_t status;
-    const char *message;
+    char message[128];
 } sugar_error_state_t;
 
 static void sugar_error_handler(
-    dcc_ctx_t *ctx,
-    dcc_status_t status,
-    const char *message,
+    dcc_app_t *app,
+    const dcc_error_t *error,
     void *user_data
 ) {
     sugar_error_state_t *state = (sugar_error_state_t *)user_data;
-    if (ctx == NULL || state == NULL) {
+    if (app == NULL || error == NULL || state == NULL) {
         return;
     }
     state->count++;
-    state->status = status;
-    state->message = message;
+    state->status = error->status;
+    snprintf(
+        state->message,
+        sizeof(state->message),
+        "%s",
+        error->message != NULL ? error->message : ""
+    );
 }
 
 static dcc_status_t sugar_status_ok(void) {

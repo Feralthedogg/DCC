@@ -8,6 +8,7 @@
 #include <dcc/message.h>
 #include <dcc/modal.h>
 #include <dcc/objects.h>
+#include <dcc/rest/result.h>
 #include <dcc/snowflake.h>
 #include <stddef.h>
 #include <stdint.h>

@@ -41,8 +41,12 @@ static size_t http_smoke_parse_content_length(const char *request, const char *h
 
 static void *http_server_main(void *arg) {
     http_server_t *server = (http_server_t *)arg;
-    int request_total =
-        server->chunked == 2 || server->chunked == 4 || server->chunked == 5 || server->chunked == 7 ? 2 : 1;
+    int request_total = server->chunked == 8
+        ? 4
+        : server->chunked == 2 || server->chunked == 4 ||
+                server->chunked == 5 || server->chunked == 7
+            ? 2
+            : 1;
 
     for (int request_index = 0; request_index < request_total; ++request_index) {
         int client = accept(server->fd, NULL, NULL);
@@ -193,6 +197,17 @@ static void *http_server_main(void *arg) {
                 "Connection: close\r\n"
                 "\r\n"
                 "{\"message\":\"unauthorized\"}";
+            (void)write(client, response, sizeof(response) - 1);
+        } else if (server->chunked == 8) {
+            const char response[] =
+                "HTTP/1.1 429 Too Many Requests\r\n"
+                "Content-Type: application/json\r\n"
+                "Retry-After: 0.001\r\n"
+                "X-RateLimit-Bucket: terminal-rate-limit\r\n"
+                "Content-Length: 39\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "{\"code\":20028,\"message\":\"rate limited\"}";
             (void)write(client, response, sizeof(response) - 1);
         } else if (server->chunked == 7 && request_index == 0) {
             const char response[] =

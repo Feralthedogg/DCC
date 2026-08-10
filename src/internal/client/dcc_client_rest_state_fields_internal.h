@@ -4,6 +4,8 @@
 #include "internal/rest/dcc_rest_intercept_internal.h"
 #include "internal/rest/dcc_rest_state_internal.h"
 
+#include <dcc/client.h>
+
 #include <stdatomic.h>
 #include <stdint.h>
 #if !defined(_WIN32)
@@ -23,6 +25,12 @@ struct dcc_rest_firewall_state;
 
 #define DCC_CLIENT_REST_STATE_FIELDS \
     atomic_flag rest_lock; \
+    atomic_flag rest_error_observer_lock; \
+    dcc_client_error_fn rest_error_observer; \
+    void *rest_error_observer_user_data; \
+    dcc_client_error_fn rest_app_error_sink; \
+    void *rest_app_error_sink_user_data; \
+    atomic_uint rest_app_error_sink_in_flight; \
     dcc_rest_intercept_fn rest_intercept; \
     void *rest_intercept_user_data; \
     struct dcc_rest_firewall_state *rest_firewall; \

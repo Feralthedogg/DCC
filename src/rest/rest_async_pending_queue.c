@@ -36,12 +36,3 @@ dcc_rest_async_request_t *dcc_rest_async_detach_pending_all_locked(dcc_client_t 
 
     return head;
 }
-
-void dcc_rest_async_pending_free_all(dcc_client_t *client) {
-    dcc_rest_async_request_t *request = dcc_rest_async_detach_pending_all_locked(client);
-    while (request != NULL) {
-        dcc_rest_async_request_t *next = request->next;
-        dcc_rest_async_request_free(request);
-        request = next;
-    }
-}

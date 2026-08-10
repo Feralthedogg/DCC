@@ -898,10 +898,10 @@ static void on_typed_select(dcc_ctx_t *ctx, void *args, void *user_data) {
     }
 }
 
-static void on_error(dcc_ctx_t *ctx, dcc_status_t status, const char *message, void *user_data) {
+static void on_error(dcc_app_t *app, const dcc_error_t *error, void *user_data) {
     app_smoke_state_t *state = (app_smoke_state_t *)user_data;
     state->error_count++;
-    if (ctx == NULL || status != DCC_ERR_STATE || message == NULL || message[0] == '\0') {
+    if (app == NULL || error == NULL || error->size != sizeof(*error) || error->version != DCC_ERROR_VERSION || error->origin != DCC_ERROR_HANDLER || error->status != DCC_ERR_STATE || error->message == NULL || error->message[0] == '\0') {
         state->bad = 1U;
     }
 }

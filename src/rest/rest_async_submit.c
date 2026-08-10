@@ -5,6 +5,7 @@
 #include "internal/rest/dcc_rest_async_signal_internal.h"
 #include "internal/rest/dcc_rest_intercept_internal.h"
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
+#include "internal/rest/dcc_rest_request_raw_internal.h"
 
 #include <string.h>
 
@@ -17,16 +18,21 @@ static dcc_status_t dcc_rest_async_intercept(
     void *user_data
 ) {
     size_t body_len = body != NULL ? strlen(body) : 0U;
-    return client->rest_intercept(
+    return dcc_rest_request_raw_impl(
         client,
         method,
         path,
         body,
         body_len,
         body_len != 0U ? "application/json" : NULL,
+        0U,
+        0,
         cb,
         user_data,
-        client->rest_intercept_user_data
+        NULL,
+        NULL,
+        NULL,
+        1
     );
 }
 

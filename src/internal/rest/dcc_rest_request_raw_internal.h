@@ -80,7 +80,8 @@ dcc_status_t dcc_rest_request_raw_impl(
     void *user_data,
     int (*is_canceled)(void *user_data),
     llam_fd_t (*swap_fd)(void *user_data, llam_fd_t fd),
-    void *cancel_user_data
+    void *cancel_user_data,
+    int observe_terminal
 );
 
 #ifdef __cplusplus

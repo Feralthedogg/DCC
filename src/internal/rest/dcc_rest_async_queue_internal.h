@@ -27,7 +27,6 @@ void dcc_rest_async_push_head_locked(dcc_client_t *client, dcc_rest_async_reques
 dcc_rest_async_request_t *dcc_rest_async_take_next_locked(dcc_client_t *client);
 size_t dcc_rest_async_pending_count_locked(const dcc_client_t *client);
 dcc_rest_async_request_t *dcc_rest_async_detach_pending_all_locked(dcc_client_t *client);
-void dcc_rest_async_pending_free_all(dcc_client_t *client);
 
 #ifdef __cplusplus
 }

@@ -139,40 +139,50 @@ static inline const char *dcc_sugar_friendly_error_description(dcc_status_t stat
 #define DCC_CTX_REPLY_SIMPLE_APP_ERROR(ctx_, status_, message_) \
     dcc_ctx_reply_error((ctx_), "Action failed", DCC_SIMPLE_ERROR_DESCRIPTION((status_), (message_)), NULL, NULL)
 
+/* Structured observers no longer receive an interaction context. These
+ * transition helpers provide observer-shaped telemetry stubs; pair them with
+ * DCC_APP_DEFAULT_ERRORS() or dcc_app_use_default_error_responses() for the
+ * safe fixed end-user response policy. */
 #define DCC_FRIENDLY_ERROR_FN(name_) \
     DCC_ERROR_FN(name_) { \
+        (void)app; \
+        (void)error; \
         (void)user_data; \
-        (void)DCC_CTX_REPLY_APP_ERROR(ctx, status, message); \
     }
 
 #define DCC_PUBLIC_FRIENDLY_ERROR_FN(name_) \
     DCC_PUBLIC_ERROR_FN(name_) { \
+        (void)app; \
+        (void)error; \
         (void)user_data; \
-        (void)DCC_CTX_REPLY_APP_ERROR(ctx, status, message); \
     }
 
 #define DCC_SIMPLE_ERROR_FN(name_) \
     DCC_ERROR_FN(name_) { \
-        (void)DCC_CTX_REPLY_SIMPLE_APP_ERROR(ctx, status, message); \
+        (void)app; \
+        (void)error; \
         (void)user_data; \
     }
 
 #define DCC_PUBLIC_SIMPLE_ERROR_FN(name_) \
     DCC_PUBLIC_ERROR_FN(name_) { \
-        (void)DCC_CTX_REPLY_SIMPLE_APP_ERROR(ctx, status, message); \
+        (void)app; \
+        (void)error; \
         (void)user_data; \
     }
 
 #define DCC_VERBOSE_ERROR_FN(name_) \
     DCC_ERROR_FN(name_) { \
+        (void)app; \
+        (void)error; \
         (void)user_data; \
-        (void)DCC_CTX_REPLY_VERBOSE_APP_ERROR(ctx, status, message); \
     }
 
 #define DCC_PUBLIC_VERBOSE_ERROR_FN(name_) \
     DCC_PUBLIC_ERROR_FN(name_) { \
+        (void)app; \
+        (void)error; \
         (void)user_data; \
-        (void)DCC_CTX_REPLY_VERBOSE_APP_ERROR(ctx, status, message); \
     }
 
 #define DCC_REPLY_SAFE(ctx_, content_) \

@@ -1,8 +1,46 @@
 #include "internal/dcc_core_internal.h"
 #include "internal/rest/dcc_rest_firewall_internal.h"
+#include "internal/rest/dcc_rest_error_observer_internal.h"
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
 #include "internal/rest/dcc_rest_request_internal.h"
 #include "internal/rest/dcc_rest_runtime_internal.h"
+
+#include <stdint.h>
+
+typedef struct dcc_rest_intercept_delivery {
+    dcc_client_t *client;
+    const char *operation;
+    dcc_rest_cb callback;
+    void *callback_user_data;
+    uint8_t called;
+} dcc_rest_intercept_delivery_t;
+
+static void dcc_rest_intercept_delivery_cb(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    dcc_rest_intercept_delivery_t *delivery =
+        (dcc_rest_intercept_delivery_t *)user_data;
+    if (delivery == NULL || response == NULL || delivery->called) {
+        return;
+    }
+    delivery->called = 1U;
+    dcc_rest_terminal_completion_t completion = {
+        .operation = delivery->operation,
+        .transport_status = DCC_OK,
+        .http_status = response->status,
+        .legacy_error = response->error,
+        .body = response->body,
+        .body_len = response->body_len,
+    };
+    dcc_rest_deliver_terminal(
+        client != NULL ? client : delivery->client,
+        &completion,
+        delivery->callback,
+        delivery->callback_user_data
+    );
+}
 
 dcc_status_t dcc_rest_request_raw_impl(
     dcc_client_t *client,
@@ -17,24 +55,53 @@ dcc_status_t dcc_rest_request_raw_impl(
     void *user_data,
     int (*is_canceled)(void *user_data),
     llam_fd_t (*swap_fd)(void *user_data, llam_fd_t fd),
-    void *cancel_user_data
+    void *cancel_user_data,
+    int observe_terminal
 ) {
     if (client == NULL || method == NULL || path == NULL || (body_len != 0 && body == NULL)) {
         return DCC_ERR_INVALID_ARG;
     }
 
     if (client->rest_intercept != NULL) {
-        return client->rest_intercept(
+        if (!observe_terminal) {
+            return client->rest_intercept(
+                client,
+                method,
+                path,
+                body,
+                body_len,
+                content_type,
+                cb,
+                user_data,
+                client->rest_intercept_user_data
+            );
+        }
+        dcc_rest_intercept_delivery_t delivery = {
+            .client = client,
+            .operation = path,
+            .callback = cb,
+            .callback_user_data = user_data,
+        };
+        dcc_status_t intercept_status = client->rest_intercept(
             client,
             method,
             path,
             body,
             body_len,
             content_type,
-            cb,
-            user_data,
+            dcc_rest_intercept_delivery_cb,
+            &delivery,
             client->rest_intercept_user_data
         );
+        if (intercept_status != DCC_OK && !delivery.called) {
+            dcc_rest_terminal_completion_t completion = {
+                .operation = path,
+                .transport_status = intercept_status,
+                .legacy_error = intercept_status,
+            };
+            dcc_rest_deliver_terminal(client, &completion, NULL, NULL);
+        }
+        return intercept_status;
     }
 
     char route[DCC_REST_ROUTE_KEY_CAP];
@@ -73,6 +140,14 @@ dcc_status_t dcc_rest_request_raw_impl(
         if (st != DCC_OK) {
             dcc_rest_prepared_request_deinit(&prepared);
             dcc_set_error(client, dcc_status_string(st));
+            if (observe_terminal) {
+                dcc_rest_terminal_completion_t completion = {
+                    .operation = path,
+                    .transport_status = st,
+                    .legacy_error = st,
+                };
+                dcc_rest_deliver_terminal(client, &completion, NULL, NULL);
+            }
             return st;
         }
 
@@ -89,12 +164,26 @@ dcc_status_t dcc_rest_request_raw_impl(
             dcc_set_error(client, dcc_status_string(limits.response_error));
         }
 
-        if (cb != NULL) {
-            dcc_rest_response_t rest_response = {
-                .size = sizeof(rest_response),
-                .status = http_response.status,
-                .error = limits.response_error,
+        if (observe_terminal) {
+            uint64_t retry_after_ms = 0U;
+            if (limits.retry_after_seconds > 0.0 &&
+                limits.retry_after_seconds <= (double)UINT64_MAX / 1000.0) {
+                retry_after_ms = (uint64_t)(limits.retry_after_seconds * 1000.0);
+            }
+            dcc_rest_terminal_completion_t completion = {
+                .operation = path,
+                .transport_status = DCC_OK,
+                .http_status = http_response.status,
+                .legacy_error = limits.response_error,
                 .body = http_response.body,
+                .body_len = http_response.body_len,
+                .retry_after_ms = retry_after_ms,
+            };
+            dcc_rest_deliver_terminal(client, &completion, cb, user_data);
+        } else if (cb != NULL) {
+            dcc_rest_response_t rest_response = {
+                .size = sizeof(rest_response), .status = http_response.status,
+                .error = limits.response_error, .body = http_response.body,
                 .body_len = http_response.body_len,
             };
             cb(client, &rest_response, user_data);

@@ -7,6 +7,7 @@
 #define DCC_REST_H
 
 #include <dcc/rest/base.h>
+#include <dcc/rest/result.h>
 #include <dcc/rest/response_helpers.h>
 #include <dcc/rest/types.h>
 #include <dcc/rest/core.h>

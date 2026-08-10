@@ -1472,6 +1472,8 @@ target_sources(dcc
         src/rest/rest_rate_limit.c
         src/rest/rest_rate_limit_buckets.c
         src/rest/rest_rate_limit_update.c
+        src/rest/rest_error_observer.c
+        src/rest/rest_result.c
         src/rest/rest_request.c
         src/rest/rest_request_headers.c
         src/rest/rest_request_prepare.c
@@ -2232,6 +2234,16 @@ if(DCC_BUILD_TESTS)
     dcc_target_use_private_headers(dcc_app_v2_listener_smoke)
     dcc_target_enable_sanitizers(dcc_app_v2_listener_smoke)
     add_test(NAME dcc_app_v2_listener_smoke COMMAND dcc_app_v2_listener_smoke)
+
+    add_executable(
+        dcc_app_v2_error_smoke
+        tests/app_v2_error_smoke.c
+        tests/support/http_smoke_server.c
+    )
+    target_link_libraries(dcc_app_v2_error_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_v2_error_smoke)
+    dcc_target_enable_sanitizers(dcc_app_v2_error_smoke)
+    add_test(NAME dcc_app_v2_error_smoke COMMAND dcc_app_v2_error_smoke)
 
     add_executable(
         dcc_app_v2_listener_concurrency_smoke

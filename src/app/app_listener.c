@@ -1753,16 +1753,18 @@ static void dcc_app_listener_report_status(
     if (ctx.interaction != NULL) {
         dcc_flow_init(&ctx.flow, client, ctx.interaction);
     }
-    if (entry->app->error_handler != NULL) {
-        entry->app->error_handler(
-            &ctx,
-            status,
-            dcc_status_string(status),
-            entry->app->error_user_data
-        );
-    } else if (ctx.interaction != NULL) {
-        (void)dcc_ctx_handle_error(&ctx, status, dcc_status_string(status));
-    }
+    const char *operation = event != NULL
+        ? dcc_event_type_name(dcc_event_type(event))
+        : entry->kind == DCC_LISTENER_TASK
+            ? "scheduled task"
+            : "App listener";
+    (void)dcc_app_report_handler_error(
+        entry->app,
+        ctx.interaction != NULL ? &ctx : NULL,
+        status,
+        operation,
+        dcc_status_string(status)
+    );
 }
 
 static const char *dcc_app_listener_message_command_args(

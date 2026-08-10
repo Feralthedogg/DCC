@@ -7,6 +7,7 @@
 #define DCC_CLIENT_H
 
 #include <dcc/error.h>
+#include <dcc/error_details.h>
 #include <dcc/events.h>
 #include <dcc/export.h>
 #include <dcc/intents.h>
@@ -28,6 +29,21 @@ extern "C" {
  * @param user_data Opaque pointer from dcc_client_options_t::log_user_data.
  */
 typedef void (*dcc_log_fn)(dcc_log_level_t level, const char *message, void *user_data);
+
+/**
+ * Receives one borrowed structured client error.
+ *
+ * The error and all pointed-to data are valid only until this function
+ * returns. Replacing or clearing an observer does not revoke a callback that
+ * another thread already copied for delivery; keep old user data alive until
+ * every in-flight callback has returned. Clearing/replacing from the callback
+ * is allowed. Destroy the client only after observer callbacks have returned.
+ */
+typedef void (*dcc_client_error_fn)(
+    dcc_client_t *client,
+    const dcc_error_t *error,
+    void *user_data
+);
 
 /**
  * @brief Creation options for a DCC client.
@@ -137,6 +153,18 @@ typedef struct dcc_gateway_presence_update {
  * @return DCC_OK on success, otherwise a status code describing the failure.
  */
 DCC_API dcc_status_t dcc_client_create(const dcc_client_options_t *options, dcc_client_t **out);
+
+/**
+ * Installs the public structured error observer for a client.
+ *
+ * `(NULL, NULL)` clears the observer. A NULL callback with non-NULL user data
+ * is invalid. This public slot is independent from an App-owned internal sink.
+ */
+DCC_API dcc_status_t dcc_client_on_error(
+    dcc_client_t *client,
+    dcc_client_error_fn handler,
+    void *user_data
+);
 
 /**
  * @brief Stops and releases a client.

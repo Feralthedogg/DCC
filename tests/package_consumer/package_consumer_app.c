@@ -28,14 +28,12 @@ static void dcc_package_consumer_app_typed_handler(dcc_ctx_t *ctx, void *args, v
 }
 
 static void dcc_package_consumer_app_error_handler(
-    dcc_ctx_t *ctx,
-    dcc_status_t status,
-    const char *message,
+    dcc_app_t *app,
+    const dcc_error_t *error,
     void *user_data
 ) {
-    (void)ctx;
-    (void)status;
-    (void)message;
+    (void)app;
+    (void)error;
     (void)user_data;
 }
 
