@@ -392,6 +392,7 @@ static int test_listener_kind_coverage(dcc_app_t *app, contract_state_t *state) 
     listener.user_data = state;
     listener.target.route.command_name = "root";
     listener.target.route.subcommand_path = "leaf";
+    listener.target.route.description = "root command";
     if (dcc_app_listen(app, &listener, &ids[id_count++]) != DCC_OK ||
         dispatch_interaction(app, DCC_EVENT_SLASH_COMMAND, "root", NULL, &subcommand, 1U) != 0) {
         return 1;
@@ -400,10 +401,11 @@ static int test_listener_kind_coverage(dcc_app_t *app, contract_state_t *state) 
     dcc_listener_init(&listener, DCC_LISTENER_AUTOCOMPLETE);
     listener.handler.plain = plain_handler;
     listener.user_data = state;
-    listener.target.route.command_name = "root";
+    listener.target.route.command_name = "root-auto";
     listener.target.route.subcommand_path = "leaf";
+    listener.target.route.description = "root autocomplete command";
     if (dcc_app_listen(app, &listener, &ids[id_count++]) != DCC_OK ||
-        dispatch_interaction(app, DCC_EVENT_AUTOCOMPLETE, "root", NULL, &subcommand, 1U) != 0) {
+        dispatch_interaction(app, DCC_EVENT_AUTOCOMPLETE, "root-auto", NULL, &subcommand, 1U) != 0) {
         return 1;
     }
 
@@ -564,9 +566,143 @@ static int expect_failed_listen_exact(
     return 0;
 }
 
+static dcc_listener_t implicit_command_listener(
+    dcc_listener_kind_t kind,
+    uint8_t nested,
+    const char *root_name,
+    const char *description,
+    contract_state_t *state
+) {
+    dcc_listener_t listener;
+    dcc_listener_init(&listener, kind);
+    listener.handler.plain = plain_handler;
+    listener.user_data = state;
+    listener.target.route.description = description;
+    if (kind == DCC_LISTENER_SUBCOMMAND || nested) {
+        listener.target.route.command_name = root_name;
+        listener.target.route.subcommand_path = "leaf";
+    } else {
+        listener.target.route.name = root_name;
+    }
+    return listener;
+}
+
+static int registry_chat_descriptions_are_nonempty(const dcc_app_t *app) {
+    const dcc_command_registry_state_t *registry =
+        dcc_command_registry_state_const(&app->registry);
+    if (registry == NULL) {
+        return 1;
+    }
+    for (size_t i = 0U; i < registry->entry_count; ++i) {
+        const dcc_application_command_builder_t *command = &registry->entries[i].command;
+        if (dcc_command_registry_builder_type(command) == DCC_APPLICATION_COMMAND_CHAT_INPUT &&
+            (command->description == NULL || command->description[0] == '\0')) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int test_implicit_command_descriptions(contract_state_t *state) {
+    dcc_app_t *app = NULL;
+    if (create_app(&app) != DCC_OK) {
+        return 1;
+    }
+
+    dcc_listener_id_t seed_route_id = 0U;
+    dcc_listener_t seed_route = slash_listener("implicit-seed", state);
+    dcc_listener_id_t seed_schedule_id = 0U;
+    dcc_listener_t seed_schedule;
+    dcc_listener_init(&seed_schedule, DCC_LISTENER_TASK);
+    seed_schedule.handler.task = task_handler;
+    seed_schedule.user_data = state;
+    seed_schedule.target.schedule.kind = DCC_LISTENER_SCHEDULE_INTERVAL;
+    seed_schedule.target.schedule.interval_ms = UINT64_C(60000);
+    if (dcc_app_listen(app, &seed_route, &seed_route_id) != DCC_OK ||
+        dcc_app_listen(app, &seed_schedule, &seed_schedule_id) != DCC_OK ||
+        app->listener_count != 2U || app->route_count != 1U || app->schedule_count != 1U ||
+        dcc_command_registry_count(&app->registry) != 1U) {
+        fprintf(stderr, "implicit-description non-empty seed state failed\n");
+        return 1;
+    }
+
+    static const struct {
+        dcc_listener_kind_t kind;
+        uint8_t nested;
+        const char *name;
+        const char *label;
+    } cases[] = {
+        {DCC_LISTENER_SLASH, 0U, "implicit-slash", "implicit slash"},
+        {DCC_LISTENER_SUBCOMMAND, 1U, "implicit-subcommand", "implicit subcommand"},
+        {DCC_LISTENER_AUTOCOMPLETE, 0U, "implicit-autocomplete", "implicit autocomplete"},
+        {DCC_LISTENER_AUTOCOMPLETE, 1U, "implicit-auto-subcommand", "implicit subcommand autocomplete"},
+    };
+    for (size_t i = 0U; i < sizeof(cases) / sizeof(cases[0]); ++i) {
+        dcc_listener_t listener = implicit_command_listener(
+            cases[i].kind,
+            cases[i].nested,
+            cases[i].name,
+            NULL,
+            state
+        );
+        if (expect_failed_listen_exact(app, &listener, DCC_ERR_INVALID_ARG, cases[i].label) != 0) {
+            return 1;
+        }
+        listener.target.route.description = "";
+        if (expect_failed_listen_exact(app, &listener, DCC_ERR_INVALID_ARG, cases[i].label) != 0) {
+            return 1;
+        }
+
+        size_t command_count = dcc_command_registry_count(&app->registry);
+        listener.target.route.description = "non-empty implicit schema";
+        dcc_listener_id_t id = 0U;
+        dcc_status_t status = dcc_app_listen(app, &listener, &id);
+        const dcc_command_registry_state_t *registry =
+            dcc_command_registry_state_const(&app->registry);
+        const dcc_application_command_builder_t *command =
+            registry != NULL && registry->entry_count != 0U
+            ? &registry->entries[registry->entry_count - 1U].command
+            : NULL;
+        if (status != DCC_OK || id == 0U ||
+            dcc_command_registry_count(&app->registry) != command_count + 1U ||
+            command == NULL || command->name == NULL ||
+            strcmp(command->name, cases[i].name) != 0 ||
+            dcc_command_registry_builder_type(command) != DCC_APPLICATION_COMMAND_CHAT_INPUT ||
+            command->description == NULL ||
+            strcmp(command->description, "non-empty implicit schema") != 0 ||
+            !registry_chat_descriptions_are_nonempty(app) ||
+            dcc_app_unlisten(app, id) != DCC_OK) {
+            fprintf(stderr, "%s clean retry did not commit one valid CHAT_INPUT schema\n", cases[i].label);
+            return 1;
+        }
+    }
+
+    if (dcc_app_unlisten(app, seed_schedule_id) != DCC_OK ||
+        dcc_app_unlisten(app, seed_route_id) != DCC_OK) {
+        return 1;
+    }
+    return dcc_app_destroy(app) == DCC_OK ? 0 : 1;
+}
+
 static int test_exact_failure_transactions(contract_state_t *state) {
     dcc_app_t *app = NULL;
     if (create_app(&app) != DCC_OK) {
+        return 1;
+    }
+    dcc_listener_id_t seed_route_id = 0U;
+    dcc_listener_t seed_route = slash_listener("transaction-seed", state);
+    dcc_listener_id_t seed_schedule_id = 0U;
+    dcc_listener_t seed_schedule;
+    dcc_listener_init(&seed_schedule, DCC_LISTENER_TASK);
+    seed_schedule.handler.task = task_handler;
+    seed_schedule.user_data = state;
+    seed_schedule.target.schedule.kind = DCC_LISTENER_SCHEDULE_INTERVAL;
+    seed_schedule.target.schedule.interval_ms = UINT64_C(60000);
+    if (dcc_app_listen(app, &seed_route, &seed_route_id) != DCC_OK ||
+        dcc_app_listen(app, &seed_schedule, &seed_schedule_id) != DCC_OK ||
+        app->listener_count == 0U || app->route_count == 0U || app->schedule_count == 0U ||
+        dcc_command_registry_count(&app->registry) == 0U) {
+        fprintf(stderr, "transaction failure tests did not start from non-empty App state\n");
         return 1;
     }
     dcc_listener_middleware_t middleware = {
@@ -579,13 +715,21 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     policy_listener.cleanup = failed_listener_cleanup;
     policy_listener.policy.middlewares = &middleware;
     policy_listener.policy.middleware_count = 1U;
+    unsigned cleanup_count = state->failed_cleanup_count;
     app->listener_test_fail_policy_allocation = 1U;
     if (expect_failed_listen_exact(
             app,
             &policy_listener,
             DCC_ERR_NOMEM,
             "route policy allocation failure"
-        ) != 0 || state->failed_cleanup_count != 0U) {
+        ) != 0 || state->failed_cleanup_count != cleanup_count) {
+        return 1;
+    }
+    dcc_listener_id_t retry_id = 0U;
+    if (dcc_app_listen(app, &policy_listener, &retry_id) != DCC_OK || retry_id == 0U ||
+        dcc_app_unlisten(app, retry_id) != DCC_OK ||
+        state->failed_cleanup_count != cleanup_count + 1U) {
+        fprintf(stderr, "route policy failpoint did not reset for a clean retry\n");
         return 1;
     }
 
@@ -596,13 +740,21 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     schedule_listener.cleanup = failed_listener_cleanup;
     schedule_listener.target.schedule.kind = DCC_LISTENER_SCHEDULE_INTERVAL;
     schedule_listener.target.schedule.interval_ms = 1U;
+    cleanup_count = state->failed_cleanup_count;
     app->listener_test_fail_schedule_allocation = 1U;
     if (expect_failed_listen_exact(
             app,
             &schedule_listener,
             DCC_ERR_NOMEM,
             "schedule allocation failure"
-        ) != 0 || state->failed_cleanup_count != 0U) {
+        ) != 0 || state->failed_cleanup_count != cleanup_count) {
+        return 1;
+    }
+    retry_id = 0U;
+    if (dcc_app_listen(app, &schedule_listener, &retry_id) != DCC_OK || retry_id == 0U ||
+        dcc_app_unlisten(app, retry_id) != DCC_OK ||
+        state->failed_cleanup_count != cleanup_count + 1U) {
+        fprintf(stderr, "schedule allocation failpoint did not reset for a clean retry\n");
         return 1;
     }
 
@@ -610,19 +762,30 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     app->next_route_id = UINT64_MAX;
     dcc_listener_t route_id_listener = slash_listener("route-id-oom", state);
     route_id_listener.cleanup = failed_listener_cleanup;
+    cleanup_count = state->failed_cleanup_count;
     if (expect_failed_listen_exact(
             app,
             &route_id_listener,
             DCC_ERR_NOMEM,
             "route ID exhaustion"
-        ) != 0 || state->failed_cleanup_count != 0U) {
+        ) != 0 || state->failed_cleanup_count != cleanup_count) {
         return 1;
     }
     app->next_route_id = saved_route_id;
+    retry_id = 0U;
+    if (dcc_app_listen(app, &route_id_listener, &retry_id) != DCC_OK || retry_id == 0U ||
+        dcc_app_unlisten(app, retry_id) != DCC_OK ||
+        state->failed_cleanup_count != cleanup_count + 1U) {
+        fprintf(stderr, "route ID failure did not permit a clean retry\n");
+        return 1;
+    }
 
-    for (size_t i = 0U; i < 4U; ++i) {
+    size_t registry_seed_index = 0U;
+    dcc_command_registry_state_t *registry_state =
+        dcc_command_registry_state_get(&app->registry, 0);
+    while (registry_state != NULL && registry_state->entry_count < registry_state->entry_cap) {
         char name[32];
-        (void)snprintf(name, sizeof(name), "seed-%zu", i);
+        (void)snprintf(name, sizeof(name), "direct-seed-%zu", registry_seed_index++);
         dcc_application_command_builder_t seed;
         dcc_application_command_builder_init(&seed);
         if (dcc_application_command_builder_set_name(&seed, name) != DCC_OK ||
@@ -634,10 +797,54 @@ static int test_exact_failure_transactions(contract_state_t *state) {
             dcc_command_registry_add_builder(&app->registry, &seed) != DCC_OK) {
             return 1;
         }
+        registry_state = dcc_command_registry_state_get(&app->registry, 0);
+    }
+
+    dcc_application_command_builder_t direct_growth_command;
+    dcc_application_command_builder_init(&direct_growth_command);
+    direct_growth_command.name = "direct-registry-growth";
+    direct_growth_command.has_name = 1U;
+    direct_growth_command.description = "direct registry growth";
+    direct_growth_command.has_description = 1U;
+    direct_growth_command.type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
+    direct_growth_command.has_type = 1U;
+    exact_app_snapshot_t direct_before = exact_app_snapshot(app);
+    dcc_command_registry_test_fail_next_growth();
+    dcc_status_t direct_status = dcc_command_registry_add_builder(
+        &app->registry,
+        &direct_growth_command
+    );
+    exact_app_snapshot_t direct_after = exact_app_snapshot(app);
+    if (direct_status != DCC_ERR_NOMEM ||
+        !exact_app_snapshot_equal(&direct_before, &direct_after)) {
+        fprintf(stderr, "direct public registry growth failure changed state\n");
+        return 1;
+    }
+    if (dcc_command_registry_add_builder(&app->registry, &direct_growth_command) != DCC_OK) {
+        fprintf(stderr, "direct public registry failpoint did not reset for clean retry\n");
+        return 1;
+    }
+
+    registry_state = dcc_command_registry_state_get(&app->registry, 0);
+    while (registry_state != NULL && registry_state->entry_count < registry_state->entry_cap) {
+        char name[32];
+        (void)snprintf(name, sizeof(name), "listener-seed-%zu", registry_seed_index++);
+        dcc_application_command_builder_t seed;
+        dcc_application_command_builder_init(&seed);
+        if (dcc_application_command_builder_set_name(&seed, name) != DCC_OK ||
+            dcc_application_command_builder_set_description(&seed, "seed") != DCC_OK ||
+            dcc_application_command_builder_set_type(
+                &seed,
+                DCC_APPLICATION_COMMAND_CHAT_INPUT
+            ) != DCC_OK ||
+            dcc_command_registry_add_builder(&app->registry, &seed) != DCC_OK) {
+            return 1;
+        }
+        registry_state = dcc_command_registry_state_get(&app->registry, 0);
     }
     dcc_application_command_builder_t growth_command;
     dcc_application_command_builder_init(&growth_command);
-    growth_command.name = "registry-growth-oom";
+    growth_command.name = "listener-registry-growth";
     growth_command.has_name = 1U;
     growth_command.description = "registry growth oom";
     growth_command.has_description = 1U;
@@ -648,13 +855,21 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     growth_listener.target.route.description = NULL;
     growth_listener.target.route.command = &growth_command;
     growth_listener.cleanup = failed_listener_cleanup;
+    cleanup_count = state->failed_cleanup_count;
     dcc_command_registry_test_fail_next_growth();
     if (expect_failed_listen_exact(
             app,
             &growth_listener,
             DCC_ERR_NOMEM,
             "command registry growth allocation failure"
-        ) != 0 || state->failed_cleanup_count != 0U) {
+        ) != 0 || state->failed_cleanup_count != cleanup_count) {
+        return 1;
+    }
+    retry_id = 0U;
+    if (dcc_app_listen(app, &growth_listener, &retry_id) != DCC_OK || retry_id == 0U ||
+        dcc_app_unlisten(app, retry_id) != DCC_OK ||
+        state->failed_cleanup_count != cleanup_count + 1U) {
+        fprintf(stderr, "listener registry growth failpoint did not reset for a clean retry\n");
         return 1;
     }
 
@@ -674,12 +889,13 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     registry_listener.target.route.description = NULL;
     registry_listener.target.route.command = &oversized;
     registry_listener.cleanup = failed_listener_cleanup;
+    cleanup_count = state->failed_cleanup_count;
     if (expect_failed_listen_exact(
             app,
             &registry_listener,
             DCC_ERR_INVALID_ARG,
             "command schema deep-copy failure"
-        ) != 0 || state->failed_cleanup_count != 0U) {
+        ) != 0 || state->failed_cleanup_count != cleanup_count) {
         return 1;
     }
 
@@ -706,13 +922,21 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     partial_listener.bindings.items.forms = &partial_binding;
     partial_listener.bindings.count = 1U;
     partial_listener.target.route.name = "partial-metadata-oom";
+    cleanup_count = state->failed_cleanup_count;
     app->listener_test_fail_metadata_copy_after = 1U;
     if (expect_failed_listen_exact(
             app,
             &partial_listener,
             DCC_ERR_NOMEM,
             "partial metadata ownership failure"
-        ) != 0 || state->failed_cleanup_count != 0U) {
+        ) != 0 || state->failed_cleanup_count != cleanup_count) {
+        return 1;
+    }
+    retry_id = 0U;
+    if (dcc_app_listen(app, &partial_listener, &retry_id) != DCC_OK || retry_id == 0U ||
+        dcc_app_unlisten(app, retry_id) != DCC_OK ||
+        state->failed_cleanup_count != cleanup_count + 1U) {
+        fprintf(stderr, "metadata-copy failpoint did not reset for a clean retry\n");
         return 1;
     }
 
@@ -738,12 +962,25 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     metadata_listener.bindings.items.forms = &huge_binding;
     metadata_listener.bindings.count = 1U;
     metadata_listener.target.route.name = "metadata-oom";
+    cleanup_count = state->failed_cleanup_count;
     if (expect_failed_listen_exact(
             app,
             &metadata_listener,
             DCC_ERR_NOMEM,
             "partial metadata copy failure"
-        ) != 0 || state->failed_cleanup_count != 0U) {
+        ) != 0 || state->failed_cleanup_count != cleanup_count) {
+        return 1;
+    }
+    huge_binding.fallback_values_count = 1U;
+    retry_id = 0U;
+    if (dcc_app_listen(app, &metadata_listener, &retry_id) != DCC_OK || retry_id == 0U ||
+        dcc_app_unlisten(app, retry_id) != DCC_OK ||
+        state->failed_cleanup_count != cleanup_count + 1U) {
+        fprintf(stderr, "metadata overflow failure did not permit a clean retry\n");
+        return 1;
+    }
+    if (dcc_app_unlisten(app, seed_schedule_id) != DCC_OK ||
+        dcc_app_unlisten(app, seed_route_id) != DCC_OK) {
         return 1;
     }
     return dcc_app_destroy(app) == DCC_OK ? 0 : 1;
@@ -1038,6 +1275,7 @@ int main(void) {
     }
     contract_state_t state = {0};
     int failed = test_validation_matrix(app, &state) != 0 ||
+                 test_implicit_command_descriptions(&state) != 0 ||
                  test_exact_failure_transactions(&state) != 0 ||
                  test_command_type_matrix(&state) != 0 ||
                  test_transactional_retry(app, &state) != 0 ||

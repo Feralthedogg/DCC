@@ -72,7 +72,7 @@ dcc_status_t dcc_client_stop(dcc_client_t *client) {
     }
     atomic_store_explicit(&client->stopping, true, memory_order_release);
     (void)dcc_gateway_request_stop(client);
-    dcc_voice_client_stop_owned(client);
+    dcc_voice_client_request_stop_owned(client);
     return dcc_runtime_request_stop(&client->runtime);
 }
 

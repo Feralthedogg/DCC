@@ -1,6 +1,8 @@
 #ifndef DCC_APP_INTERNAL_H
 #define DCC_APP_INTERNAL_H
 
+#include "internal/dcc_windows_internal.h"
+
 #include <dcc/app.h>
 #include <dcc/tasks.h>
 
@@ -8,9 +10,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#if defined(_WIN32)
-#include <windows.h>
-#else
+#if !defined(_WIN32)
 #include <pthread.h>
 #endif
 
@@ -136,6 +136,7 @@ struct dcc_app {
     dcc_listener_id_t next_listener_id;
     dcc_app_route_id_t next_route_id;
     dcc_task_group_t *tasks;
+    dcc_status_t task_reap_status;
     dcc_app_error_fn error_handler;
     void *error_user_data;
     void *state;
@@ -150,10 +151,12 @@ struct dcc_app {
     uint8_t store_open;
     uint8_t listener_sync_initialized;
     uint8_t listener_destroying;
+    uint8_t task_reaping;
     void (*listener_test_before_route_remove)(void *user_data);
     void *listener_test_before_route_remove_data;
     uint8_t listener_test_fail_policy_allocation;
     uint8_t listener_test_fail_schedule_allocation;
+    uint8_t listener_test_fail_task_reap;
     size_t listener_test_fail_metadata_copy_after;
 #if defined(_WIN32)
     CRITICAL_SECTION listener_mutex;
@@ -274,7 +277,8 @@ dcc_app_response_state_t dcc_app_auto_defer_response_state(const dcc_ctx_t *ctx)
 dcc_status_t dcc_app_auto_defer_claim_initial(dcc_ctx_t *ctx, dcc_app_response_state_t state);
 void dcc_app_auto_defer_mark(dcc_ctx_t *ctx, dcc_app_response_state_t state, dcc_status_t status);
 dcc_status_t dcc_app_start_schedules(dcc_app_t *app);
-void dcc_app_stop_schedules(dcc_app_t *app);
+dcc_status_t dcc_app_request_stop_schedules(dcc_app_t *app);
+dcc_status_t dcc_app_reap_schedules(dcc_app_t *app);
 dcc_status_t dcc_app_register_command_sync_listener(dcc_app_t *app);
 void dcc_app_listener_destroy_all(dcc_app_t *app);
 void dcc_app_listener_reclaim_all(dcc_app_t *app);

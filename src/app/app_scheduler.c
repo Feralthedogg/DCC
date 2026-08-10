@@ -147,7 +147,9 @@ dcc_status_t dcc_app_add_canonical_schedule(
     app->schedules[app->schedule_count++] = schedule;
 
     uint8_t created_tasks = 0U;
-    if (app->started && app->tasks == NULL) {
+    uint8_t accepts_runtime_work = app->started && !dcc_app_stopping(app) &&
+                                   !app->task_reaping;
+    if (accepts_runtime_work && app->tasks == NULL) {
         status = dcc_task_group_create(app->client, &app->tasks);
         if (status != DCC_OK) {
             app->schedule_count--;
@@ -157,7 +159,7 @@ dcc_status_t dcc_app_add_canonical_schedule(
         }
         created_tasks = 1U;
     }
-    if (app->tasks != NULL && app->started) {
+    if (app->tasks != NULL && accepts_runtime_work) {
         status = dcc_task_group_spawn(app->tasks, dcc_app_schedule_task, schedule, NULL);
         if (status != DCC_OK) {
             app->schedule_count--;
@@ -212,7 +214,8 @@ static dcc_status_t dcc_app_add_schedule(
     atomic_init(&schedule->cancelled, false);
     app->schedules[app->schedule_count++] = schedule;
 
-    if (app->tasks != NULL && app->started) {
+    if (app->tasks != NULL && app->started && !dcc_app_stopping(app) &&
+        !app->task_reaping) {
         status = dcc_task_group_spawn(app->tasks, dcc_app_schedule_task, schedule, NULL);
         if (status != DCC_OK) {
             return status;
@@ -321,31 +324,93 @@ dcc_status_t dcc_app_every_day_at_kst(
 }
 
 dcc_status_t dcc_app_start_schedules(dcc_app_t *app) {
-    if (app == NULL || app->tasks != NULL) {
+    if (app == NULL) {
+        return DCC_OK;
+    }
+    dcc_app_listener_lock(app);
+    if (app->task_reaping) {
+        dcc_app_listener_unlock(app);
+        return DCC_ERR_STATE;
+    }
+    if (app->tasks != NULL) {
+        dcc_app_listener_unlock(app);
         return DCC_OK;
     }
     if (app->schedule_count == 0U) {
+        app->task_reap_status = DCC_OK;
+        dcc_app_listener_unlock(app);
         return DCC_OK;
     }
     dcc_status_t status = dcc_task_group_create(app->client, &app->tasks);
     if (status != DCC_OK) {
+        dcc_app_listener_unlock(app);
         return status;
     }
+    app->task_reap_status = DCC_OK;
     for (size_t i = 0; i < app->schedule_count; ++i) {
+        atomic_store_explicit(&app->schedules[i]->cancelled, false, memory_order_release);
         status = dcc_task_group_spawn(app->tasks, dcc_app_schedule_task, app->schedules[i], NULL);
         if (status != DCC_OK) {
-            dcc_app_stop_schedules(app);
-            return status;
+            break;
         }
     }
-    return DCC_OK;
+    dcc_app_listener_unlock(app);
+    if (status != DCC_OK) {
+        (void)dcc_app_request_stop_schedules(app);
+        (void)dcc_app_reap_schedules(app);
+    }
+    return status;
 }
 
-void dcc_app_stop_schedules(dcc_app_t *app) {
-    if (app == NULL || app->tasks == NULL) {
-        return;
+dcc_status_t dcc_app_request_stop_schedules(dcc_app_t *app) {
+    if (app == NULL) {
+        return DCC_ERR_INVALID_ARG;
     }
-    (void)dcc_task_group_cancel_and_wait(app->tasks, 5000U, NULL);
-    (void)dcc_task_group_destroy(app->tasks);
+    dcc_app_listener_lock(app);
+    for (size_t i = 0U; i < app->schedule_count; ++i) {
+        atomic_store_explicit(&app->schedules[i]->cancelled, true, memory_order_release);
+    }
+    dcc_status_t status = app->tasks != NULL
+        ? dcc_task_group_cancel(app->tasks)
+        : DCC_OK;
+    dcc_app_listener_unlock(app);
+    return status;
+}
+
+dcc_status_t dcc_app_reap_schedules(dcc_app_t *app) {
+    if (app == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_app_listener_lock(app);
+    while (app->task_reaping) {
+        dcc_app_listener_wait(app);
+    }
+    if (app->tasks == NULL) {
+        dcc_status_t status = app->task_reap_status;
+        dcc_app_listener_unlock(app);
+        return status;
+    }
+    dcc_task_group_t *tasks = app->tasks;
     app->tasks = NULL;
+    app->task_reaping = 1U;
+    uint8_t fail_reap = app->listener_test_fail_task_reap;
+    app->listener_test_fail_task_reap = 0U;
+    dcc_app_listener_unlock(app);
+
+    dcc_status_t status = fail_reap
+        ? DCC_ERR_TIMEOUT
+        : dcc_task_group_cancel_and_wait(tasks, 5000U, NULL);
+    if (status == DCC_OK) {
+        status = dcc_task_group_destroy(tasks);
+    }
+
+    dcc_app_listener_lock(app);
+    app->task_reap_status = status;
+    if (status != DCC_OK) {
+        app->tasks = tasks;
+    }
+    app->task_reaping = 0U;
+    dcc_app_listener_wake_all(app);
+    dcc_app_listener_unlock(app);
+    return status;
 }

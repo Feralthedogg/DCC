@@ -28,10 +28,19 @@ DCC_API dcc_client_t *dcc_app_client(dcc_app_t *app);
 /** Starts the application runtime and registered schedules. */
 DCC_API dcc_status_t dcc_app_start(dcc_app_t *app);
 
-/** Requests application shutdown and stops registered schedules. */
+/**
+ * Requests application shutdown without waiting for callbacks or schedules.
+ *
+ * This operation is idempotent and may be called from any App-owned callback,
+ * including scheduled task callbacks. The owner must subsequently call
+ * `dcc_app_wait()` or `dcc_app_destroy()` to join and release schedule workers.
+ */
 DCC_API dcc_status_t dcc_app_stop(dcc_app_t *app);
 
-/** Waits for a started application to stop. */
+/**
+ * Waits for a started application to stop and reaps schedule workers.
+ * Returns `DCC_ERR_STATE` without mutation from an App-owned callback.
+ */
 DCC_API dcc_status_t dcc_app_wait(dcc_app_t *app);
 
 /** Starts and waits for an application. */

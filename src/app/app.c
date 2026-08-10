@@ -178,8 +178,11 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     if (dcc_app_callback_frame_active(app)) {
         return DCC_ERR_STATE;
     }
-    (void)dcc_app_stop(app);
-    dcc_app_stop_schedules(app);
+    dcc_status_t status = dcc_app_stop(app);
+    dcc_status_t reap_status = dcc_app_reap_schedules(app);
+    if (reap_status != DCC_OK) {
+        return status == DCC_OK ? reap_status : status;
+    }
     dcc_app_listener_destroy_all(app);
     for (size_t i = 0; i < app->component_session_listener_count; ++i) {
         if (app->component_session_listeners[i].listener.state != NULL) {
@@ -203,7 +206,6 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
         (void)dcc_client_off(app->client, DCC_EVENT_READY, app->command_sync_listener_id);
     }
     free(app->event_listeners);
-    dcc_client_destroy(app->client);
     dcc_app_listener_reclaim_all(app);
     dcc_command_registry_deinit(&app->registry);
     dcc_app_callback_frame_t cleanup_frame;
@@ -240,9 +242,10 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     dcc_app_clear_state(app);
     dcc_app_store_close(app);
     dcc_app_callback_frame_leave(&cleanup_frame);
+    dcc_client_destroy(app->client);
     dcc_app_listener_sync_deinit(app);
     free(app);
-    return DCC_OK;
+    return status;
 }
 
 dcc_client_t *dcc_app_client(dcc_app_t *app) {
@@ -266,6 +269,8 @@ dcc_status_t dcc_app_start(dcc_app_t *app) {
     status = dcc_app_start_schedules(app);
     if (status != DCC_OK) {
         (void)dcc_client_stop(app->client);
+        (void)dcc_app_request_stop_schedules(app);
+        (void)dcc_app_reap_schedules(app);
         app->started = 0U;
     }
     return status;
@@ -276,17 +281,29 @@ dcc_status_t dcc_app_stop(dcc_app_t *app) {
         return DCC_ERR_INVALID_ARG;
     }
     atomic_store_explicit(&app->stopping, true, memory_order_release);
-    dcc_app_stop_schedules(app);
-    app->started = 0U;
-    return dcc_client_stop(app->client);
+    dcc_status_t status = dcc_app_request_stop_schedules(app);
+    dcc_status_t client_status = dcc_client_stop(app->client);
+    return status == DCC_OK ? client_status : status;
 }
 
 dcc_status_t dcc_app_wait(dcc_app_t *app) {
     if (app == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    dcc_status_t status = dcc_client_wait(app->client);
-    dcc_app_stop_schedules(app);
+    if (dcc_app_callback_frame_active(app)) {
+        return DCC_ERR_STATE;
+    }
+    dcc_app_listener_lock(app);
+    uint8_t has_schedule_work = app->tasks != NULL || app->task_reaping;
+    dcc_app_listener_unlock(app);
+    uint8_t waits_runtime = app->started;
+    dcc_status_t status = waits_runtime
+        ? dcc_client_wait(app->client)
+        : has_schedule_work ? DCC_OK : DCC_ERR_STATE;
+    dcc_status_t reap_status = dcc_app_reap_schedules(app);
+    if (status == DCC_OK && reap_status != DCC_OK) {
+        status = reap_status;
+    }
     app->started = 0U;
     return status;
 }

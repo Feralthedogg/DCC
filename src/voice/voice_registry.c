@@ -1,4 +1,25 @@
 #include "internal/voice/dcc_voice_internal.h"
+#include "internal/voice/dcc_voice_ws_internal.h"
+
+void dcc_voice_client_request_stop_owned(dcc_client_t *client) {
+    if (client == NULL) {
+        return;
+    }
+
+    dcc_voice_client_registry_lock(client);
+    for (uint32_t i = 0U; i < client->voice_clients_len; ++i) {
+        if (client->voice_clients[i] != NULL) {
+            dcc_voice_client_t *voice_client = client->voice_clients[i];
+            atomic_store_explicit(
+                &voice_client->websocket_task_stop,
+                true,
+                memory_order_release
+            );
+            dcc_voice_client_websocket_abort_current(voice_client);
+        }
+    }
+    dcc_voice_client_registry_unlock(client);
+}
 
 dcc_status_t dcc_voice_client_register_owner(dcc_client_t *client, dcc_voice_client_t *voice_client) {
     if (client == NULL || voice_client == NULL) {

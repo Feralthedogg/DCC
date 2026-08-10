@@ -9,6 +9,7 @@ extern "C" {
 
 dcc_status_t dcc_voice_client_register_owner(dcc_client_t *client, dcc_voice_client_t *voice_client);
 void dcc_voice_client_unregister_owner(dcc_voice_client_t *voice_client);
+void dcc_voice_client_request_stop_owned(dcc_client_t *client);
 void dcc_voice_client_stop_owned(dcc_client_t *client);
 void dcc_voice_client_unbind_owner(dcc_client_t *client);
 void dcc_voice_client_set_self_user_id(dcc_client_t *client, dcc_snowflake_t user_id);

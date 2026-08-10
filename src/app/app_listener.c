@@ -1169,17 +1169,23 @@ static dcc_status_t dcc_app_listener_validate_target(const dcc_listener_t *liste
             return command_status;
         }
         if (listener->kind == DCC_LISTENER_SUBCOMMAND) {
-            return target->name == NULL && target->description == NULL &&
+            return target->name == NULL &&
                            target->command_name != NULL && target->command_name[0] != '\0' &&
-                           target->subcommand_path != NULL && target->subcommand_path[0] != '\0'
+                           target->subcommand_path != NULL && target->subcommand_path[0] != '\0' &&
+                           ((target->command == NULL && target->description != NULL &&
+                             target->description[0] != '\0') ||
+                            (target->command != NULL && target->description == NULL))
                 ? DCC_OK
                 : DCC_ERR_INVALID_ARG;
         }
         if (listener->kind == DCC_LISTENER_AUTOCOMPLETE &&
             (target->command_name != NULL || target->subcommand_path != NULL)) {
-            return target->name == NULL && target->description == NULL &&
+            return target->name == NULL &&
                            target->command_name != NULL && target->command_name[0] != '\0' &&
-                           target->subcommand_path != NULL && target->subcommand_path[0] != '\0'
+                           target->subcommand_path != NULL && target->subcommand_path[0] != '\0' &&
+                           ((target->command == NULL && target->description != NULL &&
+                             target->description[0] != '\0') ||
+                            (target->command != NULL && target->description == NULL))
                 ? DCC_OK
                 : DCC_ERR_INVALID_ARG;
         }
@@ -1192,21 +1198,24 @@ static dcc_status_t dcc_app_listener_validate_target(const dcc_listener_t *liste
                 ? DCC_OK
                 : DCC_ERR_INVALID_ARG;
         }
-        if (listener->kind == DCC_LISTENER_AUTOCOMPLETE ||
-            listener->kind == DCC_LISTENER_USER_CONTEXT_MENU ||
+        if (listener->kind == DCC_LISTENER_USER_CONTEXT_MENU ||
             listener->kind == DCC_LISTENER_MESSAGE_CONTEXT_MENU) {
             if (target->description != NULL) {
                 return DCC_ERR_INVALID_ARG;
             }
         }
         if (target->command != NULL) {
-            return target->name == NULL &&
-                           (listener->kind != DCC_LISTENER_SLASH || target->description == NULL) &&
+            return target->name == NULL && target->description == NULL &&
                            target->command->name != NULL && target->command->name[0] != '\0'
                 ? DCC_OK
                 : DCC_ERR_INVALID_ARG;
         }
-        return target->name != NULL && target->name[0] != '\0' ? DCC_OK : DCC_ERR_INVALID_ARG;
+        return target->name != NULL && target->name[0] != '\0' &&
+                       ((listener->kind != DCC_LISTENER_SLASH &&
+                         listener->kind != DCC_LISTENER_AUTOCOMPLETE) ||
+                        (target->description != NULL && target->description[0] != '\0'))
+            ? DCC_OK
+            : DCC_ERR_INVALID_ARG;
     }
     if (listener->kind == DCC_LISTENER_EVENT || listener->kind == DCC_LISTENER_READY ||
         (listener->kind >= DCC_LISTENER_MESSAGE_CREATE &&
@@ -1620,27 +1629,19 @@ static dcc_status_t dcc_app_listener_prepare_command_schema(
     dcc_command_registry_add_transaction_t *transaction
 ) {
     const dcc_listener_route_target_t *target = &listener->target.route;
-    if (listener->kind == DCC_LISTENER_SUBCOMMAND ||
-        (listener->kind == DCC_LISTENER_AUTOCOMPLETE &&
-         target->command_name != NULL)) {
-        return target->command != NULL
-            ? dcc_command_registry_add_prepare(transaction, &app->registry, target->command)
-            : DCC_OK;
-    }
     if (dcc_app_listener_is_component_kind(listener->kind)) {
         return DCC_OK;
-    }
-    if (listener->kind == DCC_LISTENER_AUTOCOMPLETE) {
-        return target->command != NULL
-            ? dcc_command_registry_add_prepare(transaction, &app->registry, target->command)
-            : DCC_OK;
     }
     if (target->command != NULL) {
         return dcc_command_registry_add_prepare(transaction, &app->registry, target->command);
     }
     dcc_application_command_builder_t command;
     dcc_application_command_builder_init(&command);
-    dcc_status_t status = dcc_application_command_builder_set_name(&command, target->name);
+    const char *command_name = listener->kind == DCC_LISTENER_SUBCOMMAND ||
+            (listener->kind == DCC_LISTENER_AUTOCOMPLETE && target->command_name != NULL)
+        ? target->command_name
+        : target->name;
+    dcc_status_t status = dcc_application_command_builder_set_name(&command, command_name);
     if (status == DCC_OK) {
         status = dcc_application_command_builder_set_type(
             &command,
@@ -1651,10 +1652,13 @@ static dcc_status_t dcc_app_listener_prepare_command_schema(
                     : DCC_APPLICATION_COMMAND_CHAT_INPUT
         );
     }
-    if (status == DCC_OK && listener->kind == DCC_LISTENER_SLASH) {
+    if (status == DCC_OK &&
+        (listener->kind == DCC_LISTENER_SLASH ||
+         listener->kind == DCC_LISTENER_SUBCOMMAND ||
+         listener->kind == DCC_LISTENER_AUTOCOMPLETE)) {
         status = dcc_application_command_builder_set_description(
             &command,
-            target->description != NULL ? target->description : ""
+            target->description
         );
     }
     if (status == DCC_OK) {
