@@ -367,12 +367,26 @@ dcc_status_t dcc_app_request_stop_schedules(dcc_app_t *app) {
         return DCC_ERR_INVALID_ARG;
     }
     dcc_app_listener_lock(app);
+    if (app->tearing_down) {
+        dcc_app_listener_unlock(app);
+        return DCC_OK;
+    }
     for (size_t i = 0U; i < app->schedule_count; ++i) {
         atomic_store_explicit(&app->schedules[i]->cancelled, true, memory_order_release);
     }
-    dcc_status_t status = app->tasks != NULL
-        ? dcc_task_group_cancel(app->tasks)
-        : DCC_OK;
+    uint8_t fail_cancel = app->listener_test_fail_task_cancel;
+    app->listener_test_fail_task_cancel = 0U;
+    dcc_status_t *cancel_status_out = app->listener_test_task_cancel_status_out;
+    app->listener_test_task_cancel_status_out = NULL;
+    dcc_status_t status = DCC_OK;
+    if (fail_cancel) {
+        status = DCC_ERR_RUNTIME;
+    } else if (app->tasks != NULL) {
+        status = dcc_task_group_cancel(app->tasks);
+    }
+    if (fail_cancel && cancel_status_out != NULL) {
+        *cancel_status_out = status;
+    }
     dcc_app_listener_unlock(app);
     return status;
 }

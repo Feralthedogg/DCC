@@ -158,7 +158,7 @@ typedef struct stop_case {
 
 typedef struct cleanup_stop_case {
     dcc_app_t *app;
-    atomic_bool called;
+    atomic_uint calls;
     atomic_int status;
 } cleanup_stop_case_t;
 
@@ -194,6 +194,12 @@ static void stop_case_init(stop_case_t *state) {
     atomic_init(&state->stop_status, DCC_ERR_STATE);
     atomic_init(&state->owner_wait_status, DCC_ERR_STATE);
     atomic_init(&state->stop_elapsed_ms, UINT64_MAX);
+}
+
+static void cleanup_stop_case_init(cleanup_stop_case_t *state) {
+    memset(state, 0, sizeof(*state));
+    atomic_init(&state->calls, 0U);
+    atomic_init(&state->status, DCC_ERR_STATE);
 }
 
 static void concurrent_cleanup(void *user_data) {
@@ -410,7 +416,7 @@ static dcc_status_t cleanup_stop_module_setup(dcc_app_t *app, void *user_data) {
 static void cleanup_stop_module_cleanup(void *user_data) {
     cleanup_stop_case_t *state = (cleanup_stop_case_t *)user_data;
     atomic_store_explicit(&state->status, dcc_app_stop(state->app), memory_order_release);
-    atomic_store_explicit(&state->called, true, memory_order_release);
+    (void)atomic_fetch_add_explicit(&state->calls, 1U, memory_order_release);
 }
 
 static int dispatch_route(void *arg) {
@@ -1160,13 +1166,52 @@ static int test_failed_reap_restores_owner(void) {
     return 0;
 }
 
+static int test_failed_stop_request_returns_consumed_success(void) {
+    concurrent_case_t state;
+    concurrent_case_init(&state, CONCURRENT_TASK);
+    if (create_app(&state.app) != DCC_OK || register_case(&state) != DCC_OK) {
+        fprintf(stderr, "failed stop-request setup did not create schedule work\n");
+        return 1;
+    }
+    state.schedule->interval_ms = 1U;
+    dcc_status_t start_status = dcc_app_start(state.app);
+    state.client = dcc_app_client(state.app);
+    test_thread_t runtime;
+    if (start_status != DCC_OK || state.app->tasks == NULL ||
+        test_thread_start(&runtime, run_client_runtime, &state) != 0 ||
+        !test_wait_true(&state.entered, 2000U)) {
+        fprintf(stderr, "failed stop-request scheduled task did not enter\n");
+        return 1;
+    }
+    atomic_store_explicit(&state.release, true, memory_order_release);
+
+    state.app->listener_test_fail_task_cancel = 1U;
+    dcc_status_t injected_status = DCC_OK;
+    state.app->listener_test_task_cancel_status_out = &injected_status;
+    dcc_status_t destroy_status = dcc_app_destroy(state.app);
+    int runtime_result = test_thread_join(&runtime);
+    unsigned cleanup_count = atomic_load_explicit(&state.cleanup_count, memory_order_acquire);
+    if (injected_status != DCC_ERR_RUNTIME || destroy_status != DCC_OK ||
+        runtime_result != 0 || cleanup_count != 1U) {
+        fprintf(
+            stderr,
+            "destroy returned an error after consuming App: injected=%d destroy=%d runtime=%d cleanup=%u\n",
+            injected_status,
+            destroy_status,
+            runtime_result,
+            cleanup_count
+        );
+        return 1;
+    }
+    return 0;
+}
+
 static int test_stop_from_module_cleanup(void) {
     cleanup_stop_case_t state;
-    memset(&state, 0, sizeof(state));
-    atomic_init(&state.called, false);
-    atomic_init(&state.status, DCC_ERR_STATE);
+    cleanup_stop_case_init(&state);
     dcc_app_t *app = NULL;
-    if (create_app(&app) != DCC_OK) {
+    if (create_app(&app) != DCC_OK ||
+        dcc_app_every_ms(app, UINT64_C(60000), legacy_noop_task_handler, NULL) != DCC_OK) {
         return 1;
     }
     dcc_app_module_t module = {
@@ -1180,15 +1225,42 @@ static int test_stop_from_module_cleanup(void) {
     dcc_status_t destroy_status = register_status == DCC_OK
         ? dcc_app_destroy(app)
         : register_status;
-    int called = atomic_load_explicit(&state.called, memory_order_acquire);
+    unsigned calls = atomic_load_explicit(&state.calls, memory_order_acquire);
     dcc_status_t stop_status = (dcc_status_t)atomic_load_explicit(
         &state.status,
         memory_order_acquire
     );
-    if (register_status != DCC_OK || destroy_status != DCC_OK || !called ||
+    if (register_status != DCC_OK || destroy_status != DCC_OK || calls != 1U ||
         stop_status != DCC_OK) {
-        fprintf(stderr, "module cleanup could not request stop: register=%d destroy=%d called=%d stop=%d\n",
-                register_status, destroy_status, called, stop_status);
+        fprintf(stderr, "module cleanup could not request stop: register=%d destroy=%d calls=%u stop=%d\n",
+                register_status, destroy_status, calls, stop_status);
+        return 1;
+    }
+    return 0;
+}
+
+static int test_stop_from_state_cleanup(void) {
+    cleanup_stop_case_t state;
+    cleanup_stop_case_init(&state);
+    dcc_app_t *app = NULL;
+    if (create_app(&app) != DCC_OK ||
+        dcc_app_every_ms(app, UINT64_C(60000), legacy_noop_task_handler, NULL) != DCC_OK) {
+        return 1;
+    }
+    state.app = app;
+    dcc_status_t state_status = dcc_app_set_state(app, &state, cleanup_stop_module_cleanup);
+    dcc_status_t destroy_status = state_status == DCC_OK
+        ? dcc_app_destroy(app)
+        : state_status;
+    unsigned calls = atomic_load_explicit(&state.calls, memory_order_acquire);
+    dcc_status_t stop_status = (dcc_status_t)atomic_load_explicit(
+        &state.status,
+        memory_order_acquire
+    );
+    if (state_status != DCC_OK || destroy_status != DCC_OK || calls != 1U ||
+        stop_status != DCC_OK) {
+        fprintf(stderr, "state cleanup could not request stop: state=%d destroy=%d calls=%u stop=%d\n",
+                state_status, destroy_status, calls, stop_status);
         return 1;
     }
     return 0;
@@ -1213,6 +1285,8 @@ int main(void) {
            test_callback_wait_is_owner_only() != 0 ||
            test_stop_without_schedules_is_idempotent() != 0 ||
            test_failed_reap_restores_owner() != 0 ||
+           test_failed_stop_request_returns_consumed_success() != 0 ||
+           test_stop_from_state_cleanup() != 0 ||
            test_stop_from_module_cleanup() != 0 ||
            dcc_app_destroy(NULL) != DCC_OK;
 }

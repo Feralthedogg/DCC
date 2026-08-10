@@ -183,6 +183,9 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     if (reap_status != DCC_OK) {
         return status == DCC_OK ? reap_status : status;
     }
+    dcc_app_listener_lock(app);
+    app->tearing_down = 1U;
+    dcc_app_listener_unlock(app);
     dcc_app_listener_destroy_all(app);
     for (size_t i = 0; i < app->component_session_listener_count; ++i) {
         if (app->component_session_listeners[i].listener.state != NULL) {
@@ -229,10 +232,15 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
         }
     }
     free(app->middlewares);
-    for (size_t i = 0; i < app->schedule_count; ++i) {
-        free(app->schedules[i]);
+    dcc_app_schedule_t **schedules = app->schedules;
+    size_t schedule_count = app->schedule_count;
+    app->schedules = NULL;
+    app->schedule_count = 0U;
+    app->schedule_cap = 0U;
+    for (size_t i = 0; i < schedule_count; ++i) {
+        free(schedules[i]);
     }
-    free(app->schedules);
+    free(schedules);
     for (size_t i = 0; i < app->module_count; ++i) {
         if (app->modules[i].cleanup != NULL) {
             app->modules[i].cleanup(app->modules[i].user_data);
@@ -245,7 +253,7 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     dcc_client_destroy(app->client);
     dcc_app_listener_sync_deinit(app);
     free(app);
-    return status;
+    return DCC_OK;
 }
 
 dcc_client_t *dcc_app_client(dcc_app_t *app) {
@@ -280,6 +288,12 @@ dcc_status_t dcc_app_stop(dcc_app_t *app) {
     if (app == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
+    dcc_app_listener_lock(app);
+    if (app->tearing_down) {
+        dcc_app_listener_unlock(app);
+        return DCC_OK;
+    }
+    dcc_app_listener_unlock(app);
     atomic_store_explicit(&app->stopping, true, memory_order_release);
     dcc_status_t status = dcc_app_request_stop_schedules(app);
     dcc_status_t client_status = dcc_client_stop(app->client);

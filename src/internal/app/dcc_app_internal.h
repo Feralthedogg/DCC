@@ -151,11 +151,14 @@ struct dcc_app {
     uint8_t store_open;
     uint8_t listener_sync_initialized;
     uint8_t listener_destroying;
+    uint8_t tearing_down;
     uint8_t task_reaping;
     void (*listener_test_before_route_remove)(void *user_data);
     void *listener_test_before_route_remove_data;
     uint8_t listener_test_fail_policy_allocation;
     uint8_t listener_test_fail_schedule_allocation;
+    uint8_t listener_test_fail_task_cancel;
+    dcc_status_t *listener_test_task_cancel_status_out;
     uint8_t listener_test_fail_task_reap;
     size_t listener_test_fail_metadata_copy_after;
 #if defined(_WIN32)

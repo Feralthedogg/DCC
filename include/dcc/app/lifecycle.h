@@ -19,6 +19,9 @@ DCC_API dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t 
  * Returns `DCC_ERR_STATE` without mutation when called from an App-owned
  * callback or cleanup. Callbacks should request `dcc_app_stop()` and let the
  * owner destroy the application after dispatch returns.
+ *
+ * `DCC_OK` means the application was consumed. Any non-OK result leaves the
+ * application alive and owned by the caller so destruction may be retried.
  */
 DCC_API dcc_status_t dcc_app_destroy(dcc_app_t *app);
 
