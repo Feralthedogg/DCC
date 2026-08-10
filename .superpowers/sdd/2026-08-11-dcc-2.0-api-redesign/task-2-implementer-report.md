@@ -157,3 +157,75 @@
   sanitizer runs. The Win32 critical-section/condition-variable path is kept
   compile-time isolated and follows the same lock/wait/wake contract, but this
   round did not have a Windows runner available for execution.
+
+## Fix Round 2 — serialized teardown and exact transactions
+
+### Review findings addressed
+
+- Split listener shutdown into serialized detach and finalize phases. External
+  unlisten/destruction now wait until source removal and all route middleware
+  cleanup complete; cleanup never runs while the App listener lock is held.
+- Changed `dcc_app_destroy` to return `dcc_status_t`. App-owned route, event,
+  task, middleware, error, and cleanup callback frames reject recursive
+  destruction with `DCC_ERR_STATE` before mutation; null/success return
+  `DCC_OK`.
+- Deep-copied App-global and route middleware arrays under the listener lock
+  for each dispatch and retained the canonical listener through the whole
+  middleware/handler/error/snapshot lifetime.
+- Added prepare/commit/abort command-registry additions and private staging for
+  listener, route, and schedule arrays. Every fallible schema copy, capacity
+  growth, route policy, schedule allocation, and metadata copy occurs before a
+  no-fail commit or restores the exact original pointer/count/capacity/IDs.
+- Enforced the listener-kind command matrix: slash, subcommand, and
+  autocomplete accept CHAT_INPUT only; user and message context menus require
+  USER and MESSAGE respectively; omitted type resolves to CHAT_INPUT. Menu
+  builders reject descriptions/options and chat builders require a non-empty
+  description.
+- Kept fallback pointer/count pairs unpublished until nested copying succeeds,
+  and reject allocation-size overflow before validation walks caller arrays.
+
+### TDD evidence
+
+- RED detach barrier: the focused concurrency test reported `listener
+  finalized before route detach completed: pre-remove-cleanup=1 ...` before
+  detach/finalize completion was serialized.
+- RED self-destroy contract: the route/event/task test failed to compile while
+  `dcc_app_destroy` still returned `void`; after the status API and callback
+  frames, all three return `DCC_ERR_STATE` and leave the App unchanged.
+- RED middleware barrier: forcing route middleware reallocation while dispatch
+  paused in global middleware terminated with `Bus error`; owned snapshots
+  made the same test pass under regular, ASan, and TSan builds.
+- RED exact transaction: forced route-policy allocation initially returned
+  success and changed listener/route/registry pointers and capacities. The
+  completed test now snapshots listener/route/schedule pointers, counts,
+  capacities, both next IDs, and registry size/state/entries/count/cap across
+  policy OOM, schedule OOM, route-ID exhaustion, schema-copy overflow,
+  registry-growth OOM, and partial metadata OOM. Every snapshot is identical
+  and failed-listener cleanup remains uncalled.
+- Added two-thread once dispatch, event destruction, and a real one-millisecond
+  LLAM scheduled worker destruction barrier; each proves one claim/cleanup and
+  no cleanup before in-flight work exits.
+
+### Verification and exact results
+
+- Implementation commit: `e42d188` (`fix: close App listener review gaps`).
+  Commits `54bb77d` and earlier were not rewritten.
+- Full configured build passed. Full CTest passed `174/174` enabled tests in
+  75.18s; the configured 24 LLAM subdirectory tests remained disabled.
+- Focused listener concurrency and contract CTest passed `2/2` in 1.12s.
+- ASan/UBSan focused CTest passed `2/2` in 1.22s with
+  `detect_leaks=0`; the installed macOS ASan runtime does not support its leak
+  mode. TSan focused CTest passed `2/2` in 1.60s with no race report.
+- Strict C11 `-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror
+  -fsyntax-only` checks passed for all changed App/registry sources and both
+  focused tests. Standalone `<dcc/app.h>` probes passed as C11 and C++17.
+- `dcc_v2_surface_audit`, `dcc_public_api_audit`,
+  `dcc_project_layout_audit`, `dcc_release_contract_audit`, and all other
+  enabled audits passed. `git diff --check` passed.
+
+### Remaining platform note
+
+- The macOS POSIX paths were exercised under both address/undefined-behavior
+  and thread sanitizers. The Win32 synchronization branch remains
+  compile-time-isolated and was not executed because no Windows runner was
+  available in this workspace.
