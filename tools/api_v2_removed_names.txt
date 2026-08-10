@@ -1,0 +1,40 @@
+# DCC 1.x spellings that must not appear in DCC 2 public headers.
+# Entries are exact identifiers unless they end in '*', which denotes a prefix.
+DCC_ON_*
+DCC_ROUTE_*
+DCC_DECORATE_*
+DCC_RESPOND*
+DCC_SIMPLE_BOT*
+DCC_V2_*
+dcc_rest_future_t
+
+# App-level REST mirrors. Lifecycle and context APIs are intentionally not listed.
+dcc_app_add_*
+dcc_app_archive_*
+dcc_app_begin_guild_prune_*
+dcc_app_clear_member_timeout_*
+dcc_app_consume_entitlement
+dcc_app_create_auto_moderation_*
+dcc_app_create_channel_invite_*
+dcc_app_create_direct_message_*
+dcc_app_create_dm_channel_*
+dcc_app_create_guild_ban_*
+dcc_app_create_guild_channel_*
+dcc_app_create_guild_emoji_*
+dcc_app_create_guild_from_template_*
+dcc_app_create_guild_role_*
+dcc_app_create_guild_scheduled_event_*
+dcc_app_create_guild_sticker_*
+dcc_app_create_guild_template_*
+dcc_app_create_stage_instance_*
+dcc_app_create_test_entitlement_*
+dcc_app_create_thread_*
+dcc_app_crosspost_*
+dcc_app_delete_*
+dcc_app_execute_*
+dcc_app_get_*
+dcc_app_leave_guild
+dcc_app_modify_*
+dcc_app_remove_*
+dcc_app_send_*
+dcc_app_sync_guild_template

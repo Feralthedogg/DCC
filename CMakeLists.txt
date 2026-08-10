@@ -1946,6 +1946,21 @@ if(DCC_BUILD_TESTS)
     enable_testing()
     find_package(Python3 COMPONENTS Interpreter)
 
+    if(Python3_Interpreter_FOUND)
+        add_test(
+            NAME dcc_v2_surface_audit
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_v2_surface.py
+                --source ${CMAKE_CURRENT_SOURCE_DIR}
+                --compiler ${CMAKE_C_COMPILER}
+                --transition
+        )
+        set_tests_properties(dcc_v2_surface_audit PROPERTIES
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            TIMEOUT 180
+        )
+    endif()
+
     add_executable(dcc_smoke tests/smoke.c)
     target_link_libraries(dcc_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_smoke)

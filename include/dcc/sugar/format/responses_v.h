@@ -23,7 +23,7 @@ static inline dcc_status_t dcc_sugar_ctx_replyfv(
         .content = content,
         .flags = flags,
         .has_content = 1U,
-        .has_flags = flags != 0U ? 1U : 0U
+        .has_flags = (uint8_t)(flags != 0U ? 1U : 0U)
     };
     status = dcc_ctx_reply(ctx, &message, NULL, NULL);
     dcc_sugar_format_free(content);
@@ -50,7 +50,7 @@ static inline dcc_status_t dcc_sugar_ctx_followupfv(
         .content = content,
         .flags = flags,
         .has_content = 1U,
-        .has_flags = flags != 0U ? 1U : 0U
+        .has_flags = (uint8_t)(flags != 0U ? 1U : 0U)
     };
     status = dcc_ctx_followup(ctx, &message, NULL, NULL);
     dcc_sugar_format_free(content);
@@ -77,7 +77,7 @@ static inline dcc_status_t dcc_sugar_ctx_sendfv(
         .content = content,
         .flags = flags,
         .has_content = 1U,
-        .has_flags = flags != 0U ? 1U : 0U
+        .has_flags = (uint8_t)(flags != 0U ? 1U : 0U)
     };
     status = dcc_ctx_send(ctx, &message, NULL, NULL);
     dcc_sugar_format_free(content);
@@ -235,7 +235,7 @@ static inline dcc_status_t dcc_sugar_app_sendfv(
         .content = content,
         .flags = flags,
         .has_content = 1U,
-        .has_flags = flags != 0U ? 1U : 0U
+        .has_flags = (uint8_t)(flags != 0U ? 1U : 0U)
     };
     status = dcc_app_send(app, channel_id, &message, NULL, NULL);
     dcc_sugar_format_free(content);

@@ -281,15 +281,15 @@ static inline const char *dcc_sugar_ctx_custom_id_suffix(
 
 static inline const char *dcc_sugar_ctx_component_action(
     const dcc_ctx_t *ctx,
-    const char *namespace
+    const char *component_namespace
 ) {
     const char *custom_id = dcc_ctx_custom_id(ctx);
     size_t namespace_len;
-    if (custom_id == NULL || namespace == NULL || namespace[0] == '\0') {
+    if (custom_id == NULL || component_namespace == NULL || component_namespace[0] == '\0') {
         return NULL;
     }
-    namespace_len = strlen(namespace);
-    if (strncmp(custom_id, namespace, namespace_len) != 0 || custom_id[namespace_len] != '.') {
+    namespace_len = strlen(component_namespace);
+    if (strncmp(custom_id, component_namespace, namespace_len) != 0 || custom_id[namespace_len] != '.') {
         return NULL;
     }
     return custom_id + namespace_len + 1U;
@@ -297,26 +297,26 @@ static inline const char *dcc_sugar_ctx_component_action(
 
 static inline const char *dcc_sugar_ctx_component_action_or(
     const dcc_ctx_t *ctx,
-    const char *namespace,
+    const char *component_namespace,
     const char *fallback
 ) {
-    const char *action = dcc_sugar_ctx_component_action(ctx, namespace);
+    const char *action = dcc_sugar_ctx_component_action(ctx, component_namespace);
     return action != NULL ? action : fallback;
 }
 
 static inline uint8_t dcc_sugar_ctx_component_in_namespace(
     const dcc_ctx_t *ctx,
-    const char *namespace
+    const char *component_namespace
 ) {
-    return dcc_sugar_ctx_component_action(ctx, namespace) != NULL ? 1U : 0U;
+    return dcc_sugar_ctx_component_action(ctx, component_namespace) != NULL ? 1U : 0U;
 }
 
 static inline uint8_t dcc_sugar_ctx_component_has_action(
     const dcc_ctx_t *ctx,
-    const char *namespace,
+    const char *component_namespace,
     const char *action
 ) {
-    return dcc_sugar_ctx_text_eq(dcc_sugar_ctx_component_action(ctx, namespace), action);
+    return dcc_sugar_ctx_text_eq(dcc_sugar_ctx_component_action(ctx, component_namespace), action);
 }
 
 #endif /* DCC_SUGAR_CONTEXT_HELPERS_H */

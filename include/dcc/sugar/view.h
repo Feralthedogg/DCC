@@ -91,7 +91,7 @@ static inline dcc_component_v2_builder_t dcc_sugar_view_button_action_row(
             .label = actions[i].label,
             .disabled = actions[i].disabled,
             .has_button_style = 1U,
-            .has_disabled = actions[i].disabled ? 1U : 0U
+            .has_disabled = (uint8_t)(actions[i].disabled ? 1U : 0U)
         };
     }
 
