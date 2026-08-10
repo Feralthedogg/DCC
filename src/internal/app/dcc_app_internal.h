@@ -8,6 +8,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +61,7 @@ typedef struct dcc_app_route {
     dcc_app_legacy_handler_fn legacy_handler;
     void *user_data;
     void *context_user_data;
+    void *listener_state;
     void (*user_data_cleanup)(void *user_data);
     dcc_app_middleware_t *middlewares;
     size_t middleware_count;
@@ -72,6 +78,7 @@ typedef struct dcc_app_schedule {
     dcc_app_canonical_schedule_fn canonical_fn;
     void *user_data;
     void *listener_state;
+    atomic_bool cancelled;
 } dcc_app_schedule_t;
 
 typedef struct dcc_app_listener_entry dcc_app_listener_entry_t;
@@ -119,6 +126,7 @@ struct dcc_app {
     dcc_app_listener_entry_t **listeners;
     size_t listener_count;
     size_t listener_cap;
+    dcc_app_listener_entry_t *retired_listeners;
     dcc_listener_id_t next_listener_id;
     dcc_app_route_id_t next_route_id;
     dcc_task_group_t *tasks;
@@ -134,6 +142,15 @@ struct dcc_app {
     uint8_t command_sync_listener_registered;
     uint8_t command_sync_ran;
     uint8_t store_open;
+    uint8_t listener_sync_initialized;
+    uint8_t listener_destroying;
+#if defined(_WIN32)
+    CRITICAL_SECTION listener_mutex;
+    CONDITION_VARIABLE listener_cond;
+#else
+    pthread_mutex_t listener_mutex;
+    pthread_cond_t listener_cond;
+#endif
     atomic_bool stopping;
     uint8_t started;
 };
@@ -176,6 +193,7 @@ dcc_status_t dcc_app_add_canonical_route_with_cleanup(
     dcc_app_handler_fn handler,
     void *user_data,
     void *context_user_data,
+    void *listener_state,
     void (*user_data_cleanup)(void *user_data),
     dcc_app_route_id_t *out_route
 );
@@ -248,6 +266,15 @@ dcc_status_t dcc_app_start_schedules(dcc_app_t *app);
 void dcc_app_stop_schedules(dcc_app_t *app);
 dcc_status_t dcc_app_register_command_sync_listener(dcc_app_t *app);
 void dcc_app_listener_destroy_all(dcc_app_t *app);
+void dcc_app_listener_reclaim_all(dcc_app_t *app);
+dcc_status_t dcc_app_listener_sync_init(dcc_app_t *app);
+void dcc_app_listener_sync_deinit(dcc_app_t *app);
+void dcc_app_listener_lock(dcc_app_t *app);
+void dcc_app_listener_unlock(dcc_app_t *app);
+void dcc_app_listener_wait(dcc_app_t *app);
+void dcc_app_listener_wake_all(dcc_app_t *app);
+uint8_t dcc_app_listener_acquire(void *listener_state);
+void dcc_app_listener_release(void *listener_state);
 uint8_t dcc_app_listener_active(const void *listener_state);
 dcc_status_t dcc_app_listener_run_task(void *listener_state, dcc_app_t *app);
 dcc_status_t dcc_app_add_canonical_schedule(
@@ -260,6 +287,7 @@ dcc_status_t dcc_app_add_canonical_schedule(
     void *listener_state,
     dcc_app_schedule_t **out_schedule
 );
+void dcc_app_cancel_canonical_schedule(dcc_app_t *app, dcc_app_schedule_t *schedule);
 
 #ifdef __cplusplus
 }

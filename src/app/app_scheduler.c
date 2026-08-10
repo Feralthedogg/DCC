@@ -4,6 +4,7 @@
 
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #define DCC_APP_KST_OFFSET_SECONDS ((time_t)(9 * 60 * 60))
@@ -36,16 +37,21 @@ static uint8_t dcc_app_stopping(const dcc_app_t *app) {
     return app == NULL || atomic_load_explicit(&app->stopping, memory_order_acquire);
 }
 
-static int dcc_app_sleep_interruptible(dcc_app_t *app, uint64_t delay_ms) {
+static int dcc_app_sleep_interruptible(dcc_app_schedule_t *schedule, uint64_t delay_ms) {
+    dcc_app_t *app = schedule != NULL ? schedule->app : NULL;
     uint64_t remaining = delay_ms;
-    while (remaining > 0U && !dcc_app_stopping(app)) {
+    while (remaining > 0U && !dcc_app_stopping(app) &&
+           !atomic_load_explicit(&schedule->cancelled, memory_order_acquire)) {
         uint64_t slice = remaining > 1000U ? 1000U : remaining;
         if (llam_sleep_ns(slice * UINT64_C(1000000)) != 0) {
             return -1;
         }
         remaining -= slice;
     }
-    return dcc_app_stopping(app) ? -1 : 0;
+    return dcc_app_stopping(app) ||
+                   atomic_load_explicit(&schedule->cancelled, memory_order_acquire)
+        ? -1
+        : 0;
 }
 
 static uint64_t dcc_app_daily_kst_delay_ms(uint8_t hour, uint8_t minute) {
@@ -74,20 +80,21 @@ static void dcc_app_schedule_task(void *arg) {
         (schedule->fn == NULL && schedule->canonical_fn == NULL)) {
         return;
     }
-    while (!dcc_app_stopping(schedule->app)) {
+    while (!dcc_app_stopping(schedule->app) &&
+           !atomic_load_explicit(&schedule->cancelled, memory_order_acquire)) {
         uint64_t delay_ms = schedule->kind == DCC_APP_SCHEDULE_DAILY_KST
             ? dcc_app_daily_kst_delay_ms(schedule->hour, schedule->minute)
             : schedule->interval_ms;
         if (delay_ms == 0U) {
             delay_ms = 1U;
         }
-        if (dcc_app_sleep_interruptible(schedule->app, delay_ms) != 0) {
+        if (dcc_app_sleep_interruptible(schedule, delay_ms) != 0) {
             break;
         }
         if (!dcc_app_stopping(schedule->app) && schedule->fn != NULL) {
             schedule->fn(schedule->app, schedule->user_data);
         } else if (!dcc_app_stopping(schedule->app) && schedule->canonical_fn != NULL &&
-                   dcc_app_listener_active(schedule->listener_state)) {
+                   !atomic_load_explicit(&schedule->cancelled, memory_order_acquire)) {
             (void)schedule->canonical_fn(schedule->listener_state, schedule->app);
         }
     }
@@ -129,6 +136,7 @@ dcc_status_t dcc_app_add_canonical_schedule(
     schedule->minute = minute;
     schedule->canonical_fn = fn;
     schedule->listener_state = listener_state;
+    atomic_init(&schedule->cancelled, false);
     app->schedules[app->schedule_count++] = schedule;
 
     uint8_t created_tasks = 0U;
@@ -194,6 +202,7 @@ static dcc_status_t dcc_app_add_schedule(
     schedule->minute = minute;
     schedule->fn = fn;
     schedule->user_data = user_data;
+    atomic_init(&schedule->cancelled, false);
     app->schedules[app->schedule_count++] = schedule;
 
     if (app->tasks != NULL && app->started) {
@@ -203,6 +212,30 @@ static dcc_status_t dcc_app_add_schedule(
         }
     }
     return DCC_OK;
+}
+
+void dcc_app_cancel_canonical_schedule(dcc_app_t *app, dcc_app_schedule_t *schedule) {
+    if (app == NULL || schedule == NULL) {
+        return;
+    }
+    atomic_store_explicit(&schedule->cancelled, true, memory_order_release);
+    dcc_app_listener_lock(app);
+    for (size_t i = 0U; i < app->schedule_count; ++i) {
+        if (app->schedules[i] != schedule) {
+            continue;
+        }
+        if (i + 1U < app->schedule_count) {
+            memmove(
+                &app->schedules[i],
+                &app->schedules[i + 1U],
+                (app->schedule_count - i - 1U) * sizeof(*app->schedules)
+            );
+        }
+        app->schedule_count--;
+        app->schedules[app->schedule_count] = NULL;
+        break;
+    }
+    dcc_app_listener_unlock(app);
 }
 
 dcc_status_t dcc_app_every_ms(

@@ -73,6 +73,11 @@ dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out) {
     if (app == NULL) {
         return DCC_ERR_NOMEM;
     }
+    dcc_status_t status = dcc_app_listener_sync_init(app);
+    if (status != DCC_OK) {
+        free(app);
+        return status;
+    }
     atomic_init(&app->stopping, false);
     dcc_command_registry_init(&app->registry);
     if (dcc_app_options_has_field(
@@ -123,18 +128,20 @@ dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out) {
         ) &&
         options->store_file_path != NULL &&
         options->store_file_path[0] != '\0') {
-        dcc_status_t status = dcc_app_store_open_file(app, options->store_file_path);
+        status = dcc_app_store_open_file(app, options->store_file_path);
         if (status != DCC_OK) {
             dcc_command_registry_deinit(&app->registry);
+            dcc_app_listener_sync_deinit(app);
             free(app);
             return status;
         }
     }
 
-    dcc_status_t status = dcc_client_create(&options->client, &app->client);
+    status = dcc_client_create(&options->client, &app->client);
     if (status != DCC_OK) {
         dcc_app_store_close(app);
         dcc_command_registry_deinit(&app->registry);
+        dcc_app_listener_sync_deinit(app);
         free(app);
         return status;
     }
@@ -144,6 +151,7 @@ dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out) {
         dcc_client_destroy(app->client);
         dcc_app_store_close(app);
         dcc_command_registry_deinit(&app->registry);
+        dcc_app_listener_sync_deinit(app);
         free(app);
         return status;
     }
@@ -153,6 +161,7 @@ dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out) {
             dcc_client_destroy(app->client);
             dcc_app_store_close(app);
             dcc_command_registry_deinit(&app->registry);
+            dcc_app_listener_sync_deinit(app);
             free(app);
             return status;
         }
@@ -192,6 +201,7 @@ void dcc_app_destroy(dcc_app_t *app) {
     }
     free(app->event_listeners);
     dcc_client_destroy(app->client);
+    dcc_app_listener_reclaim_all(app);
     dcc_command_registry_deinit(&app->registry);
     for (size_t i = 0; i < app->route_count; ++i) {
         free(app->routes[i].key);
@@ -224,6 +234,7 @@ void dcc_app_destroy(dcc_app_t *app) {
     free(app->modules);
     dcc_app_clear_state(app);
     dcc_app_store_close(app);
+    dcc_app_listener_sync_deinit(app);
     free(app);
 }
 

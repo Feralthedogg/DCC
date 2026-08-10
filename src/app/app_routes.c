@@ -148,12 +148,15 @@ dcc_status_t dcc_app_add_route_with_cleanup(
     if (out_route != NULL) {
         *out_route = DCC_APP_ROUTE_INVALID;
     }
+    dcc_app_listener_lock(app);
     dcc_status_t status = dcc_app_routes_reserve(app, app->route_count + 1U);
     if (status != DCC_OK) {
+        dcc_app_listener_unlock(app);
         return status;
     }
     char *copy = dcc_strdup(key);
     if (copy == NULL) {
+        dcc_app_listener_unlock(app);
         return DCC_ERR_NOMEM;
     }
 
@@ -170,6 +173,7 @@ dcc_status_t dcc_app_add_route_with_cleanup(
     if (out_route != NULL) {
         *out_route = route->id;
     }
+    dcc_app_listener_unlock(app);
     return DCC_OK;
 }
 
@@ -181,6 +185,7 @@ dcc_status_t dcc_app_add_canonical_route_with_cleanup(
     dcc_app_handler_fn handler,
     void *user_data,
     void *context_user_data,
+    void *listener_state,
     void (*user_data_cleanup)(void *user_data),
     dcc_app_route_id_t *out_route
 ) {
@@ -193,12 +198,15 @@ dcc_status_t dcc_app_add_canonical_route_with_cleanup(
     if (out_route != NULL) {
         *out_route = DCC_APP_ROUTE_INVALID;
     }
+    dcc_app_listener_lock(app);
     dcc_status_t status = dcc_app_routes_reserve(app, app->route_count + 1U);
     if (status != DCC_OK) {
+        dcc_app_listener_unlock(app);
         return status;
     }
     char *copy = dcc_strdup(key);
     if (copy == NULL) {
+        dcc_app_listener_unlock(app);
         return DCC_ERR_NOMEM;
     }
 
@@ -211,10 +219,12 @@ dcc_status_t dcc_app_add_canonical_route_with_cleanup(
     route->handler = handler;
     route->user_data = user_data;
     route->context_user_data = context_user_data;
+    route->listener_state = listener_state;
     route->user_data_cleanup = user_data_cleanup;
     if (out_route != NULL) {
         *out_route = route->id;
     }
+    dcc_app_listener_unlock(app);
     return DCC_OK;
 }
 
@@ -222,6 +232,7 @@ dcc_status_t dcc_app_remove_route_internal(dcc_app_t *app, dcc_app_route_id_t ro
     if (app == NULL || route_id == DCC_APP_ROUTE_INVALID) {
         return DCC_ERR_INVALID_ARG;
     }
+    dcc_app_listener_lock(app);
     size_t index = app->route_count;
     for (size_t i = 0U; i < app->route_count; ++i) {
         if (app->routes[i].id == route_id) {
@@ -230,6 +241,7 @@ dcc_status_t dcc_app_remove_route_internal(dcc_app_t *app, dcc_app_route_id_t ro
         }
     }
     if (index == app->route_count) {
+        dcc_app_listener_unlock(app);
         return DCC_ERR_INVALID_ARG;
     }
 
@@ -252,6 +264,7 @@ dcc_status_t dcc_app_remove_route_internal(dcc_app_t *app, dcc_app_route_id_t ro
         );
     }
     app->route_count--;
+    dcc_app_listener_unlock(app);
     return DCC_OK;
 }
 
@@ -311,21 +324,26 @@ dcc_status_t dcc_app_route_use_internal(
     if (middleware == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
+    dcc_app_listener_lock(app);
     dcc_app_route_t *route = dcc_app_find_route_by_id(app, route_id);
     if (route == NULL) {
+        dcc_app_listener_unlock(app);
         return DCC_ERR_INVALID_ARG;
     }
     if (route->middleware_count == SIZE_MAX) {
+        dcc_app_listener_unlock(app);
         return DCC_ERR_NOMEM;
     }
     dcc_status_t status = dcc_app_route_middlewares_reserve(route, route->middleware_count + 1U);
     if (status != DCC_OK) {
+        dcc_app_listener_unlock(app);
         return status;
     }
     route->middlewares[route->middleware_count].fn = middleware;
     route->middlewares[route->middleware_count].user_data = user_data;
     route->middlewares[route->middleware_count].cleanup = cleanup;
     route->middleware_count++;
+    dcc_app_listener_unlock(app);
     return DCC_OK;
 }
 
@@ -448,8 +466,11 @@ void dcc_app_dispatch_event(dcc_client_t *client, const dcc_event_t *event, void
     dcc_event_type_t type = dcc_event_type(event);
     const char *key = dcc_app_event_uses_interaction_name(type) ? interaction->name : interaction->custom_id;
     dcc_app_route_t *route = NULL;
+    dcc_app_route_t route_snapshot;
+    uint8_t listener_acquired = 0U;
     char subcommand_path[128];
     char subcommand_key[256];
+    dcc_app_listener_lock(app);
     if ((type == DCC_EVENT_SLASH_COMMAND || type == DCC_EVENT_AUTOCOMPLETE) &&
         dcc_ctx_subcommand_path(
             &(dcc_ctx_t){ .interaction = interaction },
@@ -468,19 +489,33 @@ void dcc_app_dispatch_event(dcc_client_t *client, const dcc_event_t *event, void
         route = dcc_app_find_route(app, type, key);
     }
     if (route == NULL || (route->handler == NULL && route->legacy_handler == NULL)) {
+        dcc_app_listener_unlock(app);
         return;
     }
-    if (route->handler != NULL) {
+    if (route->listener_state != NULL) {
+        listener_acquired = dcc_app_listener_acquire(route->listener_state);
+        if (!listener_acquired) {
+            dcc_app_listener_unlock(app);
+            return;
+        }
+    }
+    route_snapshot = *route;
+    dcc_app_listener_unlock(app);
+    if (route_snapshot.handler != NULL) {
         (void)dcc_app_dispatch_canonical_handler(
-            app, client, event, interaction, NULL, route->middlewares,
-            route->middleware_count, route->handler, route->user_data,
-            route->context_user_data
+            app, client, event, interaction, NULL, route_snapshot.middlewares,
+            route_snapshot.middleware_count, route_snapshot.handler, route_snapshot.user_data,
+            route_snapshot.context_user_data
         );
     } else {
         (void)dcc_app_dispatch_handler(
-            app, client, event, interaction, NULL, route->middlewares,
-            route->middleware_count, route->legacy_handler, route->user_data
+            app, client, event, interaction, NULL, route_snapshot.middlewares,
+            route_snapshot.middleware_count, route_snapshot.legacy_handler,
+            route_snapshot.user_data
         );
+    }
+    if (listener_acquired) {
+        dcc_app_listener_release(route_snapshot.listener_state);
     }
 }
 

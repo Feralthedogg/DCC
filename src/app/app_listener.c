@@ -15,9 +15,13 @@ struct dcc_app_listener_entry {
     dcc_listener_handler_t handler;
     void *user_data;
     dcc_app_cleanup_fn cleanup;
-    atomic_bool active;
-    atomic_bool cleanup_done;
-    atomic_bool fired;
+    size_t in_flight;
+    uint8_t active;
+    uint8_t cleanup_started;
+    uint8_t cleanup_done;
+    uint8_t fired;
+    uint8_t detached;
+    uint8_t retired;
     dcc_app_route_id_t route_id;
     dcc_event_type_t event_type;
     dcc_listener_id_t client_listener_id;
@@ -35,10 +39,113 @@ struct dcc_app_listener_entry {
     size_t prefix_len;
     size_t name_len;
     char *message_command_text;
+    struct dcc_app_listener_entry *next_retired;
 };
 
-static uint8_t dcc_app_listener_has_full_value(size_t size, uint32_t version, size_t required) {
-    return size >= required && version == 1U;
+typedef struct dcc_app_listener_dispatch_frame {
+    dcc_app_listener_entry_t *entry;
+    struct dcc_app_listener_dispatch_frame *previous;
+} dcc_app_listener_dispatch_frame_t;
+
+static _Thread_local dcc_app_listener_dispatch_frame_t *dcc_app_listener_current_frame;
+
+dcc_status_t dcc_app_listener_sync_init(dcc_app_t *app) {
+    if (app == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+#if defined(_WIN32)
+    InitializeCriticalSection(&app->listener_mutex);
+    InitializeConditionVariable(&app->listener_cond);
+#else
+    pthread_mutexattr_t attributes;
+    if (pthread_mutexattr_init(&attributes) != 0) {
+        return DCC_ERR_STATE;
+    }
+    int status = pthread_mutexattr_settype(&attributes, PTHREAD_MUTEX_RECURSIVE);
+    if (status == 0) {
+        status = pthread_mutex_init(&app->listener_mutex, &attributes);
+    }
+    (void)pthread_mutexattr_destroy(&attributes);
+    if (status != 0) {
+        return DCC_ERR_STATE;
+    }
+    if (pthread_cond_init(&app->listener_cond, NULL) != 0) {
+        (void)pthread_mutex_destroy(&app->listener_mutex);
+        return DCC_ERR_STATE;
+    }
+#endif
+    app->listener_sync_initialized = 1U;
+    return DCC_OK;
+}
+
+void dcc_app_listener_sync_deinit(dcc_app_t *app) {
+    if (app == NULL || !app->listener_sync_initialized) {
+        return;
+    }
+#if defined(_WIN32)
+    DeleteCriticalSection(&app->listener_mutex);
+#else
+    (void)pthread_cond_destroy(&app->listener_cond);
+    (void)pthread_mutex_destroy(&app->listener_mutex);
+#endif
+    app->listener_sync_initialized = 0U;
+}
+
+void dcc_app_listener_lock(dcc_app_t *app) {
+    if (app == NULL || !app->listener_sync_initialized) {
+        return;
+    }
+#if defined(_WIN32)
+    EnterCriticalSection(&app->listener_mutex);
+#else
+    (void)pthread_mutex_lock(&app->listener_mutex);
+#endif
+}
+
+void dcc_app_listener_unlock(dcc_app_t *app) {
+    if (app == NULL || !app->listener_sync_initialized) {
+        return;
+    }
+#if defined(_WIN32)
+    LeaveCriticalSection(&app->listener_mutex);
+#else
+    (void)pthread_mutex_unlock(&app->listener_mutex);
+#endif
+}
+
+void dcc_app_listener_wait(dcc_app_t *app) {
+    if (app == NULL || !app->listener_sync_initialized) {
+        return;
+    }
+#if defined(_WIN32)
+    (void)SleepConditionVariableCS(
+        &app->listener_cond,
+        &app->listener_mutex,
+        INFINITE
+    );
+#else
+    (void)pthread_cond_wait(&app->listener_cond, &app->listener_mutex);
+#endif
+}
+
+void dcc_app_listener_wake_all(dcc_app_t *app) {
+    if (app == NULL || !app->listener_sync_initialized) {
+        return;
+    }
+#if defined(_WIN32)
+    WakeAllConditionVariable(&app->listener_cond);
+#else
+    (void)pthread_cond_broadcast(&app->listener_cond);
+#endif
+}
+
+static uint8_t dcc_app_listener_has_full_value(
+    size_t size,
+    uint32_t version,
+    size_t required,
+    uint32_t expected_version
+) {
+    return size >= required && version == expected_version;
 }
 
 static uint8_t dcc_app_listener_is_route_kind(dcc_listener_kind_t kind) {
@@ -81,23 +188,122 @@ static uint8_t dcc_app_listener_route_prefix(dcc_listener_kind_t kind) {
 }
 
 static void dcc_app_listener_cleanup_user(dcc_app_listener_entry_t *entry) {
-    if (entry == NULL || entry->cleanup == NULL ||
-        atomic_exchange_explicit(&entry->cleanup_done, true, memory_order_acq_rel)) {
+    if (entry == NULL) {
         return;
     }
-    entry->cleanup(entry->user_data);
+    dcc_app_t *app = entry->app;
+    dcc_app_cleanup_fn cleanup = NULL;
+    void *user_data = NULL;
+    uint8_t run_cleanup = 0U;
+    dcc_app_listener_lock(app);
+    if (!entry->cleanup_started) {
+        entry->cleanup_started = 1U;
+        cleanup = entry->cleanup;
+        user_data = entry->user_data;
+        run_cleanup = 1U;
+    } else {
+        while (!entry->cleanup_done) {
+            dcc_app_listener_wait(app);
+        }
+    }
+    dcc_app_listener_unlock(app);
+    if (!run_cleanup) {
+        return;
+    }
+    if (cleanup != NULL) {
+        cleanup(user_data);
+    }
+    dcc_app_listener_lock(app);
+    entry->cleanup_done = 1U;
+    dcc_app_listener_wake_all(app);
+    dcc_app_listener_unlock(app);
 }
 
 static void dcc_app_listener_entry_free(dcc_app_listener_entry_t *entry) {
     if (entry == NULL) {
         return;
     }
+    for (size_t i = 0U; i < entry->binding_count; ++i) {
+        if (entry->option_bindings != NULL) {
+            free((void *)entry->option_bindings[i].name);
+            free((void *)entry->option_bindings[i].fallback_string);
+        }
+        if (entry->form_bindings != NULL) {
+            free((void *)entry->form_bindings[i].custom_id);
+            free((void *)entry->form_bindings[i].fallback_string);
+            for (size_t j = 0U; j < entry->form_bindings[i].fallback_values_count; ++j) {
+                free((void *)entry->form_bindings[i].fallback_values[j]);
+            }
+            free((void *)entry->form_bindings[i].fallback_values);
+        }
+        if (entry->component_bindings != NULL) {
+            free((void *)entry->component_bindings[i].custom_id_prefix);
+            free((void *)entry->component_bindings[i].fallback_string);
+            for (size_t j = 0U; j < entry->component_bindings[i].fallback_values_count; ++j) {
+                free((void *)entry->component_bindings[i].fallback_values[j]);
+            }
+            free((void *)entry->component_bindings[i].fallback_values);
+        }
+    }
+    for (size_t i = 0U; i < entry->validator_count; ++i) {
+        free((void *)entry->validators[i].field);
+    }
     free(entry->option_bindings);
     free(entry->form_bindings);
     free(entry->component_bindings);
     free(entry->validators);
     free(entry->message_command_text);
+    free(entry->schedule);
     free(entry);
+}
+
+static dcc_status_t dcc_app_listener_copy_string(const char *value, const char **out) {
+    if (out == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out = NULL;
+    if (value == NULL) {
+        return DCC_OK;
+    }
+    char *copy = dcc_strdup(value);
+    if (copy == NULL) {
+        return DCC_ERR_NOMEM;
+    }
+    *out = copy;
+    return DCC_OK;
+}
+
+static dcc_status_t dcc_app_listener_copy_string_array(
+    const char *const *values,
+    size_t count,
+    const char ***out
+) {
+    if (out == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out = NULL;
+    if (count == 0U) {
+        return DCC_OK;
+    }
+    if (values == NULL || count > SIZE_MAX / sizeof(**out)) {
+        return values == NULL ? DCC_ERR_INVALID_ARG : DCC_ERR_NOMEM;
+    }
+    const char **copy = (const char **)calloc(count, sizeof(*copy));
+    if (copy == NULL) {
+        return DCC_ERR_NOMEM;
+    }
+    for (size_t i = 0U; i < count; ++i) {
+        dcc_status_t status = dcc_app_listener_copy_string(values[i], &copy[i]);
+        if (status != DCC_OK) {
+            for (size_t j = 0U; j < i; ++j) {
+                free((void *)copy[j]);
+            }
+            free(copy);
+            return status;
+        }
+    }
+    *out = copy;
+    return DCC_OK;
 }
 
 static dcc_status_t dcc_app_listener_registry_reserve(dcc_app_t *app, size_t need) {
@@ -124,6 +330,168 @@ static dcc_status_t dcc_app_listener_registry_reserve(dcc_app_t *app, size_t nee
     app->listeners = next;
     app->listener_cap = next_cap;
     return DCC_OK;
+}
+
+static uint8_t dcc_app_listener_is_current(const dcc_app_listener_entry_t *entry) {
+    for (dcc_app_listener_dispatch_frame_t *frame = dcc_app_listener_current_frame;
+         frame != NULL;
+         frame = frame->previous) {
+        if (frame->entry == entry) {
+            return 1U;
+        }
+    }
+    return 0U;
+}
+
+static void dcc_app_listener_frame_push(
+    dcc_app_listener_dispatch_frame_t *frame,
+    dcc_app_listener_entry_t *entry
+) {
+    frame->entry = entry;
+    frame->previous = dcc_app_listener_current_frame;
+    dcc_app_listener_current_frame = frame;
+}
+
+static void dcc_app_listener_frame_pop(dcc_app_listener_dispatch_frame_t *frame) {
+    if (dcc_app_listener_current_frame == frame) {
+        dcc_app_listener_current_frame = frame->previous;
+    }
+}
+
+static void dcc_app_listener_retire_locked(
+    dcc_app_t *app,
+    dcc_app_listener_entry_t *entry
+) {
+    if (entry->retired) {
+        return;
+    }
+    for (size_t i = 0U; i < app->listener_count; ++i) {
+        if (app->listeners[i] != entry) {
+            continue;
+        }
+        if (i + 1U < app->listener_count) {
+            memmove(
+                &app->listeners[i],
+                &app->listeners[i + 1U],
+                (app->listener_count - i - 1U) * sizeof(*app->listeners)
+            );
+        }
+        app->listener_count--;
+        app->listeners[app->listener_count] = NULL;
+        break;
+    }
+    entry->retired = 1U;
+    entry->next_retired = app->retired_listeners;
+    app->retired_listeners = entry;
+}
+
+static dcc_status_t dcc_app_listener_detach_source(dcc_app_listener_entry_t *entry) {
+    if (entry == NULL || entry->app == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_app_t *app = entry->app;
+    dcc_app_route_id_t route_id = DCC_APP_ROUTE_INVALID;
+    dcc_event_type_t event_type = DCC_EVENT_READY;
+    dcc_listener_id_t event_id = 0U;
+    dcc_app_schedule_t *schedule = NULL;
+    dcc_app_listener_lock(app);
+    if (entry->detached) {
+        dcc_app_listener_unlock(app);
+        return DCC_OK;
+    }
+    if (entry->route_id != DCC_APP_ROUTE_INVALID) {
+        if (entry->in_flight != 0U) {
+            dcc_app_listener_unlock(app);
+            return DCC_OK;
+        }
+        route_id = entry->route_id;
+        entry->route_id = DCC_APP_ROUTE_INVALID;
+    } else if (entry->client_listener_id != 0U) {
+        event_type = entry->event_type;
+        event_id = entry->client_listener_id;
+        entry->client_listener_id = 0U;
+    } else if (entry->schedule != NULL) {
+        schedule = entry->schedule;
+    }
+    entry->detached = 1U;
+    dcc_app_listener_unlock(app);
+
+    if (route_id != DCC_APP_ROUTE_INVALID) {
+        return dcc_app_remove_route_internal(app, route_id);
+    }
+    if (event_id != 0U) {
+        return dcc_client_off(app->client, event_type, event_id);
+    }
+    if (schedule != NULL) {
+        dcc_app_cancel_canonical_schedule(app, schedule);
+    }
+    return DCC_OK;
+}
+
+static void dcc_app_listener_finalize(dcc_app_listener_entry_t *entry) {
+    if (entry == NULL) {
+        return;
+    }
+    dcc_app_t *app = entry->app;
+    dcc_app_listener_lock(app);
+    uint8_t ready = !entry->active && entry->in_flight == 0U;
+    dcc_app_listener_unlock(app);
+    if (!ready) {
+        return;
+    }
+    (void)dcc_app_listener_detach_source(entry);
+    dcc_app_listener_cleanup_user(entry);
+}
+
+uint8_t dcc_app_listener_acquire(void *listener_state) {
+    dcc_app_listener_entry_t *entry = (dcc_app_listener_entry_t *)listener_state;
+    if (entry == NULL || entry->app == NULL) {
+        return 0U;
+    }
+    dcc_app_t *app = entry->app;
+    uint8_t claimed_once = 0U;
+    dcc_app_listener_lock(app);
+    if (!entry->active || app->listener_destroying) {
+        dcc_app_listener_unlock(app);
+        return 0U;
+    }
+    if (entry->once) {
+        if (entry->fired) {
+            dcc_app_listener_unlock(app);
+            return 0U;
+        }
+        entry->fired = 1U;
+        entry->active = 0U;
+        dcc_app_listener_retire_locked(app, entry);
+        claimed_once = 1U;
+    }
+    entry->in_flight++;
+    dcc_app_listener_unlock(app);
+    if (claimed_once) {
+        (void)dcc_app_listener_detach_source(entry);
+    }
+    return 1U;
+}
+
+void dcc_app_listener_release(void *listener_state) {
+    dcc_app_listener_entry_t *entry = (dcc_app_listener_entry_t *)listener_state;
+    if (entry == NULL || entry->app == NULL) {
+        return;
+    }
+    dcc_app_t *app = entry->app;
+    uint8_t finalize = 0U;
+    dcc_app_listener_lock(app);
+    if (entry->in_flight != 0U) {
+        entry->in_flight--;
+    }
+    if (entry->in_flight == 0U) {
+        finalize = !entry->active;
+        dcc_app_listener_wake_all(app);
+    }
+    dcc_app_listener_unlock(app);
+    if (finalize) {
+        dcc_app_listener_finalize(entry);
+    }
 }
 
 void dcc_listener_init(dcc_listener_t *listener, dcc_listener_kind_t kind) {
@@ -167,27 +535,37 @@ static dcc_status_t dcc_app_listener_validate_policy(
     if (!dcc_app_listener_has_full_value(
             policy->size,
             policy->version,
-            sizeof(*policy)
+            sizeof(*policy),
+            DCC_LISTENER_ROUTE_POLICY_VERSION
         ) ||
-        (policy->middleware_count != 0U && policy->middlewares == NULL) ||
-        (policy->owner_user_id_count != 0U && policy->owner_user_ids == NULL) ||
-        (policy->check_count != 0U && policy->checks == NULL) ||
-        (policy->channel_type_count != 0U && policy->channel_types == NULL) ||
-        (policy->required_role_id_count != 0U && policy->required_role_ids == NULL) ||
-        (policy->any_role_id_count != 0U && policy->any_role_ids == NULL) ||
-        (policy->guild_only != 0U && policy->dm_only != 0U)) {
+        ((policy->middleware_count == 0U) != (policy->middlewares == NULL)) ||
+        ((policy->owner_user_id_count == 0U) != (policy->owner_user_ids == NULL)) ||
+        ((policy->check_count == 0U) != (policy->checks == NULL)) ||
+        ((policy->channel_type_count == 0U) != (policy->channel_types == NULL)) ||
+        ((policy->required_role_id_count == 0U) != (policy->required_role_ids == NULL)) ||
+        ((policy->any_role_id_count == 0U) != (policy->any_role_ids == NULL)) ||
+        policy->guild_only > 1U || policy->dm_only > 1U || policy->nsfw_only > 1U ||
+        (policy->dm_only != 0U &&
+         (policy->guild_only != 0U || policy->nsfw_only != 0U ||
+          policy->required_permissions != 0U || policy->channel_type_count != 0U ||
+          policy->required_role_id_count != 0U || policy->any_role_id_count != 0U ||
+          policy->cooldown.bucket == DCC_LISTENER_COOLDOWN_GUILD))) {
         return DCC_ERR_INVALID_ARG;
     }
     for (size_t i = 0U; i < policy->middleware_count; ++i) {
         const dcc_listener_middleware_t *item = &policy->middlewares[i];
-        if (!dcc_app_listener_has_full_value(item->size, item->version, sizeof(*item)) ||
+        if (!dcc_app_listener_has_full_value(
+                item->size, item->version, sizeof(*item), DCC_LISTENER_MIDDLEWARE_VERSION
+            ) ||
             item->callback == NULL) {
             return DCC_ERR_INVALID_ARG;
         }
     }
     for (size_t i = 0U; i < policy->check_count; ++i) {
         const dcc_listener_check_t *item = &policy->checks[i];
-        if (!dcc_app_listener_has_full_value(item->size, item->version, sizeof(*item)) ||
+        if (!dcc_app_listener_has_full_value(
+                item->size, item->version, sizeof(*item), DCC_LISTENER_CHECK_VERSION
+            ) ||
             item->callback == NULL) {
             return DCC_ERR_INVALID_ARG;
         }
@@ -196,7 +574,8 @@ static dcc_status_t dcc_app_listener_validate_policy(
     if (!dcc_app_listener_has_full_value(
             cooldown->size,
             cooldown->version,
-            sizeof(*cooldown)
+            sizeof(*cooldown),
+            DCC_LISTENER_COOLDOWN_VERSION
         )) {
         return DCC_ERR_INVALID_ARG;
     }
@@ -226,6 +605,120 @@ static uint8_t dcc_app_listener_policy_is_empty(
            policy->channel_types == NULL && policy->channel_type_count == 0U &&
            policy->required_role_ids == NULL && policy->required_role_id_count == 0U &&
            policy->any_role_ids == NULL && policy->any_role_id_count == 0U;
+}
+
+static uint8_t dcc_app_listener_binding_has_zero_scalar_fallbacks(
+    const dcc_listener_binding_t *item
+) {
+    return item->fallback_integer == 0 && item->fallback_number == 0.0 &&
+           item->fallback_boolean == 0U && item->fallback_snowflake == 0U &&
+           item->fallback_component_type == 0U;
+}
+
+static uint8_t dcc_app_listener_binding_fallbacks_are_valid(
+    dcc_listener_binding_kind_t kind,
+    const dcc_listener_binding_t *item
+) {
+    if ((item->fallback_values_count == 0U) != (item->fallback_values == NULL)) {
+        return 0U;
+    }
+    if (kind == DCC_LISTENER_BIND_OPTIONS) {
+        if (item->custom_id_prefix != NULL || item->count_offset != 0U ||
+            item->has_count_offset != 0U || item->fallback_values != NULL ||
+            item->fallback_component_type != 0U) {
+            return 0U;
+        }
+        switch ((dcc_ctx_option_bind_type_t)item->type) {
+            case DCC_CTX_OPTION_BIND_STRING:
+                return item->fallback_integer == 0 && item->fallback_number == 0.0 &&
+                       item->fallback_boolean == 0U && item->fallback_snowflake == 0U;
+            case DCC_CTX_OPTION_BIND_INTEGER:
+                return item->fallback_string == NULL && item->fallback_number == 0.0 &&
+                       item->fallback_boolean == 0U && item->fallback_snowflake == 0U;
+            case DCC_CTX_OPTION_BIND_NUMBER:
+                return item->fallback_string == NULL && item->fallback_integer == 0 &&
+                       item->fallback_boolean == 0U && item->fallback_snowflake == 0U;
+            case DCC_CTX_OPTION_BIND_BOOLEAN:
+                return item->fallback_string == NULL && item->fallback_integer == 0 &&
+                       item->fallback_number == 0.0 && item->fallback_snowflake == 0U &&
+                       item->fallback_boolean <= 1U;
+            case DCC_CTX_OPTION_BIND_SNOWFLAKE:
+                return item->fallback_string == NULL && item->fallback_integer == 0 &&
+                       item->fallback_number == 0.0 && item->fallback_boolean == 0U;
+            case DCC_CTX_OPTION_BIND_USER:
+            case DCC_CTX_OPTION_BIND_MEMBER:
+            case DCC_CTX_OPTION_BIND_ROLE:
+            case DCC_CTX_OPTION_BIND_CHANNEL:
+            case DCC_CTX_OPTION_BIND_MESSAGE:
+            case DCC_CTX_OPTION_BIND_ATTACHMENT:
+                return item->fallback_string == NULL &&
+                       dcc_app_listener_binding_has_zero_scalar_fallbacks(item);
+        }
+        return 0U;
+    }
+    if (kind == DCC_LISTENER_BIND_FORM) {
+        if (item->custom_id_prefix != NULL || item->fallback_integer != 0 ||
+            item->fallback_number != 0.0 || item->fallback_snowflake != 0U ||
+            item->fallback_component_type != 0U) {
+            return 0U;
+        }
+        if (item->type == DCC_CTX_FORM_BIND_STRING) {
+            return item->fallback_boolean == 0U && item->fallback_values == NULL &&
+                   item->count_offset == 0U && item->has_count_offset == 0U;
+        }
+        if (item->type == DCC_CTX_FORM_BIND_BOOLEAN) {
+            return item->fallback_string == NULL && item->fallback_boolean <= 1U &&
+                   item->fallback_values == NULL && item->count_offset == 0U &&
+                   item->has_count_offset == 0U;
+        }
+        return item->type == DCC_CTX_FORM_BIND_VALUES && item->fallback_string == NULL &&
+               item->fallback_boolean == 0U;
+    }
+    if (item->name != NULL || item->fallback_integer != 0 ||
+        item->fallback_number != 0.0 || item->fallback_boolean != 0U ||
+        item->fallback_snowflake != 0U) {
+        return 0U;
+    }
+    if (item->type == DCC_CTX_COMPONENT_BIND_CUSTOM_ID_SUFFIX) {
+        if (item->custom_id_prefix == NULL || item->custom_id_prefix[0] == '\0') {
+            return 0U;
+        }
+    } else if (item->custom_id_prefix != NULL) {
+        return 0U;
+    }
+    if (item->type == DCC_CTX_COMPONENT_BIND_VALUES) {
+        return item->fallback_string == NULL && item->fallback_component_type == 0U;
+    }
+    if (item->type == DCC_CTX_COMPONENT_BIND_COMPONENT_TYPE) {
+        return item->fallback_string == NULL && item->fallback_values == NULL &&
+               item->count_offset == 0U && item->has_count_offset == 0U;
+    }
+    return item->fallback_values == NULL && item->fallback_component_type == 0U &&
+           item->count_offset == 0U && item->has_count_offset == 0U;
+}
+
+static uint8_t dcc_app_listener_validator_inactive_fields_are_zero(
+    const dcc_listener_validator_t *item
+) {
+    switch (item->kind) {
+        case DCC_LISTENER_VALIDATE_STRING_REQUIRED:
+        case DCC_LISTENER_VALIDATE_DATE_YYYYMMDD:
+        case DCC_LISTENER_VALIDATE_DATE_MMDD:
+        case DCC_LISTENER_VALIDATE_DATE_MMDD_OR_YYYYMMDD:
+            return item->min_length == 0U && item->max_length == 0U &&
+                   item->min_integer == 0 && item->max_integer == 0 &&
+                   item->min_number == 0.0 && item->max_number == 0.0;
+        case DCC_LISTENER_VALIDATE_STRING_LENGTH:
+            return item->min_integer == 0 && item->max_integer == 0 &&
+                   item->min_number == 0.0 && item->max_number == 0.0;
+        case DCC_LISTENER_VALIDATE_INTEGER_RANGE:
+            return item->min_length == 0U && item->max_length == 0U &&
+                   item->min_number == 0.0 && item->max_number == 0.0;
+        case DCC_LISTENER_VALIDATE_NUMBER_RANGE:
+            return item->min_length == 0U && item->max_length == 0U &&
+                   item->min_integer == 0 && item->max_integer == 0;
+    }
+    return 0U;
 }
 
 static uint8_t dcc_app_listener_range_fits(
@@ -294,31 +787,35 @@ static dcc_status_t dcc_app_listener_validate_bindings(
     if (!dcc_app_listener_has_full_value(
             bindings->size,
             bindings->version,
-            sizeof(*bindings)
+            sizeof(*bindings),
+            DCC_LISTENER_BINDINGS_VERSION
         ) ||
         !dcc_app_listener_has_full_value(
             validators->size,
             validators->version,
-            sizeof(*validators)
+            sizeof(*validators),
+            DCC_LISTENER_VALIDATORS_VERSION
         ) ||
         !dcc_app_listener_has_full_value(
             validation->size,
             validation->version,
-            sizeof(*validation)
+            sizeof(*validation),
+            DCC_LISTENER_VALIDATION_POLICY_VERSION
         ) || validation->suppress_response > 1U) {
         return DCC_ERR_INVALID_ARG;
     }
 
     if (listener->args_size == 0U) {
         return bindings->kind == DCC_LISTENER_BIND_NONE && bindings->count == 0U &&
-                       validators->count == 0U
+                       bindings->items.options == NULL && validators->count == 0U &&
+                       validators->items == NULL && validation->suppress_response == 0U
             ? DCC_OK
             : DCC_ERR_INVALID_ARG;
     }
     if (bindings->kind < DCC_LISTENER_BIND_OPTIONS ||
         bindings->kind > DCC_LISTENER_BIND_COMPONENT ||
         bindings->count == 0U || bindings->items.options == NULL ||
-        (validators->count != 0U && validators->items == NULL)) {
+        ((validators->count == 0U) != (validators->items == NULL))) {
         return DCC_ERR_INVALID_ARG;
     }
     if ((bindings->kind == DCC_LISTENER_BIND_OPTIONS &&
@@ -337,7 +834,9 @@ static dcc_status_t dcc_app_listener_validate_bindings(
     }
     for (size_t i = 0U; i < bindings->count; ++i) {
         const dcc_listener_binding_t *item = &bindings->items.options[i];
-        if (!dcc_app_listener_has_full_value(item->size, item->version, sizeof(*item)) ||
+        if (!dcc_app_listener_has_full_value(
+                item->size, item->version, sizeof(*item), DCC_LISTENER_BINDING_VERSION
+            ) ||
             item->type == 0U || item->has_count_offset > 1U || item->required > 1U ||
             item->fallback_boolean > 1U) {
             return DCC_ERR_INVALID_ARG;
@@ -353,7 +852,8 @@ static dcc_status_t dcc_app_listener_validate_bindings(
             return DCC_ERR_INVALID_ARG;
         }
         if (bindings->kind == DCC_LISTENER_BIND_COMPONENT &&
-            item->type > DCC_CTX_COMPONENT_BIND_COMPONENT_TYPE) {
+            (item->type < DCC_CTX_COMPONENT_BIND_CUSTOM_ID ||
+             item->type > DCC_CTX_COMPONENT_BIND_COMPONENT_TYPE)) {
             return DCC_ERR_INVALID_ARG;
         }
         size_t width = dcc_app_listener_binding_width(bindings->kind, item->type);
@@ -371,16 +871,26 @@ static dcc_status_t dcc_app_listener_validate_bindings(
                   sizeof(size_t),
                   listener->args_size
               ))) ||
-            (item->fallback_values_count != 0U && item->fallback_values == NULL)) {
+            (item->has_count_offset == 0U && item->count_offset != 0U) ||
+            !dcc_app_listener_binding_fallbacks_are_valid(bindings->kind, item)) {
             return DCC_ERR_INVALID_ARG;
+        }
+        for (size_t value_index = 0U; value_index < item->fallback_values_count;
+             ++value_index) {
+            if (item->fallback_values[value_index] == NULL) {
+                return DCC_ERR_INVALID_ARG;
+            }
         }
     }
     for (size_t i = 0U; i < validators->count; ++i) {
         const dcc_listener_validator_t *item = &validators->items[i];
-        if (!dcc_app_listener_has_full_value(item->size, item->version, sizeof(*item)) ||
+        if (!dcc_app_listener_has_full_value(
+                item->size, item->version, sizeof(*item), DCC_LISTENER_VALIDATOR_VERSION
+            ) ||
             item->field == NULL || item->field[0] == '\0' ||
             item->kind < DCC_LISTENER_VALIDATE_STRING_REQUIRED ||
             item->kind > DCC_LISTENER_VALIDATE_DATE_MMDD_OR_YYYYMMDD ||
+            !dcc_app_listener_validator_inactive_fields_are_zero(item) ||
             !dcc_app_listener_range_fits(
                 item->field_offset,
                 dcc_app_listener_validator_width(item->kind),
@@ -388,10 +898,12 @@ static dcc_status_t dcc_app_listener_validate_bindings(
             ) ||
             (item->kind == DCC_LISTENER_VALIDATE_STRING_LENGTH &&
              item->max_length != 0U && item->min_length > item->max_length) ||
-            item->min_integer > item->max_integer ||
-            item->min_number != item->min_number ||
-            item->max_number != item->max_number ||
-            item->min_number > item->max_number) {
+            (item->kind == DCC_LISTENER_VALIDATE_INTEGER_RANGE &&
+             item->min_integer > item->max_integer) ||
+            (item->kind == DCC_LISTENER_VALIDATE_NUMBER_RANGE &&
+             (item->min_number != item->min_number ||
+              item->max_number != item->max_number ||
+              item->min_number > item->max_number))) {
             return DCC_ERR_INVALID_ARG;
         }
     }
@@ -401,36 +913,73 @@ static dcc_status_t dcc_app_listener_validate_bindings(
 static dcc_status_t dcc_app_listener_validate_target(const dcc_listener_t *listener) {
     if (dcc_app_listener_is_route_kind(listener->kind)) {
         const dcc_listener_route_target_t *target = &listener->target.route;
-        if (!dcc_app_listener_has_full_value(target->size, target->version, sizeof(*target))) {
+        if (!dcc_app_listener_has_full_value(
+                target->size, target->version, sizeof(*target), DCC_LISTENER_TARGET_VERSION
+            )) {
             return DCC_ERR_INVALID_ARG;
         }
-        if (listener->kind == DCC_LISTENER_SUBCOMMAND ||
-            (listener->kind == DCC_LISTENER_AUTOCOMPLETE &&
-             (target->command_name != NULL || target->subcommand_path != NULL))) {
-            return target->command_name != NULL && target->command_name[0] != '\0' &&
+        if (listener->kind == DCC_LISTENER_SUBCOMMAND) {
+            return target->name == NULL && target->description == NULL &&
+                           target->command_name != NULL && target->command_name[0] != '\0' &&
                            target->subcommand_path != NULL && target->subcommand_path[0] != '\0'
                 ? DCC_OK
                 : DCC_ERR_INVALID_ARG;
         }
-        const char *name = target->command != NULL ? target->command->name : target->name;
-        return name != NULL && name[0] != '\0' ? DCC_OK : DCC_ERR_INVALID_ARG;
+        if (listener->kind == DCC_LISTENER_AUTOCOMPLETE &&
+            (target->command_name != NULL || target->subcommand_path != NULL)) {
+            return target->name == NULL && target->description == NULL &&
+                           target->command_name != NULL && target->command_name[0] != '\0' &&
+                           target->subcommand_path != NULL && target->subcommand_path[0] != '\0'
+                ? DCC_OK
+                : DCC_ERR_INVALID_ARG;
+        }
+        if (target->command_name != NULL || target->subcommand_path != NULL) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        if (dcc_app_listener_is_component_kind(listener->kind)) {
+            return target->command == NULL && target->description == NULL &&
+                           target->name != NULL && target->name[0] != '\0'
+                ? DCC_OK
+                : DCC_ERR_INVALID_ARG;
+        }
+        if (listener->kind == DCC_LISTENER_AUTOCOMPLETE ||
+            listener->kind == DCC_LISTENER_USER_CONTEXT_MENU ||
+            listener->kind == DCC_LISTENER_MESSAGE_CONTEXT_MENU) {
+            if (target->description != NULL) {
+                return DCC_ERR_INVALID_ARG;
+            }
+        }
+        if (target->command != NULL) {
+            return target->name == NULL &&
+                           (listener->kind != DCC_LISTENER_SLASH || target->description == NULL) &&
+                           target->command->name != NULL && target->command->name[0] != '\0'
+                ? DCC_OK
+                : DCC_ERR_INVALID_ARG;
+        }
+        return target->name != NULL && target->name[0] != '\0' ? DCC_OK : DCC_ERR_INVALID_ARG;
     }
     if (listener->kind == DCC_LISTENER_EVENT || listener->kind == DCC_LISTENER_READY ||
         (listener->kind >= DCC_LISTENER_MESSAGE_CREATE &&
          listener->kind <= DCC_LISTENER_MESSAGE_DELETE)) {
         const dcc_listener_event_target_t *target = &listener->target.event;
-        if (!dcc_app_listener_has_full_value(target->size, target->version, sizeof(*target)) ||
+        if (!dcc_app_listener_has_full_value(
+                target->size, target->version, sizeof(*target), DCC_LISTENER_TARGET_VERSION
+            ) ||
             target->once > 1U) {
             return DCC_ERR_INVALID_ARG;
         }
-        return listener->kind != DCC_LISTENER_EVENT ||
-                       (target->type >= 0 && target->type < DCC_EVENT_MAX)
-            ? DCC_OK
-            : DCC_ERR_INVALID_ARG;
+        if (listener->kind == DCC_LISTENER_EVENT) {
+            return target->type >= 0 && target->type < DCC_EVENT_MAX
+                ? DCC_OK
+                : DCC_ERR_INVALID_ARG;
+        }
+        return target->type == DCC_EVENT_READY ? DCC_OK : DCC_ERR_INVALID_ARG;
     }
     if (listener->kind == DCC_LISTENER_MESSAGE_COMMAND) {
         const dcc_listener_message_command_target_t *target = &listener->target.message_command;
-        return dcc_app_listener_has_full_value(target->size, target->version, sizeof(*target)) &&
+        return dcc_app_listener_has_full_value(
+                   target->size, target->version, sizeof(*target), DCC_LISTENER_TARGET_VERSION
+               ) &&
                        target->prefix != NULL && target->prefix[0] != '\0' &&
                        target->name != NULL && target->name[0] != '\0'
             ? DCC_OK
@@ -438,14 +987,18 @@ static dcc_status_t dcc_app_listener_validate_target(const dcc_listener_t *liste
     }
     if (listener->kind == DCC_LISTENER_TASK) {
         const dcc_listener_schedule_target_t *target = &listener->target.schedule;
-        if (!dcc_app_listener_has_full_value(target->size, target->version, sizeof(*target))) {
+        if (!dcc_app_listener_has_full_value(
+                target->size, target->version, sizeof(*target), DCC_LISTENER_TARGET_VERSION
+            )) {
             return DCC_ERR_INVALID_ARG;
         }
         if (target->kind == DCC_LISTENER_SCHEDULE_INTERVAL) {
-            return target->interval_ms != 0U ? DCC_OK : DCC_ERR_INVALID_ARG;
+            return target->interval_ms != 0U && target->hour == 0U && target->minute == 0U
+                ? DCC_OK
+                : DCC_ERR_INVALID_ARG;
         }
         return target->kind == DCC_LISTENER_SCHEDULE_DAILY_KST &&
-                       target->hour <= 23U && target->minute <= 59U
+                       target->interval_ms == 0U && target->hour <= 23U && target->minute <= 59U
             ? DCC_OK
             : DCC_ERR_INVALID_ARG;
     }
@@ -530,15 +1083,27 @@ static dcc_status_t dcc_app_listener_copy_bindings(
         }
         for (size_t i = 0U; i < count; ++i) {
             entry->option_bindings[i] = (dcc_ctx_option_field_binding_t){
-                .size = sizeof(entry->option_bindings[i]), .name = items[i].name,
+                .size = sizeof(entry->option_bindings[i]),
                 .type = (dcc_ctx_option_bind_type_t)items[i].type,
                 .field_offset = items[i].field_offset, .required = items[i].required,
-                .fallback_string = items[i].fallback_string,
                 .fallback_integer = items[i].fallback_integer,
                 .fallback_number = items[i].fallback_number,
                 .fallback_boolean = items[i].fallback_boolean,
                 .fallback_snowflake = items[i].fallback_snowflake,
             };
+            dcc_status_t status = dcc_app_listener_copy_string(
+                items[i].name,
+                &entry->option_bindings[i].name
+            );
+            if (status == DCC_OK) {
+                status = dcc_app_listener_copy_string(
+                    items[i].fallback_string,
+                    &entry->option_bindings[i].fallback_string
+                );
+            }
+            if (status != DCC_OK) {
+                return status;
+            }
         }
     } else if (entry->binding_kind == DCC_LISTENER_BIND_FORM) {
         entry->form_bindings = (dcc_ctx_form_field_binding_t *)calloc(
@@ -550,15 +1115,33 @@ static dcc_status_t dcc_app_listener_copy_bindings(
         }
         for (size_t i = 0U; i < count; ++i) {
             entry->form_bindings[i] = (dcc_ctx_form_field_binding_t){
-                .size = sizeof(entry->form_bindings[i]), .custom_id = items[i].name,
+                .size = sizeof(entry->form_bindings[i]),
                 .type = (dcc_ctx_form_bind_type_t)items[i].type,
                 .field_offset = items[i].field_offset, .count_offset = items[i].count_offset,
                 .has_count_offset = items[i].has_count_offset, .required = items[i].required,
-                .fallback_string = items[i].fallback_string,
                 .fallback_boolean = items[i].fallback_boolean,
-                .fallback_values = items[i].fallback_values,
                 .fallback_values_count = items[i].fallback_values_count,
             };
+            dcc_status_t status = dcc_app_listener_copy_string(
+                items[i].name,
+                &entry->form_bindings[i].custom_id
+            );
+            if (status == DCC_OK) {
+                status = dcc_app_listener_copy_string(
+                    items[i].fallback_string,
+                    &entry->form_bindings[i].fallback_string
+                );
+            }
+            if (status == DCC_OK) {
+                status = dcc_app_listener_copy_string_array(
+                    items[i].fallback_values,
+                    items[i].fallback_values_count,
+                    &entry->form_bindings[i].fallback_values
+                );
+            }
+            if (status != DCC_OK) {
+                return status;
+            }
         }
     } else {
         entry->component_bindings = (dcc_ctx_component_field_binding_t *)calloc(
@@ -572,14 +1155,31 @@ static dcc_status_t dcc_app_listener_copy_bindings(
             entry->component_bindings[i] = (dcc_ctx_component_field_binding_t){
                 .size = sizeof(entry->component_bindings[i]),
                 .type = (dcc_ctx_component_bind_type_t)items[i].type,
-                .custom_id_prefix = items[i].custom_id_prefix,
                 .field_offset = items[i].field_offset, .count_offset = items[i].count_offset,
                 .has_count_offset = items[i].has_count_offset, .required = items[i].required,
-                .fallback_string = items[i].fallback_string,
-                .fallback_values = items[i].fallback_values,
                 .fallback_values_count = items[i].fallback_values_count,
                 .fallback_component_type = items[i].fallback_component_type,
             };
+            dcc_status_t status = dcc_app_listener_copy_string(
+                items[i].custom_id_prefix,
+                &entry->component_bindings[i].custom_id_prefix
+            );
+            if (status == DCC_OK) {
+                status = dcc_app_listener_copy_string(
+                    items[i].fallback_string,
+                    &entry->component_bindings[i].fallback_string
+                );
+            }
+            if (status == DCC_OK) {
+                status = dcc_app_listener_copy_string_array(
+                    items[i].fallback_values,
+                    items[i].fallback_values_count,
+                    &entry->component_bindings[i].fallback_values
+                );
+            }
+            if (status != DCC_OK) {
+                return status;
+            }
         }
     }
 
@@ -597,13 +1197,20 @@ static dcc_status_t dcc_app_listener_copy_bindings(
     for (size_t i = 0U; i < entry->validator_count; ++i) {
         const dcc_listener_validator_t *item = &listener->validators.items[i];
         entry->validators[i] = (dcc_ctx_field_validator_t){
-            .size = sizeof(entry->validators[i]), .field = item->field,
+            .size = sizeof(entry->validators[i]),
             .type = (dcc_ctx_field_validate_type_t)item->kind,
             .field_offset = item->field_offset, .min_length = item->min_length,
             .max_length = item->max_length, .min_integer = item->min_integer,
             .max_integer = item->max_integer, .min_number = item->min_number,
             .max_number = item->max_number,
         };
+        dcc_status_t status = dcc_app_listener_copy_string(
+            item->field,
+            &entry->validators[i].field
+        );
+        if (status != DCC_OK) {
+            return status;
+        }
     }
     return DCC_OK;
 }
@@ -629,15 +1236,20 @@ static dcc_status_t dcc_app_listener_bind_args(
 
 static dcc_status_t dcc_app_listener_route_dispatch(dcc_ctx_t *ctx, void *user_data) {
     dcc_app_listener_entry_t *entry = (dcc_app_listener_entry_t *)user_data;
-    if (entry == NULL || !atomic_load_explicit(&entry->active, memory_order_acquire)) {
+    if (entry == NULL) {
         return DCC_OK;
     }
+    dcc_app_listener_dispatch_frame_t frame;
+    dcc_app_listener_frame_push(&frame, entry);
     if (entry->args_size == 0U) {
-        return entry->handler.plain(ctx, entry->user_data);
+        dcc_status_t status = entry->handler.plain(ctx, entry->user_data);
+        dcc_app_listener_frame_pop(&frame);
+        return status;
     }
 
     void *args = calloc(1U, entry->args_size);
     if (args == NULL) {
+        dcc_app_listener_frame_pop(&frame);
         return DCC_ERR_NOMEM;
     }
     dcc_status_t status = dcc_app_listener_bind_args(entry, ctx, args);
@@ -668,6 +1280,7 @@ static dcc_status_t dcc_app_listener_route_dispatch(dcc_ctx_t *ctx, void *user_d
         status = entry->handler.typed(ctx, args, entry->user_data);
     }
     free(args);
+    dcc_app_listener_frame_pop(&frame);
     return status;
 }
 
@@ -803,19 +1416,43 @@ static dcc_status_t dcc_app_listener_add_command_schema(
     return status;
 }
 
+static dcc_status_t dcc_app_listener_route_key(
+    const dcc_listener_t *listener,
+    const char **out_key,
+    char *key_buffer,
+    size_t key_buffer_size
+) {
+    const dcc_listener_route_target_t *target = &listener->target.route;
+    if (listener->kind == DCC_LISTENER_SUBCOMMAND ||
+        (listener->kind == DCC_LISTENER_AUTOCOMPLETE && target->command_name != NULL)) {
+        dcc_status_t status = dcc_app_subcommand_key(
+            target->command_name,
+            target->subcommand_path,
+            key_buffer,
+            key_buffer_size
+        );
+        if (status == DCC_OK) {
+            *out_key = key_buffer;
+        }
+        return status;
+    }
+    *out_key = target->command != NULL ? target->command->name : target->name;
+    return DCC_OK;
+}
+
 static dcc_status_t dcc_app_listener_register_route(
     dcc_app_listener_entry_t *entry,
     const dcc_listener_t *listener
 ) {
     char key_buffer[256];
     const char *key = NULL;
-    dcc_status_t status = dcc_app_listener_add_command_schema(
-        entry,
+    dcc_status_t status = dcc_app_listener_route_key(
         listener,
         &key,
         key_buffer,
         sizeof(key_buffer)
     );
+    dcc_app_route_id_t previous_route_id = entry->app->next_route_id;
     if (status == DCC_OK) {
         status = dcc_app_add_canonical_route_with_cleanup(
             entry->app,
@@ -825,6 +1462,7 @@ static dcc_status_t dcc_app_listener_register_route(
             dcc_app_listener_route_dispatch,
             entry,
             entry->user_data,
+            entry,
             NULL,
             &entry->route_id
         );
@@ -832,9 +1470,26 @@ static dcc_status_t dcc_app_listener_register_route(
     if (status == DCC_OK) {
         status = dcc_app_listener_apply_policy(entry->app, entry->route_id, &listener->policy);
     }
+    if (status == DCC_OK) {
+        const char *schema_key = NULL;
+        char schema_key_buffer[256];
+        status = dcc_app_listener_add_command_schema(
+            entry,
+            listener,
+            &schema_key,
+            schema_key_buffer,
+            sizeof(schema_key_buffer)
+        );
+    }
     if (status != DCC_OK && entry->route_id != DCC_APP_ROUTE_INVALID) {
+        dcc_app_route_id_t failed_route_id = entry->route_id;
         (void)dcc_app_remove_route_internal(entry->app, entry->route_id);
         entry->route_id = DCC_APP_ROUTE_INVALID;
+        dcc_app_listener_lock(entry->app);
+        if (entry->app->next_route_id == failed_route_id) {
+            entry->app->next_route_id = previous_route_id;
+        }
+        dcc_app_listener_unlock(entry->app);
     }
     return status;
 }
@@ -900,11 +1555,11 @@ static void dcc_app_listener_event_dispatch(
     void *user_data
 ) {
     dcc_app_listener_entry_t *entry = (dcc_app_listener_entry_t *)user_data;
-    if (entry == NULL || event == NULL ||
-        !atomic_load_explicit(&entry->active, memory_order_acquire) ||
-        (entry->once && atomic_exchange_explicit(&entry->fired, true, memory_order_acq_rel))) {
+    if (entry == NULL || event == NULL || !dcc_app_listener_acquire(entry)) {
         return;
     }
+    dcc_app_listener_dispatch_frame_t frame;
+    dcc_app_listener_frame_push(&frame, entry);
     dcc_status_t status = DCC_OK;
     if (entry->kind == DCC_LISTENER_EVENT) {
         status = entry->handler.event(entry->app, event, entry->user_data);
@@ -935,6 +1590,8 @@ static void dcc_app_listener_event_dispatch(
         }
     }
     dcc_app_listener_report_status(entry, client, event, status);
+    dcc_app_listener_frame_pop(&frame);
+    dcc_app_listener_release(entry);
 }
 
 static dcc_status_t dcc_app_listener_register_event(
@@ -1028,32 +1685,32 @@ dcc_status_t dcc_app_listen(
     if (status != DCC_OK) {
         return status;
     }
-    if (app->listener_count == SIZE_MAX || app->next_listener_id == UINT64_MAX) {
-        return DCC_ERR_NOMEM;
-    }
-    status = dcc_app_listener_registry_reserve(app, app->listener_count + 1U);
-    if (status != DCC_OK) {
-        return status;
-    }
-
     dcc_app_listener_entry_t *entry = (dcc_app_listener_entry_t *)calloc(1U, sizeof(*entry));
     if (entry == NULL) {
         return DCC_ERR_NOMEM;
     }
     entry->app = app;
-    entry->id = ++app->next_listener_id;
     entry->kind = listener->kind;
     entry->handler = listener->handler;
     entry->user_data = listener->user_data;
     entry->cleanup = listener->cleanup;
     entry->route_id = DCC_APP_ROUTE_INVALID;
-    atomic_init(&entry->active, true);
-    atomic_init(&entry->cleanup_done, false);
-    atomic_init(&entry->fired, false);
 
     status = dcc_app_listener_copy_bindings(entry, listener);
     if (status == DCC_OK && listener->kind == DCC_LISTENER_MESSAGE_COMMAND) {
         status = dcc_app_listener_copy_message_command(entry, &listener->target.message_command);
+    }
+    if (status != DCC_OK) {
+        dcc_app_listener_entry_free(entry);
+        return status;
+    }
+
+    dcc_app_listener_lock(app);
+    if (app->listener_destroying || app->listener_count == SIZE_MAX ||
+        app->next_listener_id == UINT64_MAX) {
+        status = app->listener_destroying ? DCC_ERR_STATE : DCC_ERR_NOMEM;
+    } else {
+        status = dcc_app_listener_registry_reserve(app, app->listener_count + 1U);
     }
     if (status == DCC_OK && dcc_app_listener_is_route_kind(listener->kind)) {
         status = dcc_app_listener_register_route(entry, listener);
@@ -1063,13 +1720,16 @@ dcc_status_t dcc_app_listen(
     } else if (status == DCC_OK) {
         status = dcc_app_listener_register_task(entry, listener);
     }
+    if (status == DCC_OK) {
+        entry->id = ++app->next_listener_id;
+        entry->active = 1U;
+        app->listeners[app->listener_count++] = entry;
+    }
+    dcc_app_listener_unlock(app);
     if (status != DCC_OK) {
-        atomic_store_explicit(&entry->active, false, memory_order_release);
         dcc_app_listener_entry_free(entry);
         return status;
     }
-
-    app->listeners[app->listener_count++] = entry;
     if (out_id != NULL) {
         *out_id = entry->id;
     }
@@ -1081,25 +1741,32 @@ dcc_status_t dcc_app_unlisten(dcc_app_t *app, dcc_listener_id_t id) {
         return DCC_ERR_INVALID_ARG;
     }
     dcc_app_listener_entry_t *entry = NULL;
+    dcc_app_listener_lock(app);
     for (size_t i = 0U; i < app->listener_count; ++i) {
         if (app->listeners[i] != NULL && app->listeners[i]->id == id) {
             entry = app->listeners[i];
             break;
         }
     }
-    if (entry == NULL ||
-        !atomic_exchange_explicit(&entry->active, false, memory_order_acq_rel)) {
+    if (entry == NULL || !entry->active) {
+        dcc_app_listener_unlock(app);
         return DCC_ERR_INVALID_ARG;
     }
-    dcc_status_t status = DCC_OK;
-    if (entry->route_id != DCC_APP_ROUTE_INVALID) {
-        status = dcc_app_remove_route_internal(app, entry->route_id);
-        entry->route_id = DCC_APP_ROUTE_INVALID;
-    } else if (entry->client_listener_id != 0U) {
-        status = dcc_client_off(app->client, entry->event_type, entry->client_listener_id);
-        entry->client_listener_id = 0U;
+    entry->active = 0U;
+    dcc_app_listener_retire_locked(app, entry);
+    uint8_t self_unlisten = dcc_app_listener_is_current(entry);
+    dcc_app_listener_unlock(app);
+
+    dcc_status_t status = dcc_app_listener_detach_source(entry);
+    if (self_unlisten) {
+        return status == DCC_OK ? DCC_OK : DCC_ERR_STATE;
     }
-    dcc_app_listener_cleanup_user(entry);
+    dcc_app_listener_lock(app);
+    while (entry->in_flight != 0U) {
+        dcc_app_listener_wait(app);
+    }
+    dcc_app_listener_unlock(app);
+    dcc_app_listener_finalize(entry);
     return status == DCC_OK ? DCC_OK : DCC_ERR_STATE;
 }
 
@@ -1107,19 +1774,29 @@ void dcc_app_listener_destroy_all(dcc_app_t *app) {
     if (app == NULL) {
         return;
     }
-    for (size_t i = 0U; i < app->listener_count; ++i) {
-        dcc_app_listener_entry_t *entry = app->listeners[i];
-        if (entry == NULL) {
-            continue;
-        }
-        if (atomic_load_explicit(&entry->active, memory_order_acquire)) {
-            (void)dcc_app_unlisten(app, entry->id);
-        } else {
-            dcc_app_listener_cleanup_user(entry);
-        }
+    dcc_app_listener_lock(app);
+    app->listener_destroying = 1U;
+    while (app->listener_count != 0U) {
+        dcc_app_listener_entry_t *entry = app->listeners[app->listener_count - 1U];
+        entry->active = 0U;
+        dcc_app_listener_retire_locked(app, entry);
     }
-    for (size_t i = 0U; i < app->listener_count; ++i) {
-        dcc_app_listener_entry_free(app->listeners[i]);
+    dcc_app_listener_unlock(app);
+
+    for (dcc_app_listener_entry_t *entry = app->retired_listeners;
+         entry != NULL;
+         entry = entry->next_retired) {
+        (void)dcc_app_listener_detach_source(entry);
+    }
+    for (dcc_app_listener_entry_t *entry = app->retired_listeners;
+         entry != NULL;
+         entry = entry->next_retired) {
+        dcc_app_listener_lock(app);
+        while (entry->in_flight != 0U) {
+            dcc_app_listener_wait(app);
+        }
+        dcc_app_listener_unlock(app);
+        dcc_app_listener_finalize(entry);
     }
     free(app->listeners);
     app->listeners = NULL;
@@ -1127,19 +1804,42 @@ void dcc_app_listener_destroy_all(dcc_app_t *app) {
     app->listener_cap = 0U;
 }
 
+void dcc_app_listener_reclaim_all(dcc_app_t *app) {
+    if (app == NULL) {
+        return;
+    }
+    dcc_app_listener_lock(app);
+    dcc_app_listener_entry_t *entry = app->retired_listeners;
+    app->retired_listeners = NULL;
+    dcc_app_listener_unlock(app);
+    while (entry != NULL) {
+        dcc_app_listener_entry_t *next = entry->next_retired;
+        dcc_app_listener_entry_free(entry);
+        entry = next;
+    }
+}
+
 uint8_t dcc_app_listener_active(const void *listener_state) {
-    const dcc_app_listener_entry_t *entry =
-        (const dcc_app_listener_entry_t *)listener_state;
-    return entry != NULL && atomic_load_explicit(&entry->active, memory_order_acquire);
+    dcc_app_listener_entry_t *entry = (dcc_app_listener_entry_t *)listener_state;
+    if (entry == NULL || entry->app == NULL) {
+        return 0U;
+    }
+    dcc_app_listener_lock(entry->app);
+    uint8_t active = entry->active;
+    dcc_app_listener_unlock(entry->app);
+    return active;
 }
 
 dcc_status_t dcc_app_listener_run_task(void *listener_state, dcc_app_t *app) {
     dcc_app_listener_entry_t *entry = (dcc_app_listener_entry_t *)listener_state;
-    if (entry == NULL || app == NULL ||
-        !atomic_load_explicit(&entry->active, memory_order_acquire)) {
+    if (entry == NULL || app == NULL || !dcc_app_listener_acquire(entry)) {
         return DCC_OK;
     }
+    dcc_app_listener_dispatch_frame_t frame;
+    dcc_app_listener_frame_push(&frame, entry);
     dcc_status_t status = entry->handler.task(app, entry->user_data);
     dcc_app_listener_report_status(entry, app->client, NULL, status);
+    dcc_app_listener_frame_pop(&frame);
+    dcc_app_listener_release(entry);
     return status;
 }

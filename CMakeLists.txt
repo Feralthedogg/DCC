@@ -2233,6 +2233,29 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_app_v2_listener_smoke)
     add_test(NAME dcc_app_v2_listener_smoke COMMAND dcc_app_v2_listener_smoke)
 
+    add_executable(
+        dcc_app_v2_listener_concurrency_smoke
+        tests/app_v2_listener_concurrency_smoke.c
+    )
+    target_link_libraries(dcc_app_v2_listener_concurrency_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_v2_listener_concurrency_smoke)
+    dcc_target_enable_sanitizers(dcc_app_v2_listener_concurrency_smoke)
+    add_test(
+        NAME dcc_app_v2_listener_concurrency_smoke
+        COMMAND dcc_app_v2_listener_concurrency_smoke
+    )
+
+    add_executable(dcc_app_v2_listener_contract_smoke tests/app_v2_listener_contract_smoke.c)
+    target_link_libraries(dcc_app_v2_listener_contract_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_v2_listener_contract_smoke)
+    dcc_target_enable_sanitizers(dcc_app_v2_listener_contract_smoke)
+    add_test(NAME dcc_app_v2_listener_contract_smoke COMMAND dcc_app_v2_listener_contract_smoke)
+
+    add_executable(dcc_app_v2_context_header_smoke tests/app_v2_context_header_smoke.c)
+    target_link_libraries(dcc_app_v2_context_header_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_app_v2_context_header_smoke)
+    add_test(NAME dcc_app_v2_context_header_smoke COMMAND dcc_app_v2_context_header_smoke)
+
     add_executable(dcc_app_message_command_smoke tests/app_message_command_smoke.c)
     target_link_libraries(dcc_app_message_command_smoke PRIVATE dcc::dcc)
     dcc_target_use_private_headers(dcc_app_message_command_smoke)
