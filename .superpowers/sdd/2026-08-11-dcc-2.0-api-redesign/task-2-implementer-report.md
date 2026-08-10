@@ -229,3 +229,87 @@
   and thread sanitizers. The Win32 synchronization branch remains
   compile-time-isolated and was not executed because no Windows runner was
   available in this workspace.
+
+## Fix Round 3 — implicit schemas, callback-safe stop, and Windows policy
+
+### Review findings addressed
+
+- Builder-less slash, subcommand, root autocomplete, and nested autocomplete
+  listeners now require a non-null, non-empty description before any App or
+  command-registry mutation. They all stage a valid implicit CHAT_INPUT root
+  schema with the correct command name and description. Supplied command
+  builders retain the existing exact kind/type/description validation.
+- Extended exact-transaction coverage from pre-populated listener, route,
+  schedule, and public registry arrays. Null/empty descriptions, public
+  registry growth failure, private policy/schedule/metadata/registry
+  failpoints, route-ID exhaustion, and oversized metadata all preserve the
+  complete snapshot and support a clean retry. One-shot failpoints are proven
+  to reset.
+- Split App schedule shutdown into a nonblocking request phase and serialized
+  owner reap phase. `dcc_app_stop` now only publishes cancellation and issues
+  task-group/client/voice stop requests; it is safe and idempotent in every
+  App-owned callback. `dcc_app_wait` rejects callback self-wait before mutation,
+  while owner wait/destroy joins and destroys the task group exactly once.
+- A failed wait/destroy reap restores the exact task-group pointer and leaves
+  listener/client/cleanup ownership intact for retry. Destroy does not begin
+  partial teardown until reaping succeeds, and App cleanup callbacks retain a
+  live client while they call stop.
+- Client stop now requests owned voice websocket shutdown without polling or
+  joining. The voice registry lock protects each voice-client lifetime while
+  the cancellation flag and current-socket abort are published.
+- App internals now include the shared Windows policy header before public or
+  LLAM headers instead of including `windows.h` directly. A dedicated fixture
+  asserts lean/nominmax and winsock2 ordering and compiles under strict MinGW
+  C11; it is a build-only target so the configured CTest count remains 174.
+
+### TDD evidence
+
+- RED implicit-schema contract: the focused contract test reported
+  `implicit slash changed transaction state: status=0/1 id=3` when a missing
+  description was accepted and committed.
+- RED callback-safe stop: real one-millisecond scheduled callbacks reported
+  `canonical scheduled stop was not callback-safe` with an approximately
+  five-second callback stop latency and lost task-group ownership before stop
+  and reap were separated.
+- RED Windows policy: strict MinGW compilation of the include-order fixture
+  failed for missing `WIN32_LEAN_AND_MEAN`, missing `NOMINMAX`, LLAM's platform
+  include-order guard, and a winsock2 ordering warning before the shared policy
+  header was used.
+- GREEN tests exercise real canonical and legacy scheduled callbacks, prompt
+  callback stop, preserved owner task-group state, callback-side wait rejection,
+  owner reap, repeated/no-schedule stop, cleanup-side stop, and deterministic
+  reap failure followed by successful retry with cleanup exactly once.
+
+### Verification and exact results
+
+- Implementation commit: `ea8635d` (`fix: harden App listener transactions and
+  shutdown`). Commit `88f9789` and all earlier history were not rewritten.
+- Full configured build passed. Full CTest passed `174/174` enabled tests in
+  24.61s; the configured 24 LLAM subdirectory tests remained disabled.
+- The original listener, concurrency, contract, and context-header focused
+  CTest set passed `4/4` in 1.16s.
+- ASan/UBSan focused CTest passed `4/4` in 1.39s with
+  `ASAN_OPTIONS=halt_on_error=1:detect_leaks=0` and
+  `UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1`, with no report.
+- TSan concurrency/contract CTest passed `2/2` in 1.70s with
+  `TSAN_OPTIONS=halt_on_error=1`, with no race report.
+- Strict native C11 `-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror
+  -fsyntax-only` passed for every changed source and focused test. Standalone
+  `<dcc/app.h>` probes passed as strict C11 and C++17.
+- Strict MinGW C11 `-Wall -Wextra -Wpedantic -Werror -fsyntax-only` passed for
+  `src/app/app.c`, `src/app/app_scheduler.c`, and the Windows include-order
+  fixture. The native fixture executable also passed.
+- The full run included the V2 surface, public API, project-layout, release
+  contract, official-header, and remaining enabled audits; all passed.
+  `git diff --check` passed.
+
+### Self-review findings
+
+- Reaper failure is ownership-preserving: neither task-group destroy nor App
+  teardown proceeds after a failed join, the pointer is restored under the App
+  lock, and the next owner wait/destroy can retry deterministically.
+- Late schedule registration cannot spawn against a stopping or reaping App,
+  and schedule cancellation flags are reset only when a fresh owner start
+  creates the task group.
+- The final voice-stop refinement performs no waits while preventing an
+  unregister/destroy race around a borrowed voice-client pointer.
