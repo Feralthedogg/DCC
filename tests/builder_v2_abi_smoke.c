@@ -1968,6 +1968,8 @@ static int check_contextual_command_validation(void) {
     return 0;
 }
 
+int builder_task7_typed_records_contract(void);
+
 int main(void) {
     if (check_initializer_contracts() != 0 ||
         check_all_type_abi_matrix() != 0 ||
@@ -1980,7 +1982,8 @@ int main(void) {
         check_autocomplete_filter_stride_and_atomicity() != 0 ||
         check_registry_historical_stride_normalization() != 0 ||
         check_registry_copy_lifetime_and_oom() != 0 ||
-        check_contextual_command_validation() != 0) {
+        check_contextual_command_validation() != 0 ||
+        builder_task7_typed_records_contract() != 0) {
         return 1;
     }
     return 0;

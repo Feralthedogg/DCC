@@ -128,3 +128,40 @@ dcc_status_t dcc_message_builder_set_poll(
     }
     return DCC_OK;
 }
+
+dcc_status_t dcc_message_builder_set_message_reference(
+    dcc_message_builder_t *builder,
+    const dcc_message_reference_t *reference
+) {
+    dcc_builder_abi_view_t view;
+    if (dcc_message_builder_abi_validate(builder, &view) != DCC_OK ||
+        !DCC_BUILDER_ABI_FIELD(dcc_message_builder_t, &view, message_reference)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    builder->message_reference = reference;
+    if (reference != NULL) {
+        builder->present |= DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE;
+    } else {
+        builder->present &= ~DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE;
+    }
+    return DCC_OK;
+}
+
+dcc_status_t dcc_message_builder_set_attachments(
+    dcc_message_builder_t *builder,
+    const dcc_message_attachment_t *attachments,
+    size_t attachment_count
+) {
+    if (!DCC_MESSAGE_COLLECTION_TARGET(builder, attachments, attachment_count) ||
+        (attachment_count != 0U && attachments == NULL)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    builder->attachments = attachments;
+    builder->attachment_count = attachment_count;
+    if (attachment_count != 0U) {
+        builder->present |= DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS;
+    } else {
+        builder->present &= ~DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS;
+    }
+    return DCC_OK;
+}

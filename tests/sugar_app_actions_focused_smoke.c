@@ -67,8 +67,8 @@ static int check_message_literals(void) {
 static int check_null_app_action_aliases(void) {
     dcc_thread_params_t thread_params = {
         .size = sizeof(dcc_thread_params_t),
-        .channel_id = 333ULL,
-        .message_id = 444ULL,
+        .version = DCC_THREAD_PARAMS_VERSION,
+        .present = DCC_THREAD_PARAMS_PRESENT_NAME,
         .name = "focused-thread"
     };
 

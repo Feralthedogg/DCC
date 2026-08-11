@@ -11,6 +11,10 @@ dcc_status_t dcc_rest_delete_webhook_message(
     const dcc_rest_webhook_message_query_t *query,
     const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_SENSITIVE;
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE;
+    DCC_ENDPOINT_SENSITIVE_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_NONE, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_WEBHOOK_MESSAGE, DCC_REST_DELETE, "dcc_rest_delete_webhook_message");
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || webhook_id == 0U || message_id == 0U ||

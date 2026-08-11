@@ -50,6 +50,9 @@ dcc_status_t dcc_rest_request_raw(
         body,
         body_len,
         content_type,
+        DCC_REST_AUTH_DEFAULT,
+        NULL,
+        NULL,
         DCC_REST_MAX_RATE_LIMIT_RETRIES,
         1,
         cb,
@@ -58,7 +61,9 @@ dcc_status_t dcc_rest_request_raw(
         NULL,
         NULL,
         1,
-        0
+        0,
+        path,
+        0U
     );
     dcc_rest_operation_end(client);
     return status;

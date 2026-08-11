@@ -85,7 +85,11 @@ int run_public_rest_wrapper_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_get_channel(client, 222, rest_cb, &seen);
+    dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+    options.callback = rest_result_cb;
+    options.user_data = &seen;
+    st = dcc_rest_get_channel(client, 222, &options, NULL);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||

@@ -1,7 +1,9 @@
+#include <dcc/app.h>
 #include <dcc/client.h>
 #include <dcc/error_details.h>
 #include <dcc/rest.h>
 
+#include "internal/app/dcc_app_internal.h"
 #include "internal/rest/dcc_rest_error_observer_internal.h"
 #include "internal/rest/dcc_rest_endpoint_internal.h"
 #include "rest_v2_endpoint_smoke_support.h"
@@ -821,6 +823,211 @@ static int task7_literal_route_contract(
         "GET",
         "/invites/a%2Fb%25z?with_counts=false&guild_scheduled_event_id=22"
     );
+    return 0;
+}
+
+typedef struct task7_extended_position {
+    dcc_channel_position_t value;
+    uint64_t future;
+} task7_extended_position_t;
+
+typedef struct task7_app_callback {
+    atomic_uint calls;
+} task7_app_callback_t;
+
+static void task7_app_rest_callback(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    task7_app_callback_t *state = (task7_app_callback_t *)user_data;
+    (void)client;
+    (void)response;
+    atomic_fetch_add_explicit(&state->calls, 1U, memory_order_acq_rel);
+}
+
+static int task7_record_validation_contract(
+    dcc_client_t *client,
+    endpoint_capture_t *capture,
+    endpoint_callback_t *callback,
+    endpoint_observer_t *observer
+) {
+    endpoint_callback_reset(callback);
+    dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+    options.callback = endpoint_result_callback;
+    options.user_data = callback;
+
+    dcc_invite_params_t invite = DCC_INVITE_PARAMS_INIT;
+    invite.size = offsetof(dcc_invite_params_t, max_age) + 1U;
+    TASK7_EXPECT_LOCAL_REJECTION(
+        "invite rejects absent partially covered field", capture, callback,
+        observer, dcc_rest_create_channel_invite(
+            client, 710U, &invite, &options, &request
+        )
+    );
+
+    dcc_channel_permission_overwrite_t overwrite =
+        DCC_CHANNEL_PERMISSION_OVERWRITE_INIT;
+    overwrite.size = offsetof(dcc_channel_permission_overwrite_t, allow) + 1U;
+    TASK7_EXPECT_LOCAL_REJECTION(
+        "overwrite rejects absent partially covered field", capture, callback,
+        observer, dcc_rest_modify_channel_permission(
+            client, 711U, 712U, &overwrite, &options, &request
+        )
+    );
+
+    dcc_channel_position_t partial_position = DCC_CHANNEL_POSITION_INIT;
+    partial_position.channel_id = 713U;
+    partial_position.size = offsetof(dcc_channel_position_t, flags) + 1U;
+    dcc_channel_positions_params_t positions =
+        DCC_CHANNEL_POSITIONS_PARAMS_INIT;
+    positions.positions = &partial_position;
+    positions.position_count = 1U;
+    TASK7_EXPECT_LOCAL_REJECTION(
+        "position rejects absent partially covered field", capture, callback,
+        observer, dcc_rest_modify_guild_channel_positions(
+            client, 714U, &positions, &options, &request
+        )
+    );
+
+    dcc_channel_params_t channel = DCC_CHANNEL_PARAMS_INIT;
+    channel.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_NAME |
+        DCC_CHANNEL_GUILD_PRESENT_TYPE | DCC_CHANNEL_GUILD_PRESENT_FLAGS;
+    channel.payload.guild.name = "bad flags";
+    channel.payload.guild.type = DCC_CHANNEL_TEXT;
+    channel.payload.guild.flags = DCC_CHANNEL_FLAG_HIDE_MEDIA_DOWNLOAD_OPTIONS;
+    TASK7_EXPECT_LOCAL_REJECTION(
+        "channel rejects type-inappropriate flags", capture, callback,
+        observer, dcc_rest_create_guild_channel(
+            client, 715U, &channel, &options, &request
+        )
+    );
+
+    channel = (dcc_channel_params_t)DCC_CHANNEL_PARAMS_INIT;
+    channel.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_NAME |
+        DCC_CHANNEL_GUILD_PRESENT_TYPE | DCC_CHANNEL_GUILD_PRESENT_PARENT_ID;
+    channel.payload.guild.name = "bad null";
+    channel.payload.guild.type = DCC_CHANNEL_TEXT;
+    TASK7_EXPECT_LOCAL_REJECTION(
+        "channel rejects zero parent without explicit null", capture, callback,
+        observer, dcc_rest_create_guild_channel(
+            client, 716U, &channel, &options, &request
+        )
+    );
+
+    task7_extended_position_t extended[2] = {
+        {.value = DCC_CHANNEL_POSITION_INIT, .future = 1U},
+        {.value = DCC_CHANNEL_POSITION_INIT, .future = 2U},
+    };
+    extended[0].value.size = sizeof(extended[0]);
+    extended[0].value.channel_id = 717U;
+    extended[0].value.present = DCC_CHANNEL_POSITION_PRESENT_POSITION;
+    extended[0].value.position = 3;
+    extended[1].value.size = sizeof(extended[1]);
+    extended[1].value.channel_id = 718U;
+    extended[1].value.present = DCC_CHANNEL_POSITION_PRESENT_FLAGS;
+    extended[1].value.flags = DCC_CHANNEL_FLAG_PINNED;
+    positions = (dcc_channel_positions_params_t)
+        DCC_CHANNEL_POSITIONS_PARAMS_INIT;
+    positions.positions = (const dcc_channel_position_t *)extended;
+    positions.position_count = 2U;
+    endpoint_capture_reset(capture, 0U);
+    atomic_store_explicit(&capture->capture_release, 1U, memory_order_release);
+    dcc_rest_request_t *request = NULL;
+    dcc_status_t submit = dcc_rest_modify_guild_channel_positions(
+        client, 719U, &positions, NULL, &request
+    );
+    return endpoint_completed_contract(
+        "position array uses declared stride", capture, submit, request,
+        "PATCH", "/guilds/719/channels", "application/json",
+        "[{\"id\":\"717\",\"position\":3},{\"id\":\"718\",\"flags\":2}]",
+        sizeof("[{\"id\":\"717\",\"position\":3},{\"id\":\"718\",\"flags\":2}]") - 1U
+    );
+}
+
+static int task7_app_adapter_contract(
+    dcc_client_t *client,
+    endpoint_capture_t *capture
+) {
+    dcc_app_t app_storage;
+    memset(&app_storage, 0, sizeof(app_storage));
+    app_storage.client = client;
+    dcc_app_t *app = &app_storage;
+    task7_app_callback_t callback;
+    atomic_init(&callback.calls, 0U);
+
+    dcc_channel_params_t channel = DCC_CHANNEL_PARAMS_INIT;
+    channel.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_NAME |
+        DCC_CHANNEL_GUILD_PRESENT_TYPE;
+    channel.payload.guild.name = "adapter";
+    channel.payload.guild.type = DCC_CHANNEL_TEXT;
+    endpoint_capture_reset(capture, 0U);
+    dcc_status_t status = dcc_app_create_guild_channel_params(
+        app, 801U, &channel, task7_app_rest_callback, &callback
+    );
+    int returned_before_transport = status == DCC_OK &&
+        atomic_load_explicit(&capture->calls, memory_order_acquire) == 0U;
+    atomic_store_explicit(&capture->capture_release, 1U, memory_order_release);
+    int first_ok = returned_before_transport &&
+        endpoint_wait_for_atomic(&callback.calls, 1U, 3000U) &&
+        atomic_load_explicit(&capture->calls, memory_order_acquire) == 1U &&
+        strcmp(capture->method, "POST") == 0 &&
+        strcmp(capture->path, "/guilds/801/channels") == 0 &&
+        endpoint_contains(
+            capture->body, capture->body_len,
+            "{\"name\":\"adapter\",\"type\":0}",
+            sizeof("{\"name\":\"adapter\",\"type\":0}") - 1U
+        );
+
+    dcc_thread_params_t thread = DCC_THREAD_PARAMS_INIT;
+    thread.present = DCC_THREAD_PARAMS_PRESENT_NAME |
+        DCC_THREAD_PARAMS_PRESENT_RATE_LIMIT_PER_USER;
+    thread.name = "renamed";
+    thread.rate_limit_per_user = 9U;
+    endpoint_capture_reset(capture, 0U);
+    status = dcc_app_modify_thread(
+        app, 802U, &thread, task7_app_rest_callback, &callback
+    );
+    returned_before_transport = status == DCC_OK &&
+        atomic_load_explicit(&capture->calls, memory_order_acquire) == 0U;
+    atomic_store_explicit(&capture->capture_release, 1U, memory_order_release);
+    int second_ok = returned_before_transport &&
+        endpoint_wait_for_atomic(&callback.calls, 2U, 3000U) &&
+        atomic_load_explicit(&capture->calls, memory_order_acquire) == 1U &&
+        strcmp(capture->method, "PATCH") == 0 &&
+        strcmp(capture->path, "/channels/802") == 0 &&
+        endpoint_contains(
+            capture->body, capture->body_len,
+            "{\"name\":\"renamed\",\"rate_limit_per_user\":9}",
+            sizeof("{\"name\":\"renamed\",\"rate_limit_per_user\":9}") - 1U
+        );
+
+    endpoint_capture_reset(capture, 0U);
+    status = dcc_app_archive_thread(
+        app, 803U, task7_app_rest_callback, &callback
+    );
+    returned_before_transport = status == DCC_OK &&
+        atomic_load_explicit(&capture->calls, memory_order_acquire) == 0U;
+    atomic_store_explicit(&capture->capture_release, 1U, memory_order_release);
+    int third_ok = returned_before_transport &&
+        endpoint_wait_for_atomic(&callback.calls, 3U, 3000U) &&
+        atomic_load_explicit(&capture->calls, memory_order_acquire) == 1U &&
+        strcmp(capture->method, "PATCH") == 0 &&
+        strcmp(capture->path, "/channels/803") == 0 &&
+        endpoint_contains(
+            capture->body, capture->body_len,
+            "{\"archived\":true}",
+            sizeof("{\"archived\":true}") - 1U
+        );
+
+    if (!first_ok || !second_ok || !third_ok) {
+        fprintf(
+            stderr,
+            "Task 7 App adapter mismatch first=%d second=%d third=%d\n",
+            first_ok, second_ok, third_ok
+        );
+        return 1;
+    }
     return 0;
 }
 
@@ -1688,6 +1895,11 @@ int endpoint_task7_contract(
             client, capture, callback, observer
         ) != 0 ||
         task7_literal_route_contract(client, capture) != 0 ||
+        endpoint_task7_forum_multipart_contract(client, capture) != 0 ||
+        task7_record_validation_contract(
+            client, capture, callback, observer
+        ) != 0 ||
+        task7_app_adapter_contract(client, capture) != 0 ||
         task7_sensitive_transport_contract(client, capture, observer) != 0 ||
         task7_all_sensitive_endpoints_contract(
             client, capture, observer

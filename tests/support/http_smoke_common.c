@@ -10,6 +10,154 @@
 #include <string.h>
 #include <unistd.h>
 
+int run_rest_task7_initializer_smoke(void) {
+    dcc_channel_guild_params_t guild = {
+        .present = UINT64_C(0),
+        .name = NULL,
+        .type = DCC_CHANNEL_TEXT,
+        .topic = NULL,
+        .bitrate = 0U,
+        .user_limit = 0U,
+        .rate_limit_per_user = 0U,
+        .position = 0,
+        .permission_overwrites = NULL,
+        .permission_overwrite_count = 0U,
+        .parent_id = 0U,
+        .nsfw = 0U,
+        .rtc_region = NULL,
+        .video_quality_mode = 0U,
+        .default_auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_DAY,
+        .default_reaction_emoji = {.emoji_id = 0U, .emoji_name = NULL},
+        .available_tags = NULL,
+        .available_tag_count = 0U,
+        .default_sort_order = 0U,
+        .default_forum_layout = DCC_CHANNEL_FORUM_LAYOUT_NOT_SET,
+        .default_thread_rate_limit_per_user = 0U,
+        .flags = UINT64_C(0),
+        .nulls = UINT64_C(0),
+    };
+    dcc_channel_group_dm_params_t group_dm = {
+        .present = UINT64_C(0),
+        .name = NULL,
+        .icon = NULL,
+    };
+    dcc_channel_thread_params_t channel_thread = {
+        .present = UINT64_C(0),
+        .name = NULL,
+        .archived = 0U,
+        .auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_DAY,
+        .locked = 0U,
+        .invitable = 0U,
+        .rate_limit_per_user = 0U,
+        .flags = UINT64_C(0),
+        .applied_tags = NULL,
+        .applied_tag_count = 0U,
+    };
+    dcc_channel_params_t channel = {
+        .size = sizeof(channel),
+        .version = DCC_CHANNEL_PARAMS_VERSION,
+        .kind = DCC_CHANNEL_PARAMS_GUILD,
+        .payload = {.guild = guild},
+    };
+    dcc_channel_params_t group_dm_channel = {
+        .size = sizeof(group_dm_channel),
+        .version = DCC_CHANNEL_PARAMS_VERSION,
+        .kind = DCC_CHANNEL_PARAMS_GROUP_DM,
+        .payload = {.group_dm = group_dm},
+    };
+    dcc_channel_params_t thread_channel = {
+        .size = sizeof(thread_channel),
+        .version = DCC_CHANNEL_PARAMS_VERSION,
+        .kind = DCC_CHANNEL_PARAMS_THREAD,
+        .payload = {.thread = channel_thread},
+    };
+    dcc_channel_positions_params_t positions = {
+        .size = sizeof(positions),
+        .version = DCC_CHANNEL_POSITIONS_PARAMS_VERSION,
+        .positions = NULL,
+        .position_count = 0U,
+    };
+    dcc_channel_voice_status_params_t voice_status = {
+        .size = sizeof(voice_status),
+        .version = DCC_CHANNEL_VOICE_STATUS_PARAMS_VERSION,
+        .present = UINT64_C(0),
+        .status = NULL,
+    };
+    dcc_dm_channel_params_t dm = {
+        .size = sizeof(dm),
+        .version = DCC_DM_CHANNEL_PARAMS_VERSION,
+        .recipient_id = 0U,
+    };
+    dcc_snowflake_t role_ids[] = {1U};
+    dcc_invite_params_t invite = {
+        .size = sizeof(invite),
+        .version = DCC_INVITE_PARAMS_VERSION,
+        .present = UINT64_C(0),
+        .max_age = 0U,
+        .max_uses = 0U,
+        .temporary = 0U,
+        .unique = 0U,
+        .target_type = DCC_INVITE_TARGET_NONE,
+        .target_user_id = 0U,
+        .target_application_id = 0U,
+        .target_users_filename = NULL,
+        .target_users_data = NULL,
+        .target_users_len = 0U,
+        .role_ids = role_ids,
+        .role_id_count = 1U,
+    };
+    dcc_thread_params_t thread = {
+        .size = sizeof(thread),
+        .version = DCC_THREAD_PARAMS_VERSION,
+        .present = UINT64_C(0),
+        .name = NULL,
+        .auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_DAY,
+        .type = DCC_CHANNEL_PUBLIC_THREAD,
+        .invitable = 0U,
+        .rate_limit_per_user = 0U,
+        .message = NULL,
+        .applied_tags = NULL,
+        .applied_tag_count = 0U,
+    };
+    dcc_guild_params_t guild_params = {
+        .size = sizeof(guild_params),
+        .guild_id = 0U,
+        .name = NULL,
+        .widget_enabled = 0U,
+        .afk_channel_id = 0U,
+        .afk_timeout = DCC_GUILD_AFK_60,
+        .widget_channel_id = 0U,
+        .default_message_notifications = DCC_GUILD_NOTIFY_ALL,
+        .explicit_content_filter = DCC_GUILD_EXPLICIT_CONTENT_DISABLED,
+        .mfa_level = DCC_GUILD_MFA_NONE,
+        .system_channel_id = 0U,
+        .premium_progress_bar_enabled = 0U,
+        .rules_channel_id = 0U,
+        .vanity_url_code = NULL,
+        .description = NULL,
+        .safety_alerts_channel_id = 0U,
+        .banner = NULL,
+        .discovery_splash = NULL,
+        .splash = NULL,
+        .icon = NULL,
+    };
+
+    return channel.size == sizeof(channel) &&
+        channel.payload.guild.present == guild.present &&
+        group_dm_channel.payload.group_dm.present == group_dm.present &&
+        thread_channel.payload.thread.present == channel_thread.present &&
+        group_dm.present == UINT64_C(0) &&
+        channel_thread.present == UINT64_C(0) &&
+        positions.version == DCC_CHANNEL_POSITIONS_PARAMS_VERSION &&
+        voice_status.version == DCC_CHANNEL_VOICE_STATUS_PARAMS_VERSION &&
+        dm.version == DCC_DM_CHANNEL_PARAMS_VERSION &&
+        invite.role_id_count == 1U &&
+        thread.version == DCC_THREAD_PARAMS_VERSION &&
+        guild_params.size == sizeof(guild_params)
+        ? 0
+        : 1;
+}
+
 int run_internal_http_smoke(void) {
     http_server_t server;
     pthread_t thread;

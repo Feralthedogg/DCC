@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -444,13 +445,38 @@ def parse_smoke_calls() -> set[str]:
     return set(re.findall(r"\b(dcc_rest_[A-Za-z0-9_]+)\s*\(", text))
 
 
+def canonical_dcc_wrappers() -> dict[str, set[str]]:
+    manifest = json.loads((ROOT / "tools/rest_v2_endpoints.json").read_text())
+    legacy_to_canonical: dict[str, str] = {}
+    for endpoint in manifest["endpoints"]:
+        if endpoint["task"] > 7:
+            continue
+        canonical = endpoint["canonical"]
+        for legacy in endpoint["legacy_symbols"]:
+            legacy_to_canonical[legacy] = canonical
+    removed: set[str] = set()
+    for candidate in manifest["removed_candidates"]:
+        removed.add(candidate["canonical"])
+        removed.update(candidate["legacy_symbols"])
+
+    normalized: dict[str, set[str]] = {}
+    for dpp_method, wrappers in DPP_TO_DCC.items():
+        normalized[dpp_method] = {
+            legacy_to_canonical.get(wrapper, wrapper)
+            for wrapper in wrappers
+            if wrapper not in removed
+        }
+    return normalized
+
+
 def main() -> int:
     errors: list[str] = []
     header = parse_dcc_header()
     implementation = parse_dcc_implementation()
     smoke = parse_smoke_calls()
+    wrappers_by_method = canonical_dcc_wrappers()
 
-    for dpp_method, dcc_wrappers in sorted(DPP_TO_DCC.items()):
+    for dpp_method, dcc_wrappers in sorted(wrappers_by_method.items()):
         for wrapper in sorted(dcc_wrappers):
             if wrapper not in header:
                 errors.append(f"{dpp_method}: {wrapper} missing from include/dcc/rest public headers")
@@ -499,7 +525,7 @@ def main() -> int:
     print(
         "rest surface audit passed: "
         f"{len(DPP_TO_DCC)} DPP methods mapped to "
-        f"{sum(len(v) for v in DPP_TO_DCC.values())} DCC wrappers; "
+        f"{sum(len(v) for v in wrappers_by_method.values())} canonical DCC wrappers; "
         f"{len(DPP_REST_NON_ENDPOINT_METHODS)} DPP cache/helper method classified; "
         f"{len(DPP_CLUSTER_NON_REST_FILES)} non-REST cluster source files classified"
     )

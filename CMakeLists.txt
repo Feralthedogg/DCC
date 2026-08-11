@@ -1206,6 +1206,7 @@ target_sources(dcc
         src/objects/message_builder_poll.c
         src/objects/message_builder_poll_media.c
         src/objects/message_builder_poll_validate.c
+        src/objects/message_builder_records.c
         src/objects/message_builder_serialize.c
         src/objects/message_builder_serialize_basic.c
         src/objects/message_builder_serialize_rich.c
@@ -1344,19 +1345,8 @@ target_sources(dcc
         src/rest/rest_buffer.c
         src/rest/rest_buffer_json_string.c
         src/rest/rest_capture.c
-        src/rest/rest_channel_builder_base_json.c
-        src/rest/rest_channel_builder_base_identity.c
-        src/rest/rest_channel_builder_base_limits.c
-        src/rest/rest_channel_builder_base_permissions.c
-        src/rest/rest_channel_builder_context.c
-        src/rest/rest_channel_builder_context_validate.c
-        src/rest/rest_channel_builder_forum_details.c
-        src/rest/rest_channel_builder_forum_settings.c
-        src/rest/rest_channel_builder_json.c
-        src/rest/rest_channel_builder_tail_json.c
         src/rest/rest_channel_actions.c
         src/rest/rest_channel_builders.c
-        src/rest/rest_channel_forum_builders.c
         src/rest/rest_channel_invites.c
         src/rest/rest_channel_permissions.c
         src/rest/rest_channel_permission_builders.c
@@ -1466,10 +1456,13 @@ target_sources(dcc
         src/rest/rest_result.c
         src/rest/rest_request_handle.c
         src/rest/rest_submit.c
+        src/rest/rest_task7_probe.c
+        src/rest/rest_sensitive.c
         src/rest/rest_request.c
         src/rest/rest_request_headers.c
         src/rest/rest_request_prepare.c
         src/rest/rest_request_rate_limit_response.c
+        src/rest/rest_route_fingerprint.c
         src/rest/rest_request_url.c
         src/rest/rest_role_connections.c
         src/rest/rest_role_connections_key.c
@@ -1501,15 +1494,9 @@ target_sources(dcc
         src/rest/rest_templates_modify.c
         src/rest/rest_templates_sync_delete.c
         src/rest/rest_thread_archives.c
-        src/rest/rest_thread_archives_pages.c
         src/rest/rest_thread_body.c
-        src/rest/rest_thread_body_create_members.c
-        src/rest/rest_thread_body_members.c
-        src/rest/rest_thread_body_modify_members.c
-        src/rest/rest_thread_body_validate.c
         src/rest/rest_thread_create.c
         src/rest/rest_thread_members.c
-        src/rest/rest_threads.c
         src/rest/rest_users_current.c
         src/rest/rest_users_dms.c
         src/rest/rest_users.c
@@ -2041,7 +2028,7 @@ if(DCC_BUILD_TESTS)
         COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_rest_v2_endpoints.py
             --source ${CMAKE_CURRENT_SOURCE_DIR}
-            --progress-through 6
+            --progress-through 7
     )
     set_tests_properties(dcc_rest_v2_endpoint_manifest_audit PROPERTIES
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -2058,33 +2045,6 @@ if(DCC_BUILD_TESTS)
     set_tests_properties(dcc_rest_v2_endpoint_manifest_schema_smoke PROPERTIES
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         TIMEOUT 60
-    )
-
-    add_test(
-        NAME dcc_rest_v2_task7_red_audit_contract
-        COMMAND ${Python3_EXECUTABLE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/rest_v2_task7_red_audit_contract.py
-            --source ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-    set_tests_properties(dcc_rest_v2_task7_red_audit_contract PROPERTIES
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        TIMEOUT 60
-        LABELS "rest-v2;task7;red-contract"
-    )
-
-    add_test(
-        NAME dcc_rest_v2_task7_red_compile_contract
-        COMMAND ${Python3_EXECUTABLE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/rest_v2_task7_red_compile_contract.py
-            --compiler ${CMAKE_C_COMPILER}
-            --source ${CMAKE_CURRENT_SOURCE_DIR}
-            --binary ${CMAKE_CURRENT_BINARY_DIR}
-            --llam-include ${DCC_V2_SURFACE_LLAM_INCLUDE}
-    )
-    set_tests_properties(dcc_rest_v2_task7_red_compile_contract PROPERTIES
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        TIMEOUT 60
-        LABELS "rest-v2;task7;red-contract"
     )
 
     add_executable(dcc_smoke tests/smoke.c)
@@ -2122,6 +2082,8 @@ if(DCC_BUILD_TESTS)
         tests/rest_v2_endpoint_smoke.c
         tests/support/rest_v2_endpoint_preflight_contracts.c
         tests/support/rest_v2_endpoint_resource_contracts.c
+        tests/support/rest_v2_endpoint_task7_forum_contracts.c
+        tests/support/rest_v2_endpoint_task7_contracts.c
         tests/support/rest_v2_endpoint_transition_contracts.c
     )
     dcc_target_use_private_headers(dcc_rest_v2_endpoint_smoke)
@@ -2130,7 +2092,10 @@ if(DCC_BUILD_TESTS)
     add_test(NAME dcc_rest_v2_endpoint_smoke COMMAND dcc_rest_v2_endpoint_smoke)
     set_tests_properties(dcc_rest_v2_endpoint_smoke PROPERTIES TIMEOUT 60)
 
-    add_executable(dcc_builder_v2_abi_smoke tests/builder_v2_abi_smoke.c)
+    add_executable(dcc_builder_v2_abi_smoke
+        tests/builder_v2_abi_smoke.c
+        tests/support/builder_v2_task7_records.c
+    )
     dcc_target_use_private_headers(dcc_builder_v2_abi_smoke)
     target_link_libraries(dcc_builder_v2_abi_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_builder_v2_abi_smoke)

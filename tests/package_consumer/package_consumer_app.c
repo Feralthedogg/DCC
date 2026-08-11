@@ -1156,39 +1156,45 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_APP_STORE_MANAGED_MESSAGE(app, "package.app.latest");
     dcc_managed_message_options_t store_managed =
         DCC_MANAGED_MESSAGE_STORE_OPTIONS(123U, &managed_message, &store_binding);
-    dcc_thread_params_t thread_params = {
-        .size = sizeof(thread_params),
-        .name = "package-thread",
-    };
-    dcc_channel_params_t channel_params = {
-        .size = sizeof(channel_params),
-        .guild_id = 1U,
-        .channel_id = 2U,
-        .type = DCC_CHANNEL_TEXT,
-        .name = "package-channel",
-    };
+    dcc_thread_params_t thread_params = DCC_THREAD_PARAMS_INIT;
+    thread_params.present = DCC_THREAD_PARAMS_PRESENT_NAME;
+    thread_params.name = "package-thread";
+    dcc_channel_params_t channel_params = DCC_CHANNEL_PARAMS_INIT;
+    channel_params.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_TYPE |
+        DCC_CHANNEL_GUILD_PRESENT_NAME;
+    channel_params.payload.guild.type = DCC_CHANNEL_TEXT;
+    channel_params.payload.guild.name = "package-channel";
     dcc_channel_position_t channel_positions[] = {
-        { .channel_id = 2U, .position = 1U },
+        {
+            sizeof(dcc_channel_position_t),
+            DCC_CHANNEL_POSITION_VERSION,
+            DCC_CHANNEL_POSITION_PRESENT_POSITION,
+            2U,
+            1,
+            0U,
+            0U,
+            UINT64_C(0),
+            UINT64_C(0),
+        },
     };
-    dcc_channel_positions_params_t channel_positions_params = {
-        .size = sizeof(channel_positions_params),
-        .guild_id = 1U,
-        .positions = channel_positions,
-        .position_count = DCC_ARRAY_LEN(channel_positions),
-    };
-    dcc_invite_params_t invite_params = {
-        .size = sizeof(invite_params),
-        .channel_id = 2U,
-        .max_age = 3600U,
-        .max_uses = 5U,
-        .unique = 1U,
-    };
-    dcc_channel_permission_overwrite_t permission_overwrite = {
-        .id = 3U,
-        .allow = DCC_PERMISSION_VIEW_CHANNEL,
-        .deny = 0U,
-        .type = DCC_CHANNEL_OVERWRITE_ROLE,
-    };
+    dcc_channel_positions_params_t channel_positions_params =
+        DCC_CHANNEL_POSITIONS_PARAMS_INIT;
+    channel_positions_params.positions = channel_positions;
+    channel_positions_params.position_count = DCC_ARRAY_LEN(channel_positions);
+    dcc_invite_params_t invite_params = DCC_INVITE_PARAMS_INIT;
+    invite_params.present = DCC_INVITE_PARAMS_PRESENT_MAX_AGE |
+        DCC_INVITE_PARAMS_PRESENT_MAX_USES |
+        DCC_INVITE_PARAMS_PRESENT_UNIQUE;
+    invite_params.max_age = 3600U;
+    invite_params.max_uses = 5U;
+    invite_params.unique = 1U;
+    dcc_channel_permission_overwrite_t permission_overwrite =
+        DCC_CHANNEL_PERMISSION_OVERWRITE_INIT;
+    permission_overwrite.present =
+        DCC_CHANNEL_PERMISSION_OVERWRITE_PRESENT_ALLOW |
+        DCC_CHANNEL_PERMISSION_OVERWRITE_PRESENT_DENY;
+    permission_overwrite.id = 3U;
+    permission_overwrite.allow = DCC_PERMISSION_VIEW_CHANNEL;
     dcc_role_params_t role_params = {
         .size = sizeof(role_params),
         .guild_id = 1U,
@@ -1243,10 +1249,8 @@ int dcc_package_consumer_check_app_api(void) {
         .size = sizeof(user_params),
         .nickname = "package-user",
     };
-    dcc_dm_channel_params_t dm_params = {
-        .size = sizeof(dm_params),
-        .user_id = 2U,
-    };
+    dcc_dm_channel_params_t dm_params = DCC_DM_CHANNEL_PARAMS_INIT;
+    dm_params.recipient_id = 2U;
     dcc_stage_instance_params_t stage_params = {
         .size = sizeof(stage_params),
         .channel_id = 3U,
@@ -1693,7 +1697,7 @@ int dcc_package_consumer_check_app_api(void) {
         dcc_app_edit_message(app, 0U, 1U, &managed_message, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_edit_message_text(app, 0U, 1U, "hello", NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_delete_message(app, 0U, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
-        dcc_app_modify_thread(app, NULL, NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_app_modify_thread(app, 1U, NULL, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_archive_thread(app, 0U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_lock_thread(app, 0U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_unlock_thread(app, 0U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
@@ -1772,9 +1776,9 @@ int dcc_package_consumer_check_app_api(void) {
         dcc_app_get_channel(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_get_guild_channels(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_create_guild_channel(NULL, 1U, "{\"name\":\"general\"}", NULL, NULL) == DCC_ERR_INVALID_ARG &&
-        dcc_app_create_guild_channel_params(NULL, &channel_params, NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_app_create_guild_channel_params(NULL, 1U, &channel_params, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_modify_channel(NULL, 1U, "{\"name\":\"general\"}", NULL, NULL) == DCC_ERR_INVALID_ARG &&
-        dcc_app_modify_channel_params(NULL, &channel_params, NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_app_modify_channel_params(NULL, 1U, &channel_params, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_delete_channel(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_trigger_channel_typing(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_follow_news_channel(NULL, 1U, 2U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
@@ -1788,11 +1792,11 @@ int dcc_package_consumer_check_app_api(void) {
         dcc_app_get_guild_voice_regions(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_modify_guild_channel_positions(NULL, 1U, "[{\"id\":\"2\",\"position\":1}]", NULL, NULL) ==
             DCC_ERR_INVALID_ARG &&
-        dcc_app_modify_guild_channel_positions_params(NULL, &channel_positions_params, NULL, NULL) ==
+        dcc_app_modify_guild_channel_positions_params(NULL, 1U, &channel_positions_params, NULL, NULL) ==
             DCC_ERR_INVALID_ARG &&
         dcc_app_get_channel_invites(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_create_channel_invite(NULL, 1U, "{\"max_age\":3600}", NULL, NULL) == DCC_ERR_INVALID_ARG &&
-        dcc_app_create_channel_invite_params(NULL, &invite_params, NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_app_create_channel_invite_params(NULL, 1U, &invite_params, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_modify_channel_permission(NULL, 1U, 2U, "{\"allow\":\"1024\"}", NULL, NULL) ==
             DCC_ERR_INVALID_ARG &&
         dcc_app_modify_channel_permission_params(NULL, 1U, &permission_overwrite, NULL, NULL) ==
@@ -1801,9 +1805,9 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_APP_GET_CHANNEL(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_APP_GET_GUILD_CHANNELS(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_APP_CREATE_GUILD_CHANNEL(NULL, 1U, "{\"name\":\"general\"}") == DCC_ERR_INVALID_ARG &&
-        DCC_APP_CREATE_GUILD_CHANNEL_PARAMS(NULL, &channel_params) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_CREATE_GUILD_CHANNEL_PARAMS(NULL, 1U, &channel_params) == DCC_ERR_INVALID_ARG &&
         DCC_APP_EDIT_CHANNEL(NULL, 1U, "{\"name\":\"general\"}") == DCC_ERR_INVALID_ARG &&
-        DCC_APP_EDIT_CHANNEL_PARAMS(NULL, &channel_params) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_EDIT_CHANNEL_PARAMS(NULL, 1U, &channel_params) == DCC_ERR_INVALID_ARG &&
         DCC_APP_DELETE_CHANNEL(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_APP_TRIGGER_CHANNEL_TYPING(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_APP_FOLLOW_NEWS_CHANNEL(NULL, 1U, 2U) == DCC_ERR_INVALID_ARG &&
@@ -1815,10 +1819,10 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_APP_GET_VOICE_REGIONS(NULL) == DCC_ERR_INVALID_ARG &&
         DCC_APP_GET_GUILD_VOICE_REGIONS(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_APP_REORDER_GUILD_CHANNELS(NULL, 1U, "[{\"id\":\"2\",\"position\":1}]") == DCC_ERR_INVALID_ARG &&
-        DCC_APP_REORDER_GUILD_CHANNELS_PARAMS(NULL, &channel_positions_params) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_REORDER_GUILD_CHANNELS_PARAMS(NULL, 1U, &channel_positions_params) == DCC_ERR_INVALID_ARG &&
         DCC_APP_GET_CHANNEL_INVITES(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_APP_CREATE_CHANNEL_INVITE(NULL, 1U, "{\"max_age\":3600}") == DCC_ERR_INVALID_ARG &&
-        DCC_APP_CREATE_CHANNEL_INVITE_PARAMS(NULL, &invite_params) == DCC_ERR_INVALID_ARG &&
+        DCC_APP_CREATE_CHANNEL_INVITE_PARAMS(NULL, 1U, &invite_params) == DCC_ERR_INVALID_ARG &&
         DCC_APP_EDIT_CHANNEL_PERMISSION(NULL, 1U, 2U, "{\"allow\":\"1024\"}") == DCC_ERR_INVALID_ARG &&
         DCC_APP_EDIT_CHANNEL_PERMISSION_PARAMS(NULL, 1U, &permission_overwrite) == DCC_ERR_INVALID_ARG &&
         DCC_APP_DELETE_CHANNEL_PERMISSION(NULL, 1U, 2U) == DCC_ERR_INVALID_ARG &&
@@ -1830,7 +1834,7 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_CHANNEL_SEND_TEXT_F(NULL, 1U, "hello %d", 1) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_FETCH(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_EDIT(NULL, 1U, "{\"name\":\"general\"}") == DCC_ERR_INVALID_ARG &&
-        DCC_CHANNEL_EDIT_PARAMS(NULL, &channel_params) == DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_EDIT_PARAMS(NULL, 1U, &channel_params) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_DELETE(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_TYPING(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_FOLLOW(NULL, 1U, 2U) == DCC_ERR_INVALID_ARG &&
@@ -1843,15 +1847,15 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_GUILD_VOICE_REGIONS_FETCH(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_INVITES_FETCH(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_INVITE_CREATE(NULL, 1U, "{\"max_age\":3600}") == DCC_ERR_INVALID_ARG &&
-        DCC_CHANNEL_INVITE_CREATE_PARAMS(NULL, &invite_params) == DCC_ERR_INVALID_ARG &&
+        DCC_CHANNEL_INVITE_CREATE_PARAMS(NULL, 1U, &invite_params) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_PERMISSION_EDIT(NULL, 1U, 2U, "{\"allow\":\"1024\"}") == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_PERMISSION_EDIT_PARAMS(NULL, 1U, &permission_overwrite) == DCC_ERR_INVALID_ARG &&
         DCC_CHANNEL_PERMISSION_DELETE(NULL, 1U, 2U) == DCC_ERR_INVALID_ARG &&
         DCC_GUILD_CHANNELS_REORDER(NULL, 1U, "[{\"id\":\"2\",\"position\":1}]") == DCC_ERR_INVALID_ARG &&
-        DCC_GUILD_CHANNELS_REORDER_PARAMS(NULL, &channel_positions_params) == DCC_ERR_INVALID_ARG &&
+        DCC_GUILD_CHANNELS_REORDER_PARAMS(NULL, 1U, &channel_positions_params) == DCC_ERR_INVALID_ARG &&
         DCC_GUILD_CHANNELS_FETCH(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_GUILD_CHANNEL_CREATE(NULL, 1U, "{\"name\":\"general\"}") == DCC_ERR_INVALID_ARG &&
-        DCC_GUILD_CHANNEL_CREATE_PARAMS(NULL, &channel_params) == DCC_ERR_INVALID_ARG &&
+        DCC_GUILD_CHANNEL_CREATE_PARAMS(NULL, 1U, &channel_params) == DCC_ERR_INVALID_ARG &&
         dcc_app_get_guild_roles(NULL, 1U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_create_guild_role(NULL, 1U, "{\"name\":\"role\"}", NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_create_guild_role_params(NULL, &role_params, NULL, NULL) == DCC_ERR_INVALID_ARG &&

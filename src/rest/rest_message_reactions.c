@@ -33,6 +33,9 @@ dcc_status_t dcc_rest_add_message_reaction(
     dcc_snowflake_t message_id, const char *reaction,
     const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_MESSAGE_REACTION_SELF, DCC_REST_PUT);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
@@ -51,6 +54,9 @@ dcc_status_t dcc_rest_delete_own_message_reaction(
     dcc_snowflake_t message_id, const char *reaction,
     const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_MESSAGE_REACTION_SELF, DCC_REST_DELETE);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
@@ -69,6 +75,9 @@ dcc_status_t dcc_rest_delete_user_message_reaction(
     dcc_snowflake_t message_id, const char *reaction, dcc_snowflake_t user_id,
     const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_MESSAGE_REACTION_USER, DCC_REST_DELETE);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U ||

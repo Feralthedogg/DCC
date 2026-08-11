@@ -3,48 +3,85 @@
 #if !defined(_WIN32)
 
 dcc_status_t call_rest_leave_thread(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_leave_thread(client, 999, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_leave_thread(client, 999, &options, NULL);
 }
 dcc_status_t call_rest_add_thread_member(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_add_thread_member(client, 999, 444, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_add_thread_member(client, 999, 444, &options, NULL);
 }
 dcc_status_t call_rest_add_thread_member_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_thread_member_params_t params = {
-        .size = sizeof(params),
-        .thread_id = 999,
-        .user_id = 444
-    };
-    return dcc_rest_add_thread_member_params(client, &params, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_add_thread_member(client, 999, 444, &options, NULL);
 }
 dcc_status_t call_rest_remove_thread_member(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_remove_thread_member(client, 999, 444, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_remove_thread_member(client, 999, 444, &options, NULL);
 }
 dcc_status_t call_rest_get_thread_member(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_thread_member(client, 999, 444, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_thread_member(client, 999, 444, NULL, &options, NULL);
 }
 dcc_status_t call_rest_get_thread_members(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_thread_members(client, 999, "with_member=true&limit=2", cb, user_data);
+    dcc_rest_thread_member_query_t query = DCC_REST_THREAD_MEMBER_QUERY_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_THREAD_MEMBER_QUERY_PRESENT_WITH_MEMBER |
+        DCC_REST_THREAD_MEMBER_QUERY_PRESENT_LIMIT;
+    query.with_member = 1;
+    query.limit = 2;
+    return dcc_rest_get_thread_members(client, 999, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_active_threads(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_active_threads(client, 333, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_active_threads(client, 333, &options, NULL);
 }
 dcc_status_t call_rest_get_public_archived_threads(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_public_archived_threads(client, 222, "before=2024-01-01T00:00:00.000000%2B00:00&limit=2", cb, user_data);
+    dcc_rest_thread_archive_query_t query = DCC_REST_THREAD_ARCHIVE_QUERY_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_THREAD_ARCHIVE_QUERY_PRESENT_BEFORE |
+        DCC_REST_THREAD_ARCHIVE_QUERY_PRESENT_LIMIT;
+    query.before = "2024-01-01T00:00:00.000000+00:00";
+    query.limit = 2;
+    return dcc_rest_get_public_archived_threads(client, 222, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_public_archived_threads_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_public_archived_threads_page(client, 222, 1704067200, 2, cb, user_data);
+    dcc_rest_thread_archive_query_t query = DCC_REST_THREAD_ARCHIVE_QUERY_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_THREAD_ARCHIVE_QUERY_PRESENT_BEFORE |
+        DCC_REST_THREAD_ARCHIVE_QUERY_PRESENT_LIMIT;
+    query.before = "1704067200";
+    query.limit = 2;
+    return dcc_rest_get_public_archived_threads(client, 222, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_private_archived_threads(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_private_archived_threads(client, 222, "before=2024-01-01T00:00:00.000000%2B00:00&limit=2", cb, user_data);
+    dcc_rest_thread_archive_query_t query = DCC_REST_THREAD_ARCHIVE_QUERY_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_THREAD_ARCHIVE_QUERY_PRESENT_BEFORE |
+        DCC_REST_THREAD_ARCHIVE_QUERY_PRESENT_LIMIT;
+    query.before = "2024-01-01T00:00:00.000000+00:00";
+    query.limit = 2;
+    return dcc_rest_get_private_archived_threads(client, 222, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_private_archived_threads_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_private_archived_threads_page(client, 222, 1704067200, 2, cb, user_data);
+    dcc_rest_thread_archive_query_t query = DCC_REST_THREAD_ARCHIVE_QUERY_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_THREAD_ARCHIVE_QUERY_PRESENT_BEFORE |
+        DCC_REST_THREAD_ARCHIVE_QUERY_PRESENT_LIMIT;
+    query.before = "1704067200";
+    query.limit = 2;
+    return dcc_rest_get_private_archived_threads(client, 222, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_joined_private_archived_threads(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_joined_private_archived_threads(client, 222, "before=777&limit=2", cb, user_data);
+    dcc_rest_joined_thread_archive_query_t query = DCC_REST_JOINED_THREAD_ARCHIVE_QUERY_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_JOINED_THREAD_ARCHIVE_QUERY_PRESENT_BEFORE |
+        DCC_REST_JOINED_THREAD_ARCHIVE_QUERY_PRESENT_LIMIT;
+    query.before = 777;
+    query.limit = 2;
+    return dcc_rest_get_joined_private_archived_threads(client, 222, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_joined_private_archived_threads_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_joined_private_archived_threads_page(client, 222, 777, 2, cb, user_data);
+    return call_rest_get_joined_private_archived_threads(client, cb, user_data);
 }
 dcc_status_t call_rest_get_guild_emojis(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_guild_emojis(client, 333, cb, user_data);
@@ -99,13 +136,18 @@ dcc_status_t call_rest_get_sticker_packs(dcc_client_t *client, dcc_rest_cb cb, v
     return dcc_rest_get_sticker_packs(client, cb, user_data);
 }
 dcc_status_t call_rest_get_invite(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_invite(client, "a/b", "with_counts=true&with_expiration=true", cb, user_data);
+    dcc_rest_invite_query_t query = DCC_REST_INVITE_QUERY_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_INVITE_QUERY_PRESENT_WITH_COUNTS;
+    query.with_counts = 1;
+    return dcc_rest_get_invite(client, "a/b", &query, &options, NULL);
 }
 dcc_status_t call_rest_get_invite_full(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_invite_full(client, "a/b", cb, user_data);
+    return call_rest_get_invite(client, cb, user_data);
 }
 dcc_status_t call_rest_delete_invite(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_invite(client, "a/b", cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_delete_invite(client, "a/b", &options, NULL);
 }
 dcc_status_t call_rest_create_webhook(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     dcc_rest_webhook_builder_t builder = DCC_REST_WEBHOOK_BUILDER_INIT;
@@ -303,19 +345,4 @@ dcc_status_t call_rest_delete_all_global_commands(dcc_client_t *client, dcc_rest
 dcc_status_t call_rest_delete_all_guild_commands(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_delete_all_guild_commands(client, 123, 333, cb, user_data);
 }
-dcc_status_t call_rest_bulk_edit_guild_command_permissions(
-    dcc_client_t *client,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    return dcc_rest_bulk_edit_guild_command_permissions(
-        client,
-        123,
-        333,
-        "[{\"id\":\"444\",\"permissions\":[]}]",
-        cb,
-        user_data
-    );
-}
-
 #endif

@@ -51,14 +51,26 @@ dcc_status_t dcc_message_builder_validate_for_json(const dcc_message_builder_t *
             builder->sticker_ids_count != 0U && builder->sticker_ids == NULL) ||
         (HAS(DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE_JSON) &&
             builder->message_reference_json == NULL) ||
+        (HAS(DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE) &&
+            (builder->message_reference == NULL ||
+             dcc_message_reference_validate(builder->message_reference, NULL) != DCC_OK)) ||
         (HAS(DCC_MESSAGE_BUILDER_PRESENT_EMBEDS_JSON) && builder->embeds_json == NULL) ||
         (HAS(DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_JSON) && builder->components_json == NULL) ||
         (HAS(DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS_JSON) && builder->attachments_json == NULL) ||
+        (HAS(DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS) &&
+            (builder->attachment_count == 0U || builder->attachments == NULL ||
+             dcc_message_attachment_array_validate(
+                 builder->attachments, builder->attachment_count, NULL
+             ) != DCC_OK)) ||
         (HAS(DCC_MESSAGE_BUILDER_PRESENT_POLL_JSON) && builder->poll_json == NULL) ||
         (HAS(DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON) &&
             builder->components_v2_json == NULL) ||
         (HAS(DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS_JSON) &&
-            HAS(DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS))) {
+            HAS(DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS)) ||
+        (HAS(DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE_JSON) &&
+            HAS(DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE)) ||
+        (HAS(DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS_JSON) &&
+            HAS(DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS))) {
         return DCC_ERR_INVALID_ARG;
     }
 
@@ -107,6 +119,29 @@ dcc_status_t dcc_message_builder_validate_for_json(const dcc_message_builder_t *
             HAS(DCC_MESSAGE_BUILDER_PRESENT_POLL_JSON) ||
             (HAS(DCC_MESSAGE_BUILDER_PRESENT_STICKER_IDS) && builder->sticker_ids_count != 0U))) {
         return DCC_ERR_INVALID_ARG;
+    }
+    if (HAS(DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE)) {
+        dcc_message_reference_type_t reference_type;
+        if (dcc_message_reference_validate(
+                builder->message_reference, &reference_type
+            ) != DCC_OK) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        if (reference_type == DCC_MESSAGE_REFERENCE_FORWARD &&
+            (HAS(DCC_MESSAGE_BUILDER_PRESENT_CONTENT) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_EMBEDS) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_EMBEDS_JSON) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_STICKER_IDS) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_JSON) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_POLL) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_POLL_JSON) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS) ||
+             HAS(DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS_JSON))) {
+            return DCC_ERR_INVALID_ARG;
+        }
     }
 #undef HAS
     return DCC_OK;

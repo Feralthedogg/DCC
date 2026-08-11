@@ -17,6 +17,44 @@ typedef struct dcc_endpoint_record_view {
     uint64_t present;
 } dcc_endpoint_record_view_t;
 
+typedef enum dcc_endpoint_auth_policy {
+    DCC_ENDPOINT_AUTH_POLICY_BOT = 1,
+    DCC_ENDPOINT_AUTH_POLICY_NONE_OR_BOT = 2,
+    DCC_ENDPOINT_AUTH_POLICY_BEARER = 3,
+    DCC_ENDPOINT_AUTH_POLICY_NONE = 4,
+    DCC_ENDPOINT_AUTH_POLICY_BOT_OR_BEARER = 5,
+    DCC_ENDPOINT_AUTH_POLICY_WEBHOOK_TOKEN_OR_BOT = 6
+} dcc_endpoint_auth_policy_t;
+
+typedef enum dcc_endpoint_audit_policy {
+    DCC_ENDPOINT_AUDIT_REASON_DENIED = 0,
+    DCC_ENDPOINT_AUDIT_REASON_ALLOWED = 1
+} dcc_endpoint_audit_policy_t;
+
+typedef enum dcc_endpoint_path_policy {
+    DCC_ENDPOINT_PATH_PUBLIC = 0,
+    DCC_ENDPOINT_PATH_SENSITIVE = 1
+} dcc_endpoint_path_policy_t;
+
+typedef enum dcc_endpoint_route_key_policy {
+    DCC_ENDPOINT_ROUTE_KEY_LITERAL = 0,
+    DCC_ENDPOINT_ROUTE_KEY_OPAQUE = 1
+} dcc_endpoint_route_key_policy_t;
+
+/* Keep each canonical endpoint's checked route and capability tuple beside its
+ * public definition. Besides auditability, this prevents helper refactors from
+ * silently changing authentication, audit-reason, or route-key policy. */
+#define DCC_ENDPOINT_CONTRACT(auth_, audit_, route_, method_) do { \
+    (void)(auth_); (void)(audit_); (void)DCC_ENDPOINT_PATH_PUBLIC; \
+    (void)(route_); (void)(method_); \
+} while (0)
+
+#define DCC_ENDPOINT_SENSITIVE_CONTRACT(auth_, audit_, route_, method_, operation_) do { \
+    (void)(auth_); (void)(audit_); (void)DCC_ENDPOINT_PATH_SENSITIVE; \
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE; (void)(route_); (void)(method_); \
+    (void)(operation_); \
+} while (0)
+
 typedef struct dcc_endpoint_interaction_view {
     dcc_endpoint_record_view_t record;
     dcc_interaction_response_type_t type;
@@ -52,6 +90,10 @@ typedef struct dcc_endpoint_webhook_edit_view {
     (offsetof(type_, field_) + sizeof(((type_ *)0)->field_))
 
 int dcc_endpoint_field_covered(size_t size, size_t offset, size_t width);
+int dcc_endpoint_field_partially_covered(
+    size_t size, size_t offset, size_t width
+);
+int dcc_endpoint_utf8_scalar_count(const char *text, size_t *out_count);
 dcc_status_t dcc_endpoint_record_read(
     const void *value,
     size_t version_offset,
@@ -122,12 +164,31 @@ dcc_status_t dcc_endpoint_prepare(
     dcc_rest_call_options_t *out_options
 );
 
+dcc_status_t dcc_endpoint_prepare_policy(
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request,
+    dcc_rest_call_options_t *out_options,
+    dcc_endpoint_auth_policy_t auth_policy,
+    dcc_endpoint_audit_policy_t audit_policy
+);
+
 dcc_status_t dcc_endpoint_submit(
     dcc_client_t *client,
     dcc_rest_method_t method,
     const char *path,
     const dcc_endpoint_body_t *body,
     const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
+);
+
+dcc_status_t dcc_endpoint_submit_named(
+    dcc_client_t *client,
+    const char *operation,
+    dcc_rest_method_t method,
+    const char *path,
+    const dcc_endpoint_body_t *body,
+    const dcc_rest_call_options_t *options,
+    dcc_endpoint_path_policy_t path_policy,
     dcc_rest_request_t **out_request
 );
 

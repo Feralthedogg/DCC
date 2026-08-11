@@ -18,7 +18,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     call_rest_create_guild_channel_params,
                     "POST",
                     "/guilds/333/channels",
-                    "{\"guild_id\":\"333\",\"position\":2,\"name\":\"ops forum\",\"topic\":\"forum typed\",\"permission_overwrites\":[{\"id\":\"555\",\"allow\":\"1024\",\"deny\":\"0\",\"type\":0}],\"rate_limit_per_user\":5,\"default_thread_rate_limit_per_user\":7,\"flags\":16,\"default_forum_layout\":1,\"type\":15,\"parent_id\":\"777\",\"nsfw\":true,\"default_auto_archive_duration\":60,\"available_tags\":[{\"name\":\"news\",\"moderated\":false,\"emoji_name\":\"star\"},{\"name\":\"alerts\",\"moderated\":true,\"emoji_id\":\"999\"}],\"default_reaction_emoji\":{\"emoji_name\":\"star\"},\"default_sort_order\":1,\"lock_permissions\":true}"
+                    "{\"name\":\"ops forum\",\"type\":15,\"topic\":\"forum typed\",\"rate_limit_per_user\":5,\"position\":2,\"permission_overwrites\":[{\"id\":\"555\",\"allow\":\"1024\",\"deny\":\"0\",\"type\":0}],\"parent_id\":\"777\",\"nsfw\":true,\"default_auto_archive_duration\":60,\"default_reaction_emoji\":{\"emoji_name\":\"star\"},\"available_tags\":[{\"name\":\"news\",\"moderated\":false,\"emoji_name\":\"star\"},{\"name\":\"alerts\",\"moderated\":true,\"emoji_id\":\"999\"}],\"default_sort_order\":1,\"default_forum_layout\":1,\"default_thread_rate_limit_per_user\":7,\"flags\":16}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -42,7 +42,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     call_rest_modify_guild_channel_positions_params,
                     "PATCH",
                     "/guilds/333/channels",
-                    "[{\"id\":\"222\",\"position\":1,\"parent_id\":\"3330\",\"lock_permissions\":true}]"
+                    "[{\"id\":\"222\",\"position\":1,\"lock_permissions\":true,\"parent_id\":\"3330\"}]"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -50,7 +50,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     call_rest_modify_channel_params,
                     "PATCH",
                     "/channels/222",
-                    "{\"id\":\"222\",\"guild_id\":\"333\",\"position\":3,\"name\":\"voice\",\"user_limit\":12,\"bitrate\":64000,\"type\":2,\"nsfw\":false,\"default_auto_archive_duration\":1440}"
+                    "{\"name\":\"voice\",\"type\":2,\"bitrate\":64000,\"user_limit\":12,\"position\":3,\"parent_id\":null,\"nsfw\":false}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -58,7 +58,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     call_rest_modify_channel_media_params,
                     "PATCH",
                     "/channels/222",
-                    "{\"id\":\"222\",\"guild_id\":\"333\",\"name\":\"media\",\"flags\":32784,\"type\":16,\"nsfw\":true,\"default_auto_archive_duration\":10080,\"available_tags\":[{\"name\":\"clips\",\"moderated\":true,\"emoji_id\":\"999\"}],\"default_reaction_emoji\":{\"emoji_id\":\"888\"},\"default_sort_order\":1}"
+                    "{\"name\":\"media\",\"type\":16,\"nsfw\":true,\"default_auto_archive_duration\":10080,\"default_reaction_emoji\":{\"emoji_id\":\"888\"},\"available_tags\":[{\"name\":\"clips\",\"moderated\":true,\"emoji_id\":\"999\"}],\"default_sort_order\":1,\"flags\":32784}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -138,7 +138,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     call_rest_create_channel_invite_params,
                     "POST",
                     "/channels/222/invites",
-                    "{\"max_age\":60,\"max_uses\":2,\"target_user\":\"444\",\"target_type\":1,\"temporary\":true,\"unique\":true}"
+                    "{\"max_age\":60,\"max_uses\":2,\"temporary\":true,\"unique\":true,\"target_type\":1,\"target_user_id\":\"444\",\"role_ids\":[\"555\"]}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -326,35 +326,11 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
-                    "create_guild",
-                    call_rest_create_guild,
-                    "POST",
-                    "/guilds",
-                    "{\"name\":\"ops\"}"
-                ) != 0 ||
-        run_public_rest_wrapper_expect(
-                    client,
-                    "create_guild_params",
-                    call_rest_create_guild_params,
-                    "POST",
-                    "/guilds",
-                    "{\"name\":\"ops typed\",\"widget_enabled\":true,\"afk_channel_id\":\"222\",\"afk_timeout\":300,\"widget_channel_id\":\"223\",\"default_message_notifications\":1,\"explicit_content_filter\":2,\"mfa_level\":1,\"system_channel_id\":\"224\",\"premium_progress_bar_enabled\":true,\"rules_channel_id\":\"225\",\"vanity_url_code\":\"vanity\",\"description\":\"desc\",\"safety_alerts_channel_id\":\"226\",\"banner\":\"data:image/png;base64,AA==\",\"discovery_splash\":\"data:image/png;base64,BB==\",\"splash\":\"data:image/png;base64,CC==\",\"icon\":\"data:image/png;base64,DD==\"}"
-                ) != 0 ||
-        run_public_rest_wrapper_expect(
-                    client,
                     "modify_guild_params",
                     call_rest_modify_guild_params,
                     "PATCH",
                     "/guilds/333",
                     "{\"id\":\"333\",\"name\":\"ops edit\",\"widget_enabled\":false,\"default_message_notifications\":0,\"explicit_content_filter\":1,\"mfa_level\":0,\"system_channel_id\":\"224\",\"premium_progress_bar_enabled\":false,\"description\":\"desc edit\"}"
-                ) != 0 ||
-        run_public_rest_wrapper_expect(
-                    client,
-                    "delete_guild",
-                    call_rest_delete_guild,
-                    "DELETE",
-                    "/guilds/333",
-                    NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -478,25 +454,9 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
-                    "modify_guild_integration",
-                    call_rest_modify_guild_integration,
-                    "PATCH",
-                    "/guilds/333/integrations/555",
-                    "{\"expire_behavior\":0}"
-                ) != 0 ||
-        run_public_rest_wrapper_expect(
-                    client,
                     "delete_guild_integration",
                     call_rest_delete_guild_integration,
                     "DELETE",
-                    "/guilds/333/integrations/555",
-                    NULL
-                ) != 0 ||
-        run_public_rest_wrapper_expect(
-                    client,
-                    "sync_guild_integration",
-                    call_rest_sync_guild_integration,
-                    "POST",
                     "/guilds/333/integrations/555",
                     NULL
                 ) != 0 ||

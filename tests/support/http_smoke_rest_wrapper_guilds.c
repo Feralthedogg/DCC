@@ -318,22 +318,6 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
-                    "create_guild_from_template",
-                    call_rest_create_guild_from_template,
-                    "POST",
-                    "/guilds/templates/tpl%2Fabc",
-                    "{\"name\":\"New Guild\"}"
-                ) != 0 ||
-        run_public_rest_wrapper_expect(
-                    client,
-                    "create_guild_from_template_params",
-                    call_rest_create_guild_from_template_params,
-                    "POST",
-                    "/guilds/templates/tpl%2Fabc",
-                    "{\"name\":\"New Guild Typed\"}"
-                ) != 0 ||
-        run_public_rest_wrapper_expect(
-                    client,
                     "get_guild_templates",
                     call_rest_get_guild_templates,
                     "GET",
@@ -442,14 +426,6 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_get_current_user_guilds,
                     "GET",
                     "/users/@me/guilds?limit=2&after=333",
-                    NULL
-                ) != 0 ||
-        run_public_rest_wrapper_expect(
-                    client,
-                    "get_current_user_dms",
-                    call_rest_get_current_user_dms,
-                    "GET",
-                    "/users/@me/channels",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(

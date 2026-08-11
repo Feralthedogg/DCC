@@ -65,7 +65,7 @@ int run_public_rest_wrapper_expect_webhooks_apps_smoke(dcc_client_t *client) {
                     "get_public_archived_threads",
                     call_rest_get_public_archived_threads,
                     "GET",
-                    "/channels/222/threads/archived/public?before=2024-01-01T00:00:00.000000%2B00:00&limit=2",
+                    "/channels/222/threads/archived/public?before=2024-01-01T00%3A00%3A00.000000%2B00%3A00&limit=2",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -81,7 +81,7 @@ int run_public_rest_wrapper_expect_webhooks_apps_smoke(dcc_client_t *client) {
                     "get_private_archived_threads",
                     call_rest_get_private_archived_threads,
                     "GET",
-                    "/channels/222/threads/archived/private?before=2024-01-01T00:00:00.000000%2B00:00&limit=2",
+                    "/channels/222/threads/archived/private?before=2024-01-01T00%3A00%3A00.000000%2B00%3A00&limit=2",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -217,7 +217,7 @@ int run_public_rest_wrapper_expect_webhooks_apps_smoke(dcc_client_t *client) {
                     "get_invite",
                     call_rest_get_invite,
                     "GET",
-                    "/invites/a%2Fb?with_counts=true&with_expiration=true",
+                    "/invites/a%2Fb?with_counts=true",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -225,7 +225,7 @@ int run_public_rest_wrapper_expect_webhooks_apps_smoke(dcc_client_t *client) {
                     "get_invite_full",
                     call_rest_get_invite_full,
                     "GET",
-                    "/invites/a%2Fb?with_counts=true&with_expiration=true",
+                    "/invites/a%2Fb?with_counts=true",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -475,14 +475,6 @@ int run_public_rest_wrapper_expect_webhooks_apps_smoke(dcc_client_t *client) {
                     "PUT",
                     "/applications/123/guilds/333/commands",
                     "[]"
-                ) != 0 ||
-        run_public_rest_wrapper_expect(
-                    client,
-                    "bulk_edit_guild_command_permissions",
-                    call_rest_bulk_edit_guild_command_permissions,
-                    "PUT",
-                    "/applications/123/guilds/333/commands/permissions",
-                    "[{\"id\":\"444\",\"permissions\":[]}]"
                 ) != 0) {
         return 1;
     }

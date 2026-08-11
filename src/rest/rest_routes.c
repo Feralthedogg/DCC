@@ -1,6 +1,8 @@
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
 #include "internal/rest/dcc_rest_routes_internal.h"
+#include "internal/rest/dcc_rest_sensitive_internal.h"
 
+#include <stdio.h>
 #include <string.h>
 
 void dcc_rest_route_key(const char *method, const char *path, char *out, size_t out_size) {
@@ -22,6 +24,17 @@ void dcc_rest_route_key(const char *method, const char *path, char *out, size_t 
     const char *query = strchr(route, '?');
     size_t route_len = query != NULL ? (size_t)(query - route) : strlen(route);
     size_t pos = 0;
+
+    if ((route_len >= 10U && strncmp(route, "/webhooks/", 10U) == 0) ||
+        (route_len >= 14U && strncmp(route, "/interactions/", 14U) == 0)) {
+        char fingerprint[65];
+        if (dcc_endpoint_sensitive_route_fingerprint(
+                route, route_len, fingerprint) == DCC_OK) {
+            (void)snprintf(out, out_size, "%s opaque:%s", method, fingerprint);
+            dcc_endpoint_secure_zero(fingerprint, sizeof(fingerprint));
+        }
+        return;
+    }
 
     while (*method != '\0' && pos + 1U < out_size) {
         out[pos++] = *method++;

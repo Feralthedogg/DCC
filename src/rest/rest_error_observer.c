@@ -188,6 +188,7 @@ static void dcc_rest_result_view_init(
         .body = completion->body,
         .body_len = completion->body_len,
         .retry_after_ms = completion->retry_after_ms,
+        .flags = completion->result_flags,
     };
     if (completion->body == NULL || completion->body_len == 0U ||
         dcc_json_parse(completion->body, completion->body_len, &view->json) != DCC_OK ||

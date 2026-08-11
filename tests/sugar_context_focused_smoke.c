@@ -56,6 +56,8 @@ static int check_modal_literals(void) {
 static int check_null_context_aliases(void) {
     dcc_thread_params_t thread_params = {
         .size = sizeof(dcc_thread_params_t),
+        .version = DCC_THREAD_PARAMS_VERSION,
+        .present = DCC_THREAD_PARAMS_PRESENT_NAME,
         .name = "focused-thread"
     };
 

@@ -329,21 +329,6 @@ dcc_status_t call_rest_delete_stage_instance(dcc_client_t *client, dcc_rest_cb c
 dcc_status_t call_rest_get_template(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_template(client, "tpl/abc", cb, user_data);
 }
-dcc_status_t call_rest_create_guild_from_template(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_guild_from_template(client, "tpl/abc", "{\"name\":\"New Guild\"}", cb, user_data);
-}
-dcc_status_t call_rest_create_guild_from_template_params(
-    dcc_client_t *client,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    const dcc_template_params_t params = {
-        .size = sizeof(dcc_template_params_t),
-        .code = "tpl/abc",
-        .name = "New Guild Typed"
-    };
-    return dcc_rest_create_guild_from_template_params(client, &params, cb, user_data);
-}
 dcc_status_t call_rest_get_guild_templates(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_guild_templates(client, 333, cb, user_data);
 }
@@ -406,17 +391,19 @@ dcc_status_t call_rest_get_current_user_guilds(dcc_client_t *client, dcc_rest_cb
     return dcc_rest_get_current_user_guilds(client, "limit=2&after=333", cb, user_data);
 }
 dcc_status_t call_rest_get_current_user_dms(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_current_user_dms(client, cb, user_data);
+    (void)client;
+    (void)cb;
+    (void)user_data;
+    return DCC_ERR_INVALID_ARG;
 }
 dcc_status_t call_rest_create_dm_channel(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_dm_channel(client, "{\"recipient_id\":\"444\"}", cb, user_data);
+    dcc_dm_channel_params_t params = DCC_DM_CHANNEL_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.recipient_id = 444;
+    return dcc_rest_create_dm_channel(client, &params, &options, NULL);
 }
 dcc_status_t call_rest_create_dm_channel_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_dm_channel_params_t params = {
-        .size = sizeof(params),
-        .user_id = 444
-    };
-    return dcc_rest_create_dm_channel_params(client, &params, cb, user_data);
+    return call_rest_create_dm_channel(client, cb, user_data);
 }
 dcc_status_t call_rest_create_direct_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_create_direct_message(client, 444, "{\"content\":\"hi\"}", cb, user_data);

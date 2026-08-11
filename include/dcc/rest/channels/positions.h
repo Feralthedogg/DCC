@@ -2,6 +2,7 @@
 #define DCC_REST_CHANNELS_POSITIONS_H
 
 #include <dcc/rest/types.h>
+#include <dcc/rest/request.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,16 +11,9 @@ extern "C" {
 DCC_API dcc_status_t dcc_rest_modify_guild_channel_positions(
     dcc_client_t *client,
     dcc_snowflake_t guild_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_modify_guild_channel_positions_params(
-    dcc_client_t *client,
     const dcc_channel_positions_params_t *params,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 #ifdef __cplusplus

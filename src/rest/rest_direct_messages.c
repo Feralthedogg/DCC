@@ -43,6 +43,9 @@ static dcc_status_t dcc_rest_direct_message_request(
         json_body,
         body_len,
         "application/json",
+        DCC_REST_AUTH_DEFAULT,
+        NULL,
+        NULL,
         DCC_REST_MAX_RATE_LIMIT_RETRIES,
         1,
         cb,
@@ -51,7 +54,9 @@ static dcc_status_t dcc_rest_direct_message_request(
         NULL,
         NULL,
         1,
-        0
+        0,
+        path,
+        0U
     );
 }
 

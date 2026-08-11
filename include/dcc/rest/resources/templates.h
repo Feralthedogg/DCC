@@ -14,21 +14,6 @@ DCC_API dcc_status_t dcc_rest_get_template(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_create_guild_from_template(
-    dcc_client_t *client,
-    const char *code,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_create_guild_from_template_params(
-    dcc_client_t *client,
-    const dcc_template_params_t *params,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
 DCC_API dcc_status_t dcc_rest_get_guild_templates(
     dcc_client_t *client,
     dcc_snowflake_t guild_id,

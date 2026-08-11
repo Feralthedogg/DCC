@@ -13,6 +13,9 @@ dcc_status_t dcc_rest_execute_webhook(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE;
+    DCC_ENDPOINT_SENSITIVE_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_NONE, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_WEBHOOK_EXECUTE, DCC_REST_POST, "dcc_rest_execute_webhook");
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || webhook_id == 0U ||
@@ -38,8 +41,9 @@ dcc_status_t dcc_rest_execute_webhook(
         &base, DCC_REST_ROUTE_WEBHOOK_EXECUTE,
         (unsigned long long)webhook_id, token);
     if (status == DCC_OK) status = dcc_endpoint_path_with_query(base, &query, &path);
-    if (status == DCC_OK) status = dcc_endpoint_submit(
-        client, DCC_REST_POST, path, &body, &resolved, out_request);
+    if (status == DCC_OK) status = dcc_endpoint_submit_named(
+        client, "dcc_rest_execute_webhook", DCC_REST_POST, path, &body,
+        &resolved, DCC_ENDPOINT_PATH_SENSITIVE, out_request);
     free(token);
     free(base);
     free(path);

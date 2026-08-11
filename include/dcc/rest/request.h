@@ -25,6 +25,20 @@ extern "C" {
 /** Opaque owner of one accepted asynchronous REST operation and its result. */
 typedef struct dcc_rest_request dcc_rest_request_t;
 
+/** Authentication source for one REST call. */
+typedef enum dcc_rest_auth_mode {
+    DCC_REST_AUTH_DEFAULT = 0,
+    DCC_REST_AUTH_NONE = 1,
+    DCC_REST_AUTH_BOT = 2,
+    DCC_REST_AUTH_BEARER = 3
+} dcc_rest_auth_mode_t;
+
+/** Call-option flags. */
+enum {
+    DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY = UINT64_C(1),
+    DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY = UINT64_C(1) << 1U
+};
+
 /**
  * @page dcc_rest_endpoint_call_contract Endpoint submission contract
  *
@@ -72,12 +86,17 @@ typedef struct dcc_rest_call_options {
     dcc_rest_priority_t priority;  /**< Queue priority. */
     dcc_rest_result_fn callback;   /**< Optional exactly-once terminal callback. */
     void *user_data;               /**< Borrowed until callback return. */
+    const char *audit_log_reason;  /**< Optional UTF-8 Discord audit reason. */
+    dcc_rest_auth_mode_t auth_mode;/**< Authentication selection. */
+    const char *auth_token;        /**< Required only for Bearer authentication. */
+    uint64_t flags;                /**< DCC_REST_CALL_FLAG_* bits. */
 } dcc_rest_call_options_t;
 
 /** Constant initializer for dcc_rest_call_options_t. */
 #define DCC_REST_CALL_OPTIONS_INIT \
     { sizeof(dcc_rest_call_options_t), DCC_REST_CALL_OPTIONS_VERSION, \
-      DCC_REST_PRIORITY_NORMAL, NULL, NULL }
+      DCC_REST_PRIORITY_NORMAL, NULL, NULL, NULL, DCC_REST_AUTH_DEFAULT, \
+      NULL, UINT64_C(0) }
 
 /** Versioned raw REST submission description. */
 typedef struct dcc_rest_request_desc {
@@ -88,20 +107,20 @@ typedef struct dcc_rest_request_desc {
     const char *content_type;       /**< Optional NUL-terminated value; copied. */
     const void *body;               /**< Optional exact body byte span; copied. */
     size_t body_len;                /**< Exact byte count, including embedded NULs. */
-    dcc_rest_call_options_t options; /**< Scheduling and callback options. */
+    const dcc_rest_call_options_t *options; /**< Optional borrowed call options. */
 } dcc_rest_request_desc_t;
 
 /** Constant initializer for dcc_rest_request_desc_t. */
 #define DCC_REST_REQUEST_DESC_INIT \
     { sizeof(dcc_rest_request_desc_t), DCC_REST_REQUEST_DESC_VERSION, \
-      DCC_REST_GET, NULL, NULL, NULL, 0U, DCC_REST_CALL_OPTIONS_INIT }
+      DCC_REST_GET, NULL, NULL, NULL, 0U, NULL }
 
 /** Initializes call options to normal priority with no callback; NULL is allowed. */
 DCC_API void dcc_rest_call_options_init(dcc_rest_call_options_t *options);
 
 /**
- * Initializes a raw descriptor and its nested call options; NULL is allowed.
- * The initialized descriptor uses GET and has no path, content type, or body.
+ * Initializes a raw descriptor; NULL is allowed. The initialized descriptor
+ * uses GET and has no path, content type, body, or call-options pointer.
  */
 DCC_API void dcc_rest_request_desc_init(dcc_rest_request_desc_t *description);
 

@@ -8,6 +8,9 @@ dcc_status_t dcc_rest_get_channel_webhooks(
     dcc_client_t *client, dcc_snowflake_t channel_id,
     const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_CHANNEL_WEBHOOKS, DCC_REST_GET);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U)
@@ -25,6 +28,9 @@ dcc_status_t dcc_rest_get_guild_webhooks(
     dcc_client_t *client, dcc_snowflake_t guild_id,
     const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_GUILD_WEBHOOKS, DCC_REST_GET);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || guild_id == 0U)
@@ -43,6 +49,11 @@ dcc_status_t dcc_rest_get_webhook(
     const char *webhook_token, const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_SENSITIVE;
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE;
+    DCC_ENDPOINT_SENSITIVE_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_WEBHOOK_TOKEN_OR_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_WEBHOOK_OPTIONAL_TOKEN_NO_TOKEN, DCC_REST_GET, "dcc_rest_get_webhook");
+    (void)DCC_REST_ROUTE_WEBHOOK_OPTIONAL_TOKEN_WITH_TOKEN;
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || webhook_id == 0U ||

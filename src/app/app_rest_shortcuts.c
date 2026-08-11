@@ -35,6 +35,7 @@
 #include <dcc/rest/resources/templates.h>
 
 #include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_paths_internal.h"
 #include <dcc/rest/resources/users.h>
 #include <dcc/rest/resources/voice_states.h>
 #include <dcc/rest/roles.h>
@@ -54,6 +55,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct dcc_app_infer_guild_state {
     dcc_app_t *app;
@@ -92,7 +94,9 @@ dcc_status_t dcc_app_get_channel(
     if (app == NULL || channel_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_channel(dcc_app_client(app), channel_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_channel, dcc_app_client(app), channel_id
+    );
 }
 
 dcc_status_t dcc_app_infer_guild_id_from_channel(
@@ -123,13 +127,16 @@ dcc_status_t dcc_app_infer_guild_id_from_channel(
     state->cb = cb;
     state->user_data = user_data;
 
-    status = dcc_rest_get_channel(
-        client,
-        channel_id,
-        dcc_app_infer_guild_id_from_channel_rest_cb,
-        state
+    dcc_rest_call_options_t options;
+    void *bridge = NULL;
+    status = dcc_endpoint_legacy_options(
+        dcc_app_infer_guild_id_from_channel_rest_cb, state, &options, &bridge
     );
+    if (status == DCC_OK) {
+        status = dcc_rest_get_channel(client, channel_id, &options, NULL);
+    }
     if (status != DCC_OK) {
+        dcc_endpoint_legacy_bridge_release(bridge);
         free(state);
     }
     return status;
@@ -144,7 +151,10 @@ dcc_status_t dcc_app_get_guild_channels(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_channels(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_channels,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_create_guild_channel(
@@ -157,19 +167,31 @@ dcc_status_t dcc_app_create_guild_channel(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_channel(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[80];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/channels",
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), DCC_REST_POST, path, NULL,
+        "application/json", json_body, strlen(json_body), cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_create_guild_channel_params(
     dcc_app_t *app,
+    dcc_snowflake_t guild_id,
     const dcc_channel_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || params == NULL) {
+    if (app == NULL || guild_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_channel_params(dcc_app_client(app), params, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_guild_channel,
+        dcc_app_client(app), guild_id, params
+    );
 }
 
 dcc_status_t dcc_app_modify_channel(
@@ -182,19 +204,30 @@ dcc_status_t dcc_app_modify_channel(
     if (app == NULL || channel_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_channel(dcc_app_client(app), channel_id, json_body, cb, user_data);
+    char path[64];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/channels/%llu", (unsigned long long)channel_id
+    );
+    return status == DCC_OK ? dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), DCC_REST_PATCH, path, NULL,
+        "application/json", json_body, strlen(json_body), cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_channel_params(
     dcc_app_t *app,
+    dcc_snowflake_t channel_id,
     const dcc_channel_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || params == NULL) {
+    if (app == NULL || channel_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_channel_params(dcc_app_client(app), params, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_channel,
+        dcc_app_client(app), channel_id, params
+    );
 }
 
 dcc_status_t dcc_app_delete_channel(
@@ -206,7 +239,9 @@ dcc_status_t dcc_app_delete_channel(
     if (app == NULL || channel_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_channel(dcc_app_client(app), channel_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_channel, dcc_app_client(app), channel_id
+    );
 }
 
 dcc_status_t dcc_app_trigger_channel_typing(
@@ -218,7 +253,10 @@ dcc_status_t dcc_app_trigger_channel_typing(
     if (app == NULL || channel_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_trigger_channel_typing(dcc_app_client(app), channel_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_trigger_channel_typing,
+        dcc_app_client(app), channel_id
+    );
 }
 
 dcc_status_t dcc_app_follow_news_channel(
@@ -232,17 +270,12 @@ dcc_status_t dcc_app_follow_news_channel(
         return DCC_ERR_INVALID_ARG;
     }
 
-    char body[64];
-    int written = snprintf(
-        body,
-        sizeof(body),
-        "{\"webhook_channel_id\":\"%llu\"}",
-        (unsigned long long)webhook_channel_id
+    dcc_rest_follow_news_channel_t follow = DCC_REST_FOLLOW_NEWS_CHANNEL_INIT;
+    follow.webhook_channel_id = webhook_channel_id;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_follow_news_channel,
+        dcc_app_client(app), channel_id, &follow
     );
-    if (written < 0 || (size_t)written >= sizeof(body)) {
-        return DCC_ERR_NOMEM;
-    }
-    return dcc_rest_follow_news_channel(dcc_app_client(app), channel_id, body, cb, user_data);
 }
 
 dcc_status_t dcc_app_set_channel_voice_status(
@@ -255,12 +288,14 @@ dcc_status_t dcc_app_set_channel_voice_status(
     if (app == NULL || channel_id == 0U || status == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    dcc_channel_voice_status_params_t params = {
-        .size = sizeof(params),
-        .channel_id = channel_id,
-        .status = status,
-    };
-    return dcc_rest_set_channel_voice_status_params(dcc_app_client(app), &params, cb, user_data);
+    dcc_channel_voice_status_params_t params =
+        DCC_CHANNEL_VOICE_STATUS_PARAMS_INIT;
+    params.present = DCC_CHANNEL_VOICE_STATUS_PRESENT_STATUS;
+    params.status = status;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_set_channel_voice_status,
+        dcc_app_client(app), channel_id, &params
+    );
 }
 
 dcc_status_t dcc_app_get_current_user_voice_state(
@@ -372,19 +407,31 @@ dcc_status_t dcc_app_modify_guild_channel_positions(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_channel_positions(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[80];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/channels",
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), DCC_REST_PATCH, path, NULL,
+        "application/json", json_body, strlen(json_body), cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_guild_channel_positions_params(
     dcc_app_t *app,
+    dcc_snowflake_t guild_id,
     const dcc_channel_positions_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || params == NULL) {
+    if (app == NULL || guild_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_channel_positions_params(dcc_app_client(app), params, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_guild_channel_positions,
+        dcc_app_client(app), guild_id, params
+    );
 }
 
 dcc_status_t dcc_app_get_channel_invites(
@@ -396,7 +443,10 @@ dcc_status_t dcc_app_get_channel_invites(
     if (app == NULL || channel_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_channel_invites(dcc_app_client(app), channel_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_channel_invites,
+        dcc_app_client(app), channel_id
+    );
 }
 
 dcc_status_t dcc_app_create_channel_invite(
@@ -409,19 +459,31 @@ dcc_status_t dcc_app_create_channel_invite(
     if (app == NULL || channel_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_channel_invite(dcc_app_client(app), channel_id, json_body, cb, user_data);
+    char path[80];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/channels/%llu/invites",
+        (unsigned long long)channel_id
+    );
+    return status == DCC_OK ? dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), DCC_REST_POST, path, NULL,
+        "application/json", json_body, strlen(json_body), cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_create_channel_invite_params(
     dcc_app_t *app,
+    dcc_snowflake_t channel_id,
     const dcc_invite_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || params == NULL) {
+    if (app == NULL || channel_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_channel_invite_params(dcc_app_client(app), params, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_channel_invite,
+        dcc_app_client(app), channel_id, params
+    );
 }
 
 dcc_status_t dcc_app_modify_channel_permission(
@@ -435,14 +497,15 @@ dcc_status_t dcc_app_modify_channel_permission(
     if (app == NULL || channel_id == 0U || overwrite_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_channel_permission(
-        dcc_app_client(app),
-        channel_id,
-        overwrite_id,
-        json_body,
-        cb,
-        user_data
+    char path[112];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/channels/%llu/permissions/%llu",
+        (unsigned long long)channel_id, (unsigned long long)overwrite_id
     );
+    return status == DCC_OK ? dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), DCC_REST_PUT, path, NULL,
+        "application/json", json_body, strlen(json_body), cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_channel_permission_params(
@@ -455,7 +518,10 @@ dcc_status_t dcc_app_modify_channel_permission_params(
     if (app == NULL || channel_id == 0U || overwrite == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_channel_permission_params(dcc_app_client(app), channel_id, overwrite, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_channel_permission,
+        dcc_app_client(app), channel_id, overwrite->id, overwrite
+    );
 }
 
 dcc_status_t dcc_app_delete_channel_permission(
@@ -468,7 +534,10 @@ dcc_status_t dcc_app_delete_channel_permission(
     if (app == NULL || channel_id == 0U || overwrite_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_channel_permission(dcc_app_client(app), channel_id, overwrite_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_channel_permission,
+        dcc_app_client(app), channel_id, overwrite_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_roles(
@@ -773,11 +842,10 @@ dcc_status_t dcc_app_create_thread_from_message(
         return DCC_ERR_INVALID_ARG;
     }
 
-    dcc_thread_params_t local = *params;
-    local.size = sizeof(local);
-    local.channel_id = channel_id;
-    local.message_id = message_id;
-    return dcc_rest_create_thread_from_message_params(dcc_app_client(app), &local, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_thread_from_message,
+        dcc_app_client(app), channel_id, message_id, params
+    );
 }
 
 dcc_status_t dcc_app_create_thread_from_message_name(
@@ -792,25 +860,129 @@ dcc_status_t dcc_app_create_thread_from_message_name(
         return DCC_ERR_INVALID_ARG;
     }
 
-    dcc_thread_params_t params = {
-        .size = sizeof(params),
-        .channel_id = channel_id,
-        .message_id = message_id,
-        .name = name,
-    };
+    dcc_thread_params_t params = DCC_THREAD_PARAMS_INIT;
+    params.present = DCC_THREAD_PARAMS_PRESENT_NAME;
+    params.name = name;
     return dcc_app_create_thread_from_message(app, channel_id, message_id, &params, cb, user_data);
 }
 
 dcc_status_t dcc_app_modify_thread(
     dcc_app_t *app,
+    dcc_snowflake_t thread_id,
     const dcc_thread_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || params == NULL || params->thread_id == 0U) {
+    static const uint64_t known =
+        DCC_THREAD_PARAMS_PRESENT_NAME |
+        DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION |
+        DCC_THREAD_PARAMS_PRESENT_TYPE |
+        DCC_THREAD_PARAMS_PRESENT_INVITABLE |
+        DCC_THREAD_PARAMS_PRESENT_RATE_LIMIT_PER_USER |
+        DCC_THREAD_PARAMS_PRESENT_MESSAGE |
+        DCC_THREAD_PARAMS_PRESENT_APPLIED_TAGS;
+    dcc_endpoint_record_view_t view;
+    if (app == NULL || thread_id == 0U ||
+        dcc_endpoint_record_read(
+            params,
+            offsetof(dcc_thread_params_t, version),
+            offsetof(dcc_thread_params_t, present),
+            DCC_ENDPOINT_FIELD_END(dcc_thread_params_t, present),
+            DCC_THREAD_PARAMS_VERSION,
+            known,
+            &view
+        ) != DCC_OK ||
+        dcc_endpoint_field_partially_covered(
+            view.size, offsetof(dcc_thread_params_t, name), sizeof(params->name)
+        ) ||
+        dcc_endpoint_field_partially_covered(
+            view.size, offsetof(dcc_thread_params_t, auto_archive_duration),
+            sizeof(params->auto_archive_duration)
+        ) ||
+        dcc_endpoint_field_partially_covered(
+            view.size, offsetof(dcc_thread_params_t, type), sizeof(params->type)
+        ) ||
+        dcc_endpoint_field_partially_covered(
+            view.size, offsetof(dcc_thread_params_t, invitable),
+            sizeof(params->invitable)
+        ) ||
+        dcc_endpoint_field_partially_covered(
+            view.size, offsetof(dcc_thread_params_t, rate_limit_per_user),
+            sizeof(params->rate_limit_per_user)
+        ) ||
+        dcc_endpoint_field_partially_covered(
+            view.size, offsetof(dcc_thread_params_t, message),
+            sizeof(params->message)
+        ) ||
+        dcc_endpoint_field_partially_covered(
+            view.size, offsetof(dcc_thread_params_t, applied_tags),
+            sizeof(params->applied_tags)
+        ) ||
+        dcc_endpoint_field_partially_covered(
+            view.size, offsetof(dcc_thread_params_t, applied_tag_count),
+            sizeof(params->applied_tag_count)
+        ) ||
+        !dcc_endpoint_present_field_covered(
+            &view, DCC_THREAD_PARAMS_PRESENT_NAME,
+            offsetof(dcc_thread_params_t, name), sizeof(params->name)
+        ) ||
+        !dcc_endpoint_present_field_covered(
+            &view, DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION,
+            offsetof(dcc_thread_params_t, auto_archive_duration),
+            sizeof(params->auto_archive_duration)
+        ) ||
+        !dcc_endpoint_present_field_covered(
+            &view, DCC_THREAD_PARAMS_PRESENT_INVITABLE,
+            offsetof(dcc_thread_params_t, invitable), sizeof(params->invitable)
+        ) ||
+        !dcc_endpoint_present_field_covered(
+            &view, DCC_THREAD_PARAMS_PRESENT_RATE_LIMIT_PER_USER,
+            offsetof(dcc_thread_params_t, rate_limit_per_user),
+            sizeof(params->rate_limit_per_user)
+        ) ||
+        !dcc_endpoint_present_field_covered(
+            &view, DCC_THREAD_PARAMS_PRESENT_APPLIED_TAGS,
+            offsetof(dcc_thread_params_t, applied_tags),
+            sizeof(params->applied_tags)
+        ) ||
+        ((view.present & DCC_THREAD_PARAMS_PRESENT_APPLIED_TAGS) != 0U &&
+         !dcc_endpoint_field_covered(
+             view.size, offsetof(dcc_thread_params_t, applied_tag_count),
+             sizeof(params->applied_tag_count)
+         )) ||
+        (view.present & (DCC_THREAD_PARAMS_PRESENT_TYPE |
+            DCC_THREAD_PARAMS_PRESENT_MESSAGE)) != 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_thread_params(dcc_app_client(app), params, cb, user_data);
+    dcc_channel_params_t channel = DCC_CHANNEL_PARAMS_INIT;
+    channel.kind = DCC_CHANNEL_PARAMS_THREAD;
+    if ((view.present & DCC_THREAD_PARAMS_PRESENT_NAME) != 0U) {
+        channel.payload.thread.present |= DCC_CHANNEL_THREAD_PRESENT_NAME;
+        channel.payload.thread.name = params->name;
+    }
+    if ((view.present & DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION) != 0U) {
+        channel.payload.thread.present |=
+            DCC_CHANNEL_THREAD_PRESENT_AUTO_ARCHIVE_DURATION;
+        channel.payload.thread.auto_archive_duration = params->auto_archive_duration;
+    }
+    if ((view.present & DCC_THREAD_PARAMS_PRESENT_INVITABLE) != 0U) {
+        channel.payload.thread.present |= DCC_CHANNEL_THREAD_PRESENT_INVITABLE;
+        channel.payload.thread.invitable = params->invitable;
+    }
+    if ((view.present & DCC_THREAD_PARAMS_PRESENT_RATE_LIMIT_PER_USER) != 0U) {
+        channel.payload.thread.present |=
+            DCC_CHANNEL_THREAD_PRESENT_RATE_LIMIT_PER_USER;
+        channel.payload.thread.rate_limit_per_user = params->rate_limit_per_user;
+    }
+    if ((view.present & DCC_THREAD_PARAMS_PRESENT_APPLIED_TAGS) != 0U) {
+        channel.payload.thread.present |= DCC_CHANNEL_THREAD_PRESENT_APPLIED_TAGS;
+        channel.payload.thread.applied_tags = params->applied_tags;
+        channel.payload.thread.applied_tag_count = params->applied_tag_count;
+    }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_channel,
+        dcc_app_client(app), thread_id, &channel
+    );
 }
 
 dcc_status_t dcc_app_archive_thread(
@@ -819,12 +991,15 @@ dcc_status_t dcc_app_archive_thread(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    dcc_thread_params_t params = {
-        .size = sizeof(params),
-        .thread_id = thread_id,
-        .archived = 1U,
-    };
-    return dcc_app_modify_thread(app, &params, cb, user_data);
+    if (app == NULL || thread_id == 0U) return DCC_ERR_INVALID_ARG;
+    dcc_channel_params_t params = DCC_CHANNEL_PARAMS_INIT;
+    params.kind = DCC_CHANNEL_PARAMS_THREAD;
+    params.payload.thread.present = DCC_CHANNEL_THREAD_PRESENT_ARCHIVED;
+    params.payload.thread.archived = 1U;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_channel,
+        dcc_app_client(app), thread_id, &params
+    );
 }
 
 dcc_status_t dcc_app_lock_thread(
@@ -833,13 +1008,17 @@ dcc_status_t dcc_app_lock_thread(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    dcc_thread_params_t params = {
-        .size = sizeof(params),
-        .thread_id = thread_id,
-        .archived = 1U,
-        .locked = 1U,
-    };
-    return dcc_app_modify_thread(app, &params, cb, user_data);
+    if (app == NULL || thread_id == 0U) return DCC_ERR_INVALID_ARG;
+    dcc_channel_params_t params = DCC_CHANNEL_PARAMS_INIT;
+    params.kind = DCC_CHANNEL_PARAMS_THREAD;
+    params.payload.thread.present = DCC_CHANNEL_THREAD_PRESENT_ARCHIVED |
+        DCC_CHANNEL_THREAD_PRESENT_LOCKED;
+    params.payload.thread.archived = 1U;
+    params.payload.thread.locked = 1U;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_channel,
+        dcc_app_client(app), thread_id, &params
+    );
 }
 
 dcc_status_t dcc_app_unlock_thread(
@@ -848,9 +1027,13 @@ dcc_status_t dcc_app_unlock_thread(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    dcc_thread_params_t params = {
-        .size = sizeof(params),
-        .thread_id = thread_id,
-    };
-    return dcc_app_modify_thread(app, &params, cb, user_data);
+    if (app == NULL || thread_id == 0U) return DCC_ERR_INVALID_ARG;
+    dcc_channel_params_t params = DCC_CHANNEL_PARAMS_INIT;
+    params.kind = DCC_CHANNEL_PARAMS_THREAD;
+    params.payload.thread.present = DCC_CHANNEL_THREAD_PRESENT_LOCKED;
+    params.payload.thread.locked = 0U;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_channel,
+        dcc_app_client(app), thread_id, &params
+    );
 }

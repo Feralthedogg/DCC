@@ -22,6 +22,9 @@ dcc_status_t dcc_rest_delete_message(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_ALLOWED,
+        DCC_REST_ROUTE_CHANNEL_MESSAGE, DCC_REST_DELETE);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U) {
@@ -48,6 +51,9 @@ dcc_status_t dcc_rest_crosspost_message(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_CHANNEL_MESSAGE_CROSSPOST, DCC_REST_POST);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U) {
@@ -75,6 +81,9 @@ dcc_status_t dcc_rest_bulk_delete_messages(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_ALLOWED,
+        DCC_REST_ROUTE_CHANNEL_MESSAGE_BULK_DELETE, DCC_REST_POST);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U ||

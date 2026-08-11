@@ -442,7 +442,7 @@ int run_public_rest_wrapper_expect_users_threads_smoke(dcc_client_t *client) {
                     call_rest_create_forum_thread_params,
                     "POST",
                     "/channels/222/threads",
-                    "{\"name\":\"forum typed\",\"rate_limit_per_user\":3,\"message\":{\"content\":\"forum starter\"},\"applied_tags\":[\"901\",\"902\"],\"auto_archive_duration\":1440}"
+                    "{\"name\":\"forum typed\",\"auto_archive_duration\":1440,\"rate_limit_per_user\":3,\"applied_tags\":[\"901\",\"902\"],\"message\":{\"content\":\"forum starter\"}}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,

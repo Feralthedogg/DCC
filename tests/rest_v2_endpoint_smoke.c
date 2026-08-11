@@ -1955,6 +1955,11 @@ int main(void) {
     if (!failed) {
         failed = endpoint_cancel_destroy_contract(client, &capture, &callback);
     }
+    if (!failed) {
+        failed = endpoint_task7_contract(
+            client, &capture, &callback, &observer
+        );
+    }
     dcc_status_t stop_status = dcc_client_stop(client);
     (void)pthread_join(runner_thread, NULL);
     if (!failed && stop_status == DCC_OK) {

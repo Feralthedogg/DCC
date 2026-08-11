@@ -19,6 +19,7 @@ typedef struct dcc_rest_terminal_completion {
     const char *body;
     size_t body_len;
     uint64_t retry_after_ms;
+    uint64_t result_flags;
 } dcc_rest_terminal_completion_t;
 
 dcc_status_t dcc_rest_set_app_error_sink(

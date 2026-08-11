@@ -18,10 +18,16 @@ extern "C" {
 struct dcc_rest_async_request {
     dcc_client_t *client;
     char *method;
-    char *path;
+    char *operation;
+    char *wire_path;
     char *body;
     size_t body_len;
     char *content_type;
+    char *audit_log_reason;
+    char *auth_token;
+    dcc_rest_auth_mode_t auth_mode;
+    uint64_t flags;
+    uint8_t sensitive_path;
     char route[DCC_REST_ROUTE_KEY_CAP];
     dcc_rest_priority_t priority;
     dcc_rest_cb cb;
@@ -40,10 +46,16 @@ struct dcc_rest_async_request {
 dcc_rest_async_request_t *dcc_rest_async_request_new(
     dcc_client_t *client,
     const char *method,
+    const char *operation,
     const char *path,
     const void *body,
     size_t body_len,
     const char *content_type,
+    const char *audit_log_reason,
+    dcc_rest_auth_mode_t auth_mode,
+    const char *auth_token,
+    uint64_t flags,
+    uint8_t sensitive_path,
     dcc_rest_priority_t priority,
     dcc_rest_cb cb,
     void *user_data,

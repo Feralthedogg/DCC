@@ -2,6 +2,7 @@
 #define DCC_REST_INVITES_H
 
 #include <dcc/rest/types.h>
+#include <dcc/rest/request.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,23 +11,16 @@ extern "C" {
 DCC_API dcc_status_t dcc_rest_get_invite(
     dcc_client_t *client,
     const char *invite_code,
-    const char *query,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_get_invite_full(
-    dcc_client_t *client,
-    const char *invite_code,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_invite_query_t *query,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 DCC_API dcc_status_t dcc_rest_delete_invite(
     dcc_client_t *client,
     const char *invite_code,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 #ifdef __cplusplus

@@ -44,7 +44,11 @@ def load_surface_mapping() -> set[str]:
         raise RuntimeError(f"failed to load {SURFACE_AUDIT}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return {wrapper for wrappers in module.DPP_TO_DCC.values() for wrapper in wrappers}
+    return {
+        wrapper
+        for wrappers in module.canonical_dcc_wrappers().values()
+        for wrapper in wrappers
+    }
 
 
 def read_http_smoke() -> str:

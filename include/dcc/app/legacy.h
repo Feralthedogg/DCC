@@ -717,6 +717,7 @@ DCC_API dcc_status_t dcc_app_create_guild_channel(
 );
 DCC_API dcc_status_t dcc_app_create_guild_channel_params(
     dcc_app_t *app,
+    dcc_snowflake_t guild_id,
     const dcc_channel_params_t *params,
     dcc_rest_cb cb,
     void *user_data
@@ -730,6 +731,7 @@ DCC_API dcc_status_t dcc_app_modify_channel(
 );
 DCC_API dcc_status_t dcc_app_modify_channel_params(
     dcc_app_t *app,
+    dcc_snowflake_t channel_id,
     const dcc_channel_params_t *params,
     dcc_rest_cb cb,
     void *user_data
@@ -820,6 +822,7 @@ DCC_API dcc_status_t dcc_app_modify_guild_channel_positions(
 );
 DCC_API dcc_status_t dcc_app_modify_guild_channel_positions_params(
     dcc_app_t *app,
+    dcc_snowflake_t guild_id,
     const dcc_channel_positions_params_t *params,
     dcc_rest_cb cb,
     void *user_data
@@ -839,6 +842,7 @@ DCC_API dcc_status_t dcc_app_create_channel_invite(
 );
 DCC_API dcc_status_t dcc_app_create_channel_invite_params(
     dcc_app_t *app,
+    dcc_snowflake_t channel_id,
     const dcc_invite_params_t *params,
     dcc_rest_cb cb,
     void *user_data
@@ -1015,6 +1019,7 @@ DCC_API dcc_status_t dcc_app_create_thread_from_message_name(
 );
 DCC_API dcc_status_t dcc_app_modify_thread(
     dcc_app_t *app,
+    dcc_snowflake_t thread_id,
     const dcc_thread_params_t *params,
     dcc_rest_cb cb,
     void *user_data

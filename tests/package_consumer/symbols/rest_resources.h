@@ -27,15 +27,17 @@ typedef dcc_status_t (*dcc_package_automod_create_fn)(
     );
 typedef dcc_status_t (*dcc_package_channel_create_fn)(
         dcc_client_t *,
+        dcc_snowflake_t,
         const dcc_channel_params_t *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_thread_create_fn)(
         dcc_client_t *,
+        dcc_snowflake_t,
         const dcc_thread_params_t *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_scheduled_event_create_fn)(
         dcc_client_t *,
@@ -81,9 +83,10 @@ typedef dcc_status_t (*dcc_package_current_user_modify_fn)(
     );
 typedef dcc_status_t (*dcc_package_invite_create_fn)(
         dcc_client_t *,
+        dcc_snowflake_t,
         const dcc_invite_params_t *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_webhook_create_fn)(
         dcc_client_t *,
@@ -94,15 +97,16 @@ typedef dcc_status_t (*dcc_package_webhook_create_fn)(
     );
 typedef dcc_status_t (*dcc_package_channel_positions_fn)(
         dcc_client_t *,
+        dcc_snowflake_t,
         const dcc_channel_positions_params_t *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_dm_create_fn)(
         dcc_client_t *,
         const dcc_dm_channel_params_t *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_voice_state_fn)(
         dcc_client_t *,

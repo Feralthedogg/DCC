@@ -189,12 +189,18 @@
     dcc_rest_modify_guild_incident_actions((client_), (guild_id_), (json_), (cb_), (user_data_))
 #define DCC_REST_INCIDENT_ACTIONS_PARAMS(client_, guild_id_, params_, cb_, user_data_) \
     dcc_rest_modify_guild_incident_actions_params((client_), (guild_id_), (params_), (cb_), (user_data_))
-#define DCC_REST_INVITE_TARGET_USERS(client_, invite_code_, cb_, user_data_) \
-    dcc_rest_get_invite_target_users((client_), (invite_code_), (cb_), (user_data_))
-#define DCC_REST_PUT_INVITE_TARGET_USERS(client_, invite_code_, filename_, csv_, csv_len_, cb_, user_data_) \
-    dcc_rest_put_invite_target_users((client_), (invite_code_), (filename_), (csv_), (csv_len_), (cb_), (user_data_))
-#define DCC_REST_INVITE_TARGET_USERS_JOB(client_, invite_code_, cb_, user_data_) \
-    dcc_rest_get_invite_target_users_job_status((client_), (invite_code_), (cb_), (user_data_))
+#define DCC_REST_INVITE_TARGET_USERS(client_, invite_code_, options_, out_request_) \
+    dcc_rest_get_invite_target_users( \
+        (client_), (invite_code_), (options_), (out_request_) \
+    )
+#define DCC_REST_PUT_INVITE_TARGET_USERS(client_, invite_code_, upload_, options_, out_request_) \
+    dcc_rest_put_invite_target_users( \
+        (client_), (invite_code_), (upload_), (options_), (out_request_) \
+    )
+#define DCC_REST_INVITE_TARGET_USERS_JOB(client_, invite_code_, options_, out_request_) \
+    dcc_rest_get_invite_target_users_job_status( \
+        (client_), (invite_code_), (options_), (out_request_) \
+    )
 #define DCC_REST_ENTITLEMENT(client_, application_id_, entitlement_id_, cb_, user_data_) \
     dcc_rest_get_entitlement((client_), (application_id_), (entitlement_id_), (cb_), (user_data_))
 #define DCC_REST_STICKER_PACK(client_, pack_id_, cb_, user_data_) \
@@ -266,10 +272,14 @@
         (cb_), \
         (user_data_) \
     )
-#define DCC_REST_CREATE_LOBBY_INVITE_SELF(client_, lobby_id_, cb_, user_data_) \
-    dcc_rest_create_lobby_channel_invite_for_self((client_), (lobby_id_), (cb_), (user_data_))
-#define DCC_REST_CREATE_LOBBY_INVITE_USER(client_, lobby_id_, user_id_, cb_, user_data_) \
-    dcc_rest_create_lobby_channel_invite_for_user((client_), (lobby_id_), (user_id_), (cb_), (user_data_))
+#define DCC_REST_CREATE_LOBBY_INVITE_SELF(client_, lobby_id_, options_, out_request_) \
+    dcc_rest_create_lobby_channel_invite_for_self( \
+        (client_), (lobby_id_), (options_), (out_request_) \
+    )
+#define DCC_REST_CREATE_LOBBY_INVITE_USER(client_, lobby_id_, user_id_, options_, out_request_) \
+    dcc_rest_create_lobby_channel_invite_for_user( \
+        (client_), (lobby_id_), (user_id_), (options_), (out_request_) \
+    )
 
 #define DCC_GATEWAY_REQUEST_MEMBERS(client_, options_) \
     dcc_client_request_guild_members((client_), (options_))

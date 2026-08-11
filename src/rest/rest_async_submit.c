@@ -26,6 +26,9 @@ static dcc_status_t dcc_rest_async_intercept(
         body,
         body_len,
         body_len != 0U ? "application/json" : NULL,
+        DCC_REST_AUTH_DEFAULT,
+        NULL,
+        NULL,
         0U,
         0,
         cb,
@@ -34,7 +37,9 @@ static dcc_status_t dcc_rest_async_intercept(
         NULL,
         NULL,
         1,
-        1
+        1,
+        path,
+        0U
     );
 }
 
@@ -75,9 +80,15 @@ dcc_status_t dcc_rest_request_async_priority(
         client,
         method,
         path,
+        path,
         body,
         body != NULL ? strlen(body) : 0U,
         body != NULL ? "application/json" : NULL,
+        NULL,
+        DCC_REST_AUTH_DEFAULT,
+        NULL,
+        0U,
+        0U,
         priority,
         cb,
         user_data,

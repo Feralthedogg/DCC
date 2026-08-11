@@ -21,7 +21,8 @@
         (app_), \
         &((dcc_dm_channel_params_t[]){ { \
             .size = sizeof(dcc_dm_channel_params_t), \
-            .user_id = (user_id_) \
+            .version = DCC_DM_CHANNEL_PARAMS_VERSION, \
+            .recipient_id = (user_id_) \
         } })[0] \
     )
 #define DCC_GROUP_DM_RECIPIENT_ADD(app_, channel_id_, user_id_, json_body_) \

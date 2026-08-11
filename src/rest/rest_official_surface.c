@@ -1,7 +1,9 @@
 #include "internal/rest/dcc_rest_buffer_internal.h"
+#include "internal/rest/dcc_rest_config_internal.h"
 #include "internal/rest/dcc_rest_endpoint_internal.h"
 #include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_json_internal.h"
+#include "internal/rest/dcc_rest_multipart_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
 #include "internal/rest/dcc_rest_request_core_internal.h"
 #include "internal/rest/dcc_rest_request_internal.h"
@@ -984,49 +986,99 @@ static dcc_status_t dcc_rest_invite_path(
 dcc_status_t dcc_rest_get_invite_target_users(
     dcc_client_t *client,
     const char *invite_code,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_DCC_DCC_REST_GET_INVITE_TARGET_USERS, DCC_REST_GET);
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare_policy(
+        options, out_request, &resolved, DCC_ENDPOINT_AUTH_POLICY_BOT,
+        DCC_ENDPOINT_AUDIT_REASON_DENIED
+    );
+    if (status != DCC_OK || client == NULL)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     char path[160];
-    dcc_status_t status = dcc_rest_invite_path(path, sizeof(path), "/invites/%s/target-users", invite_code);
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_GET, path, NULL, cb, user_data) : status;
+    status = dcc_rest_invite_path(path, sizeof(path), "/invites/%s/target-users", invite_code);
+    return status == DCC_OK ? dcc_endpoint_submit_named(
+        client, "dcc_rest_get_invite_target_users", DCC_REST_GET, path, NULL,
+        &resolved, DCC_ENDPOINT_PATH_PUBLIC, out_request
+    ) : status;
 }
 
 dcc_status_t dcc_rest_put_invite_target_users(
     dcc_client_t *client,
     const char *invite_code,
-    const char *filename,
-    const void *csv_data,
-    size_t csv_len,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_invite_target_users_upload_t *upload,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    if (filename == NULL || filename[0] == '\0' || csv_data == NULL || csv_len == 0) {
-        return DCC_ERR_INVALID_ARG;
-    }
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_DCC_DCC_REST_PUT_INVITE_TARGET_USERS, DCC_REST_PUT);
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare_policy(
+        options, out_request, &resolved, DCC_ENDPOINT_AUTH_POLICY_BOT,
+        DCC_ENDPOINT_AUDIT_REASON_DENIED
+    );
+    dcc_endpoint_record_view_t upload_view;
+    if (status != DCC_OK || client == NULL ||
+        dcc_endpoint_record_read(
+            upload, offsetof(dcc_rest_invite_target_users_upload_t, version),
+            SIZE_MAX,
+            DCC_ENDPOINT_FIELD_END(dcc_rest_invite_target_users_upload_t, data_len),
+            DCC_REST_INVITE_TARGET_USERS_UPLOAD_VERSION, 0U, &upload_view
+        ) != DCC_OK ||
+        upload->filename == NULL || upload->filename[0] == '\0' ||
+        strchr(upload->filename, '\r') != NULL ||
+        strchr(upload->filename, '\n') != NULL ||
+        upload->data == NULL || upload->data_len == 0U)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     char path[160];
-    dcc_status_t status = dcc_rest_invite_path(path, sizeof(path), "/invites/%s/target-users", invite_code);
+    status = dcc_rest_invite_path(path, sizeof(path), "/invites/%s/target-users", invite_code);
     dcc_rest_multipart_file_t file = {
         .field_name = "target_users_file",
-        .filename = filename,
+        .filename = upload->filename,
         .content_type = "text/csv",
-        .data = csv_data,
-        .data_len = csv_len,
+        .data = upload->data,
+        .data_len = upload->data_len,
     };
-    return status == DCC_OK ?
-        dcc_rest_request_method_multipart(client, DCC_REST_PUT, path, NULL, 0, &file, 1, cb, user_data) :
-        status;
+    char *multipart = NULL;
+    size_t multipart_len = 0U;
+    if (status == DCC_OK) status = dcc_rest_build_multipart_body(
+        NULL, 0U, &file, 1U, &multipart, &multipart_len
+    );
+    dcc_endpoint_body_t body = {
+        multipart, multipart_len, DCC_REST_MULTIPART_CONTENT_TYPE
+    };
+    if (status == DCC_OK) status = dcc_endpoint_submit_named(
+        client, "dcc_rest_put_invite_target_users", DCC_REST_PUT, path, &body,
+        &resolved, DCC_ENDPOINT_PATH_PUBLIC, out_request
+    );
+    free(multipart);
+    return status;
 }
 
 dcc_status_t dcc_rest_get_invite_target_users_job_status(
     dcc_client_t *client,
     const char *invite_code,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_DCC_DCC_REST_GET_INVITE_TARGET_USERS_JOB_STATUS, DCC_REST_GET);
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare_policy(
+        options, out_request, &resolved, DCC_ENDPOINT_AUTH_POLICY_BOT,
+        DCC_ENDPOINT_AUDIT_REASON_DENIED
+    );
+    if (status != DCC_OK || client == NULL)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     char path[176];
-    dcc_status_t status = dcc_rest_invite_path(path, sizeof(path), "/invites/%s/target-users/job-status", invite_code);
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_GET, path, NULL, cb, user_data) : status;
+    status = dcc_rest_invite_path(path, sizeof(path), "/invites/%s/target-users/job-status", invite_code);
+    return status == DCC_OK ? dcc_endpoint_submit_named(
+        client, "dcc_rest_get_invite_target_users_job_status", DCC_REST_GET,
+        path, NULL, &resolved, DCC_ENDPOINT_PATH_PUBLIC, out_request
+    ) : status;
 }
 
 dcc_status_t dcc_rest_get_entitlement(
@@ -1095,6 +1147,9 @@ dcc_status_t dcc_rest_execute_webhook_slack(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE;
+    DCC_ENDPOINT_SENSITIVE_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_NONE, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_WEBHOOK_EXECUTE_SLACK, DCC_REST_POST, "dcc_rest_execute_webhook_slack");
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || webhook_id == 0U ||
@@ -1115,8 +1170,9 @@ dcc_status_t dcc_rest_execute_webhook_slack(
     dcc_endpoint_body_t body = {
         (char *)payload_body, payload_body_len, "application/json"
     };
-    if (status == DCC_OK) status = dcc_endpoint_submit(
-        client, DCC_REST_POST, path, &body, &resolved, out_request);
+    if (status == DCC_OK) status = dcc_endpoint_submit_named(
+        client, "dcc_rest_execute_webhook_slack", DCC_REST_POST, path,
+        &body, &resolved, DCC_ENDPOINT_PATH_SENSITIVE, out_request);
     free(token);
     free(path);
     return status;
@@ -1130,6 +1186,9 @@ dcc_status_t dcc_rest_execute_webhook_github(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE;
+    DCC_ENDPOINT_SENSITIVE_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_NONE, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_WEBHOOK_EXECUTE_GITHUB, DCC_REST_POST, "dcc_rest_execute_webhook_github");
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || webhook_id == 0U ||
@@ -1150,8 +1209,9 @@ dcc_status_t dcc_rest_execute_webhook_github(
     dcc_endpoint_body_t body = {
         (char *)payload_body, payload_body_len, "application/json"
     };
-    if (status == DCC_OK) status = dcc_endpoint_submit(
-        client, DCC_REST_POST, path, &body, &resolved, out_request);
+    if (status == DCC_OK) status = dcc_endpoint_submit_named(
+        client, "dcc_rest_execute_webhook_github", DCC_REST_POST, path,
+        &body, &resolved, DCC_ENDPOINT_PATH_SENSITIVE, out_request);
     free(token);
     free(path);
     return status;
@@ -1890,23 +1950,44 @@ dcc_status_t dcc_rest_update_lobby_message_moderation_metadata_params(
 dcc_status_t dcc_rest_create_lobby_channel_invite_for_self(
     dcc_client_t *client,
     dcc_snowflake_t lobby_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BEARER, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_DCC_DCC_REST_CREATE_LOBBY_CHANNEL_INVITE_FOR_SELF, DCC_REST_POST);
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare_policy(
+        options, out_request, &resolved, DCC_ENDPOINT_AUTH_POLICY_BEARER,
+        DCC_ENDPOINT_AUDIT_REASON_DENIED
+    );
+    if (status != DCC_OK || client == NULL)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     char path[120];
-    dcc_status_t status = dcc_rest_path_snowflake(path, sizeof(path), "/lobbies/%llu/members/@me/invites", lobby_id);
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_POST, path, NULL, cb, user_data) : status;
+    status = dcc_rest_path_snowflake(path, sizeof(path), "/lobbies/%llu/members/@me/invites", lobby_id);
+    return status == DCC_OK ? dcc_endpoint_submit_named(
+        client, "dcc_rest_create_lobby_channel_invite_for_self", DCC_REST_POST,
+        path, NULL, &resolved, DCC_ENDPOINT_PATH_PUBLIC, out_request
+    ) : status;
 }
 
 dcc_status_t dcc_rest_create_lobby_channel_invite_for_user(
     dcc_client_t *client,
     dcc_snowflake_t lobby_id,
     dcc_snowflake_t user_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_DCC_DCC_REST_CREATE_LOBBY_CHANNEL_INVITE_FOR_USER, DCC_REST_POST);
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare_policy(
+        options, out_request, &resolved, DCC_ENDPOINT_AUTH_POLICY_BOT,
+        DCC_ENDPOINT_AUDIT_REASON_DENIED
+    );
+    if (status != DCC_OK || client == NULL)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     char path[144];
-    dcc_status_t status = lobby_id != 0 && user_id != 0 ?
+    status = lobby_id != 0 && user_id != 0 ?
         dcc_rest_format_path(
             path,
             sizeof(path),
@@ -1915,5 +1996,8 @@ dcc_status_t dcc_rest_create_lobby_channel_invite_for_user(
             (unsigned long long)user_id
         ) :
         DCC_ERR_INVALID_ARG;
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_POST, path, NULL, cb, user_data) : status;
+    return status == DCC_OK ? dcc_endpoint_submit_named(
+        client, "dcc_rest_create_lobby_channel_invite_for_user", DCC_REST_POST,
+        path, NULL, &resolved, DCC_ENDPOINT_PATH_PUBLIC, out_request
+    ) : status;
 }

@@ -15,9 +15,10 @@ extern "C" {
 #endif
 
 typedef struct dcc_rest_request_headers {
-    dcc_http_header_t headers[3];
+    dcc_http_header_t headers[4];
     size_t header_count;
     char *authorization;
+    char *audit_log_reason;
 } dcc_rest_request_headers_t;
 
 typedef struct dcc_rest_request_response_limits {
@@ -37,7 +38,10 @@ dcc_status_t dcc_rest_request_headers_init(
     const dcc_client_t *client,
     int absolute_url,
     size_t body_len,
-    const char *content_type
+    const char *content_type,
+    dcc_rest_auth_mode_t auth_mode,
+    const char *auth_token,
+    const char *audit_log_reason
 );
 void dcc_rest_request_headers_deinit(dcc_rest_request_headers_t *headers);
 dcc_status_t dcc_rest_prepare_http_request(
@@ -48,6 +52,9 @@ dcc_status_t dcc_rest_prepare_http_request(
     const void *body,
     size_t body_len,
     const char *content_type,
+    dcc_rest_auth_mode_t auth_mode,
+    const char *auth_token,
+    const char *audit_log_reason,
     int (*is_canceled)(void *user_data),
     llam_fd_t (*swap_fd)(void *user_data, llam_fd_t fd),
     void *cancel_user_data
@@ -74,6 +81,9 @@ dcc_status_t dcc_rest_request_raw_impl(
     const void *body,
     size_t body_len,
     const char *content_type,
+    dcc_rest_auth_mode_t auth_mode,
+    const char *auth_token,
+    const char *audit_log_reason,
     uint32_t max_rate_limit_retries,
     int wait_for_route,
     dcc_rest_cb cb,
@@ -82,7 +92,9 @@ dcc_status_t dcc_rest_request_raw_impl(
     llam_fd_t (*swap_fd)(void *user_data, llam_fd_t fd),
     void *cancel_user_data,
     int observe_terminal,
-    int silent_admission_failure
+    int silent_admission_failure,
+    const char *operation,
+    uint64_t result_flags
 );
 
 #ifdef __cplusplus

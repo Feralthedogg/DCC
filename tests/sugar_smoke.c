@@ -2561,27 +2561,42 @@ static int run_sugar_options_smoke(void) {
         DCC_MANAGED_MESSAGE_KEEP_PREVIOUS_OPTIONS(444ULL, &managed_message, NULL, NULL, NULL);
     dcc_thread_params_t thread_params = {
         .size = sizeof(thread_params),
+        .version = DCC_THREAD_PARAMS_VERSION,
+        .present = DCC_THREAD_PARAMS_PRESENT_NAME,
         .name = "sugar-thread",
     };
     dcc_channel_params_t channel_params = {
         .size = sizeof(channel_params),
-        .guild_id = 222ULL,
-        .channel_id = 333ULL,
-        .type = DCC_CHANNEL_TEXT,
-        .name = "sugar-channel",
+        .version = DCC_CHANNEL_PARAMS_VERSION,
+        .kind = DCC_CHANNEL_PARAMS_GUILD,
+        .payload.guild = {
+            .present = DCC_CHANNEL_GUILD_PRESENT_TYPE |
+                DCC_CHANNEL_GUILD_PRESENT_NAME,
+            .type = DCC_CHANNEL_TEXT,
+            .name = "sugar-channel",
+        },
     };
     dcc_channel_position_t channel_positions[] = {
-        { .channel_id = 333ULL, .position = 1U },
+        {
+            .size = sizeof(dcc_channel_position_t),
+            .version = DCC_CHANNEL_POSITION_VERSION,
+            .present = DCC_CHANNEL_POSITION_PRESENT_POSITION,
+            .channel_id = 333ULL,
+            .position = 1,
+        },
     };
     dcc_channel_positions_params_t channel_positions_params = {
         .size = sizeof(channel_positions_params),
-        .guild_id = 222ULL,
+        .version = DCC_CHANNEL_POSITIONS_PARAMS_VERSION,
         .positions = channel_positions,
         .position_count = DCC_ARRAY_LEN(channel_positions),
     };
     dcc_invite_params_t invite_params = {
         .size = sizeof(invite_params),
-        .channel_id = 333ULL,
+        .version = DCC_INVITE_PARAMS_VERSION,
+        .present = DCC_INVITE_PARAMS_PRESENT_MAX_AGE |
+            DCC_INVITE_PARAMS_PRESENT_MAX_USES |
+            DCC_INVITE_PARAMS_PRESENT_UNIQUE,
         .max_age = 3600U,
         .max_uses = 5U,
         .unique = 1U,
@@ -2648,7 +2663,8 @@ static int run_sugar_options_smoke(void) {
     };
     dcc_dm_channel_params_t dm_params = {
         .size = sizeof(dm_params),
-        .user_id = 333ULL,
+        .version = DCC_DM_CHANNEL_PARAMS_VERSION,
+        .recipient_id = 333ULL,
     };
     dcc_stage_instance_params_t stage_params = {
         .size = sizeof(stage_params),
@@ -2726,10 +2742,11 @@ static int run_sugar_options_smoke(void) {
         .data = sticker_data,
         .data_len = sizeof(sticker_data),
     };
+    dcc_snowflake_t message_search_channel_id = 333ULL;
     dcc_message_search_params_t message_search_params = {
         .size = sizeof(message_search_params),
         .content = "sugar",
-        .channel_ids = &channel_params.channel_id,
+        .channel_ids = &message_search_channel_id,
         .channel_id_count = 1U,
         .has_limit = 1U,
         .limit = 25U,
@@ -3586,9 +3603,9 @@ static int run_sugar_options_smoke(void) {
         dcc_app_get_guild_channels(NULL, 222ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_create_guild_channel(NULL, 222ULL, "{\"name\":\"general\"}", NULL, NULL) !=
             DCC_ERR_INVALID_ARG ||
-        dcc_app_create_guild_channel_params(NULL, &channel_params, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_app_create_guild_channel_params(NULL, 222ULL, &channel_params, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_modify_channel(NULL, 333ULL, "{\"name\":\"general\"}", NULL, NULL) != DCC_ERR_INVALID_ARG ||
-        dcc_app_modify_channel_params(NULL, &channel_params, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_app_modify_channel_params(NULL, 333ULL, &channel_params, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_delete_channel(NULL, 333ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_trigger_channel_typing(NULL, 333ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_follow_news_channel(NULL, 333ULL, 444ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
@@ -3606,11 +3623,11 @@ static int run_sugar_options_smoke(void) {
         dcc_app_get_guild_voice_regions(NULL, 222ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_modify_guild_channel_positions(NULL, 222ULL, "[{\"id\":\"333\",\"position\":1}]", NULL, NULL) !=
             DCC_ERR_INVALID_ARG ||
-        dcc_app_modify_guild_channel_positions_params(NULL, &channel_positions_params, NULL, NULL) !=
+        dcc_app_modify_guild_channel_positions_params(NULL, 222ULL, &channel_positions_params, NULL, NULL) !=
             DCC_ERR_INVALID_ARG ||
         dcc_app_get_channel_invites(NULL, 333ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_create_channel_invite(NULL, 333ULL, "{\"max_age\":3600}", NULL, NULL) != DCC_ERR_INVALID_ARG ||
-        dcc_app_create_channel_invite_params(NULL, &invite_params, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_app_create_channel_invite_params(NULL, 333ULL, &invite_params, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_modify_channel_permission(NULL, 333ULL, 444ULL, "{\"allow\":\"1024\"}", NULL, NULL) !=
             DCC_ERR_INVALID_ARG ||
         dcc_app_modify_channel_permission_params(NULL, 333ULL, &permission_overwrite, NULL, NULL) !=
@@ -3619,9 +3636,9 @@ static int run_sugar_options_smoke(void) {
         DCC_APP_GET_CHANNEL(NULL, 333ULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_GET_GUILD_CHANNELS(NULL, 222ULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_CREATE_GUILD_CHANNEL(NULL, 222ULL, "{\"name\":\"general\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_APP_CREATE_GUILD_CHANNEL_PARAMS(NULL, &channel_params) != DCC_ERR_INVALID_ARG ||
+        DCC_APP_CREATE_GUILD_CHANNEL_PARAMS(NULL, 222ULL, &channel_params) != DCC_ERR_INVALID_ARG ||
         DCC_APP_EDIT_CHANNEL(NULL, 333ULL, "{\"name\":\"general\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_APP_EDIT_CHANNEL_PARAMS(NULL, &channel_params) != DCC_ERR_INVALID_ARG ||
+        DCC_APP_EDIT_CHANNEL_PARAMS(NULL, 333ULL, &channel_params) != DCC_ERR_INVALID_ARG ||
         DCC_APP_DELETE_CHANNEL(NULL, 333ULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_TRIGGER_CHANNEL_TYPING(NULL, 333ULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_FOLLOW_NEWS_CHANNEL(NULL, 333ULL, 444ULL) != DCC_ERR_INVALID_ARG ||
@@ -3639,10 +3656,10 @@ static int run_sugar_options_smoke(void) {
         DCC_APP_GET_GUILD_VOICE_REGIONS(NULL, 222ULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_REORDER_GUILD_CHANNELS(NULL, 222ULL, "[{\"id\":\"333\",\"position\":1}]") !=
             DCC_ERR_INVALID_ARG ||
-        DCC_APP_REORDER_GUILD_CHANNELS_PARAMS(NULL, &channel_positions_params) != DCC_ERR_INVALID_ARG ||
+        DCC_APP_REORDER_GUILD_CHANNELS_PARAMS(NULL, 222ULL, &channel_positions_params) != DCC_ERR_INVALID_ARG ||
         DCC_APP_GET_CHANNEL_INVITES(NULL, 333ULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_CREATE_CHANNEL_INVITE(NULL, 333ULL, "{\"max_age\":3600}") != DCC_ERR_INVALID_ARG ||
-        DCC_APP_CREATE_CHANNEL_INVITE_PARAMS(NULL, &invite_params) != DCC_ERR_INVALID_ARG ||
+        DCC_APP_CREATE_CHANNEL_INVITE_PARAMS(NULL, 333ULL, &invite_params) != DCC_ERR_INVALID_ARG ||
         DCC_APP_EDIT_CHANNEL_PERMISSION(NULL, 333ULL, 444ULL, "{\"allow\":\"1024\"}") != DCC_ERR_INVALID_ARG ||
         DCC_APP_EDIT_CHANNEL_PERMISSION_PARAMS(NULL, 333ULL, &permission_overwrite) != DCC_ERR_INVALID_ARG ||
         DCC_APP_DELETE_CHANNEL_PERMISSION(NULL, 333ULL, 444ULL) != DCC_ERR_INVALID_ARG ||
@@ -3652,7 +3669,7 @@ static int run_sugar_options_smoke(void) {
         DCC_CHANNEL_SEND_UI(NULL, 333ULL, DCC_UI_TEXT("send")) != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_FETCH(NULL, 333ULL) != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_EDIT(NULL, 333ULL, "{\"name\":\"general\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_CHANNEL_EDIT_PARAMS(NULL, &channel_params) != DCC_ERR_INVALID_ARG ||
+        DCC_CHANNEL_EDIT_PARAMS(NULL, 333ULL, &channel_params) != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_DELETE(NULL, 333ULL) != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_TYPING(NULL, 333ULL) != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_FOLLOW(NULL, 333ULL, 444ULL) != DCC_ERR_INVALID_ARG ||
@@ -3667,16 +3684,16 @@ static int run_sugar_options_smoke(void) {
         DCC_GUILD_VOICE_REGIONS_FETCH(NULL, 222ULL) != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_INVITES_FETCH(NULL, 333ULL) != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_INVITE_CREATE(NULL, 333ULL, "{\"max_age\":3600}") != DCC_ERR_INVALID_ARG ||
-        DCC_CHANNEL_INVITE_CREATE_PARAMS(NULL, &invite_params) != DCC_ERR_INVALID_ARG ||
+        DCC_CHANNEL_INVITE_CREATE_PARAMS(NULL, 333ULL, &invite_params) != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_PERMISSION_EDIT(NULL, 333ULL, 444ULL, "{\"allow\":\"1024\"}") != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_PERMISSION_EDIT_PARAMS(NULL, 333ULL, &permission_overwrite) != DCC_ERR_INVALID_ARG ||
         DCC_CHANNEL_PERMISSION_DELETE(NULL, 333ULL, 444ULL) != DCC_ERR_INVALID_ARG ||
         DCC_GUILD_CHANNELS_REORDER(NULL, 222ULL, "[{\"id\":\"333\",\"position\":1}]") !=
             DCC_ERR_INVALID_ARG ||
-        DCC_GUILD_CHANNELS_REORDER_PARAMS(NULL, &channel_positions_params) != DCC_ERR_INVALID_ARG ||
+        DCC_GUILD_CHANNELS_REORDER_PARAMS(NULL, 222ULL, &channel_positions_params) != DCC_ERR_INVALID_ARG ||
         DCC_GUILD_CHANNELS_FETCH(NULL, 222ULL) != DCC_ERR_INVALID_ARG ||
         DCC_GUILD_CHANNEL_CREATE(NULL, 222ULL, "{\"name\":\"general\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_GUILD_CHANNEL_CREATE_PARAMS(NULL, &channel_params) != DCC_ERR_INVALID_ARG ||
+        DCC_GUILD_CHANNEL_CREATE_PARAMS(NULL, 222ULL, &channel_params) != DCC_ERR_INVALID_ARG ||
         dcc_app_get_guild_roles(NULL, 222ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_create_guild_role(NULL, 222ULL, "{\"name\":\"role\"}", NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_create_guild_role_params(NULL, &role_params, NULL, NULL) != DCC_ERR_INVALID_ARG ||

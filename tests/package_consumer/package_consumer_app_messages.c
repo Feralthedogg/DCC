@@ -46,6 +46,8 @@ int dcc_package_consumer_check_app_message_api(void) {
     dcc_message_builder_t message = DCC_MESSAGE_TEXT("message");
     dcc_thread_params_t thread_params = {
         .size = sizeof(thread_params),
+        .version = DCC_THREAD_PARAMS_VERSION,
+        .present = DCC_THREAD_PARAMS_PRESENT_NAME,
         .name = "package-thread",
     };
 

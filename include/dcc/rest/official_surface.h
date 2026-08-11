@@ -8,6 +8,7 @@
 
 #include <dcc/rest/base.h>
 #include <dcc/rest/request.h>
+#include <dcc/rest/types/invites.h>
 #include <dcc/rest/types/webhooks.h>
 
 #ifdef __cplusplus
@@ -410,8 +411,8 @@ DCC_API void dcc_rest_official_body_json_free(char *json);
 DCC_API dcc_status_t dcc_rest_get_invite_target_users(
     dcc_client_t *client,
     const char *invite_code,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 /**
@@ -422,11 +423,9 @@ DCC_API dcc_status_t dcc_rest_get_invite_target_users(
 DCC_API dcc_status_t dcc_rest_put_invite_target_users(
     dcc_client_t *client,
     const char *invite_code,
-    const char *filename,
-    const void *csv_data,
-    size_t csv_len,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_invite_target_users_upload_t *upload,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 /**
@@ -435,8 +434,8 @@ DCC_API dcc_status_t dcc_rest_put_invite_target_users(
 DCC_API dcc_status_t dcc_rest_get_invite_target_users_job_status(
     dcc_client_t *client,
     const char *invite_code,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 /**
@@ -847,8 +846,8 @@ DCC_API dcc_status_t dcc_rest_update_lobby_message_moderation_metadata_params(
 DCC_API dcc_status_t dcc_rest_create_lobby_channel_invite_for_self(
     dcc_client_t *client,
     dcc_snowflake_t lobby_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 /**
@@ -858,8 +857,8 @@ DCC_API dcc_status_t dcc_rest_create_lobby_channel_invite_for_user(
     dcc_client_t *client,
     dcc_snowflake_t lobby_id,
     dcc_snowflake_t user_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 #ifdef __cplusplus

@@ -98,6 +98,9 @@ int run_public_rest_gap_smoke(void) {
     pthread_t thread;
     rest_seen_t seen;
     dcc_rest_call_options_t call_options = rest_call_options(&seen);
+    dcc_channel_params_t channel_modify = DCC_CHANNEL_PARAMS_INIT;
+    channel_modify.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_NAME;
+    channel_modify.payload.guild.name = "ops";
 
 #define EXPECT_REST_GAP(label, expected_method, expected_path, expected_body, call_expr) \
     do { \
@@ -140,14 +143,14 @@ int run_public_rest_gap_smoke(void) {
         "PATCH",
         "/channels/222",
         "{\"name\":\"ops\"}",
-        dcc_rest_modify_channel(client, 222, "{\"name\":\"ops\"}", rest_cb, &seen)
+        dcc_rest_modify_channel(client, 222, &channel_modify, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "delete_channel",
         "DELETE",
         "/channels/222",
         NULL,
-        dcc_rest_delete_channel(client, 222, rest_cb, &seen)
+        dcc_rest_delete_channel(client, 222, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "get_channel_messages",
@@ -394,13 +397,6 @@ int run_public_rest_gap_smoke(void) {
         "/applications/123/guilds/333/commands/444/permissions",
         "{\"permissions\":[{\"id\":\"555\",\"type\":1,\"permission\":true}]}",
         dcc_rest_edit_guild_command_permissions_params(client, &command_permission_params, rest_cb, &seen)
-    );
-    EXPECT_REST_GAP(
-        "bulk_edit_guild_command_permissions_params",
-        "PUT",
-        "/applications/123/guilds/333/commands/permissions",
-        "[{\"id\":\"444\",\"permissions\":[{\"id\":\"555\",\"type\":1,\"permission\":true}]}]",
-        dcc_rest_bulk_edit_guild_command_permissions_params(client, &bulk_command_permission_params, rest_cb, &seen)
     );
     EXPECT_REST_GAP(
         "interaction_original_response_get",

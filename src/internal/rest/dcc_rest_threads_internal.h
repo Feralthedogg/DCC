@@ -22,7 +22,7 @@ typedef enum dcc_rest_thread_body_mode {
 dcc_status_t dcc_rest_build_thread_body(
     const dcc_thread_params_t *params,
     dcc_rest_thread_body_mode_t mode,
-    char **out
+    dcc_endpoint_body_t *out
 );
 
 #ifdef __cplusplus

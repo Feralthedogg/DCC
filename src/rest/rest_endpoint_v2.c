@@ -8,6 +8,7 @@
 #include "internal/rest/dcc_rest_json_internal.h"
 #include "internal/rest/dcc_rest_multipart_build_internal.h"
 #include "internal/rest/dcc_rest_multipart_internal.h"
+#include "internal/rest/dcc_rest_submit_internal.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -81,16 +82,54 @@ static void dcc_endpoint_legacy_result(
     free(bridge);
 }
 
-static int dcc_endpoint_options_valid(const dcc_rest_call_options_t *options) {
-    return options != NULL && options->size >= sizeof(*options) &&
-        options->version == DCC_REST_CALL_OPTIONS_VERSION &&
-        options->priority >= DCC_REST_PRIORITY_LOW &&
-        options->priority <= DCC_REST_PRIORITY_HIGH &&
-        (options->callback != NULL || options->user_data == NULL);
+int dcc_endpoint_utf8_scalar_count(const char *text, size_t *out_count) {
+    if (text == NULL || out_count == NULL) return 0;
+    size_t count = 0U;
+    const unsigned char *p = (const unsigned char *)text;
+    while (*p != 0U) {
+        uint32_t value;
+        size_t width;
+        if (*p < 0x80U) {
+            value = *p;
+            width = 1U;
+        } else if (*p >= 0xC2U && *p <= 0xDFU) {
+            value = (uint32_t)(*p & 0x1FU);
+            width = 2U;
+        } else if (*p >= 0xE0U && *p <= 0xEFU) {
+            value = (uint32_t)(*p & 0x0FU);
+            width = 3U;
+        } else if (*p >= 0xF0U && *p <= 0xF4U) {
+            value = (uint32_t)(*p & 0x07U);
+            width = 4U;
+        } else {
+            return 0;
+        }
+        for (size_t index = 1U; index < width; ++index) {
+            if ((p[index] & 0xC0U) != 0x80U) return 0;
+            value = (value << 6U) | (uint32_t)(p[index] & 0x3FU);
+        }
+        if ((width == 3U && value < 0x800U) ||
+            (width == 4U && value < 0x10000U) ||
+            (value >= 0xD800U && value <= 0xDFFFU) || value > 0x10FFFFU) {
+            return 0;
+        }
+        p += width;
+        ++count;
+    }
+    *out_count = count;
+    return 1;
 }
 
 int dcc_endpoint_field_covered(size_t size, size_t offset, size_t width) {
     return size >= offset && width <= size - offset;
+}
+
+int dcc_endpoint_field_partially_covered(
+    size_t size,
+    size_t offset,
+    size_t width
+) {
+    return size > offset && size - offset < width;
 }
 
 dcc_status_t dcc_endpoint_record_read(
@@ -835,14 +874,74 @@ dcc_status_t dcc_endpoint_prepare(
     if (out_options == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    if (options == NULL) {
-        *out_options = (dcc_rest_call_options_t)DCC_REST_CALL_OPTIONS_INIT;
-        return DCC_OK;
+    return dcc_rest_call_options_normalize(options, out_options);
+}
+
+dcc_status_t dcc_endpoint_prepare_policy(
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request,
+    dcc_rest_call_options_t *out_options,
+    dcc_endpoint_auth_policy_t auth_policy,
+    dcc_endpoint_audit_policy_t audit_policy
+) {
+    dcc_status_t status = dcc_endpoint_prepare(
+        options, out_request, out_options
+    );
+    if (status != DCC_OK) return status;
+    if (out_options->audit_log_reason != NULL) {
+        size_t scalars = 0U;
+        if (audit_policy != DCC_ENDPOINT_AUDIT_REASON_ALLOWED ||
+            out_options->audit_log_reason[0] == '\0' ||
+            !dcc_endpoint_utf8_scalar_count(out_options->audit_log_reason, &scalars) ||
+            scalars > 512U) {
+            return DCC_ERR_INVALID_ARG;
+        }
     }
-    if (!dcc_endpoint_options_valid(options)) {
-        return DCC_ERR_INVALID_ARG;
+    switch (auth_policy) {
+        case DCC_ENDPOINT_AUTH_POLICY_BOT:
+            if (out_options->auth_mode == DCC_REST_AUTH_DEFAULT)
+                out_options->auth_mode = DCC_REST_AUTH_BOT;
+            if (out_options->auth_mode != DCC_REST_AUTH_BOT)
+                return DCC_ERR_INVALID_ARG;
+            break;
+        case DCC_ENDPOINT_AUTH_POLICY_NONE_OR_BOT:
+            if (out_options->auth_mode == DCC_REST_AUTH_DEFAULT)
+                out_options->auth_mode = DCC_REST_AUTH_NONE;
+            if (out_options->auth_mode != DCC_REST_AUTH_NONE &&
+                out_options->auth_mode != DCC_REST_AUTH_BOT)
+                return DCC_ERR_INVALID_ARG;
+            break;
+        case DCC_ENDPOINT_AUTH_POLICY_BEARER:
+            if (out_options->auth_mode != DCC_REST_AUTH_BEARER ||
+                out_options->auth_token == NULL || out_options->auth_token[0] == '\0')
+                return DCC_ERR_INVALID_ARG;
+            break;
+        case DCC_ENDPOINT_AUTH_POLICY_NONE:
+            if (out_options->auth_mode == DCC_REST_AUTH_DEFAULT)
+                out_options->auth_mode = DCC_REST_AUTH_NONE;
+            if (out_options->auth_mode != DCC_REST_AUTH_NONE)
+                return DCC_ERR_INVALID_ARG;
+            break;
+        case DCC_ENDPOINT_AUTH_POLICY_BOT_OR_BEARER:
+            if (out_options->auth_mode == DCC_REST_AUTH_DEFAULT)
+                out_options->auth_mode = DCC_REST_AUTH_BOT;
+            if (out_options->auth_mode != DCC_REST_AUTH_BOT &&
+                out_options->auth_mode != DCC_REST_AUTH_BEARER)
+                return DCC_ERR_INVALID_ARG;
+            if (out_options->auth_mode == DCC_REST_AUTH_BEARER &&
+                (out_options->auth_token == NULL || out_options->auth_token[0] == '\0'))
+                return DCC_ERR_INVALID_ARG;
+            break;
+        case DCC_ENDPOINT_AUTH_POLICY_WEBHOOK_TOKEN_OR_BOT:
+            if (out_options->auth_mode == DCC_REST_AUTH_DEFAULT)
+                out_options->auth_mode = DCC_REST_AUTH_NONE;
+            if (out_options->auth_mode != DCC_REST_AUTH_NONE &&
+                out_options->auth_mode != DCC_REST_AUTH_BOT)
+                return DCC_ERR_INVALID_ARG;
+            break;
+        default:
+            return DCC_ERR_INVALID_ARG;
     }
-    *out_options = *options;
     return DCC_OK;
 }
 
@@ -854,6 +953,38 @@ dcc_status_t dcc_endpoint_submit(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    const char *operation = NULL;
+    if (path != NULL && strncmp(path, "/interactions/", 14U) == 0 &&
+        strstr(path, "/callback") != NULL && method == DCC_REST_POST) {
+        operation = "dcc_rest_interaction_response_create";
+    } else if (path != NULL && strncmp(path, "/webhooks/", 10U) == 0) {
+        const char *messages = strstr(path, "/messages/");
+        if (messages != NULL && strncmp(messages + 10U, "@original", 9U) == 0) {
+            operation = method == DCC_REST_GET
+                ? "dcc_rest_interaction_original_response_get"
+                : method == DCC_REST_PATCH
+                    ? "dcc_rest_interaction_original_response_edit"
+                    : method == DCC_REST_DELETE
+                        ? "dcc_rest_interaction_original_response_delete" : NULL;
+        } else if (messages != NULL) {
+            operation = method == DCC_REST_GET
+                ? "dcc_rest_get_webhook_message"
+                : method == DCC_REST_PATCH
+                    ? "dcc_rest_modify_webhook_message"
+                    : method == DCC_REST_DELETE
+                        ? "dcc_rest_delete_webhook_message" : NULL;
+        } else {
+            operation = method == DCC_REST_GET ? "dcc_rest_get_webhook"
+                : method == DCC_REST_PATCH ? "dcc_rest_modify_webhook"
+                : method == DCC_REST_DELETE ? "dcc_rest_delete_webhook" : NULL;
+        }
+    }
+    if (operation != NULL) {
+        return dcc_endpoint_submit_named(
+            client, operation, method, path, body, options,
+            DCC_ENDPOINT_PATH_SENSITIVE, out_request
+        );
+    }
     dcc_rest_request_desc_t description = DCC_REST_REQUEST_DESC_INIT;
     description.method = method;
     description.path = path;
@@ -862,8 +993,34 @@ dcc_status_t dcc_endpoint_submit(
         description.body = body->data;
         description.body_len = body->len;
     }
-    description.options = *options;
+    description.options = options;
     return dcc_rest_submit(client, &description, out_request);
+}
+
+dcc_status_t dcc_endpoint_submit_named(
+    dcc_client_t *client,
+    const char *operation,
+    dcc_rest_method_t method,
+    const char *path,
+    const dcc_endpoint_body_t *body,
+    const dcc_rest_call_options_t *options,
+    dcc_endpoint_path_policy_t path_policy,
+    dcc_rest_request_t **out_request
+) {
+    dcc_rest_request_desc_t description = DCC_REST_REQUEST_DESC_INIT;
+    description.method = method;
+    description.path = path;
+    description.options = options;
+    if (body != NULL) {
+        description.content_type = body->content_type;
+        description.body = body->data;
+        description.body_len = body->len;
+    }
+    return dcc_rest_submit_operation(
+        client, &description, operation,
+        path_policy == DCC_ENDPOINT_PATH_SENSITIVE ? 1U : 0U,
+        out_request
+    );
 }
 
 dcc_status_t dcc_endpoint_submit_legacy_raw(

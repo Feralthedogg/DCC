@@ -6,28 +6,84 @@
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
 #include "internal/rest/dcc_rest_request_handle_internal.h"
 #include "internal/rest/dcc_rest_state_internal.h"
+#include "internal/rest/dcc_rest_submit_internal.h"
+#include "internal/rest/dcc_rest_task7_probe_internal.h"
 
 #include <dcc/rest/request.h>
 
 #include <stdatomic.h>
+#include <stddef.h>
+#include <string.h>
 
-static int dcc_rest_call_options_valid(const dcc_rest_call_options_t *options) {
-    return options != NULL &&
-        options->size >= sizeof(*options) &&
-        options->version == DCC_REST_CALL_OPTIONS_VERSION &&
-        dcc_rest_priority_valid(options->priority) &&
-        (options->callback != NULL || options->user_data == NULL);
+static int dcc_rest_field_covered(size_t size, size_t offset, size_t width) {
+    return size >= offset && width <= size - offset;
+}
+
+static int dcc_rest_field_partial(size_t size, size_t offset, size_t width) {
+    return size > offset && !dcc_rest_field_covered(size, offset, width);
+}
+
+dcc_status_t dcc_rest_call_options_normalize(
+    const dcc_rest_call_options_t *options,
+    dcc_rest_call_options_t *out
+) {
+    if (out == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out = (dcc_rest_call_options_t)DCC_REST_CALL_OPTIONS_INIT;
+    if (options == NULL) {
+        return DCC_OK;
+    }
+    const size_t required = offsetof(dcc_rest_call_options_t, audit_log_reason);
+    if (options->size < required ||
+        options->version != DCC_REST_CALL_OPTIONS_VERSION ||
+        !dcc_rest_priority_valid(options->priority) ||
+        (options->callback == NULL && options->user_data != NULL)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    out->priority = options->priority;
+    out->callback = options->callback;
+    out->user_data = options->user_data;
+
+#define DCC_READ_OPTION_FIELD(field_) \
+    do { \
+        const size_t offset = offsetof(dcc_rest_call_options_t, field_); \
+        const size_t width = sizeof(options->field_); \
+        if (dcc_rest_field_partial(options->size, offset, width)) { \
+            return DCC_ERR_INVALID_ARG; \
+        } \
+        if (dcc_rest_field_covered(options->size, offset, width)) { \
+            out->field_ = options->field_; \
+        } \
+    } while (0)
+    DCC_READ_OPTION_FIELD(audit_log_reason);
+    DCC_READ_OPTION_FIELD(auth_mode);
+    DCC_READ_OPTION_FIELD(auth_token);
+    DCC_READ_OPTION_FIELD(flags);
+#undef DCC_READ_OPTION_FIELD
+
+    if (out->auth_mode < DCC_REST_AUTH_DEFAULT ||
+        out->auth_mode > DCC_REST_AUTH_BEARER ||
+        (out->flags & ~(DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY |
+            DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY)) != 0U ||
+        (out->auth_mode == DCC_REST_AUTH_BEARER &&
+            (out->auth_token == NULL || out->auth_token[0] == '\0')) ||
+        (out->auth_mode != DCC_REST_AUTH_BEARER && out->auth_token != NULL)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    return DCC_OK;
 }
 
 static int dcc_rest_request_desc_valid(
     const dcc_rest_request_desc_t *description,
     const char **out_method
 ) {
-    if (description == NULL || description->size < sizeof(*description) ||
+    const size_t required = offsetof(dcc_rest_request_desc_t, options) +
+        sizeof(description->options);
+    if (description == NULL || description->size < required ||
         description->version != DCC_REST_REQUEST_DESC_VERSION ||
         description->path == NULL || description->path[0] == '\0' ||
-        (description->body_len != 0U && description->body == NULL) ||
-        !dcc_rest_call_options_valid(&description->options)) {
+        (description->body_len != 0U && description->body == NULL)) {
         return 0;
     }
     const char *method = dcc_rest_method_name(description->method);
@@ -53,17 +109,37 @@ static void dcc_rest_request_handle_release_unpublished(
     }
 }
 
-dcc_status_t dcc_rest_submit(
+dcc_status_t dcc_rest_submit_operation(
     dcc_client_t *client,
     const dcc_rest_request_desc_t *description,
+    const char *operation,
+    uint8_t sensitive_path,
     dcc_rest_request_t **out_request
 ) {
     if (out_request != NULL) {
         *out_request = NULL;
     }
     const char *method = NULL;
-    if (client == NULL || !dcc_rest_request_desc_valid(description, &method)) {
+    dcc_rest_call_options_t options;
+    if (client == NULL || operation == NULL || operation[0] == '\0' ||
+        !dcc_rest_request_desc_valid(description, &method) ||
+        dcc_rest_call_options_normalize(description->options, &options) != DCC_OK) {
         return DCC_ERR_INVALID_ARG;
+    }
+    dcc_status_t forced = dcc_endpoint_task7_probe_consume_failure();
+    if (forced != DCC_OK) {
+        return forced;
+    }
+    const int absolute = strncmp(description->path, "https://", 8U) == 0 ||
+        strncmp(description->path, "http://", 7U) == 0;
+    if (absolute) {
+        if (options.auth_mode != DCC_REST_AUTH_DEFAULT ||
+            options.audit_log_reason != NULL) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        options.auth_mode = DCC_REST_AUTH_NONE;
+    } else if (options.auth_mode == DCC_REST_AUTH_DEFAULT) {
+        options.auth_mode = DCC_REST_AUTH_BOT;
     }
 
     dcc_status_t status = dcc_rest_operation_begin(client);
@@ -80,8 +156,8 @@ dcc_status_t dcc_rest_submit(
     dcc_rest_request_t *handle = NULL;
     status = dcc_rest_request_handle_create(
         client,
-        description->options.callback,
-        description->options.user_data,
+        options.callback,
+        options.user_data,
         (uint8_t)caller_reference,
         &handle
     );
@@ -93,11 +169,17 @@ dcc_status_t dcc_rest_submit(
     dcc_rest_async_request_t *request = dcc_rest_async_request_new(
         client,
         method,
+        operation,
         description->path,
         description->body,
         description->body_len,
         description->content_type,
-        description->options.priority,
+        options.audit_log_reason,
+        options.auth_mode,
+        options.auth_token,
+        options.flags,
+        sensitive_path,
+        options.priority,
         NULL,
         NULL,
         handle
@@ -130,4 +212,14 @@ dcc_status_t dcc_rest_submit(
     }
     dcc_rest_operation_end(client);
     return status;
+}
+
+dcc_status_t dcc_rest_submit(
+    dcc_client_t *client,
+    const dcc_rest_request_desc_t *description,
+    dcc_rest_request_t **out_request
+) {
+    return dcc_rest_submit_operation(
+        client, description, "dcc_rest_submit", 0U, out_request
+    );
 }

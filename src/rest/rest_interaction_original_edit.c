@@ -12,6 +12,10 @@ dcc_status_t dcc_rest_interaction_original_response_edit(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_SENSITIVE;
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE;
+    DCC_ENDPOINT_SENSITIVE_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_NONE, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_INTERACTION_ORIGINAL_RESPONSE, DCC_REST_PATCH, "dcc_rest_interaction_original_response_edit");
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || application_id == 0U ||

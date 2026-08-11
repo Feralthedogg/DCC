@@ -27,10 +27,13 @@ void dcc_rest_async_worker_task(void *arg) {
         status = dcc_rest_request_raw_impl(
             client,
             request->method,
-            request->path,
+            request->wire_path,
             request->body,
             request->body_len,
             request->content_type,
+            request->auth_mode,
+            request->auth_token,
+            request->audit_log_reason,
             0,
             0,
             dcc_rest_capture_cb,
@@ -39,7 +42,11 @@ void dcc_rest_async_worker_task(void *arg) {
             dcc_rest_async_request_swap_fd,
             request,
             0,
-            0
+            0,
+            request->operation,
+            (request->flags & DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY) != 0U
+                ? DCC_REST_RESULT_FLAG_SENSITIVE_BODY
+                : 0U
         );
     }
 
@@ -81,13 +88,17 @@ void dcc_rest_async_worker_task(void *arg) {
             retry_after_ms = not_before_ms > now_ms ? not_before_ms - now_ms : 1U;
         }
         dcc_rest_terminal_completion_t completion = {
-            .operation = request->path,
+            .operation = request->operation,
             .transport_status = status,
             .http_status = status == DCC_OK ? captured.status : 0U,
             .legacy_error = status == DCC_OK ? captured.error : status,
             .body = status == DCC_OK ? captured.body : NULL,
             .body_len = status == DCC_OK ? captured.body_len : 0U,
             .retry_after_ms = retry_after_ms,
+            .result_flags = (request->flags &
+                DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY) != 0U
+                ? DCC_REST_RESULT_FLAG_SENSITIVE_BODY
+                : 0U,
         };
         request->callback_called = 1;
         if (request->request_handle != NULL) {

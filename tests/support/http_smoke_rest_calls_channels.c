@@ -3,11 +3,21 @@
 #if !defined(_WIN32)
 
 dcc_status_t call_rest_create_guild_channel(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_guild_channel(client, 333, "{\"name\":\"ops\",\"type\":0}", cb, user_data);
+    dcc_channel_params_t params = DCC_CHANNEL_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_NAME |
+        DCC_CHANNEL_GUILD_PRESENT_TYPE;
+    params.payload.guild.name = "ops";
+    params.payload.guild.type = DCC_CHANNEL_TEXT;
+    return dcc_rest_create_guild_channel(client, 333, &params, &options, NULL);
 }
 dcc_status_t call_rest_create_guild_channel_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_channel_permission_overwrite_t overwrites[] = {
         {
+            .size = sizeof(dcc_channel_permission_overwrite_t),
+            .version = DCC_CHANNEL_PERMISSION_OVERWRITE_VERSION,
+            .present = DCC_CHANNEL_PERMISSION_OVERWRITE_PRESENT_ALLOW |
+                DCC_CHANNEL_PERMISSION_OVERWRITE_PRESENT_DENY,
             .id = 555,
             .allow = 1024,
             .deny = 0,
@@ -17,163 +27,227 @@ dcc_status_t call_rest_create_guild_channel_params(dcc_client_t *client, dcc_res
     const dcc_channel_forum_tag_params_t tags[] = {
         {
             .size = sizeof(dcc_channel_forum_tag_params_t),
+            .version = DCC_CHANNEL_FORUM_TAG_PARAMS_VERSION,
+            .present = DCC_CHANNEL_FORUM_TAG_PRESENT_NAME |
+                DCC_CHANNEL_FORUM_TAG_PRESENT_EMOJI_NAME |
+                DCC_CHANNEL_FORUM_TAG_PRESENT_MODERATED,
             .name = "news",
             .emoji_name = "star",
             .moderated = 0
         },
         {
             .size = sizeof(dcc_channel_forum_tag_params_t),
+            .version = DCC_CHANNEL_FORUM_TAG_PARAMS_VERSION,
+            .present = DCC_CHANNEL_FORUM_TAG_PRESENT_NAME |
+                DCC_CHANNEL_FORUM_TAG_PRESENT_EMOJI_ID |
+                DCC_CHANNEL_FORUM_TAG_PRESENT_MODERATED,
             .name = "alerts",
             .emoji_id = 999,
             .moderated = 1
         }
     };
-    const dcc_channel_params_t params = {
-        .size = sizeof(dcc_channel_params_t),
-        .guild_id = 333,
-        .type = DCC_CHANNEL_FORUM,
-        .name = "ops forum",
-        .topic = "forum typed",
-        .permission_overwrites = overwrites,
-        .permission_overwrite_count = sizeof(overwrites) / sizeof(overwrites[0]),
-        .position = 2,
-        .rate_limit_per_user = 5,
-        .default_thread_rate_limit_per_user = 7,
-        .parent_id = 777,
-        .nsfw = 1,
-        .default_auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_HOUR,
-        .default_sort_order = 1,
-        .lock_permissions = 1,
-        .available_tags = tags,
-        .available_tag_count = sizeof(tags) / sizeof(tags[0]),
-        .default_reaction_emoji_name = "star",
-        .default_forum_layout = DCC_CHANNEL_FORUM_LAYOUT_LIST_VIEW,
-        .require_tag = 1
-    };
-    return dcc_rest_create_guild_channel_params(client, &params, cb, user_data);
+    dcc_channel_params_t params = DCC_CHANNEL_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_NAME |
+        DCC_CHANNEL_GUILD_PRESENT_TYPE | DCC_CHANNEL_GUILD_PRESENT_TOPIC |
+        DCC_CHANNEL_GUILD_PRESENT_PERMISSION_OVERWRITES |
+        DCC_CHANNEL_GUILD_PRESENT_POSITION |
+        DCC_CHANNEL_GUILD_PRESENT_RATE_LIMIT_PER_USER |
+        DCC_CHANNEL_GUILD_PRESENT_DEFAULT_THREAD_RATE_LIMIT_PER_USER |
+        DCC_CHANNEL_GUILD_PRESENT_FLAGS | DCC_CHANNEL_GUILD_PRESENT_PARENT_ID |
+        DCC_CHANNEL_GUILD_PRESENT_NSFW |
+        DCC_CHANNEL_GUILD_PRESENT_DEFAULT_AUTO_ARCHIVE_DURATION |
+        DCC_CHANNEL_GUILD_PRESENT_AVAILABLE_TAGS |
+        DCC_CHANNEL_GUILD_PRESENT_DEFAULT_REACTION_EMOJI |
+        DCC_CHANNEL_GUILD_PRESENT_DEFAULT_SORT_ORDER |
+        DCC_CHANNEL_GUILD_PRESENT_DEFAULT_FORUM_LAYOUT;
+    params.payload.guild.name = "ops forum";
+    params.payload.guild.type = DCC_CHANNEL_FORUM;
+    params.payload.guild.topic = "forum typed";
+    params.payload.guild.permission_overwrites = overwrites;
+    params.payload.guild.permission_overwrite_count = sizeof(overwrites) / sizeof(overwrites[0]);
+    params.payload.guild.position = 2;
+    params.payload.guild.rate_limit_per_user = 5;
+    params.payload.guild.default_thread_rate_limit_per_user = 7;
+    params.payload.guild.flags = 16U;
+    params.payload.guild.parent_id = 777;
+    params.payload.guild.nsfw = 1;
+    params.payload.guild.default_auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_HOUR;
+    params.payload.guild.available_tags = tags;
+    params.payload.guild.available_tag_count = sizeof(tags) / sizeof(tags[0]);
+    params.payload.guild.default_reaction_emoji.emoji_name = "star";
+    params.payload.guild.default_sort_order = 1;
+    params.payload.guild.default_forum_layout = DCC_CHANNEL_FORUM_LAYOUT_LIST_VIEW;
+    return dcc_rest_create_guild_channel(client, 333, &params, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_channels(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_channels(client, 333, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_channels(client, 333, &options, NULL);
 }
 dcc_status_t call_rest_modify_guild_channel_positions(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_modify_guild_channel_positions(client, 333, "[{\"id\":\"222\",\"position\":1}]", cb, user_data);
+    dcc_channel_position_t position = DCC_CHANNEL_POSITION_INIT;
+    dcc_channel_positions_params_t params = DCC_CHANNEL_POSITIONS_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    position.present = DCC_CHANNEL_POSITION_PRESENT_POSITION;
+    position.channel_id = 222;
+    position.position = 1;
+    params.positions = &position;
+    params.position_count = 1U;
+    return dcc_rest_modify_guild_channel_positions(client, 333, &params, &options, NULL);
 }
 dcc_status_t call_rest_modify_guild_channel_positions_params(
     dcc_client_t *client,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    const dcc_channel_position_t positions[] = {
-        {
-            .channel_id = 222,
-            .position = 1,
-            .parent_id = 3330,
-            .lock_permissions = 1
-        }
-    };
-    const dcc_channel_positions_params_t params = {
-        .size = sizeof(params),
-        .guild_id = 333,
-        .positions = positions,
-        .position_count = sizeof(positions) / sizeof(positions[0])
-    };
-    return dcc_rest_modify_guild_channel_positions_params(client, &params, cb, user_data);
+    dcc_channel_position_t position = DCC_CHANNEL_POSITION_INIT;
+    dcc_channel_positions_params_t params = DCC_CHANNEL_POSITIONS_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    position.present = DCC_CHANNEL_POSITION_PRESENT_POSITION |
+        DCC_CHANNEL_POSITION_PRESENT_PARENT_ID |
+        DCC_CHANNEL_POSITION_PRESENT_LOCK_PERMISSIONS;
+    position.channel_id = 222;
+    position.position = 1;
+    position.parent_id = 3330;
+    position.lock_permissions = 1;
+    params.positions = &position;
+    params.position_count = 1U;
+    return dcc_rest_modify_guild_channel_positions(client, 333, &params, &options, NULL);
 }
 dcc_status_t call_rest_modify_channel_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_channel_params_t params = {
-        .size = sizeof(dcc_channel_params_t),
-        .guild_id = 333,
-        .channel_id = 222,
-        .type = DCC_CHANNEL_VOICE,
-        .name = "voice",
-        .position = 3,
-        .nsfw = 0,
-        .default_auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_DAY,
-        .user_limit = 12,
-        .bitrate_kbps = 64
-    };
-    return dcc_rest_modify_channel_params(client, &params, cb, user_data);
+    dcc_channel_params_t params = DCC_CHANNEL_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_TYPE |
+        DCC_CHANNEL_GUILD_PRESENT_NAME | DCC_CHANNEL_GUILD_PRESENT_POSITION |
+        DCC_CHANNEL_GUILD_PRESENT_NSFW |
+        DCC_CHANNEL_GUILD_PRESENT_USER_LIMIT | DCC_CHANNEL_GUILD_PRESENT_BITRATE |
+        DCC_CHANNEL_GUILD_PRESENT_PARENT_ID;
+    params.payload.guild.type = DCC_CHANNEL_VOICE;
+    params.payload.guild.name = "voice";
+    params.payload.guild.position = 3;
+    params.payload.guild.nsfw = 0;
+    params.payload.guild.user_limit = 12;
+    params.payload.guild.bitrate = 64000;
+    params.payload.guild.nulls = DCC_CHANNEL_GUILD_NULL_PARENT_ID;
+    return dcc_rest_modify_channel(client, 222, &params, &options, NULL);
 }
 dcc_status_t call_rest_modify_channel_media_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_channel_forum_tag_params_t tags[] = {
         {
             .size = sizeof(dcc_channel_forum_tag_params_t),
+            .version = DCC_CHANNEL_FORUM_TAG_PARAMS_VERSION,
+            .present = DCC_CHANNEL_FORUM_TAG_PRESENT_NAME |
+                DCC_CHANNEL_FORUM_TAG_PRESENT_EMOJI_ID |
+                DCC_CHANNEL_FORUM_TAG_PRESENT_MODERATED,
             .name = "clips",
             .emoji_id = 999,
             .moderated = 1
         }
     };
-    const dcc_channel_params_t params = {
-        .size = sizeof(dcc_channel_params_t),
-        .guild_id = 333,
-        .channel_id = 222,
-        .type = DCC_CHANNEL_MEDIA,
-        .name = "media",
-        .nsfw = 1,
-        .default_auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_WEEK,
-        .default_sort_order = 1,
-        .available_tags = tags,
-        .available_tag_count = sizeof(tags) / sizeof(tags[0]),
-        .default_reaction_emoji_id = 888,
-        .require_tag = 1,
-        .hide_media_download_options = 1
-    };
-    return dcc_rest_modify_channel_params(client, &params, cb, user_data);
+    dcc_channel_params_t params = DCC_CHANNEL_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_TYPE |
+        DCC_CHANNEL_GUILD_PRESENT_NAME | DCC_CHANNEL_GUILD_PRESENT_NSFW |
+        DCC_CHANNEL_GUILD_PRESENT_DEFAULT_AUTO_ARCHIVE_DURATION |
+        DCC_CHANNEL_GUILD_PRESENT_DEFAULT_SORT_ORDER |
+        DCC_CHANNEL_GUILD_PRESENT_AVAILABLE_TAGS |
+        DCC_CHANNEL_GUILD_PRESENT_DEFAULT_REACTION_EMOJI |
+        DCC_CHANNEL_GUILD_PRESENT_FLAGS;
+    params.payload.guild.type = DCC_CHANNEL_MEDIA;
+    params.payload.guild.name = "media";
+    params.payload.guild.nsfw = 1;
+    params.payload.guild.default_auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_WEEK;
+    params.payload.guild.default_sort_order = 1;
+    params.payload.guild.available_tags = tags;
+    params.payload.guild.available_tag_count = sizeof(tags) / sizeof(tags[0]);
+    params.payload.guild.default_reaction_emoji.emoji_id = 888;
+    params.payload.guild.flags = 32784U;
+    return dcc_rest_modify_channel(client, 222, &params, &options, NULL);
 }
 dcc_status_t call_rest_modify_channel_permission(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_modify_channel_permission(client, 222, 555, "{\"allow\":\"1024\",\"deny\":\"0\",\"type\":0}", cb, user_data);
+    dcc_channel_permission_overwrite_t overwrite = DCC_CHANNEL_PERMISSION_OVERWRITE_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    overwrite.present = DCC_CHANNEL_PERMISSION_OVERWRITE_PRESENT_ALLOW |
+        DCC_CHANNEL_PERMISSION_OVERWRITE_PRESENT_DENY;
+    overwrite.allow = 1024;
+    overwrite.deny = 0;
+    overwrite.type = DCC_CHANNEL_OVERWRITE_ROLE;
+    return dcc_rest_modify_channel_permission(client, 222, 555, &overwrite, &options, NULL);
 }
 dcc_status_t call_rest_modify_channel_permission_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_channel_permission_overwrite_t overwrite = {
-        .id = 555,
-        .allow = 2048,
-        .deny = 1024,
-        .type = DCC_CHANNEL_OVERWRITE_MEMBER
-    };
-    return dcc_rest_modify_channel_permission_params(client, 222, &overwrite, cb, user_data);
+    dcc_channel_permission_overwrite_t overwrite = DCC_CHANNEL_PERMISSION_OVERWRITE_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    overwrite.present = DCC_CHANNEL_PERMISSION_OVERWRITE_PRESENT_ALLOW |
+        DCC_CHANNEL_PERMISSION_OVERWRITE_PRESENT_DENY;
+    overwrite.id = 555;
+    overwrite.allow = 2048;
+    overwrite.deny = 1024;
+    overwrite.type = DCC_CHANNEL_OVERWRITE_MEMBER;
+    return dcc_rest_modify_channel_permission(client, 222, 555, &overwrite, &options, NULL);
 }
 dcc_status_t call_rest_delete_channel_permission(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_channel_permission(client, 222, 555, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_delete_channel_permission(client, 222, 555, &options, NULL);
 }
 dcc_status_t call_rest_follow_news_channel(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_follow_news_channel(client, 222, "{\"webhook_channel_id\":\"333\"}", cb, user_data);
+    dcc_rest_follow_news_channel_t follow = DCC_REST_FOLLOW_NEWS_CHANNEL_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    follow.webhook_channel_id = 333;
+    return dcc_rest_follow_news_channel(client, 222, &follow, &options, NULL);
 }
 dcc_status_t call_rest_trigger_channel_typing(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_trigger_channel_typing(client, 222, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_trigger_channel_typing(client, 222, &options, NULL);
 }
 dcc_status_t call_rest_set_channel_voice_status(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_set_channel_voice_status(client, 222, "{\"status\":\"Live\"}", cb, user_data);
+    dcc_channel_voice_status_params_t params = DCC_CHANNEL_VOICE_STATUS_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.present = DCC_CHANNEL_VOICE_STATUS_PRESENT_STATUS;
+    params.status = "Live";
+    return dcc_rest_set_channel_voice_status(client, 222, &params, &options, NULL);
 }
 dcc_status_t call_rest_set_channel_voice_status_params(
     dcc_client_t *client,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    const dcc_channel_voice_status_params_t params = {
-        .size = sizeof(params),
-        .channel_id = 222,
-        .status = "Live typed"
-    };
-    return dcc_rest_set_channel_voice_status_params(client, &params, cb, user_data);
+    dcc_channel_voice_status_params_t params = DCC_CHANNEL_VOICE_STATUS_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.present = DCC_CHANNEL_VOICE_STATUS_PRESENT_STATUS;
+    params.status = "Live typed";
+    return dcc_rest_set_channel_voice_status(client, 222, &params, &options, NULL);
 }
 dcc_status_t call_rest_get_channel_invites(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_channel_invites(client, 222, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_channel_invites(client, 222, &options, NULL);
 }
 dcc_status_t call_rest_create_channel_invite(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_channel_invite(client, 222, "{\"max_age\":60}", cb, user_data);
+    dcc_invite_params_t params = DCC_INVITE_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.present = DCC_INVITE_PARAMS_PRESENT_MAX_AGE;
+    params.max_age = 60;
+    return dcc_rest_create_channel_invite(client, 222, &params, &options, NULL);
 }
 dcc_status_t call_rest_create_channel_invite_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_invite_params_t params = {
-        .size = sizeof(params),
-        .channel_id = 222,
-        .max_age = 60,
-        .max_uses = 2,
-        .target_user_id = 444,
-        .target_type = DCC_INVITE_TARGET_STREAM,
-        .temporary = 1,
-        .unique = 1
-    };
-    return dcc_rest_create_channel_invite_params(client, &params, cb, user_data);
+    dcc_invite_params_t params = DCC_INVITE_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    const dcc_snowflake_t role_ids[] = {555};
+    params.present = DCC_INVITE_PARAMS_PRESENT_MAX_AGE |
+        DCC_INVITE_PARAMS_PRESENT_MAX_USES |
+        DCC_INVITE_PARAMS_PRESENT_TARGET_USER_ID |
+        DCC_INVITE_PARAMS_PRESENT_TARGET_TYPE |
+        DCC_INVITE_PARAMS_PRESENT_TEMPORARY |
+        DCC_INVITE_PARAMS_PRESENT_UNIQUE |
+        DCC_INVITE_PARAMS_PRESENT_ROLE_IDS;
+    params.max_age = 60;
+    params.max_uses = 2;
+    params.target_user_id = 444;
+    params.target_type = DCC_INVITE_TARGET_STREAM;
+    params.temporary = 1;
+    params.unique = 1;
+    params.role_ids = role_ids;
+    params.role_id_count = 1U;
+    return dcc_rest_create_channel_invite(client, 222, &params, &options, NULL);
 }
 dcc_status_t call_rest_edit_message_flags(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     dcc_message_builder_t message;
@@ -297,34 +371,8 @@ dcc_status_t call_rest_end_poll(dcc_client_t *client, dcc_rest_cb cb, void *user
     return dcc_rest_end_poll(client, 222, 777, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_invites(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_invites(client, 333, cb, user_data);
-}
-dcc_status_t call_rest_create_guild(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_guild(client, "{\"name\":\"ops\"}", cb, user_data);
-}
-dcc_status_t call_rest_create_guild_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_guild_params_t params = {
-        .size = sizeof(params),
-        .name = "ops typed",
-        .widget_enabled = 1,
-        .afk_channel_id = 222,
-        .afk_timeout = DCC_GUILD_AFK_300,
-        .widget_channel_id = 223,
-        .default_message_notifications = DCC_GUILD_NOTIFY_ONLY_MENTIONS,
-        .explicit_content_filter = DCC_GUILD_EXPLICIT_CONTENT_ALL_MEMBERS,
-        .mfa_level = DCC_GUILD_MFA_ELEVATED,
-        .system_channel_id = 224,
-        .premium_progress_bar_enabled = 1,
-        .rules_channel_id = 225,
-        .vanity_url_code = "vanity",
-        .description = "desc",
-        .safety_alerts_channel_id = 226,
-        .banner = "data:image/png;base64,AA==",
-        .discovery_splash = "data:image/png;base64,BB==",
-        .splash = "data:image/png;base64,CC==",
-        .icon = "data:image/png;base64,DD=="
-    };
-    return dcc_rest_create_guild_params(client, &params, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_invites(client, 333, &options, NULL);
 }
 dcc_status_t call_rest_modify_guild_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_guild_params_t params = {
@@ -340,9 +388,6 @@ dcc_status_t call_rest_modify_guild_params(dcc_client_t *client, dcc_rest_cb cb,
         .description = "desc edit"
     };
     return dcc_rest_modify_guild_params(client, &params, cb, user_data);
-}
-dcc_status_t call_rest_delete_guild(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_guild(client, 333, cb, user_data);
 }
 dcc_status_t call_rest_modify_current_guild_member(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_modify_current_guild_member(client, 333, "{\"nick\":\"ops\"}", cb, user_data);
@@ -416,14 +461,8 @@ dcc_status_t call_rest_delete_guild_ban(dcc_client_t *client, dcc_rest_cb cb, vo
 dcc_status_t call_rest_get_guild_integrations(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_guild_integrations(client, 333, cb, user_data);
 }
-dcc_status_t call_rest_modify_guild_integration(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_modify_guild_integration(client, 333, 555, "{\"expire_behavior\":0}", cb, user_data);
-}
 dcc_status_t call_rest_delete_guild_integration(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_delete_guild_integration(client, 333, 555, cb, user_data);
-}
-dcc_status_t call_rest_sync_guild_integration(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_sync_guild_integration(client, 333, 555, cb, user_data);
 }
 dcc_status_t call_rest_get_guild_widget(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_guild_widget(client, 333, cb, user_data);

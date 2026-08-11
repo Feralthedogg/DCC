@@ -434,17 +434,13 @@ dcc_status_t dcc_app_modify_guild_integration(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || guild_id == 0U || integration_id == 0U || json_body == NULL) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    return dcc_rest_modify_guild_integration(
-        dcc_app_client(app),
-        guild_id,
-        integration_id,
-        json_body,
-        cb,
-        user_data
-    );
+    (void)app;
+    (void)guild_id;
+    (void)integration_id;
+    (void)json_body;
+    (void)cb;
+    (void)user_data;
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_delete_guild_integration(
@@ -467,10 +463,12 @@ dcc_status_t dcc_app_sync_guild_integration(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || guild_id == 0U || integration_id == 0U) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    return dcc_rest_sync_guild_integration(dcc_app_client(app), guild_id, integration_id, cb, user_data);
+    (void)app;
+    (void)guild_id;
+    (void)integration_id;
+    (void)cb;
+    (void)user_data;
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_get_guild_widget(

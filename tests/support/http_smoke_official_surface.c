@@ -181,7 +181,8 @@ static dcc_status_t call_official_modify_guild_incident_actions_params(
 }
 
 static dcc_status_t call_official_get_invite_target_users(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_invite_target_users(client, "inv/abc", cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_invite_target_users(client, "inv/abc", &options, NULL);
 }
 
 static dcc_status_t call_official_get_invite_target_users_job_status(
@@ -189,7 +190,8 @@ static dcc_status_t call_official_get_invite_target_users_job_status(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    return dcc_rest_get_invite_target_users_job_status(client, "inv/abc", cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_invite_target_users_job_status(client, "inv/abc", &options, NULL);
 }
 
 static dcc_status_t call_official_get_entitlement(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
@@ -432,7 +434,10 @@ static dcc_status_t call_official_create_lobby_channel_invite_for_self(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    return dcc_rest_create_lobby_channel_invite_for_self(client, 700, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    options.auth_mode = DCC_REST_AUTH_BEARER;
+    options.auth_token = "activity-token";
+    return dcc_rest_create_lobby_channel_invite_for_self(client, 700, &options, NULL);
 }
 
 static dcc_status_t call_official_create_lobby_channel_invite_for_user(
@@ -440,7 +445,8 @@ static dcc_status_t call_official_create_lobby_channel_invite_for_user(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    return dcc_rest_create_lobby_channel_invite_for_user(client, 700, 444, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_create_lobby_channel_invite_for_user(client, 700, 444, &options, NULL);
 }
 
 static int run_official_rest_wrapper_expect(
@@ -497,17 +503,22 @@ static int run_official_surface_multipart_smoke(dcc_client_t *client) {
 
     rest_seen_t seen;
     const char csv[] = "id\n444\n";
+    dcc_rest_invite_target_users_upload_t upload =
+        DCC_REST_INVITE_TARGET_USERS_UPLOAD_INIT;
+    dcc_rest_call_options_t options = rest_call_options(&seen);
+    upload.filename = "target.csv";
+    upload.data = csv;
+    upload.data_len = sizeof(csv) - 1U;
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
     dcc_status_t st = dcc_rest_put_invite_target_users(
         client,
         "inv/abc",
-        "target.csv",
-        csv,
-        sizeof(csv) - 1U,
-        rest_cb,
-        &seen
+        &upload,
+        &options,
+        NULL
     );
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
 
@@ -520,6 +531,15 @@ static int run_official_surface_multipart_smoke(dcc_client_t *client) {
             NULL,
             NULL,
             "name=\"target_users_file\"; filename=\"target.csv\"\r\nContent-Type: text/csv\r\n\r\nid\n444\n")) {
+        fprintf(stderr,
+                "unexpected official multipart request: st=%s called=%d status=%u method=%s path=%s body=%s headers=%s\n",
+                dcc_status_string(st),
+                seen.called,
+                seen.status,
+                server.method,
+                server.path,
+                server.body,
+                server.headers);
         (void)unsetenv("DCC_DISCORD_API_BASE");
         return 1;
     }
@@ -1016,10 +1036,23 @@ int run_public_rest_official_surface_smoke(void) {
         return 1;
     }
 
-    int ok = run_public_rest_official_surface_routes(client) == 0 &&
-             run_public_rest_official_body_builder_edges() == 0 &&
-             run_public_oauth2_surface_smoke() == 0 &&
-             run_public_webhook_event_surface_smoke() == 0;
+    int ok = 1;
+    if (run_public_rest_official_surface_routes(client) != 0) {
+        fprintf(stderr, "run_public_rest_official_surface_routes failed\n");
+        ok = 0;
+    }
+    if (run_public_rest_official_body_builder_edges() != 0) {
+        fprintf(stderr, "run_public_rest_official_body_builder_edges failed\n");
+        ok = 0;
+    }
+    if (run_public_oauth2_surface_smoke() != 0) {
+        fprintf(stderr, "run_public_oauth2_surface_smoke failed\n");
+        ok = 0;
+    }
+    if (run_public_webhook_event_surface_smoke() != 0) {
+        fprintf(stderr, "run_public_webhook_event_surface_smoke failed\n");
+        ok = 0;
+    }
     (void)unsetenv("DCC_DISCORD_API_BASE");
     dcc_client_destroy(client);
     return ok ? 0 : 1;

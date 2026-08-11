@@ -2,6 +2,7 @@
 #define DCC_REST_RESOURCES_USERS_H
 
 #include <dcc/rest/types.h>
+#include <dcc/rest/request.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,24 +54,11 @@ DCC_API dcc_status_t dcc_rest_get_current_user_guilds(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_get_current_user_dms(
-    dcc_client_t *client,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
 DCC_API dcc_status_t dcc_rest_create_dm_channel(
     dcc_client_t *client,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_create_dm_channel_params(
-    dcc_client_t *client,
     const dcc_dm_channel_params_t *params,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 DCC_API dcc_status_t dcc_rest_leave_guild(

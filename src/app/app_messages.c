@@ -25,8 +25,6 @@ typedef struct dcc_app_message_thread_state {
     dcc_app_message_thread_cb cb;
     void *user_data;
     char *thread_name;
-    char *message_json;
-    dcc_snowflake_t *applied_tags;
 } dcc_app_message_thread_state_t;
 
 typedef struct dcc_app_managed_message_store_publish {
@@ -93,8 +91,6 @@ static void dcc_app_message_thread_state_free(dcc_app_message_thread_state_t *st
         return;
     }
     free(state->thread_name);
-    free(state->message_json);
-    free(state->applied_tags);
     free(state);
 }
 
@@ -105,11 +101,14 @@ static dcc_status_t dcc_app_message_thread_state_copy(
     if (state == NULL ||
         thread == NULL ||
         thread->size < sizeof(*thread) ||
+        thread->version != DCC_THREAD_PARAMS_VERSION ||
         thread->name == NULL ||
         thread->name[0] == '\0' ||
         strlen(thread->name) > 100U ||
         !dcc_app_thread_archive_duration_valid(thread->auto_archive_duration) ||
-        (thread->applied_tag_count != 0U && thread->applied_tags == NULL)) {
+        (thread->present & ~(DCC_THREAD_PARAMS_PRESENT_NAME |
+            DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION |
+            DCC_THREAD_PARAMS_PRESENT_RATE_LIMIT_PER_USER)) != 0U) {
         return DCC_ERR_INVALID_ARG;
     }
 
@@ -120,27 +119,6 @@ static dcc_status_t dcc_app_message_thread_state_copy(
         return DCC_ERR_NOMEM;
     }
     state->thread.name = state->thread_name;
-
-    if (thread->message_json != NULL) {
-        state->message_json = dcc_app_message_thread_strdup(thread->message_json);
-        if (state->message_json == NULL) {
-            return DCC_ERR_NOMEM;
-        }
-        state->thread.message_json = state->message_json;
-    }
-
-    if (thread->applied_tag_count != 0U) {
-        if (thread->applied_tag_count > SIZE_MAX / sizeof(*thread->applied_tags)) {
-            return DCC_ERR_NOMEM;
-        }
-        size_t bytes = thread->applied_tag_count * sizeof(*thread->applied_tags);
-        state->applied_tags = (dcc_snowflake_t *)malloc(bytes);
-        if (state->applied_tags == NULL) {
-            return DCC_ERR_NOMEM;
-        }
-        memcpy(state->applied_tags, thread->applied_tags, bytes);
-        state->thread.applied_tags = state->applied_tags;
-    }
 
     return DCC_OK;
 }
@@ -332,10 +310,9 @@ dcc_status_t dcc_app_send_with_thread_name(
     dcc_app_message_thread_cb cb,
     void *user_data
 ) {
-    dcc_thread_params_t thread = {
-        .size = sizeof(thread),
-        .name = thread_name,
-    };
+    dcc_thread_params_t thread = DCC_THREAD_PARAMS_INIT;
+    thread.present = DCC_THREAD_PARAMS_PRESENT_NAME;
+    thread.name = thread_name;
     return dcc_app_send_with_thread(app, channel_id, message, &thread, cb, user_data);
 }
 

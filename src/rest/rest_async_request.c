@@ -1,17 +1,38 @@
 #include "internal/rest/dcc_rest_async_request_internal.h"
 #include "internal/rest/dcc_rest_request_handle_internal.h"
+#include "internal/rest/dcc_rest_sensitive_internal.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 void dcc_rest_async_request_free(dcc_rest_async_request_t *request) {
     if (request == NULL) {
         return;
     }
     free(request->method);
-    free(request->path);
-    free(request->body);
+    free(request->operation);
+    dcc_rest_sensitive_free(
+        request->wire_path,
+        request->wire_path != NULL ? strlen(request->wire_path) + 1U : 0U
+    );
+    if ((request->flags & DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY) != 0U) {
+        dcc_rest_sensitive_free(request->body, request->body_len);
+    } else {
+        free(request->body);
+    }
     free(request->content_type);
+    dcc_rest_sensitive_free(
+        request->audit_log_reason,
+        request->audit_log_reason != NULL
+            ? strlen(request->audit_log_reason) + 1U
+            : 0U
+    );
+    dcc_rest_sensitive_free(
+        request->auth_token,
+        request->auth_token != NULL ? strlen(request->auth_token) + 1U : 0U
+    );
     dcc_rest_request_handle_release(request->request_handle);
+    dcc_endpoint_secure_zero(request, sizeof(*request));
     free(request);
 }
 

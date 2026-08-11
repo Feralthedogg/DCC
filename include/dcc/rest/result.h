@@ -19,6 +19,11 @@ extern "C" {
 /** Current layout version for dcc_rest_result_t. */
 #define DCC_REST_RESULT_VERSION 1U
 
+/** Result flags. */
+enum {
+    DCC_REST_RESULT_FLAG_SENSITIVE_BODY = UINT64_C(1)
+};
+
 /**
  * Borrowed REST completion result.
  *
@@ -36,6 +41,7 @@ typedef struct dcc_rest_result {
     const char *body;               /**< Borrowed raw response bytes. */
     size_t body_len;                /**< Exact byte length of body. */
     uint64_t retry_after_ms;        /**< Terminal retry delay, when known. */
+    uint64_t flags;                 /**< DCC_REST_RESULT_FLAG_* bits. */
 } dcc_rest_result_t;
 
 /** Returns non-zero only for a valid transport-successful 2xx result. */

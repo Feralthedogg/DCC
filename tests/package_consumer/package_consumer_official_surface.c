@@ -61,6 +61,12 @@ int dcc_package_consumer_check_official_surface_api(void) {
         github_json,
         sizeof(github_json) - 1U
     );
+    static const char target_users_csv[] = "id\n123\n";
+    dcc_rest_invite_target_users_upload_t target_users_upload =
+        DCC_REST_INVITE_TARGET_USERS_UPLOAD_INIT;
+    target_users_upload.filename = "targets.csv";
+    target_users_upload.data = target_users_csv;
+    target_users_upload.data_len = sizeof(target_users_csv) - 1U;
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_gateway);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_current_application);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_modify_current_application);
@@ -621,17 +627,15 @@ int dcc_package_consumer_check_official_surface_api(void) {
         DCC_REST_WIDGET_JSON(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_WIDGET_PNG(NULL, 123, "banner1", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_INCIDENT_ACTIONS_PARAMS(NULL, 123, &incident_actions, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_INVITE_TARGET_USERS(NULL, "invite", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_REST_INVITE_TARGET_USERS(NULL, "invite", NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_PUT_INVITE_TARGET_USERS(
             NULL,
             "invite",
-            "targets.csv",
-            "id\n123\n",
-            7,
-            package_official_rest_cb,
+            &target_users_upload,
+            NULL,
             NULL
         ) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_INVITE_TARGET_USERS_JOB(NULL, "invite", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_REST_INVITE_TARGET_USERS_JOB(NULL, "invite", NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_ENTITLEMENT(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_STICKER_PACK(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_CURRENT_USER_GUILD_MEMBER(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
@@ -652,8 +656,8 @@ int dcc_package_consumer_check_official_surface_api(void) {
         DCC_REST_SEND_LOBBY_MESSAGE_PARAMS(NULL, 123, &lobby_message, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_LOBBY_MESSAGES(NULL, 123, "limit=1", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_UPDATE_LOBBY_MESSAGE_MODERATION_PARAMS(NULL, 123, 456, &moderation, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_CREATE_LOBBY_INVITE_SELF(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_CREATE_LOBBY_INVITE_USER(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_REST_CREATE_LOBBY_INVITE_SELF(NULL, 123, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_REST_CREATE_LOBBY_INVITE_USER(NULL, 123, 456, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_LEGACY_PIN_MESSAGE(NULL, 123, 456, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_LEGACY_UNPIN_MESSAGE(NULL, 123, 456, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_LEGACY_CHANNEL_PINS(NULL, 123, NULL, NULL) != DCC_ERR_INVALID_ARG ||

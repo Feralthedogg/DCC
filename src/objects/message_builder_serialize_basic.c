@@ -58,6 +58,13 @@ dcc_status_t dcc_message_builder_append_basic_json(
     }
     if (status == DCC_OK && HAS(DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE_JSON)) {
         status = dcc_message_json_append_raw_member(buffer, first, "message_reference", builder->message_reference_json);
+    } else if (status == DCC_OK && HAS(DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE)) {
+        status = dcc_message_json_member_prefix(buffer, first, "message_reference");
+        if (status == DCC_OK) {
+            status = dcc_message_reference_append_json(
+                builder->message_reference, buffer
+            );
+        }
     }
     if (status == DCC_OK && HAS(DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS_JSON)) {
         status = dcc_message_json_append_raw_member(buffer, first, "allowed_mentions", builder->allowed_mentions_json);

@@ -89,6 +89,25 @@ def intentional_api_removals(source: pathlib.Path) -> set[str]:
                 f"endpoint {index} legacy_symbols must contain dcc_ names"
             )
         symbols.update(legacy_symbols)
+    removed = manifest.get("removed_candidates")
+    if not isinstance(removed, list):
+        raise ValueError("rest_v2_endpoints.json removed_candidates must be a list")
+    for index, candidate in enumerate(removed):
+        if not isinstance(candidate, dict):
+            raise ValueError(f"removed candidate {index} must be an object")
+        canonical = candidate.get("canonical")
+        legacy_symbols = candidate.get("legacy_symbols")
+        if not isinstance(canonical, str) or not canonical.startswith("dcc_"):
+            raise ValueError(f"removed candidate {index} has an invalid canonical")
+        if not isinstance(legacy_symbols, list) or not all(
+            isinstance(symbol, str) and symbol.startswith("dcc_")
+            for symbol in legacy_symbols
+        ):
+            raise ValueError(
+                f"removed candidate {index} legacy_symbols must contain dcc_ names"
+            )
+        symbols.add(canonical)
+        symbols.update(legacy_symbols)
     return symbols
 
 

@@ -11,7 +11,7 @@ size_t dcc_rest_async_cancel_pending_list(
         dcc_rest_async_request_t *next = request->next;
         request->next = NULL;
         dcc_rest_terminal_completion_t completion = {
-            .operation = request->path,
+            .operation = request->operation,
             .transport_status = DCC_ERR_CANCELED,
             .legacy_error = DCC_ERR_CANCELED,
         };

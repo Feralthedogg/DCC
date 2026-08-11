@@ -19,7 +19,24 @@ typedef struct dcc_builder_abi_prefix {
      DCC_MESSAGE_BUILDER_PRESENT_EMBEDS_JSON | \
      DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_JSON | \
      DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS_JSON | DCC_MESSAGE_BUILDER_PRESENT_POLL_JSON | \
-     DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON)
+     DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON | \
+     DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE | \
+     DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS)
+
+#define DCC_MESSAGE_REFERENCE_KNOWN \
+    (DCC_MESSAGE_REFERENCE_PRESENT_TYPE | \
+     DCC_MESSAGE_REFERENCE_PRESENT_MESSAGE_ID | \
+     DCC_MESSAGE_REFERENCE_PRESENT_CHANNEL_ID | \
+     DCC_MESSAGE_REFERENCE_PRESENT_GUILD_ID | \
+     DCC_MESSAGE_REFERENCE_PRESENT_FAIL_IF_NOT_EXISTS)
+
+#define DCC_MESSAGE_ATTACHMENT_KNOWN \
+    (DCC_MESSAGE_ATTACHMENT_PRESENT_FILENAME | \
+     DCC_MESSAGE_ATTACHMENT_PRESENT_TITLE | \
+     DCC_MESSAGE_ATTACHMENT_PRESENT_DESCRIPTION | \
+     DCC_MESSAGE_ATTACHMENT_PRESENT_DURATION_SECS | \
+     DCC_MESSAGE_ATTACHMENT_PRESENT_WAVEFORM | \
+     DCC_MESSAGE_ATTACHMENT_PRESENT_IS_SPOILER)
 
 #define DCC_BUILDER_KNOWN_POLL \
     (DCC_POLL_BUILDER_PRESENT_QUESTION | DCC_POLL_BUILDER_PRESENT_ANSWERS | \
@@ -88,6 +105,14 @@ int dcc_builder_abi_field_covered(size_t size, size_t offset, size_t width) {
     return size >= offset && width <= size - offset;
 }
 
+static int dcc_builder_abi_field_partially_covered(
+    size_t size,
+    size_t offset,
+    size_t width
+) {
+    return size > offset && size - offset < width;
+}
+
 int dcc_builder_abi_view_has(const dcc_builder_abi_view_t *view, uint64_t bit) {
     return view != NULL && (view->present & bit) != 0U;
 }
@@ -148,6 +173,11 @@ static int dcc_builder_bit_field(
 
 #define DCC_BIT_PAIR(type_, view_, bit_, first_, second_) \
     (DCC_BIT_FIELD(type_, view_, bit_, first_) && DCC_BIT_FIELD(type_, view_, bit_, second_))
+
+#define DCC_PARTIAL_FIELD(type_, view_, field_) \
+    dcc_builder_abi_field_partially_covered( \
+        (view_)->size, offsetof(type_, field_), sizeof(((type_ *)0)->field_) \
+    )
 
 dcc_status_t dcc_builder_abi_array_begin(
     const void *values,
@@ -215,8 +245,93 @@ dcc_status_t dcc_message_builder_abi_validate(
             DCC_BIT_FIELD(dcc_message_builder_t, out, DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_JSON, components_json) &&
             DCC_BIT_FIELD(dcc_message_builder_t, out, DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS_JSON, attachments_json) &&
             DCC_BIT_FIELD(dcc_message_builder_t, out, DCC_MESSAGE_BUILDER_PRESENT_POLL_JSON, poll_json) &&
-            DCC_BIT_FIELD(dcc_message_builder_t, out, DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON, components_v2_json)
+            DCC_BIT_FIELD(dcc_message_builder_t, out, DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON, components_v2_json) &&
+            !DCC_PARTIAL_FIELD(dcc_message_builder_t, out, message_reference) &&
+            !DCC_PARTIAL_FIELD(dcc_message_builder_t, out, attachments) &&
+            !DCC_PARTIAL_FIELD(dcc_message_builder_t, out, attachment_count) &&
+            DCC_BIT_FIELD(dcc_message_builder_t, out, DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE, message_reference) &&
+            DCC_BIT_PAIR(dcc_message_builder_t, out, DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS, attachments, attachment_count)
         ? DCC_OK : DCC_ERR_INVALID_ARG;
+}
+
+dcc_status_t dcc_message_reference_abi_validate(
+    const dcc_message_reference_t *reference,
+    dcc_builder_abi_view_t *out
+) {
+    dcc_status_t status = dcc_builder_abi_read(
+        reference, DCC_MESSAGE_REFERENCE_VERSION,
+        DCC_MESSAGE_REFERENCE_KNOWN, out
+    );
+    if (status != DCC_OK) {
+        return status;
+    }
+    return !DCC_PARTIAL_FIELD(dcc_message_reference_t, out, type) &&
+            !DCC_PARTIAL_FIELD(dcc_message_reference_t, out, message_id) &&
+            !DCC_PARTIAL_FIELD(dcc_message_reference_t, out, channel_id) &&
+            !DCC_PARTIAL_FIELD(dcc_message_reference_t, out, guild_id) &&
+            !DCC_PARTIAL_FIELD(dcc_message_reference_t, out, fail_if_not_exists) &&
+            DCC_BIT_FIELD(dcc_message_reference_t, out,
+                DCC_MESSAGE_REFERENCE_PRESENT_TYPE, type) &&
+            DCC_BIT_FIELD(dcc_message_reference_t, out,
+                DCC_MESSAGE_REFERENCE_PRESENT_MESSAGE_ID, message_id) &&
+            DCC_BIT_FIELD(dcc_message_reference_t, out,
+                DCC_MESSAGE_REFERENCE_PRESENT_CHANNEL_ID, channel_id) &&
+            DCC_BIT_FIELD(dcc_message_reference_t, out,
+                DCC_MESSAGE_REFERENCE_PRESENT_GUILD_ID, guild_id) &&
+            DCC_BIT_FIELD(dcc_message_reference_t, out,
+                DCC_MESSAGE_REFERENCE_PRESENT_FAIL_IF_NOT_EXISTS,
+                fail_if_not_exists)
+        ? DCC_OK : DCC_ERR_INVALID_ARG;
+}
+
+dcc_status_t dcc_message_attachment_abi_validate(
+    const dcc_message_attachment_t *attachment,
+    dcc_builder_abi_view_t *out
+) {
+    dcc_status_t status = dcc_builder_abi_read(
+        attachment, DCC_MESSAGE_ATTACHMENT_VERSION,
+        DCC_MESSAGE_ATTACHMENT_KNOWN, out
+    );
+    if (status != DCC_OK ||
+        !dcc_builder_abi_field_covered(
+            out->size, offsetof(dcc_message_attachment_t, id),
+            sizeof(attachment->id)
+        )) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    return !DCC_PARTIAL_FIELD(dcc_message_attachment_t, out, filename) &&
+            !DCC_PARTIAL_FIELD(dcc_message_attachment_t, out, title) &&
+            !DCC_PARTIAL_FIELD(dcc_message_attachment_t, out, description) &&
+            !DCC_PARTIAL_FIELD(dcc_message_attachment_t, out, duration_secs) &&
+            !DCC_PARTIAL_FIELD(dcc_message_attachment_t, out, waveform) &&
+            !DCC_PARTIAL_FIELD(dcc_message_attachment_t, out, is_spoiler) &&
+            DCC_BIT_FIELD(dcc_message_attachment_t, out,
+                DCC_MESSAGE_ATTACHMENT_PRESENT_FILENAME, filename) &&
+            DCC_BIT_FIELD(dcc_message_attachment_t, out,
+                DCC_MESSAGE_ATTACHMENT_PRESENT_TITLE, title) &&
+            DCC_BIT_FIELD(dcc_message_attachment_t, out,
+                DCC_MESSAGE_ATTACHMENT_PRESENT_DESCRIPTION, description) &&
+            DCC_BIT_FIELD(dcc_message_attachment_t, out,
+                DCC_MESSAGE_ATTACHMENT_PRESENT_DURATION_SECS, duration_secs) &&
+            DCC_BIT_FIELD(dcc_message_attachment_t, out,
+                DCC_MESSAGE_ATTACHMENT_PRESENT_WAVEFORM, waveform) &&
+            DCC_BIT_FIELD(dcc_message_attachment_t, out,
+                DCC_MESSAGE_ATTACHMENT_PRESENT_IS_SPOILER, is_spoiler)
+        ? DCC_OK : DCC_ERR_INVALID_ARG;
+}
+
+dcc_status_t dcc_message_attachment_array_begin(
+    const dcc_message_attachment_t *values,
+    size_t count,
+    size_t *out_stride
+) {
+    return dcc_builder_abi_array_begin(
+        values, count, _Alignof(dcc_message_attachment_t),
+        offsetof(dcc_message_attachment_t, id) +
+            sizeof(((dcc_message_attachment_t *)0)->id),
+        DCC_MESSAGE_ATTACHMENT_VERSION, DCC_MESSAGE_ATTACHMENT_KNOWN,
+        out_stride
+    );
 }
 
 dcc_status_t dcc_poll_builder_abi_validate(

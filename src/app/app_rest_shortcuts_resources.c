@@ -47,6 +47,10 @@
 #include <dcc/rest/webhooks/messages/edit.h>
 #include <dcc/rest/webhooks/messages/fetch.h>
 
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+
+#include <string.h>
+
 static int dcc_app_string_invalid(const char *value) {
     return value == NULL || value[0] == '\0';
 }
@@ -257,10 +261,10 @@ dcc_status_t dcc_app_get_current_user_dms(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    return dcc_rest_get_current_user_dms(dcc_app_client(app), cb, user_data);
+    (void)app;
+    (void)cb;
+    (void)user_data;
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_create_dm_channel(
@@ -272,7 +276,10 @@ dcc_status_t dcc_app_create_dm_channel(
     if (app == NULL || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_dm_channel(dcc_app_client(app), json_body, cb, user_data);
+    return dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), DCC_REST_POST, "/users/@me/channels", NULL,
+        "application/json", json_body, strlen(json_body), cb, user_data
+    );
 }
 
 dcc_status_t dcc_app_create_dm_channel_params(
@@ -284,7 +291,9 @@ dcc_status_t dcc_app_create_dm_channel_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_dm_channel_params(dcc_app_client(app), params, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_dm_channel, dcc_app_client(app), params
+    );
 }
 
 dcc_status_t dcc_app_add_group_dm_recipient(
@@ -392,7 +401,10 @@ dcc_status_t dcc_app_get_guild_invites(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_invites(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_invites,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_get_invite(
@@ -405,7 +417,11 @@ dcc_status_t dcc_app_get_invite(
     if (app == NULL || dcc_app_string_invalid(invite_code)) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_invite(dcc_app_client(app), invite_code, query, cb, user_data);
+    (void)query;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_invite,
+        dcc_app_client(app), invite_code, NULL
+    );
 }
 
 dcc_status_t dcc_app_get_invite_full(
@@ -417,7 +433,10 @@ dcc_status_t dcc_app_get_invite_full(
     if (app == NULL || dcc_app_string_invalid(invite_code)) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_invite_full(dcc_app_client(app), invite_code, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_invite,
+        dcc_app_client(app), invite_code, NULL
+    );
 }
 
 dcc_status_t dcc_app_delete_invite(
@@ -429,7 +448,10 @@ dcc_status_t dcc_app_delete_invite(
     if (app == NULL || dcc_app_string_invalid(invite_code)) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_invite(dcc_app_client(app), invite_code, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_invite,
+        dcc_app_client(app), invite_code
+    );
 }
 
 dcc_status_t dcc_app_create_stage_instance(
@@ -524,10 +546,12 @@ dcc_status_t dcc_app_create_guild_from_template(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || dcc_app_string_invalid(code) || json_body == NULL) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    return dcc_rest_create_guild_from_template(dcc_app_client(app), code, json_body, cb, user_data);
+    (void)app;
+    (void)code;
+    (void)json_body;
+    (void)cb;
+    (void)user_data;
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_create_guild_from_template_params(
@@ -536,10 +560,11 @@ dcc_status_t dcc_app_create_guild_from_template_params(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || params == NULL) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    return dcc_rest_create_guild_from_template_params(dcc_app_client(app), params, cb, user_data);
+    (void)app;
+    (void)params;
+    (void)cb;
+    (void)user_data;
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_get_guild_templates(

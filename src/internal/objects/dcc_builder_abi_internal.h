@@ -33,6 +33,19 @@ dcc_status_t dcc_message_builder_abi_validate(
     const dcc_message_builder_t *builder,
     dcc_builder_abi_view_t *out
 );
+dcc_status_t dcc_message_reference_abi_validate(
+    const dcc_message_reference_t *reference,
+    dcc_builder_abi_view_t *out
+);
+dcc_status_t dcc_message_attachment_abi_validate(
+    const dcc_message_attachment_t *attachment,
+    dcc_builder_abi_view_t *out
+);
+dcc_status_t dcc_message_attachment_array_begin(
+    const dcc_message_attachment_t *values,
+    size_t count,
+    size_t *out_stride
+);
 dcc_status_t dcc_poll_builder_abi_validate(
     const dcc_poll_builder_t *builder,
     dcc_builder_abi_view_t *out

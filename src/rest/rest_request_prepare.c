@@ -1,4 +1,5 @@
 #include "internal/rest/dcc_rest_request_internal.h"
+#include "internal/rest/dcc_rest_sensitive_internal.h"
 #include "internal/rest/dcc_rest_request_url_internal.h"
 
 #include <stdlib.h>
@@ -12,6 +13,9 @@ dcc_status_t dcc_rest_prepare_http_request(
     const void *body,
     size_t body_len,
     const char *content_type,
+    dcc_rest_auth_mode_t auth_mode,
+    const char *auth_token,
+    const char *audit_log_reason,
     int (*is_canceled)(void *user_data),
     llam_fd_t (*swap_fd)(void *user_data, llam_fd_t fd),
     void *cancel_user_data
@@ -32,7 +36,10 @@ dcc_status_t dcc_rest_prepare_http_request(
         client,
         absolute_url,
         body_len,
-        content_type
+        content_type,
+        auth_mode,
+        auth_token,
+        audit_log_reason
     );
     if (header_status != DCC_OK) {
         free(prepared->url);
@@ -66,4 +73,5 @@ void dcc_rest_prepared_request_deinit(dcc_rest_prepared_request_t *prepared) {
     prepared->http.url = NULL;
     prepared->http.headers = NULL;
     prepared->http.header_count = 0;
+    dcc_endpoint_secure_zero(&prepared->http, sizeof(prepared->http));
 }

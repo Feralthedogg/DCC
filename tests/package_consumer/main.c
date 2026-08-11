@@ -32,23 +32,38 @@ int main(void) {
     };
     const dcc_channel_forum_tag_params_t tag = {
         .size = sizeof(dcc_channel_forum_tag_params_t),
+        .version = DCC_CHANNEL_FORUM_TAG_PARAMS_VERSION,
+        .present = DCC_CHANNEL_FORUM_TAG_PRESENT_NAME |
+            DCC_CHANNEL_FORUM_TAG_PRESENT_EMOJI_NAME,
         .name = "news",
         .emoji_name = "star"
     };
     const dcc_channel_params_t channel = {
         .size = sizeof(dcc_channel_params_t),
-        .guild_id = 123,
-        .type = DCC_CHANNEL_FORUM,
-        .name = "general",
-        .default_auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_DAY,
-        .available_tags = &tag,
-        .available_tag_count = 1U,
-        .default_forum_layout = DCC_CHANNEL_FORUM_LAYOUT_LIST_VIEW,
-        .require_tag = 1
+        .version = DCC_CHANNEL_PARAMS_VERSION,
+        .kind = DCC_CHANNEL_PARAMS_GUILD,
+        .payload.guild = {
+            .present = DCC_CHANNEL_GUILD_PRESENT_NAME |
+                DCC_CHANNEL_GUILD_PRESENT_TYPE |
+                DCC_CHANNEL_GUILD_PRESENT_DEFAULT_AUTO_ARCHIVE_DURATION |
+                DCC_CHANNEL_GUILD_PRESENT_AVAILABLE_TAGS |
+                DCC_CHANNEL_GUILD_PRESENT_DEFAULT_FORUM_LAYOUT |
+                DCC_CHANNEL_GUILD_PRESENT_FLAGS,
+            .name = "general",
+            .type = DCC_CHANNEL_FORUM,
+            .default_auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_DAY,
+            .available_tags = &tag,
+            .available_tag_count = 1U,
+            .default_forum_layout = DCC_CHANNEL_FORUM_LAYOUT_LIST_VIEW,
+            .flags = 16U
+        }
     };
     const dcc_thread_params_t thread = {
         .size = sizeof(dcc_thread_params_t),
-        .channel_id = 123,
+        .version = DCC_THREAD_PARAMS_VERSION,
+        .present = DCC_THREAD_PARAMS_PRESENT_NAME |
+            DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION |
+            DCC_THREAD_PARAMS_PRESENT_TYPE,
         .name = "thread",
         .auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_DAY,
         .type = DCC_CHANNEL_PUBLIC_THREAD
@@ -104,7 +119,10 @@ int main(void) {
     };
     const dcc_invite_params_t invite = {
         .size = sizeof(dcc_invite_params_t),
-        .channel_id = 123,
+        .version = DCC_INVITE_PARAMS_VERSION,
+        .present = DCC_INVITE_PARAMS_PRESENT_TARGET_TYPE |
+            DCC_INVITE_PARAMS_PRESENT_TARGET_USER_ID,
+        .target_user_id = 123,
         .target_type = DCC_INVITE_TARGET_STREAM
     };
     const dcc_rest_webhook_builder_t webhook = {
@@ -114,19 +132,24 @@ int main(void) {
         .name = "relay",
     };
     const dcc_channel_position_t channel_position = {
+        .size = sizeof(dcc_channel_position_t),
+        .version = DCC_CHANNEL_POSITION_VERSION,
+        .present = DCC_CHANNEL_POSITION_PRESENT_POSITION |
+            DCC_CHANNEL_POSITION_PRESENT_LOCK_PERMISSIONS,
         .channel_id = 123,
         .position = 1,
         .lock_permissions = 1
     };
     const dcc_channel_positions_params_t channel_positions = {
         .size = sizeof(dcc_channel_positions_params_t),
-        .guild_id = 123,
+        .version = DCC_CHANNEL_POSITIONS_PARAMS_VERSION,
         .positions = &channel_position,
         .position_count = 1U
     };
     const dcc_dm_channel_params_t dm = {
         .size = sizeof(dcc_dm_channel_params_t),
-        .user_id = 456
+        .version = DCC_DM_CHANNEL_PARAMS_VERSION,
+        .recipient_id = 456
     };
     const dcc_voice_state_params_t voice_state = {
         .size = sizeof(dcc_voice_state_params_t),
@@ -220,32 +243,27 @@ int main(void) {
         .user_id = 456,
         .role_id = 789
     };
-    const dcc_thread_member_params_t thread_member = {
-        .size = sizeof(dcc_thread_member_params_t),
-        .thread_id = 123,
-        .user_id = 456
-    };
     dcc_package_metadata_update_fn metadata_update = dcc_rest_update_application_role_connection_metadata_params;
     dcc_package_connection_update_fn connection_update = dcc_rest_update_current_user_application_role_connection_params;
     dcc_package_automod_create_fn automod_create = dcc_rest_create_auto_moderation_rule_params;
-    dcc_package_channel_create_fn channel_create = dcc_rest_create_guild_channel_params;
-    dcc_package_thread_create_fn thread_create = dcc_rest_create_thread_params;
+    dcc_package_channel_create_fn channel_create = dcc_rest_create_guild_channel;
+    dcc_package_thread_create_fn thread_create = dcc_rest_create_thread;
     dcc_package_scheduled_event_create_fn scheduled_event_create = dcc_rest_create_guild_scheduled_event_params;
     dcc_package_template_create_fn template_create = dcc_rest_create_guild_template_params;
-    dcc_package_guild_create_fn guild_create = dcc_rest_create_guild_params;
     dcc_package_onboarding_modify_fn onboarding_modify = dcc_rest_modify_guild_onboarding_params;
     dcc_package_member_modify_fn member_modify = dcc_rest_modify_guild_member_params;
     dcc_package_current_member_modify_fn current_member_modify = dcc_rest_modify_current_guild_member_params;
     dcc_package_current_user_modify_fn current_user_modify = dcc_rest_modify_current_user_params;
-    dcc_package_invite_create_fn invite_create = dcc_rest_create_channel_invite_params;
+    dcc_package_invite_create_fn invite_create = dcc_rest_create_channel_invite;
     dcc_package_webhook_create_fn webhook_create = dcc_rest_create_webhook;
-    dcc_package_channel_positions_fn channel_positions_modify = dcc_rest_modify_guild_channel_positions_params;
-    dcc_package_dm_create_fn dm_create = dcc_rest_create_dm_channel_params;
+    dcc_package_channel_positions_fn channel_positions_modify = dcc_rest_modify_guild_channel_positions;
+    dcc_package_dm_create_fn dm_create = dcc_rest_create_dm_channel;
     dcc_package_message_reaction_fn reaction_add = dcc_rest_add_message_reaction;
     dcc_package_message_flags_fn message_flags_edit = dcc_rest_edit_message;
     dcc_package_message_pin_fn legacy_pin_message = dcc_rest_legacy_pin_message;
     dcc_package_message_pin_fn legacy_unpin_message = dcc_rest_legacy_unpin_message;
     dcc_package_channel_pins_fn legacy_channel_pins = dcc_rest_get_legacy_channel_pins;
+    dcc_package_thread_member_fn thread_member_add = dcc_rest_add_thread_member;
     dcc_package_direct_message_builder_fn direct_message_create = dcc_rest_create_direct_message_builder;
     dcc_package_application_command_builder_fn application_command_create =
         dcc_rest_create_application_command_builder;
@@ -313,13 +331,10 @@ int main(void) {
     dcc_package_sticker_create_fn sticker_create = dcc_rest_create_guild_sticker_params;
     dcc_package_command_permissions_fn command_permissions_edit =
         dcc_rest_edit_guild_command_permissions_params;
-    dcc_package_bulk_command_permissions_fn bulk_command_permissions_edit =
-        dcc_rest_bulk_edit_guild_command_permissions_params;
     dcc_package_guild_ban_fn ban_create = dcc_rest_create_guild_ban_params;
     dcc_package_guild_prune_fn prune_begin = dcc_rest_begin_guild_prune_params;
     dcc_package_test_entitlement_fn test_entitlement_create = dcc_rest_create_test_entitlement_params;
     dcc_package_member_role_fn member_role_add = dcc_rest_add_guild_member_role_params;
-    dcc_package_thread_member_fn thread_member_add = dcc_rest_add_thread_member_params;
     dcc_package_task_group_create_fn task_group_create = dcc_task_group_create;
     dcc_package_task_group_spawn_fn task_group_spawn = dcc_task_group_spawn;
     dcc_package_task_group_wait_fn task_group_wait = dcc_task_group_wait;
@@ -487,7 +502,7 @@ int main(void) {
                    metadata.type == DCC_APPLICATION_ROLE_CONNECTION_METADATA_BOOLEAN_EQUAL &&
                    connection.metadata_field_count == 1U &&
                    automod.trigger_type == DCC_AUTO_MODERATION_TRIGGER_SPAM &&
-                   channel.type == DCC_CHANNEL_FORUM &&
+                   channel.payload.guild.type == DCC_CHANNEL_FORUM &&
                    tag.size == sizeof(dcc_channel_forum_tag_params_t) &&
                    thread.type == DCC_CHANNEL_PUBLIC_THREAD &&
                    scheduled_event.entity_type == DCC_SCHEDULED_EVENT_ENTITY_EXTERNAL &&
@@ -500,7 +515,7 @@ int main(void) {
                    invite.target_type == DCC_INVITE_TARGET_STREAM &&
                    webhook.name != NULL &&
                    channel_positions.position_count == 1U &&
-                   dm.user_id == 456U &&
+                   dm.recipient_id == 456U &&
                    voice_state.channel_id == 789U &&
                    (direct_message_builder.present & DCC_MESSAGE_BUILDER_PRESENT_CONTENT) != 0U &&
                    direct_message_builder.poll == &poll_builder &&
@@ -514,7 +529,7 @@ int main(void) {
                    prune.include_role_count == 1U &&
                    test_entitlement.owner_type == 2U &&
                    member_role.role_id == 789U &&
-                   thread_member.user_id == 456U &&
+                   thread_member_add != NULL &&
                    metadata_update != NULL &&
                    connection_update != NULL &&
                    automod_create != NULL &&
@@ -522,7 +537,6 @@ int main(void) {
                    thread_create != NULL &&
                    scheduled_event_create != NULL &&
                    template_create != NULL &&
-                   guild_create != NULL &&
                    onboarding_modify != NULL &&
                    member_modify != NULL &&
                    current_member_modify != NULL &&
@@ -583,12 +597,10 @@ int main(void) {
                    ) == DCC_ERR_INVALID_ARG &&
                    sticker_create != NULL &&
                    command_permissions_edit != NULL &&
-                   bulk_command_permissions_edit != NULL &&
                    ban_create != NULL &&
                    prune_begin != NULL &&
                    test_entitlement_create != NULL &&
                    member_role_add != NULL &&
-                   thread_member_add != NULL &&
                    task_group_create != NULL &&
                    task_group_spawn != NULL &&
                    task_group_wait != NULL &&

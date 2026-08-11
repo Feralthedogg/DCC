@@ -55,6 +55,7 @@ FIELD_WIRE_ALIASES = {
     "message_json": {"message"},
     "metadata_fields": {"metadata"},
     "name_localizations_json": {"name_localizations"},
+    "nulls": {"parent_id", "default_reaction_emoji"},
     "positions": {"id", "position", "parent_id", "lock_permissions"},
     "replied_to_message_ids": {"replied_to_message_id"},
     "replied_to_user_ids": {"replied_to_user_id"},
@@ -104,6 +105,7 @@ WIRE_TOKEN_SKIP_FIELDS = {
     "permission_count",
     "permission_overwrite_count",
     "position_count",
+    "present",
     "preset_count",
     "prompt_count",
     "regex_pattern_count",
@@ -116,6 +118,7 @@ WIRE_TOKEN_SKIP_FIELDS = {
     "thread_id",
     "token",
     "user_id",
+    "version",
     "webhook_id",
     "welcome_channel_count",
 }
@@ -267,7 +270,6 @@ EXPECTED_INTERACTION_MULTIPART_REQUESTS = Counter(
 )
 
 EXPECTED_REST_GAP_LABELS = {
-    "bulk_edit_guild_command_permissions_params",
     "bulk_overwrite_application_commands_default_global",
     "bulk_overwrite_application_commands_specific_guild",
     "bulk_overwrite_global_commands",

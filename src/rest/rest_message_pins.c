@@ -22,6 +22,9 @@ dcc_status_t dcc_rest_pin_message(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_ALLOWED,
+        DCC_REST_ROUTE_CHANNEL_MESSAGE_PIN, DCC_REST_PUT);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
@@ -42,6 +45,9 @@ dcc_status_t dcc_rest_unpin_message(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_ALLOWED,
+        DCC_REST_ROUTE_CHANNEL_MESSAGE_PIN, DCC_REST_DELETE);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
@@ -62,6 +68,9 @@ dcc_status_t dcc_rest_get_channel_pins(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_CHANNEL_MESSAGE_PINS, DCC_REST_GET);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U)
@@ -94,6 +103,9 @@ dcc_status_t dcc_rest_legacy_pin_message(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_ALLOWED,
+        DCC_REST_ROUTE_LEGACY_CHANNEL_PIN, DCC_REST_PUT);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
@@ -114,6 +126,9 @@ dcc_status_t dcc_rest_legacy_unpin_message(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_ALLOWED,
+        DCC_REST_ROUTE_LEGACY_CHANNEL_PIN, DCC_REST_DELETE);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
@@ -133,6 +148,9 @@ dcc_status_t dcc_rest_get_legacy_channel_pins(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_PATH_PUBLIC;
+    DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_LEGACY_CHANNEL_PINS, DCC_REST_GET);
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U)

@@ -22,30 +22,9 @@ DCC_API dcc_status_t dcc_rest_modify_guild(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_create_guild(
-    dcc_client_t *client,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_create_guild_params(
-    dcc_client_t *client,
-    const dcc_guild_params_t *params,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
 DCC_API dcc_status_t dcc_rest_modify_guild_params(
     dcc_client_t *client,
     const dcc_guild_params_t *params,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_delete_guild(
-    dcc_client_t *client,
-    dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );

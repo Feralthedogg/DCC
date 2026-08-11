@@ -354,73 +354,111 @@ dcc_status_t call_rest_update_current_user_application_role_connection_params(
     );
 }
 dcc_status_t call_rest_get_thread(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_thread(client, 999, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_channel(client, 999, &options, NULL);
 }
 dcc_status_t call_rest_create_thread(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_thread(client, 222, "{\"name\":\"ops\",\"auto_archive_duration\":60,\"type\":11}", cb, user_data);
+    dcc_thread_params_t params = DCC_THREAD_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.present = DCC_THREAD_PARAMS_PRESENT_NAME |
+        DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION |
+        DCC_THREAD_PARAMS_PRESENT_TYPE;
+    params.name = "ops";
+    params.auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_HOUR;
+    params.type = DCC_CHANNEL_PUBLIC_THREAD;
+    return dcc_rest_create_thread(client, 222, &params, &options, NULL);
 }
 dcc_status_t call_rest_create_thread_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_thread_params_t params = {
-        .size = sizeof(dcc_thread_params_t),
-        .channel_id = 222,
-        .name = "ops typed",
-        .auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_HOUR,
-        .type = DCC_CHANNEL_PRIVATE_THREAD,
-        .invitable = 1,
-        .rate_limit_per_user = 5
-    };
-    return dcc_rest_create_thread_params(client, &params, cb, user_data);
+    dcc_thread_params_t params = DCC_THREAD_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.present = DCC_THREAD_PARAMS_PRESENT_NAME |
+        DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION |
+        DCC_THREAD_PARAMS_PRESENT_TYPE | DCC_THREAD_PARAMS_PRESENT_INVITABLE |
+        DCC_THREAD_PARAMS_PRESENT_RATE_LIMIT_PER_USER;
+    params.name = "ops typed";
+    params.auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_HOUR;
+    params.type = DCC_CHANNEL_PRIVATE_THREAD;
+    params.invitable = 1;
+    params.rate_limit_per_user = 5;
+    return dcc_rest_create_thread(client, 222, &params, &options, NULL);
 }
 dcc_status_t call_rest_create_forum_thread_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_snowflake_t tags[] = {901, 902};
-    const dcc_thread_params_t params = {
-        .size = sizeof(dcc_thread_params_t),
-        .channel_id = 222,
-        .name = "forum typed",
-        .auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_DAY,
-        .rate_limit_per_user = 3,
-        .applied_tags = tags,
-        .applied_tag_count = sizeof(tags) / sizeof(tags[0]),
-        .message_json = "{\"content\":\"forum starter\"}"
-    };
-    return dcc_rest_create_forum_thread_params(client, &params, cb, user_data);
+    dcc_message_builder_t message;
+    dcc_message_builder_init(&message);
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_thread_params_t params = DCC_THREAD_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    dcc_status_t status = dcc_message_builder_set_content(&message, "forum starter");
+    payload.message = &message;
+    params.present = DCC_THREAD_PARAMS_PRESENT_NAME |
+        DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION |
+        DCC_THREAD_PARAMS_PRESENT_RATE_LIMIT_PER_USER |
+        DCC_THREAD_PARAMS_PRESENT_APPLIED_TAGS |
+        DCC_THREAD_PARAMS_PRESENT_MESSAGE;
+    params.name = "forum typed";
+    params.auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_DAY;
+    params.rate_limit_per_user = 3;
+    params.applied_tags = tags;
+    params.applied_tag_count = sizeof(tags) / sizeof(tags[0]);
+    params.message = &payload;
+    return status == DCC_OK
+        ? dcc_rest_create_forum_thread(client, 222, &params, &options, NULL)
+        : status;
 }
 dcc_status_t call_rest_create_thread_from_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_thread_from_message(client, 222, 777, "{\"name\":\"ops-msg\",\"auto_archive_duration\":60}", cb, user_data);
+    dcc_thread_params_t params = DCC_THREAD_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.present = DCC_THREAD_PARAMS_PRESENT_NAME |
+        DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION;
+    params.name = "ops-msg";
+    params.auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_HOUR;
+    return dcc_rest_create_thread_from_message(client, 222, 777, &params, &options, NULL);
 }
 dcc_status_t call_rest_create_thread_from_message_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_thread_params_t params = {
-        .size = sizeof(dcc_thread_params_t),
-        .channel_id = 222,
-        .message_id = 777,
-        .name = "ops-msg typed",
-        .auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_3_DAYS,
-        .rate_limit_per_user = 4
-    };
-    return dcc_rest_create_thread_from_message_params(client, &params, cb, user_data);
+    dcc_thread_params_t params = DCC_THREAD_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.present = DCC_THREAD_PARAMS_PRESENT_NAME |
+        DCC_THREAD_PARAMS_PRESENT_AUTO_ARCHIVE_DURATION |
+        DCC_THREAD_PARAMS_PRESENT_RATE_LIMIT_PER_USER;
+    params.name = "ops-msg typed";
+    params.auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_3_DAYS;
+    params.rate_limit_per_user = 4;
+    return dcc_rest_create_thread_from_message(client, 222, 777, &params, &options, NULL);
 }
 dcc_status_t call_rest_modify_thread(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_modify_thread(client, 999, "{\"archived\":true}", cb, user_data);
+    dcc_channel_params_t params = DCC_CHANNEL_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.kind = DCC_CHANNEL_PARAMS_THREAD;
+    params.payload.thread.present = DCC_CHANNEL_THREAD_PRESENT_ARCHIVED;
+    params.payload.thread.archived = 1;
+    return dcc_rest_modify_channel(client, 999, &params, &options, NULL);
 }
 dcc_status_t call_rest_modify_thread_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_snowflake_t tags[] = {901};
-    const dcc_thread_params_t params = {
-        .size = sizeof(dcc_thread_params_t),
-        .thread_id = 999,
-        .name = "renamed",
-        .auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_WEEK,
-        .type = DCC_CHANNEL_PRIVATE_THREAD,
-        .invitable = 0,
-        .rate_limit_per_user = 6,
-        .archived = 1,
-        .locked = 1,
-        .applied_tags = tags,
-        .applied_tag_count = sizeof(tags) / sizeof(tags[0])
-    };
-    return dcc_rest_modify_thread_params(client, &params, cb, user_data);
+    dcc_channel_params_t params = DCC_CHANNEL_PARAMS_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    params.kind = DCC_CHANNEL_PARAMS_THREAD;
+    params.payload.thread.present = DCC_CHANNEL_THREAD_PRESENT_NAME |
+        DCC_CHANNEL_THREAD_PRESENT_ARCHIVED |
+        DCC_CHANNEL_THREAD_PRESENT_AUTO_ARCHIVE_DURATION |
+        DCC_CHANNEL_THREAD_PRESENT_LOCKED |
+        DCC_CHANNEL_THREAD_PRESENT_INVITABLE |
+        DCC_CHANNEL_THREAD_PRESENT_RATE_LIMIT_PER_USER |
+        DCC_CHANNEL_THREAD_PRESENT_APPLIED_TAGS;
+    params.payload.thread.name = "renamed";
+    params.payload.thread.auto_archive_duration = DCC_CHANNEL_AUTO_ARCHIVE_1_WEEK;
+    params.payload.thread.invitable = 0;
+    params.payload.thread.rate_limit_per_user = 6;
+    params.payload.thread.archived = 1;
+    params.payload.thread.locked = 1;
+    params.payload.thread.applied_tags = tags;
+    params.payload.thread.applied_tag_count = sizeof(tags) / sizeof(tags[0]);
+    return dcc_rest_modify_channel(client, 999, &params, &options, NULL);
 }
 dcc_status_t call_rest_join_thread(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_join_thread(client, 999, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_join_thread(client, 999, &options, NULL);
 }
 
 #endif

@@ -31,7 +31,7 @@ dcc_status_t respond_game(
     const char *status_text,
     int game_over
 );
-void rest_response_log_cb(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data);
+void rest_response_log_cb(dcc_client_t *client, const dcc_rest_result_t *response, void *user_data);
 void on_game_command(dcc_ctx_t *ctx, void *user_data);
 void on_game_button(dcc_ctx_t *ctx, void *user_data);
 

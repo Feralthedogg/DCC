@@ -65,10 +65,10 @@
     DCC_APP_EDIT_CHANNEL((app_), (channel_id_), (json_body_))
 #define DCC_CHANNEL_EDIT_CB(app_, channel_id_, json_body_, cb_, user_data_) \
     DCC_APP_EDIT_CHANNEL_CB((app_), (channel_id_), (json_body_), (cb_), (user_data_))
-#define DCC_CHANNEL_EDIT_PARAMS(app_, params_) \
-    DCC_APP_EDIT_CHANNEL_PARAMS((app_), (params_))
-#define DCC_CHANNEL_EDIT_PARAMS_CB(app_, params_, cb_, user_data_) \
-    DCC_APP_EDIT_CHANNEL_PARAMS_CB((app_), (params_), (cb_), (user_data_))
+#define DCC_CHANNEL_EDIT_PARAMS(app_, channel_id_, params_) \
+    DCC_APP_EDIT_CHANNEL_PARAMS((app_), (channel_id_), (params_))
+#define DCC_CHANNEL_EDIT_PARAMS_CB(app_, channel_id_, params_, cb_, user_data_) \
+    DCC_APP_EDIT_CHANNEL_PARAMS_CB((app_), (channel_id_), (params_), (cb_), (user_data_))
 #define DCC_CHANNEL_DELETE(app_, channel_id_) \
     DCC_APP_DELETE_CHANNEL((app_), (channel_id_))
 #define DCC_CHANNEL_DELETE_CB(app_, channel_id_, cb_, user_data_) \
@@ -113,10 +113,10 @@
     DCC_APP_CREATE_CHANNEL_INVITE((app_), (channel_id_), (json_body_))
 #define DCC_CHANNEL_INVITE_CREATE_CB(app_, channel_id_, json_body_, cb_, user_data_) \
     DCC_APP_CREATE_CHANNEL_INVITE_CB((app_), (channel_id_), (json_body_), (cb_), (user_data_))
-#define DCC_CHANNEL_INVITE_CREATE_PARAMS(app_, params_) \
-    DCC_APP_CREATE_CHANNEL_INVITE_PARAMS((app_), (params_))
-#define DCC_CHANNEL_INVITE_CREATE_PARAMS_CB(app_, params_, cb_, user_data_) \
-    DCC_APP_CREATE_CHANNEL_INVITE_PARAMS_CB((app_), (params_), (cb_), (user_data_))
+#define DCC_CHANNEL_INVITE_CREATE_PARAMS(app_, channel_id_, params_) \
+    DCC_APP_CREATE_CHANNEL_INVITE_PARAMS((app_), (channel_id_), (params_))
+#define DCC_CHANNEL_INVITE_CREATE_PARAMS_CB(app_, channel_id_, params_, cb_, user_data_) \
+    DCC_APP_CREATE_CHANNEL_INVITE_PARAMS_CB((app_), (channel_id_), (params_), (cb_), (user_data_))
 #define DCC_CHANNEL_PERMISSION_EDIT(app_, channel_id_, overwrite_id_, json_body_) \
     DCC_APP_EDIT_CHANNEL_PERMISSION((app_), (channel_id_), (overwrite_id_), (json_body_))
 #define DCC_CHANNEL_PERMISSION_EDIT_CB(app_, channel_id_, overwrite_id_, json_body_, cb_, user_data_) \
@@ -133,10 +133,10 @@
     DCC_APP_REORDER_GUILD_CHANNELS((app_), (guild_id_), (json_body_))
 #define DCC_GUILD_CHANNELS_REORDER_CB(app_, guild_id_, json_body_, cb_, user_data_) \
     DCC_APP_REORDER_GUILD_CHANNELS_CB((app_), (guild_id_), (json_body_), (cb_), (user_data_))
-#define DCC_GUILD_CHANNELS_REORDER_PARAMS(app_, params_) \
-    DCC_APP_REORDER_GUILD_CHANNELS_PARAMS((app_), (params_))
-#define DCC_GUILD_CHANNELS_REORDER_PARAMS_CB(app_, params_, cb_, user_data_) \
-    DCC_APP_REORDER_GUILD_CHANNELS_PARAMS_CB((app_), (params_), (cb_), (user_data_))
+#define DCC_GUILD_CHANNELS_REORDER_PARAMS(app_, guild_id_, params_) \
+    DCC_APP_REORDER_GUILD_CHANNELS_PARAMS((app_), (guild_id_), (params_))
+#define DCC_GUILD_CHANNELS_REORDER_PARAMS_CB(app_, guild_id_, params_, cb_, user_data_) \
+    DCC_APP_REORDER_GUILD_CHANNELS_PARAMS_CB((app_), (guild_id_), (params_), (cb_), (user_data_))
 #define DCC_GUILD_CHANNELS_FETCH(app_, guild_id_) \
     DCC_APP_GET_GUILD_CHANNELS((app_), (guild_id_))
 #define DCC_GUILD_CHANNELS_FETCH_CB(app_, guild_id_, cb_, user_data_) \
@@ -145,10 +145,10 @@
     DCC_APP_CREATE_GUILD_CHANNEL((app_), (guild_id_), (json_body_))
 #define DCC_GUILD_CHANNEL_CREATE_CB(app_, guild_id_, json_body_, cb_, user_data_) \
     DCC_APP_CREATE_GUILD_CHANNEL_CB((app_), (guild_id_), (json_body_), (cb_), (user_data_))
-#define DCC_GUILD_CHANNEL_CREATE_PARAMS(app_, params_) \
-    DCC_APP_CREATE_GUILD_CHANNEL_PARAMS((app_), (params_))
-#define DCC_GUILD_CHANNEL_CREATE_PARAMS_CB(app_, params_, cb_, user_data_) \
-    DCC_APP_CREATE_GUILD_CHANNEL_PARAMS_CB((app_), (params_), (cb_), (user_data_))
+#define DCC_GUILD_CHANNEL_CREATE_PARAMS(app_, guild_id_, params_) \
+    DCC_APP_CREATE_GUILD_CHANNEL_PARAMS((app_), (guild_id_), (params_))
+#define DCC_GUILD_CHANNEL_CREATE_PARAMS_CB(app_, guild_id_, params_, cb_, user_data_) \
+    DCC_APP_CREATE_GUILD_CHANNEL_PARAMS_CB((app_), (guild_id_), (params_), (cb_), (user_data_))
 #define DCC_GUILD_ROLES_FETCH(app_, guild_id_) \
     DCC_APP_GET_GUILD_ROLES((app_), (guild_id_))
 #define DCC_GUILD_ROLES_FETCH_CB(app_, guild_id_, cb_, user_data_) \

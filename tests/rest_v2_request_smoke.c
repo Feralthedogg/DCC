@@ -418,11 +418,7 @@ static int request_initializer_and_null_contract(void) {
         description.method != DCC_REST_GET ||
         description.path != NULL || description.content_type != NULL ||
         description.body != NULL || description.body_len != 0U ||
-        description.options.size != sizeof(description.options) ||
-        description.options.version != DCC_REST_CALL_OPTIONS_VERSION ||
-        description.options.priority != DCC_REST_PRIORITY_NORMAL ||
-        description.options.callback != NULL ||
-        description.options.user_data != NULL) {
+        description.options != NULL) {
         return 1;
     }
     dcc_rest_call_options_init(NULL);
@@ -451,8 +447,11 @@ static int request_expect_rejected(
 }
 
 static int request_validation_contract(dcc_client_t *client) {
+    dcc_rest_call_options_t valid_options = DCC_REST_CALL_OPTIONS_INIT;
+    dcc_rest_call_options_t bad_options = valid_options;
     dcc_rest_request_desc_t valid = DCC_REST_REQUEST_DESC_INIT;
     valid.path = "/valid";
+    valid.options = &valid_options;
     dcc_rest_request_desc_t bad = valid;
 
     if (request_expect_rejected(client, NULL) != 0) return 1;
@@ -468,17 +467,24 @@ static int request_validation_contract(dcc_client_t *client) {
     if (request_expect_rejected(client, &bad) != 0) return 1;
     bad = valid; bad.body_len = 1U;
     if (request_expect_rejected(client, &bad) != 0) return 1;
-    bad = valid; bad.options.size = sizeof(bad.options) - 1U;
+    bad_options = valid_options; bad_options.size =
+        offsetof(dcc_rest_call_options_t, audit_log_reason) - 1U;
+    bad = valid; bad.options = &bad_options;
     if (request_expect_rejected(client, &bad) != 0) return 1;
-    bad = valid; bad.options.version++;
+    bad_options = valid_options; bad_options.version++;
+    bad = valid; bad.options = &bad_options;
     if (request_expect_rejected(client, &bad) != 0) return 1;
-    bad = valid; bad.options.priority = (dcc_rest_priority_t)99;
+    bad_options = valid_options; bad_options.priority = (dcc_rest_priority_t)99;
+    bad = valid; bad.options = &bad_options;
     if (request_expect_rejected(client, &bad) != 0) return 1;
-    bad = valid; bad.options.user_data = &bad;
+    bad_options = valid_options; bad_options.user_data = &bad;
+    bad = valid; bad.options = &bad_options;
     if (request_expect_rejected(client, &bad) != 0) return 1;
     bad = valid;
     bad.size = sizeof(bad) + 64U;
-    bad.options.size = sizeof(bad.options) + 64U;
+    bad_options = valid_options;
+    bad_options.size = sizeof(bad_options) + 64U;
+    bad.options = &bad_options;
     dcc_rest_request_t *request = (dcc_rest_request_t *)(uintptr_t)1U;
     if (dcc_rest_submit(client, &bad, &request) != DCC_ERR_STATE || request != NULL) {
         return 1;
@@ -510,8 +516,10 @@ static int request_delayed_copy_wait_contract(
     description.content_type = content_type;
     description.body = body;
     description.body_len = sizeof(body);
-    description.options.callback = request_result_callback;
-    description.options.user_data = &callback;
+    dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+    options.callback = request_result_callback;
+    options.user_data = &callback;
+    description.options = &options;
 
     uint64_t started_ms = request_now_ms();
     dcc_status_t status = dcc_rest_submit(client, &description, &request);
@@ -626,10 +634,12 @@ static dcc_status_t request_submit_test(
     dcc_rest_request_t **out_request
 ) {
     dcc_rest_request_desc_t description = DCC_REST_REQUEST_DESC_INIT;
+    dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
     description.path = path;
     if (callback != NULL) {
-        description.options.callback = request_result_callback;
-        description.options.user_data = callback;
+        options.callback = request_result_callback;
+        options.user_data = callback;
+        description.options = &options;
     }
     return dcc_rest_submit(client, &description, out_request);
 }
@@ -641,9 +651,11 @@ static dcc_status_t request_submit_gated(
     dcc_rest_request_t **out_request
 ) {
     dcc_rest_request_desc_t description = DCC_REST_REQUEST_DESC_INIT;
+    dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
     description.path = path;
-    description.options.callback = request_gated_result_callback;
-    description.options.user_data = gate;
+    options.callback = request_gated_result_callback;
+    options.user_data = gate;
+    description.options = &options;
     return dcc_rest_submit(client, &description, out_request);
 }
 
@@ -1097,9 +1109,11 @@ static int request_error_admission_and_retry_contract(
         ok = 0;
     }
     dcc_rest_request_desc_t rejected_description = DCC_REST_REQUEST_DESC_INIT;
+    dcc_rest_call_options_t rejected_options = DCC_REST_CALL_OPTIONS_INIT;
     rejected_description.path = "/spawn-rejected";
-    rejected_description.options.callback = request_result_callback;
-    rejected_description.options.user_data = &rejected;
+    rejected_options.callback = request_result_callback;
+    rejected_options.user_data = &rejected;
+    rejected_description.options = &rejected_options;
     dcc_rest_request_t *rejected_request = (dcc_rest_request_t *)(uintptr_t)1U;
     dcc_rest_test_fail_next_worker_spawn(client);
     dcc_status_t rejected_status = dcc_rest_submit(

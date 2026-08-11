@@ -124,6 +124,13 @@ dcc_status_t dcc_message_builder_append_rich_json(
     }
     if (status == DCC_OK && HAS(DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS_JSON)) {
         status = dcc_message_json_append_raw_member(buffer, first, "attachments", builder->attachments_json);
+    } else if (status == DCC_OK && HAS(DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS)) {
+        status = dcc_message_json_member_prefix(buffer, first, "attachments");
+        if (status == DCC_OK) {
+            status = dcc_message_attachments_append_json(
+                builder->attachments, builder->attachment_count, buffer
+            );
+        }
     }
     if (status == DCC_OK && HAS(DCC_MESSAGE_BUILDER_PRESENT_POLL)) {
         status = dcc_message_json_member_prefix(buffer, first, "poll");

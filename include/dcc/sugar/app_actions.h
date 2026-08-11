@@ -93,10 +93,10 @@
     dcc_app_modify_channel((app_), (channel_id_), (json_body_), NULL, NULL)
 #define DCC_APP_EDIT_CHANNEL_CB(app_, channel_id_, json_body_, cb_, user_data_) \
     dcc_app_modify_channel((app_), (channel_id_), (json_body_), (cb_), (user_data_))
-#define DCC_APP_EDIT_CHANNEL_PARAMS(app_, params_) \
-    dcc_app_modify_channel_params((app_), (params_), NULL, NULL)
-#define DCC_APP_EDIT_CHANNEL_PARAMS_CB(app_, params_, cb_, user_data_) \
-    dcc_app_modify_channel_params((app_), (params_), (cb_), (user_data_))
+#define DCC_APP_EDIT_CHANNEL_PARAMS(app_, channel_id_, params_) \
+    dcc_app_modify_channel_params((app_), (channel_id_), (params_), NULL, NULL)
+#define DCC_APP_EDIT_CHANNEL_PARAMS_CB(app_, channel_id_, params_, cb_, user_data_) \
+    dcc_app_modify_channel_params((app_), (channel_id_), (params_), (cb_), (user_data_))
 #define DCC_APP_DELETE_CHANNEL(app_, channel_id_) \
     dcc_app_delete_channel((app_), (channel_id_), NULL, NULL)
 #define DCC_APP_DELETE_CHANNEL_CB(app_, channel_id_, cb_, user_data_) \
@@ -299,10 +299,10 @@
     DCC_APP_EDIT_CHANNEL((app_), (channel_id_), (json_body_))
 #define DCC_CHANNEL_EDIT_CB(app_, channel_id_, json_body_, cb_, user_data_) \
     DCC_APP_EDIT_CHANNEL_CB((app_), (channel_id_), (json_body_), (cb_), (user_data_))
-#define DCC_CHANNEL_EDIT_PARAMS(app_, params_) \
-    DCC_APP_EDIT_CHANNEL_PARAMS((app_), (params_))
-#define DCC_CHANNEL_EDIT_PARAMS_CB(app_, params_, cb_, user_data_) \
-    DCC_APP_EDIT_CHANNEL_PARAMS_CB((app_), (params_), (cb_), (user_data_))
+#define DCC_CHANNEL_EDIT_PARAMS(app_, channel_id_, params_) \
+    DCC_APP_EDIT_CHANNEL_PARAMS((app_), (channel_id_), (params_))
+#define DCC_CHANNEL_EDIT_PARAMS_CB(app_, channel_id_, params_, cb_, user_data_) \
+    DCC_APP_EDIT_CHANNEL_PARAMS_CB((app_), (channel_id_), (params_), (cb_), (user_data_))
 #define DCC_CHANNEL_DELETE(app_, channel_id_) \
     DCC_APP_DELETE_CHANNEL((app_), (channel_id_))
 #define DCC_CHANNEL_DELETE_CB(app_, channel_id_, cb_, user_data_) \

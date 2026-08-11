@@ -28,6 +28,9 @@ dcc_status_t dcc_rest_interaction_followup_get(
     const char *interaction_token, dcc_snowflake_t message_id,
     const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE;
+    DCC_ENDPOINT_SENSITIVE_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_NONE, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_INTERACTION_FOLLOWUP_MESSAGE, DCC_REST_GET, "dcc_rest_interaction_followup_get");
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || application_id == 0U ||
@@ -38,8 +41,9 @@ dcc_status_t dcc_rest_interaction_followup_get(
     status = dcc_followup_message_path(&path,
         DCC_REST_ROUTE_INTERACTION_FOLLOWUP_MESSAGE, application_id,
         interaction_token, message_id);
-    if (status == DCC_OK) status = dcc_endpoint_submit(
-        client, DCC_REST_GET, path, NULL, &resolved, out_request);
+    if (status == DCC_OK) status = dcc_endpoint_submit_named(
+        client, "dcc_rest_interaction_followup_get", DCC_REST_GET, path,
+        NULL, &resolved, DCC_ENDPOINT_PATH_SENSITIVE, out_request);
     free(path);
     return status;
 }
@@ -50,6 +54,9 @@ dcc_status_t dcc_rest_interaction_followup_edit(
     const dcc_rest_message_payload_t *payload,
     const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE;
+    DCC_ENDPOINT_SENSITIVE_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_NONE, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_INTERACTION_FOLLOWUP_MESSAGE, DCC_REST_PATCH, "dcc_rest_interaction_followup_edit");
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || application_id == 0U ||
@@ -65,8 +72,9 @@ dcc_status_t dcc_rest_interaction_followup_edit(
     if (status == DCC_OK) status = dcc_followup_message_path(&path,
         DCC_REST_ROUTE_INTERACTION_FOLLOWUP_MESSAGE, application_id,
         interaction_token, message_id);
-    if (status == DCC_OK) status = dcc_endpoint_submit(
-        client, DCC_REST_PATCH, path, &body, &resolved, out_request);
+    if (status == DCC_OK) status = dcc_endpoint_submit_named(
+        client, "dcc_rest_interaction_followup_edit", DCC_REST_PATCH,
+        path, &body, &resolved, DCC_ENDPOINT_PATH_SENSITIVE, out_request);
     free(path);
     dcc_endpoint_body_deinit(&body);
     return status;
@@ -77,6 +85,9 @@ dcc_status_t dcc_rest_interaction_followup_delete(
     const char *interaction_token, dcc_snowflake_t message_id,
     const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
+    (void)DCC_ENDPOINT_ROUTE_KEY_OPAQUE;
+    DCC_ENDPOINT_SENSITIVE_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_NONE, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+        DCC_REST_ROUTE_INTERACTION_FOLLOWUP_MESSAGE, DCC_REST_DELETE, "dcc_rest_interaction_followup_delete");
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || application_id == 0U ||
@@ -87,8 +98,9 @@ dcc_status_t dcc_rest_interaction_followup_delete(
     status = dcc_followup_message_path(&path,
         DCC_REST_ROUTE_INTERACTION_FOLLOWUP_MESSAGE, application_id,
         interaction_token, message_id);
-    if (status == DCC_OK) status = dcc_endpoint_submit(
-        client, DCC_REST_DELETE, path, NULL, &resolved, out_request);
+    if (status == DCC_OK) status = dcc_endpoint_submit_named(
+        client, "dcc_rest_interaction_followup_delete", DCC_REST_DELETE,
+        path, NULL, &resolved, DCC_ENDPOINT_PATH_SENSITIVE, out_request);
     free(path);
     return status;
 }

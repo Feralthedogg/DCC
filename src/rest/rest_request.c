@@ -4,15 +4,21 @@
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
 #include "internal/rest/dcc_rest_request_internal.h"
 #include "internal/rest/dcc_rest_runtime_internal.h"
+#include "internal/rest/dcc_rest_paths_internal.h"
+#include "internal/rest/dcc_rest_sensitive_internal.h"
+#include "internal/rest/dcc_rest_task7_probe_internal.h"
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct dcc_rest_intercept_delivery {
     dcc_client_t *client;
     const char *operation;
     dcc_rest_cb callback;
     void *callback_user_data;
+    uint64_t result_flags;
     uint8_t called;
 } dcc_rest_intercept_delivery_t;
 
@@ -29,6 +35,7 @@ static void dcc_rest_intercept_delivery_cb(
     delivery->called = 1U;
     dcc_rest_terminal_completion_t completion = {
         .operation = delivery->operation,
+        .result_flags = delivery->result_flags,
     };
     const size_t required_response_size =
         offsetof(dcc_rest_response_t, body_len) + sizeof(response->body_len);
@@ -64,6 +71,9 @@ dcc_status_t dcc_rest_request_raw_impl(
     const void *body,
     size_t body_len,
     const char *content_type,
+    dcc_rest_auth_mode_t auth_mode,
+    const char *auth_token,
+    const char *audit_log_reason,
     uint32_t max_rate_limit_retries,
     int wait_for_route,
     dcc_rest_cb cb,
@@ -72,11 +82,51 @@ dcc_status_t dcc_rest_request_raw_impl(
     llam_fd_t (*swap_fd)(void *user_data, llam_fd_t fd),
     void *cancel_user_data,
     int observe_terminal,
-    int silent_admission_failure
+    int silent_admission_failure,
+    const char *operation,
+    uint64_t result_flags
 ) {
     if (client == NULL || method == NULL || path == NULL || (body_len != 0 && body == NULL)) {
         return DCC_ERR_INVALID_ARG;
     }
+
+    char *probe_audit = NULL;
+    char *probe_authorization = NULL;
+    const char *probe_prefix = auth_mode == DCC_REST_AUTH_BEARER
+        ? "Bearer "
+        : auth_mode == DCC_REST_AUTH_BOT ? "Bot " : NULL;
+    const char *probe_token = auth_mode == DCC_REST_AUTH_BEARER
+        ? auth_token
+        : auth_mode == DCC_REST_AUTH_BOT ? client->token : NULL;
+    if (probe_prefix != NULL && probe_token != NULL && probe_token[0] != '\0') {
+        size_t length = strlen(probe_prefix) + strlen(probe_token);
+        probe_authorization = (char *)malloc(length + 1U);
+        if (probe_authorization == NULL) return DCC_ERR_NOMEM;
+        memcpy(probe_authorization, probe_prefix, strlen(probe_prefix));
+        memcpy(probe_authorization + strlen(probe_prefix), probe_token, strlen(probe_token) + 1U);
+    }
+    if (audit_log_reason != NULL) {
+        dcc_status_t escaped = dcc_rest_escape_path_segment(
+            audit_log_reason, &probe_audit
+        );
+        if (escaped != DCC_OK) {
+            dcc_rest_sensitive_free(
+                probe_authorization,
+                probe_authorization != NULL ? strlen(probe_authorization) + 1U : 0U
+            );
+            return escaped;
+        }
+    }
+    dcc_endpoint_task7_probe_prepared(
+        operation, probe_audit, probe_authorization
+    );
+    dcc_rest_sensitive_free(
+        probe_audit, probe_audit != NULL ? strlen(probe_audit) + 1U : 0U
+    );
+    dcc_rest_sensitive_free(
+        probe_authorization,
+        probe_authorization != NULL ? strlen(probe_authorization) + 1U : 0U
+    );
 
     if (client->rest_intercept != NULL) {
         if (!observe_terminal) {
@@ -94,9 +144,10 @@ dcc_status_t dcc_rest_request_raw_impl(
         }
         dcc_rest_intercept_delivery_t delivery = {
             .client = client,
-            .operation = path,
+            .operation = operation != NULL ? operation : path,
             .callback = cb,
             .callback_user_data = user_data,
+            .result_flags = result_flags,
         };
         dcc_status_t intercept_status = client->rest_intercept(
             client,
@@ -112,9 +163,10 @@ dcc_status_t dcc_rest_request_raw_impl(
         if (intercept_status != DCC_OK && !delivery.called &&
             !silent_admission_failure) {
             dcc_rest_terminal_completion_t completion = {
-                .operation = path,
+                .operation = operation != NULL ? operation : path,
                 .transport_status = intercept_status,
                 .legacy_error = intercept_status,
+                .result_flags = result_flags,
             };
             dcc_rest_deliver_terminal(client, &completion, NULL, NULL);
         }
@@ -143,6 +195,9 @@ dcc_status_t dcc_rest_request_raw_impl(
         body,
         body_len,
         content_type,
+        auth_mode,
+        auth_token,
+        audit_log_reason,
         is_canceled,
         swap_fd,
         cancel_user_data
@@ -164,7 +219,7 @@ dcc_status_t dcc_rest_request_raw_impl(
             dcc_set_error(client, dcc_status_string(st));
             if (observe_terminal) {
                 dcc_rest_terminal_completion_t completion = {
-                    .operation = path,
+                    .operation = operation != NULL ? operation : path,
                     .transport_status = st,
                     .legacy_error = st,
                 };
@@ -193,13 +248,14 @@ dcc_status_t dcc_rest_request_raw_impl(
                 retry_after_ms = (uint64_t)(limits.retry_after_seconds * 1000.0);
             }
             dcc_rest_terminal_completion_t completion = {
-                .operation = path,
+                    .operation = operation != NULL ? operation : path,
                 .transport_status = DCC_OK,
                 .http_status = http_response.status,
                 .legacy_error = limits.response_error,
                 .body = http_response.body,
                 .body_len = http_response.body_len,
                 .retry_after_ms = retry_after_ms,
+                .result_flags = result_flags,
             };
             dcc_rest_deliver_terminal(client, &completion, cb, user_data);
         } else if (cb != NULL) {

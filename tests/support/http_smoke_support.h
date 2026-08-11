@@ -89,6 +89,7 @@ int expect_multipart_request(
     const char *file_fragment
 );
 
+int run_rest_task7_initializer_smoke(void);
 int run_internal_http_smoke(void);
 int run_internal_http_chunked_smoke(void);
 int run_public_event_wait_smoke(void);
@@ -169,10 +170,7 @@ dcc_status_t call_rest_get_poll_answer_voters(dcc_client_t *client, dcc_rest_cb 
 dcc_status_t call_rest_get_poll_answer_voters_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_end_poll(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_get_guild_invites(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
-dcc_status_t call_rest_create_guild(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
-dcc_status_t call_rest_create_guild_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_modify_guild_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
-dcc_status_t call_rest_delete_guild(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_modify_current_guild_member(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_modify_current_guild_member_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_set_current_guild_member_nickname(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
@@ -188,9 +186,7 @@ dcc_status_t call_rest_create_guild_ban_seconds(dcc_client_t *client, dcc_rest_c
 dcc_status_t call_rest_create_guild_ban_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_delete_guild_ban(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_get_guild_integrations(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
-dcc_status_t call_rest_modify_guild_integration(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_delete_guild_integration(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
-dcc_status_t call_rest_sync_guild_integration(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_get_guild_widget(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_modify_guild_widget(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_modify_guild_widget_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
@@ -231,8 +227,6 @@ dcc_status_t call_rest_modify_stage_instance(dcc_client_t *client, dcc_rest_cb c
 dcc_status_t call_rest_modify_stage_instance_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_delete_stage_instance(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_get_template(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
-dcc_status_t call_rest_create_guild_from_template(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
-dcc_status_t call_rest_create_guild_from_template_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_get_guild_templates(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_create_guild_template(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_create_guild_template_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
@@ -371,7 +365,6 @@ dcc_status_t call_rest_modify_application_emoji_params(dcc_client_t *client, dcc
 dcc_status_t call_rest_delete_application_emoji(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_delete_all_global_commands(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 dcc_status_t call_rest_delete_all_guild_commands(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
-dcc_status_t call_rest_bulk_edit_guild_command_permissions(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 
 #endif
 
