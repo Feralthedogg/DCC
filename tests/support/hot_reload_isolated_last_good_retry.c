@@ -32,7 +32,10 @@ int dcc_hot_reload_isolated_last_good_retry_smoke(void) {
 
     char url[128];
     snprintf(url, sizeof(url), "http://127.0.0.1:%u", (unsigned)server.port);
-    setenv("DCC_ISOLATED_TEST_URL", url, 1);
+    /* This fixture counts only dispatch and fallback traffic. The test module's
+     * optional READY probe targets the same server and races those five
+     * assertions, so explicitly keep that independent probe disabled. */
+    unsetenv("DCC_ISOLATED_TEST_URL");
     setenv("DCC_DISCORD_API_BASE", url, 1);
 
     dcc_client_options_t client_options = { .size = sizeof(client_options), .token = "" };
