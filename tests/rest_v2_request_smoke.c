@@ -1,8 +1,10 @@
 #include <dcc/client.h>
+#include <dcc/rest/core/async.h>
 #include <dcc/rest/request.h>
 
 #include "internal/rest/dcc_rest_intercept_internal.h"
 #include "internal/rest/dcc_rest_async_drain_internal.h"
+#include "internal/rest/dcc_rest_runtime_internal.h"
 
 #if defined(_WIN32)
 int main(void) {
@@ -34,6 +36,8 @@ typedef struct request_intercept_state {
     atomic_uint calls;
     atomic_uint entered;
     atomic_uint observed_delay_ms;
+    atomic_uint cooperative_hold;
+    atomic_uint cooperative_release;
     char method[16];
     char path[128];
     char content_type[128];
@@ -65,6 +69,43 @@ typedef struct request_canceller {
     dcc_rest_request_t *request;
     dcc_status_t status;
 } request_canceller_t;
+
+typedef enum request_control_action {
+    REQUEST_CONTROL_CANCEL,
+    REQUEST_CONTROL_DESTROY
+} request_control_action_t;
+
+typedef struct request_start_gate {
+    atomic_uint ready;
+    atomic_uint release;
+} request_start_gate_t;
+
+typedef struct request_control {
+    dcc_rest_request_t *request;
+    request_control_action_t action;
+    request_start_gate_t *start_gate;
+    atomic_uint returned;
+    dcc_status_t status;
+    uint64_t elapsed_ms;
+} request_control_t;
+
+typedef struct request_client_destroyer {
+    dcc_client_t *client;
+    request_start_gate_t *start_gate;
+    atomic_uint returned;
+} request_client_destroyer_t;
+
+typedef struct request_delivery_gate {
+    atomic_uint callback_entered;
+    atomic_uint callback_release;
+    atomic_uint callback_called;
+    atomic_uint observer_entered;
+    atomic_uint observer_release;
+    atomic_uint observer_called;
+    atomic_uint stage;
+    atomic_uint order_ok;
+    atomic_int result_status;
+} request_delivery_gate_t;
 
 static uint64_t request_now_ms(void) {
     struct timespec now;
@@ -104,6 +145,53 @@ static void *request_canceller_main(void *arg) {
     return NULL;
 }
 
+static void *request_control_main(void *arg) {
+    request_control_t *control = (request_control_t *)arg;
+    if (control->start_gate != NULL) {
+        atomic_fetch_add_explicit(
+            &control->start_gate->ready,
+            1U,
+            memory_order_acq_rel
+        );
+        while (atomic_load_explicit(
+                &control->start_gate->release,
+                memory_order_acquire
+            ) == 0U) {
+            request_sleep_ms(1U);
+        }
+    }
+    uint64_t started_ms = request_now_ms();
+    if (control->action == REQUEST_CONTROL_DESTROY) {
+        dcc_rest_request_destroy(control->request);
+        control->status = DCC_OK;
+    } else {
+        control->status = dcc_rest_request_cancel(control->request);
+    }
+    control->elapsed_ms = request_now_ms() - started_ms;
+    atomic_store_explicit(&control->returned, 1U, memory_order_release);
+    return NULL;
+}
+
+static void *request_client_destroyer_main(void *arg) {
+    request_client_destroyer_t *destroyer = (request_client_destroyer_t *)arg;
+    if (destroyer->start_gate != NULL) {
+        atomic_fetch_add_explicit(
+            &destroyer->start_gate->ready,
+            1U,
+            memory_order_acq_rel
+        );
+        while (atomic_load_explicit(
+                &destroyer->start_gate->release,
+                memory_order_acquire
+            ) == 0U) {
+            request_sleep_ms(1U);
+        }
+    }
+    dcc_client_destroy(destroyer->client);
+    atomic_store_explicit(&destroyer->returned, 1U, memory_order_release);
+    return NULL;
+}
+
 static dcc_status_t request_intercept(
     dcc_client_t *client,
     const char *method,
@@ -135,6 +223,10 @@ static dcc_status_t request_intercept(
         memcpy(state->body, body, state->body_len);
     }
     atomic_store_explicit(&state->entered, 1U, memory_order_release);
+    while (atomic_load_explicit(&state->cooperative_hold, memory_order_acquire) != 0U &&
+           atomic_load_explicit(&state->cooperative_release, memory_order_acquire) == 0U) {
+        dcc_rest_sleep_ms(1U);
+    }
     uint32_t delay_ms = atomic_load_explicit(&state->delay_ms, memory_order_acquire);
     atomic_store_explicit(&state->observed_delay_ms, delay_ms, memory_order_release);
     if (delay_ms != 0U) {
@@ -220,6 +312,86 @@ static void request_error_observer(
             atomic_store_explicit(&state->stage, 2U, memory_order_release);
         }
     }
+}
+
+static void request_gated_result_callback(
+    dcc_client_t *client,
+    const dcc_rest_result_t *result,
+    void *user_data
+) {
+    (void)client;
+    request_delivery_gate_t *gate = (request_delivery_gate_t *)user_data;
+    atomic_store_explicit(
+        &gate->result_status,
+        result != NULL ? dcc_rest_result_status(result) : DCC_ERR_RUNTIME,
+        memory_order_release
+    );
+    atomic_fetch_add_explicit(&gate->callback_called, 1U, memory_order_acq_rel);
+    atomic_store_explicit(&gate->stage, 1U, memory_order_release);
+    atomic_store_explicit(&gate->callback_entered, 1U, memory_order_release);
+    while (atomic_load_explicit(&gate->callback_release, memory_order_acquire) == 0U) {
+        request_sleep_ms(1U);
+    }
+}
+
+static void request_gated_error_observer(
+    dcc_client_t *client,
+    const dcc_error_t *error,
+    void *user_data
+) {
+    (void)client;
+    request_delivery_gate_t *gate = (request_delivery_gate_t *)user_data;
+    if (error == NULL) {
+        return;
+    }
+    atomic_fetch_add_explicit(&gate->observer_called, 1U, memory_order_acq_rel);
+    if (atomic_load_explicit(&gate->stage, memory_order_acquire) != 1U) {
+        atomic_store_explicit(&gate->order_ok, 0U, memory_order_release);
+    }
+    atomic_store_explicit(&gate->stage, 2U, memory_order_release);
+    atomic_store_explicit(&gate->observer_entered, 1U, memory_order_release);
+    while (atomic_load_explicit(&gate->observer_release, memory_order_acquire) == 0U) {
+        request_sleep_ms(1U);
+    }
+}
+
+static void request_delivery_gate_init(
+    request_delivery_gate_t *gate,
+    uint8_t gate_callback,
+    uint8_t gate_observer
+) {
+    memset(gate, 0, sizeof(*gate));
+    atomic_init(&gate->callback_entered, 0U);
+    atomic_init(&gate->callback_release, gate_callback ? 0U : 1U);
+    atomic_init(&gate->callback_called, 0U);
+    atomic_init(&gate->observer_entered, 0U);
+    atomic_init(&gate->observer_release, gate_observer ? 0U : 1U);
+    atomic_init(&gate->observer_called, 0U);
+    atomic_init(&gate->stage, 0U);
+    atomic_init(&gate->order_ok, 1U);
+    atomic_init(&gate->result_status, DCC_ERR_STATE);
+}
+
+static int request_wait_for_atomic(atomic_uint *value, uint32_t timeout_ms) {
+    uint64_t started_ms = request_now_ms();
+    while (atomic_load_explicit(value, memory_order_acquire) == 0U &&
+           request_now_ms() - started_ms < timeout_ms) {
+        request_sleep_ms(1U);
+    }
+    return atomic_load_explicit(value, memory_order_acquire) != 0U;
+}
+
+static int request_wait_for_atomic_at_least(
+    atomic_uint *value,
+    unsigned expected,
+    uint32_t timeout_ms
+) {
+    uint64_t started_ms = request_now_ms();
+    while (atomic_load_explicit(value, memory_order_acquire) < expected &&
+           request_now_ms() - started_ms < timeout_ms) {
+        request_sleep_ms(1U);
+    }
+    return atomic_load_explicit(value, memory_order_acquire) >= expected;
 }
 
 static void request_callback_state_init(request_callback_state_t *state) {
@@ -434,6 +606,8 @@ static void request_intercept_reset(
     atomic_store_explicit(&intercept->calls, 0U, memory_order_release);
     atomic_store_explicit(&intercept->entered, 0U, memory_order_release);
     atomic_store_explicit(&intercept->observed_delay_ms, 0U, memory_order_release);
+    atomic_store_explicit(&intercept->cooperative_hold, 0U, memory_order_release);
+    atomic_store_explicit(&intercept->cooperative_release, 1U, memory_order_release);
 }
 
 static int request_wait_for_entered(request_intercept_state_t *intercept) {
@@ -460,9 +634,203 @@ static dcc_status_t request_submit_test(
     return dcc_rest_submit(client, &description, out_request);
 }
 
+static dcc_status_t request_submit_gated(
+    dcc_client_t *client,
+    const char *path,
+    request_delivery_gate_t *gate,
+    dcc_rest_request_t **out_request
+) {
+    dcc_rest_request_desc_t description = DCC_REST_REQUEST_DESC_INIT;
+    description.path = path;
+    description.options.callback = request_gated_result_callback;
+    description.options.user_data = gate;
+    return dcc_rest_submit(client, &description, out_request);
+}
+
 static void request_callback_state_deinit(request_callback_state_t *state) {
     dcc_rest_result_free(state->clone);
     state->clone = NULL;
+}
+
+static int request_nonblocking_cancel_destroy_contract(
+    dcc_client_t *client,
+    request_intercept_state_t *intercept
+) {
+    int ok = 1;
+    dcc_rest_request_t *blocker = NULL;
+    dcc_rest_request_t *pending = NULL;
+    request_delivery_gate_t cancel_gate;
+    request_delivery_gate_init(&cancel_gate, 1U, 0U);
+    request_intercept_reset(intercept, REQUEST_INTERCEPT_SUCCESS, 300U);
+    if (dcc_client_on_error(client, request_gated_error_observer, &cancel_gate) != DCC_OK ||
+        request_submit_test(client, "/nonblocking-cancel-blocker", NULL, &blocker) != DCC_OK ||
+        !request_wait_for_entered(intercept) ||
+        request_submit_gated(client, "/nonblocking-cancel", &cancel_gate, &pending) != DCC_OK) {
+        ok = 0;
+    }
+    /* The blocker owns the only slot. Its completion consumes this injected
+     * rejection while trying to run the canceled job; the queue must retain
+     * and retry that job without falling back to caller-stack delivery. */
+    dcc_rest_test_fail_next_worker_spawn(client);
+
+    request_control_t cancel_control = {
+        .request = pending,
+        .action = REQUEST_CONTROL_CANCEL,
+        .status = DCC_ERR_STATE,
+    };
+    atomic_init(&cancel_control.returned, 0U);
+    pthread_t cancel_thread;
+    int cancel_started = ok && pthread_create(
+        &cancel_thread,
+        NULL,
+        request_control_main,
+        &cancel_control
+    ) == 0;
+    int callback_entered = cancel_started && request_wait_for_atomic(
+        &cancel_gate.callback_entered,
+        1500U
+    );
+    int cancel_returned_before_release = callback_entered &&
+        atomic_load_explicit(&cancel_control.returned, memory_order_acquire) != 0U;
+    atomic_store_explicit(&cancel_gate.callback_release, 1U, memory_order_release);
+    atomic_store_explicit(&cancel_gate.observer_release, 1U, memory_order_release);
+    if (cancel_started) {
+        (void)pthread_join(cancel_thread, NULL);
+    }
+
+    const dcc_rest_result_t *pending_result = NULL;
+    const dcc_rest_result_t *blocker_result = NULL;
+    dcc_status_t pending_wait_status = pending != NULL
+        ? dcc_rest_request_wait(pending, 2000U, &pending_result)
+        : DCC_ERR_STATE;
+    dcc_status_t blocker_wait_status = blocker != NULL
+        ? dcc_rest_request_wait(blocker, 2000U, &blocker_result)
+        : DCC_ERR_STATE;
+    dcc_status_t cancel_drain_status = dcc_rest_async_wait(client, 2000U);
+    if (!cancel_started || !callback_entered || !cancel_returned_before_release ||
+        cancel_control.status != DCC_OK ||
+        pending == NULL || pending_wait_status != DCC_OK ||
+        pending_result == NULL ||
+        dcc_rest_result_status(pending_result) != DCC_ERR_CANCELED ||
+        blocker == NULL || blocker_wait_status != DCC_OK ||
+        blocker_result == NULL || dcc_rest_result_status(blocker_result) != DCC_OK ||
+        cancel_drain_status != DCC_OK ||
+        atomic_load_explicit(&cancel_gate.callback_called, memory_order_acquire) != 1U ||
+        atomic_load_explicit(&cancel_gate.observer_called, memory_order_acquire) != 1U ||
+        atomic_load_explicit(&cancel_gate.stage, memory_order_acquire) != 2U ||
+        atomic_load_explicit(&cancel_gate.order_ok, memory_order_acquire) != 1U ||
+        atomic_load_explicit(&cancel_gate.result_status, memory_order_acquire) != DCC_ERR_CANCELED ||
+        atomic_load_explicit(&intercept->calls, memory_order_acquire) != 1U) {
+        fprintf(
+            stderr,
+            "nonblocking cancel detail started=%d entered=%d returned=%d status=%s "
+            "elapsed=%llu callback=%u observer=%u stage=%u order=%u result=%s calls=%u\n",
+            cancel_started,
+            callback_entered,
+            cancel_returned_before_release,
+            dcc_status_string(cancel_control.status),
+            (unsigned long long)cancel_control.elapsed_ms,
+            atomic_load_explicit(&cancel_gate.callback_called, memory_order_acquire),
+            atomic_load_explicit(&cancel_gate.observer_called, memory_order_acquire),
+            atomic_load_explicit(&cancel_gate.stage, memory_order_acquire),
+            atomic_load_explicit(&cancel_gate.order_ok, memory_order_acquire),
+            dcc_status_string((dcc_status_t)atomic_load_explicit(
+                &cancel_gate.result_status,
+                memory_order_acquire
+            )),
+            atomic_load_explicit(&intercept->calls, memory_order_acquire)
+        );
+        ok = 0;
+    }
+    dcc_rest_request_destroy(pending);
+    dcc_rest_request_destroy(blocker);
+
+    blocker = NULL;
+    dcc_rest_request_t *destroyed_pending = NULL;
+    request_delivery_gate_t destroy_gate;
+    request_delivery_gate_init(&destroy_gate, 0U, 1U);
+    request_intercept_reset(intercept, REQUEST_INTERCEPT_SUCCESS, 300U);
+    if (dcc_client_on_error(client, request_gated_error_observer, &destroy_gate) != DCC_OK ||
+        request_submit_test(client, "/nonblocking-destroy-blocker", NULL, &blocker) != DCC_OK ||
+        !request_wait_for_entered(intercept) ||
+        request_submit_gated(
+            client,
+            "/nonblocking-destroy",
+            &destroy_gate,
+            &destroyed_pending
+        ) != DCC_OK) {
+        ok = 0;
+    }
+
+    request_control_t destroy_control = {
+        .request = destroyed_pending,
+        .action = REQUEST_CONTROL_DESTROY,
+        .status = DCC_ERR_STATE,
+    };
+    atomic_init(&destroy_control.returned, 0U);
+    pthread_t destroy_thread;
+    int destroy_started = destroyed_pending != NULL && pthread_create(
+        &destroy_thread,
+        NULL,
+        request_control_main,
+        &destroy_control
+    ) == 0;
+    int observer_entered = destroy_started && request_wait_for_atomic(
+        &destroy_gate.observer_entered,
+        1500U
+    );
+    int destroy_returned_before_release = observer_entered &&
+        atomic_load_explicit(&destroy_control.returned, memory_order_acquire) != 0U;
+    atomic_store_explicit(&destroy_gate.callback_release, 1U, memory_order_release);
+    atomic_store_explicit(&destroy_gate.observer_release, 1U, memory_order_release);
+    if (destroy_started) {
+        (void)pthread_join(destroy_thread, NULL);
+        destroyed_pending = NULL;
+    } else {
+        dcc_rest_request_destroy(destroyed_pending);
+        destroyed_pending = NULL;
+    }
+
+    blocker_result = NULL;
+    blocker_wait_status = blocker != NULL
+        ? dcc_rest_request_wait(blocker, 2000U, &blocker_result)
+        : DCC_ERR_STATE;
+    dcc_status_t destroy_drain_status = dcc_rest_async_wait(client, 2000U);
+    if (!destroy_started || !observer_entered || !destroy_returned_before_release ||
+        destroy_control.status != DCC_OK ||
+        blocker == NULL || blocker_wait_status != DCC_OK ||
+        blocker_result == NULL || dcc_rest_result_status(blocker_result) != DCC_OK ||
+        destroy_drain_status != DCC_OK ||
+        atomic_load_explicit(&destroy_gate.callback_called, memory_order_acquire) != 1U ||
+        atomic_load_explicit(&destroy_gate.observer_called, memory_order_acquire) != 1U ||
+        atomic_load_explicit(&destroy_gate.stage, memory_order_acquire) != 2U ||
+        atomic_load_explicit(&destroy_gate.order_ok, memory_order_acquire) != 1U ||
+        atomic_load_explicit(&destroy_gate.result_status, memory_order_acquire) != DCC_ERR_CANCELED ||
+        atomic_load_explicit(&intercept->calls, memory_order_acquire) != 1U) {
+        fprintf(
+            stderr,
+            "nonblocking destroy detail started=%d entered=%d returned=%d status=%s "
+            "elapsed=%llu callback=%u observer=%u stage=%u order=%u result=%s calls=%u\n",
+            destroy_started,
+            observer_entered,
+            destroy_returned_before_release,
+            dcc_status_string(destroy_control.status),
+            (unsigned long long)destroy_control.elapsed_ms,
+            atomic_load_explicit(&destroy_gate.callback_called, memory_order_acquire),
+            atomic_load_explicit(&destroy_gate.observer_called, memory_order_acquire),
+            atomic_load_explicit(&destroy_gate.stage, memory_order_acquire),
+            atomic_load_explicit(&destroy_gate.order_ok, memory_order_acquire),
+            dcc_status_string((dcc_status_t)atomic_load_explicit(
+                &destroy_gate.result_status,
+                memory_order_acquire
+            )),
+            atomic_load_explicit(&intercept->calls, memory_order_acquire)
+        );
+        ok = 0;
+    }
+    dcc_rest_request_destroy(blocker);
+    (void)dcc_client_on_error(client, NULL, NULL);
+    return ok ? 0 : 1;
 }
 
 static int request_cancel_contract(
@@ -806,6 +1174,142 @@ static int request_error_admission_and_retry_contract(
     return ok ? 0 : 1;
 }
 
+static int request_wait_for_queue_state(
+    dcc_client_t *client,
+    size_t pending,
+    size_t active,
+    size_t active_routes,
+    uint32_t timeout_ms,
+    dcc_rest_async_status_t *out
+) {
+    uint64_t started_ms = request_now_ms();
+    do {
+        dcc_rest_async_status_t snapshot = {.size = sizeof(snapshot)};
+        if (dcc_rest_async_status(client, &snapshot) != DCC_OK) {
+            return 0;
+        }
+        if (snapshot.pending == pending && snapshot.active == active &&
+            snapshot.active_routes == active_routes) {
+            if (out != NULL) {
+                *out = snapshot;
+            }
+            return 1;
+        }
+        request_sleep_ms(1U);
+    } while (request_now_ms() - started_ms < timeout_ms);
+    if (out != NULL) {
+        out->size = sizeof(*out);
+        (void)dcc_rest_async_status(client, out);
+    }
+    return 0;
+}
+
+static int request_same_route_cancel_tracking_contract(void) {
+    dcc_client_options_t options = {
+        .size = sizeof(options),
+        .token = "",
+        .intents = DCC_INTENT_GUILDS,
+        .rest_concurrency = 2U,
+    };
+    dcc_client_t *client = NULL;
+    if (dcc_client_create(&options, &client) != DCC_OK ||
+        dcc_client_start(client) != DCC_OK) {
+        dcc_client_destroy(client);
+        return 1;
+    }
+
+    request_intercept_state_t intercept;
+    memset(&intercept, 0, sizeof(intercept));
+    atomic_init(&intercept.mode, REQUEST_INTERCEPT_SUCCESS);
+    atomic_init(&intercept.delay_ms, 0U);
+    atomic_init(&intercept.calls, 0U);
+    atomic_init(&intercept.entered, 0U);
+    atomic_init(&intercept.observed_delay_ms, 0U);
+    atomic_init(&intercept.cooperative_hold, 1U);
+    atomic_init(&intercept.cooperative_release, 0U);
+    dcc_rest_set_interceptor(client, request_intercept, &intercept);
+
+    request_runner_t runner = {.client = client, .status = DCC_ERR_STATE};
+    pthread_t runner_thread;
+    if (pthread_create(&runner_thread, NULL, request_runner_main, &runner) != 0) {
+        atomic_store_explicit(&intercept.cooperative_release, 1U, memory_order_release);
+        dcc_client_destroy(client);
+        return 1;
+    }
+
+    int ok = 1;
+    dcc_rest_request_t *original = NULL;
+    dcc_rest_request_t *canceled = NULL;
+    dcc_rest_request_t *blocked = NULL;
+    const dcc_rest_result_t *original_result = NULL;
+    const dcc_rest_result_t *canceled_result = NULL;
+    const dcc_rest_result_t *blocked_result = NULL;
+    dcc_rest_async_status_t before = {.size = sizeof(before)};
+    dcc_rest_async_status_t during = {.size = sizeof(during)};
+    dcc_rest_async_status_t after = {.size = sizeof(after)};
+
+    if (request_submit_test(client, "/same-route", NULL, &original) != DCC_OK ||
+        !request_wait_for_entered(&intercept) ||
+        request_submit_test(client, "/same-route", NULL, &canceled) != DCC_OK ||
+        dcc_rest_async_status(client, &before) != DCC_OK ||
+        before.active != 1U || before.pending != 1U || before.active_routes != 1U ||
+        before.pending_blocked_by_active_route != 1U ||
+        dcc_rest_request_cancel(canceled) != DCC_OK ||
+        dcc_rest_request_wait(canceled, 2000U, &canceled_result) != DCC_OK ||
+        canceled_result == NULL ||
+        dcc_rest_result_status(canceled_result) != DCC_ERR_CANCELED ||
+        !request_wait_for_queue_state(client, 0U, 1U, 1U, 1000U, &during) ||
+        request_submit_test(client, "/same-route", NULL, &blocked) != DCC_OK ||
+        dcc_rest_async_status(client, &after) != DCC_OK ||
+        after.active != 1U || after.pending != 1U || after.active_routes != 1U ||
+        after.pending_blocked_by_active_route != 1U ||
+        atomic_load_explicit(&intercept.calls, memory_order_acquire) != 1U ||
+        dcc_rest_request_cancel(blocked) != DCC_OK ||
+        dcc_rest_request_wait(blocked, 2000U, &blocked_result) != DCC_OK ||
+        blocked_result == NULL ||
+        dcc_rest_result_status(blocked_result) != DCC_ERR_CANCELED ||
+        !request_wait_for_queue_state(client, 0U, 1U, 1U, 1000U, NULL)) {
+        ok = 0;
+    }
+
+    atomic_store_explicit(&intercept.cooperative_release, 1U, memory_order_release);
+    if (original == NULL ||
+        dcc_rest_request_wait(original, 2000U, &original_result) != DCC_OK ||
+        original_result == NULL || dcc_rest_result_status(original_result) != DCC_OK ||
+        dcc_rest_async_wait(client, 2000U) != DCC_OK ||
+        !request_wait_for_queue_state(client, 0U, 0U, 0U, 1000U, &after) ||
+        atomic_load_explicit(&intercept.calls, memory_order_acquire) != 1U) {
+        ok = 0;
+    }
+    if (!ok) {
+        fprintf(
+            stderr,
+            "same-route cancel detail before=%zu/%zu/%zu/%zu "
+            "during=%zu/%zu/%zu after=%zu/%zu/%zu/%zu calls=%u\n",
+            before.pending,
+            before.active,
+            before.active_routes,
+            before.pending_blocked_by_active_route,
+            during.pending,
+            during.active,
+            during.active_routes,
+            after.pending,
+            after.active,
+            after.active_routes,
+            after.pending_blocked_by_active_route,
+            atomic_load_explicit(&intercept.calls, memory_order_acquire)
+        );
+    }
+
+    dcc_rest_request_destroy(blocked);
+    dcc_rest_request_destroy(canceled);
+    dcc_rest_request_destroy(original);
+    (void)dcc_client_stop(client);
+    (void)pthread_join(runner_thread, NULL);
+    dcc_client_destroy(client);
+    return ok && runner.status == DCC_OK ? 0 : 1;
+}
+
 static int request_client_teardown_contract(void) {
     dcc_client_options_t options = {
         .size = sizeof(options),
@@ -822,10 +1326,12 @@ static int request_client_teardown_contract(void) {
     request_intercept_state_t intercept;
     memset(&intercept, 0, sizeof(intercept));
     atomic_init(&intercept.mode, REQUEST_INTERCEPT_SUCCESS);
-    atomic_init(&intercept.delay_ms, 250U);
+    atomic_init(&intercept.delay_ms, 0U);
     atomic_init(&intercept.calls, 0U);
     atomic_init(&intercept.entered, 0U);
     atomic_init(&intercept.observed_delay_ms, 0U);
+    atomic_init(&intercept.cooperative_hold, 1U);
+    atomic_init(&intercept.cooperative_release, 0U);
     dcc_rest_set_interceptor(client, request_intercept, &intercept);
 
     request_runner_t runner = {.client = client, .status = DCC_ERR_STATE};
@@ -851,12 +1357,73 @@ static int request_client_teardown_contract(void) {
             &pending_callback,
             &pending_request
         ) == DCC_OK;
-    dcc_client_destroy(client);
+    dcc_status_t stop_status = ok ? dcc_client_stop(client) : DCC_ERR_STATE;
+    unsigned callback_before_teardown = atomic_load_explicit(
+        &pending_callback.called,
+        memory_order_acquire
+    );
+
+    request_start_gate_t start_gate;
+    atomic_init(&start_gate.ready, 0U);
+    atomic_init(&start_gate.release, 0U);
+    request_control_t cancel_control = {
+        .request = pending_request,
+        .action = REQUEST_CONTROL_CANCEL,
+        .start_gate = &start_gate,
+        .status = DCC_ERR_STATE,
+    };
+    atomic_init(&cancel_control.returned, 0U);
+    request_client_destroyer_t destroyer = {
+        .client = client,
+        .start_gate = &start_gate,
+    };
+    atomic_init(&destroyer.returned, 0U);
+    pthread_t cancel_thread;
+    pthread_t destroy_thread;
+    int cancel_started = pthread_create(
+        &cancel_thread,
+        NULL,
+        request_control_main,
+        &cancel_control
+    ) == 0;
+    int destroy_started = pthread_create(
+        &destroy_thread,
+        NULL,
+        request_client_destroyer_main,
+        &destroyer
+    ) == 0;
+    int race_ready = cancel_started && destroy_started &&
+        request_wait_for_atomic_at_least(&start_gate.ready, 2U, 1000U);
+    atomic_store_explicit(&start_gate.release, 1U, memory_order_release);
+    int pending_delivered = race_ready && request_wait_for_atomic(
+        &pending_callback.stage,
+        1000U
+    );
+    int cancel_returned = race_ready && request_wait_for_atomic(
+        &cancel_control.returned,
+        1000U
+    );
+    int destroy_waited_for_active = race_ready &&
+        atomic_load_explicit(&destroyer.returned, memory_order_acquire) == 0U;
+    atomic_store_explicit(&intercept.cooperative_release, 1U, memory_order_release);
+    if (cancel_started) {
+        (void)pthread_join(cancel_thread, NULL);
+    }
+    if (destroy_started) {
+        (void)pthread_join(destroy_thread, NULL);
+    } else {
+        dcc_client_destroy(client);
+    }
     (void)pthread_join(runner_thread, NULL);
 
     const dcc_rest_result_t *result = NULL;
     const dcc_rest_result_t *pending_result = NULL;
-    if (!ok || request == NULL || runner.status != DCC_OK ||
+    if (!ok || stop_status != DCC_OK || cancel_control.status != DCC_OK ||
+        callback_before_teardown != 0U || !race_ready || !pending_delivered ||
+        !cancel_returned ||
+        !destroy_waited_for_active ||
+        atomic_load_explicit(&destroyer.returned, memory_order_acquire) != 1U ||
+        request == NULL || runner.status != DCC_OK ||
         dcc_rest_request_wait(request, 1000U, &result) != DCC_OK ||
         result == NULL || dcc_rest_result_status(result) != DCC_ERR_CANCELED ||
         pending_request == NULL ||
@@ -915,6 +1482,8 @@ int main(void) {
     atomic_init(&intercept.calls, 0U);
     atomic_init(&intercept.entered, 0U);
     atomic_init(&intercept.observed_delay_ms, 0U);
+    atomic_init(&intercept.cooperative_hold, 0U);
+    atomic_init(&intercept.cooperative_release, 1U);
     dcc_rest_set_interceptor(client, request_intercept, &intercept);
 
     request_runner_t runner = {.client = client, .status = DCC_ERR_STATE};
@@ -926,6 +1495,9 @@ int main(void) {
     }
 
     int failed = request_delayed_copy_wait_contract(client, &intercept);
+    if (!failed) {
+        failed = request_nonblocking_cancel_destroy_contract(client, &intercept);
+    }
     if (!failed) {
         failed = request_cancel_contract(client, &intercept);
     }
@@ -940,6 +1512,10 @@ int main(void) {
     dcc_client_destroy(client);
     if (failed || runner.status != DCC_OK) {
         fprintf(stderr, "request queue/handle contract failed\n");
+        return 1;
+    }
+    if (request_same_route_cancel_tracking_contract() != 0) {
+        fprintf(stderr, "request same-route cancel tracking contract failed\n");
         return 1;
     }
     if (request_client_teardown_contract() != 0) {

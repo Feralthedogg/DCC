@@ -30,6 +30,7 @@ struct dcc_rest_async_request {
     int callback_called;
     uint32_t retry_attempt;
     uint64_t not_before_ms;
+    uint8_t route_claimed;
     atomic_bool cancel_requested;
     _Atomic(llam_fd_t) active_fd;
     dcc_rest_async_request_t *next;

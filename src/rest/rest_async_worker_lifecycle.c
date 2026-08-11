@@ -13,7 +13,10 @@ void dcc_rest_async_finish_active_locked(dcc_client_t *client, dcc_rest_async_re
         client->rest_async_active--;
     }
     dcc_rest_async_remove_active_locked(client, request);
-    dcc_rest_async_unmark_route_active_locked(client, request->route);
+    if (request->route_claimed) {
+        dcc_rest_async_unmark_route_active_locked(client, request->route);
+        request->route_claimed = 0U;
+    }
 }
 
 void dcc_rest_async_complete(dcc_rest_async_request_t *request) {
@@ -28,7 +31,14 @@ void dcc_rest_async_complete(dcc_rest_async_request_t *request) {
     if (atomic_load_explicit(&client->stopping, memory_order_acquire)) {
         pending = dcc_rest_async_detach_pending_all_locked(client);
     } else {
-        (void)dcc_rest_async_drain_locked(client);
+        dcc_status_t drain_status = dcc_rest_async_drain_locked(client);
+        if (drain_status != DCC_OK) {
+            /* A failed spawn restores the exact queue position. Retry once so
+             * a transient rejection cannot strand a canceled request after
+             * the last active worker completes. Persistent failure remains
+             * owned by the pending queue for wait/teardown recovery. */
+            (void)dcc_rest_async_drain_locked(client);
+        }
     }
     dcc_rest_unlock(client);
     dcc_rest_async_signal(client);

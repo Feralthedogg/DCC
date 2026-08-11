@@ -49,7 +49,14 @@ static dcc_status_t dcc_rest_async_drain_impl_locked(
             break;
         }
 
-        status = dcc_rest_async_mark_route_active_locked(client, request->route);
+        request->route_claimed = 0U;
+        int canceled = atomic_load_explicit(
+            &request->cancel_requested,
+            memory_order_acquire
+        );
+        status = canceled
+            ? DCC_OK
+            : dcc_rest_async_mark_route_active_locked(client, request->route);
         if (status != DCC_OK) {
             if (request == admission && out_rejected != NULL) {
                 *out_rejected = request;
@@ -61,13 +68,17 @@ static dcc_status_t dcc_rest_async_drain_impl_locked(
             }
             break;
         }
+        request->route_claimed = !canceled && request->route[0] != '\0' ? 1U : 0U;
         client->rest_async_active++;
         dcc_rest_async_push_active_locked(client, request);
 
         status = dcc_rest_async_spawn_worker_locked(client, request);
         if (status != DCC_OK) {
             dcc_rest_async_remove_active_locked(client, request);
-            dcc_rest_async_unmark_route_active_locked(client, request->route);
+            if (request->route_claimed) {
+                dcc_rest_async_unmark_route_active_locked(client, request->route);
+                request->route_claimed = 0U;
+            }
             client->rest_async_active--;
             if (request == admission && out_rejected != NULL) {
                 *out_rejected = request;

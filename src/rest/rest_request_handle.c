@@ -1,6 +1,7 @@
 #include "internal/rest/dcc_rest_request_handle_internal.h"
 #include "internal/client/dcc_client_state_internal.h"
 #include "internal/rest/dcc_rest_async_cancel_internal.h"
+#include "internal/rest/dcc_rest_async_drain_internal.h"
 #include "internal/rest/dcc_rest_async_queue_internal.h"
 #include "internal/rest/dcc_rest_async_request_internal.h"
 #include "internal/rest/dcc_rest_async_signal_internal.h"
@@ -256,27 +257,16 @@ uint8_t dcc_rest_request_completed(const dcc_rest_request_t *request) {
         : 0U;
 }
 
-static int dcc_rest_request_detach_pending_locked(
+static int dcc_rest_request_is_pending_locked(
     dcc_client_t *client,
     dcc_rest_async_request_t *target
 ) {
     for (uint32_t priority = 0U; priority < DCC_REST_PRIORITY_LEVELS; ++priority) {
-        dcc_rest_async_request_t *previous = NULL;
         dcc_rest_async_request_t *request = client->rest_async_heads[priority];
         while (request != NULL) {
             if (request == target) {
-                if (previous != NULL) {
-                    previous->next = request->next;
-                } else {
-                    client->rest_async_heads[priority] = request->next;
-                }
-                if (client->rest_async_tails[priority] == request) {
-                    client->rest_async_tails[priority] = previous;
-                }
-                request->next = NULL;
                 return 1;
             }
-            previous = request;
             request = request->next;
         }
     }
@@ -320,9 +310,18 @@ dcc_status_t dcc_rest_request_cancel(dcc_rest_request_t *request) {
     int pending = 0;
     dcc_rest_lock(client);
     if (!atomic_load_explicit(&request->terminal_claimed, memory_order_acquire)) {
-        pending = dcc_rest_request_detach_pending_locked(client, async_request);
-        if (!pending && dcc_rest_request_is_active_locked(client, async_request)) {
+        pending = dcc_rest_request_is_pending_locked(client, async_request);
+        if (pending || dcc_rest_request_is_active_locked(client, async_request)) {
             (void)dcc_rest_async_request_cancel(async_request, &fd, &fd_count);
+        }
+        if (pending) {
+            /* Keep exact cancellation in the client-owned queue. A canceled
+             * worker performs terminal delivery without route/rate-limit
+             * admission, so cancel/destroy never execute user code inline. */
+            dcc_status_t drain_status = dcc_rest_async_drain_locked(client);
+            if (drain_status != DCC_OK) {
+                (void)dcc_rest_async_drain_locked(client);
+            }
         }
     }
     dcc_rest_unlock(client);
@@ -330,15 +329,6 @@ dcc_status_t dcc_rest_request_cancel(dcc_rest_request_t *request) {
 
     if (fd_count != 0U && !LLAM_FD_IS_INVALID(fd)) {
         (void)llam_close(fd);
-    }
-    if (pending) {
-        dcc_rest_terminal_completion_t completion = {
-            .operation = async_request->path,
-            .transport_status = DCC_ERR_CANCELED,
-            .legacy_error = DCC_ERR_CANCELED,
-        };
-        dcc_rest_request_handle_finalize(request, &completion);
-        dcc_rest_async_request_free(async_request);
     }
     return DCC_OK;
 }

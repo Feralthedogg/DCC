@@ -31,8 +31,9 @@ typedef struct dcc_rest_request dcc_rest_request_t;
  * The callback may cancel or destroy its request, but waiting on that same
  * request returns DCC_ERR_STATE. The result view is valid only until the
  * callback returns; use dcc_rest_result_clone() to retain it. No thread
- * affinity is promised: normal completion runs on a runtime worker, while
- * pending cancellation or teardown may deliver on the calling thread.
+ * affinity is promised: normal completion and exact cancellation while the
+ * runtime accepts work run on a runtime worker, while bulk cancellation or
+ * teardown may deliver on the thread performing that operation.
  */
 typedef void (*dcc_rest_result_fn)(
     dcc_client_t *client,
@@ -113,8 +114,10 @@ DCC_API dcc_status_t dcc_rest_request_wait(
 
 /**
  * Requests nonblocking, idempotent cancellation of one operation.
- * Completion may win the race and retain its original result. NULL returns
- * DCC_ERR_INVALID_ARG.
+ * Completion may win the race and retain its original result. An exact
+ * cancellation never invokes terminal callbacks on this function's stack;
+ * once client stopping begins, delivery may be deferred to bulk teardown.
+ * NULL returns DCC_ERR_INVALID_ARG.
  */
 DCC_API dcc_status_t dcc_rest_request_cancel(dcc_rest_request_t *request);
 

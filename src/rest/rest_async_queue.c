@@ -30,8 +30,13 @@ dcc_rest_async_request_t *dcc_rest_async_take_next_locked(
         dcc_rest_async_request_t *prev = NULL;
         dcc_rest_async_request_t *request = client->rest_async_heads[priority];
         while (request != NULL) {
-            if (!dcc_rest_async_route_active_locked(client, request->route) &&
-                dcc_rest_async_request_wait_ms_locked(client, request, now, 1) == 0) {
+            int canceled = atomic_load_explicit(
+                &request->cancel_requested,
+                memory_order_acquire
+            );
+            if (canceled ||
+                (!dcc_rest_async_route_active_locked(client, request->route) &&
+                 dcc_rest_async_request_wait_ms_locked(client, request, now, 1) == 0)) {
                 if (position != NULL) {
                     position->priority = (uint32_t)priority;
                     position->previous = prev;
