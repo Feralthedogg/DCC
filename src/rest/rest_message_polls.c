@@ -23,17 +23,12 @@ dcc_status_t dcc_rest_get_poll_answer_voters(
     dcc_rest_buffer_t query = {0};
     const uint64_t allowed = DCC_REST_ID_PAGE_PRESENT_AFTER |
         DCC_REST_ID_PAGE_PRESENT_LIMIT;
-    if (page != NULL && (page->size < sizeof(*page) ||
-            page->version != DCC_REST_ID_PAGE_VERSION ||
-            (page->present & ~allowed) != 0U ||
-            ((page->present & DCC_REST_ID_PAGE_PRESENT_AFTER) != 0U && page->after == 0U) ||
-            ((page->present & DCC_REST_ID_PAGE_PRESENT_LIMIT) != 0U &&
-                (page->limit == 0U || page->limit > 100U)))) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    if (page != NULL && (page->present & DCC_REST_ID_PAGE_PRESENT_AFTER) != 0U)
+    dcc_endpoint_record_view_t view;
+    status = dcc_endpoint_id_page_preflight(page, allowed, &view);
+    if (status != DCC_OK) return status;
+    if (page != NULL && (view.present & DCC_REST_ID_PAGE_PRESENT_AFTER) != 0U)
         status = dcc_rest_query_append_u64_value(&query, "after", page->after);
-    if (status == DCC_OK && page != NULL && (page->present & DCC_REST_ID_PAGE_PRESENT_LIMIT) != 0U)
+    if (status == DCC_OK && page != NULL && (view.present & DCC_REST_ID_PAGE_PRESENT_LIMIT) != 0U)
         status = dcc_rest_query_append_u64_value(&query, "limit", page->limit);
     char *base = NULL;
     char *path = NULL;

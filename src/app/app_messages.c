@@ -413,8 +413,9 @@ dcc_status_t dcc_app_send_json(
         (unsigned long long)channel_id
     );
     return status == DCC_OK
-        ? dcc_rest_request_method(
-            dcc_app_client(app), DCC_REST_POST, path, json_body, cb, user_data
+        ? dcc_endpoint_submit_legacy_raw(
+            dcc_app_client(app), DCC_REST_POST, path, NULL,
+            "application/json", json_body, strlen(json_body), cb, user_data
         )
         : status;
 }

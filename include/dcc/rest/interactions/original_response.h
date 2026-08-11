@@ -8,6 +8,10 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Submits `GET /webhooks/{application_id}/{token}/messages/@original`.
+ * @details Uses the @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_interaction_original_response_get(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
@@ -16,6 +20,11 @@ DCC_API dcc_status_t dcc_rest_interaction_original_response_get(
     dcc_rest_request_t **out_request
 );
 
+/**
+ * @brief Submits `PATCH /webhooks/{application_id}/{token}/messages/@original`.
+ * @details `payload` is borrowed for the call. Uses the
+ * @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_interaction_original_response_edit(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
@@ -25,6 +34,10 @@ DCC_API dcc_status_t dcc_rest_interaction_original_response_edit(
     dcc_rest_request_t **out_request
 );
 
+/**
+ * @brief Submits `DELETE /webhooks/{application_id}/{token}/messages/@original`.
+ * @details Uses the @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_interaction_original_response_delete(
     dcc_client_t *client,
     dcc_snowflake_t application_id,

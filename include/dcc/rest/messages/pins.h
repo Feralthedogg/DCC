@@ -15,6 +15,7 @@ extern "C" {
 
 /**
  * @brief Submits a REST request to pin message.
+ * @details Uses the @ref dcc_rest_endpoint_call_contract.
  */
 DCC_API dcc_status_t dcc_rest_pin_message(
     dcc_client_t *client,
@@ -26,6 +27,7 @@ DCC_API dcc_status_t dcc_rest_pin_message(
 
 /**
  * @brief Submits a REST request to unpin message.
+ * @details Uses the @ref dcc_rest_endpoint_call_contract.
  */
 DCC_API dcc_status_t dcc_rest_unpin_message(
     dcc_client_t *client,
@@ -37,6 +39,8 @@ DCC_API dcc_status_t dcc_rest_unpin_message(
 
 /**
  * @brief Submits a REST request to get channel pins.
+ * @details `query` may be NULL. Uses the
+ * @ref dcc_rest_endpoint_call_contract.
  */
 DCC_API dcc_status_t dcc_rest_get_channel_pins(
     dcc_client_t *client,
@@ -48,6 +52,7 @@ DCC_API dcc_status_t dcc_rest_get_channel_pins(
 
 /**
  * @brief Submits a REST request to pin message using the legacy pins route.
+ * @details Uses the @ref dcc_rest_endpoint_call_contract.
  */
 DCC_API dcc_status_t dcc_rest_legacy_pin_message(
     dcc_client_t *client,
@@ -59,6 +64,7 @@ DCC_API dcc_status_t dcc_rest_legacy_pin_message(
 
 /**
  * @brief Submits a REST request to unpin message using the legacy pins route.
+ * @details Uses the @ref dcc_rest_endpoint_call_contract.
  */
 DCC_API dcc_status_t dcc_rest_legacy_unpin_message(
     dcc_client_t *client,
@@ -70,6 +76,7 @@ DCC_API dcc_status_t dcc_rest_legacy_unpin_message(
 
 /**
  * @brief Submits a REST request to get channel pins using the legacy pins route.
+ * @details Uses the @ref dcc_rest_endpoint_call_contract.
  */
 DCC_API dcc_status_t dcc_rest_get_legacy_channel_pins(
     dcc_client_t *client,

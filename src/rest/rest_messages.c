@@ -9,36 +9,16 @@ static dcc_status_t dcc_message_list_query_build(
     const dcc_rest_message_list_query_t *query,
     dcc_rest_buffer_t *out
 ) {
-    const uint64_t known = DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND |
-        DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE |
-        DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER |
-        DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT;
-    if (query == NULL) return DCC_OK;
-    if (query->size < sizeof(*query) ||
-        query->version != DCC_REST_MESSAGE_LIST_QUERY_VERSION ||
-        (query->present & ~known) != 0U) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    uint64_t cursors = query->present &
-        (DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND |
-         DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE |
-         DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER);
-    if ((cursors & (cursors - 1U)) != 0U ||
-        ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND) != 0U && query->around == 0U) ||
-        ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE) != 0U && query->before == 0U) ||
-        ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER) != 0U && query->after == 0U) ||
-        ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT) != 0U &&
-            (query->limit == 0U || query->limit > 100U))) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    dcc_status_t status = DCC_OK;
-    if ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND) != 0U)
+    dcc_endpoint_record_view_t view;
+    dcc_status_t status = dcc_endpoint_message_list_preflight(query, &view);
+    if (status != DCC_OK || query == NULL) return status;
+    if ((view.present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND) != 0U)
         status = dcc_rest_query_append_u64_value(out, "around", query->around);
-    if (status == DCC_OK && (query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE) != 0U)
+    if (status == DCC_OK && (view.present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE) != 0U)
         status = dcc_rest_query_append_u64_value(out, "before", query->before);
-    if (status == DCC_OK && (query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER) != 0U)
+    if (status == DCC_OK && (view.present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER) != 0U)
         status = dcc_rest_query_append_u64_value(out, "after", query->after);
-    if (status == DCC_OK && (query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT) != 0U)
+    if (status == DCC_OK && (view.present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT) != 0U)
         status = dcc_rest_query_append_u64_value(out, "limit", query->limit);
     return status;
 }
@@ -55,6 +35,9 @@ dcc_status_t dcc_rest_get_channel_messages(
     if (status != DCC_OK || client == NULL || channel_id == 0U) {
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     }
+    dcc_endpoint_record_view_t view;
+    status = dcc_endpoint_message_list_preflight(query, &view);
+    if (status != DCC_OK) return status;
     dcc_rest_buffer_t query_text = {0};
     status = dcc_message_list_query_build(query, &query_text);
     char *base = NULL;

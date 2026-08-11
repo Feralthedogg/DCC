@@ -3,15 +3,16 @@
 #include <dcc/rest/webhooks.h>
 
 #include "internal/rest/dcc_rest_buffer_internal.h"
+#include "internal/rest/dcc_rest_config_internal.h"
 #include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_multipart_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
 #include "internal/rest/dcc_rest_query_append_internal.h"
 #include "internal/rest/dcc_rest_query_webhooks_internal.h"
-#include "internal/rest/dcc_rest_request_core_internal.h"
-#include "internal/rest/dcc_rest_request_payload_multipart_internal.h"
 #include "internal/rest/dcc_rest_request_webhooks_internal.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 static int dcc_app_webhook_token_invalid(const char *webhook_token) {
     return webhook_token == NULL || webhook_token[0] == '\0';
@@ -34,8 +35,10 @@ static dcc_status_t dcc_app_webhook_raw(
         &path, webhook_id, webhook_token, suffix, message_id
     );
     if (status == DCC_OK) {
-        status = dcc_rest_request_with_query(
-            client, method, path, query, body, cb, user_data
+        status = dcc_endpoint_submit_legacy_raw(
+            client, method, path, query,
+            body != NULL ? "application/json" : NULL,
+            body, body != NULL ? strlen(body) : 0U, cb, user_data
         );
     }
     free(path);
@@ -60,12 +63,24 @@ static dcc_status_t dcc_app_webhook_raw_multipart(
     dcc_status_t status = dcc_rest_webhook_token_path(
         &path, webhook_id, webhook_token, suffix, message_id
     );
+    char *multipart = NULL;
+    size_t multipart_len = 0U;
     if (status == DCC_OK) {
-        status = dcc_rest_request_payload_files_multipart(
-            client, method, path, query, payload_json, files, file_count,
-            cb, user_data
+        const dcc_rest_multipart_field_t field = {
+            .name = "payload_json",
+            .value = payload_json,
+        };
+        status = dcc_rest_build_multipart_body(
+            &field, 1U, files, file_count, &multipart, &multipart_len
         );
     }
+    if (status == DCC_OK) {
+        status = dcc_endpoint_submit_legacy_raw(
+            client, method, path, query, DCC_REST_MULTIPART_CONTENT_TYPE,
+            multipart, multipart_len, cb, user_data
+        );
+    }
+    free(multipart);
     free(path);
     return status;
 }
@@ -83,7 +98,11 @@ static dcc_status_t dcc_app_webhook_management_raw(
         path, sizeof(path), "/webhooks/%llu", (unsigned long long)id
     );
     return status == DCC_OK
-        ? dcc_rest_request_method(client, method, path, body, cb, user_data)
+        ? dcc_endpoint_submit_legacy_raw(
+            client, method, path, NULL,
+            body != NULL ? "application/json" : NULL,
+            body, body != NULL ? strlen(body) : 0U, cb, user_data
+        )
         : status;
 }
 
@@ -132,8 +151,10 @@ dcc_status_t dcc_app_create_webhook(
         (unsigned long long)channel_id
     );
     return status == DCC_OK
-        ? dcc_rest_request_method(dcc_app_client(app), DCC_REST_POST, path,
-            json_body, cb, user_data)
+        ? dcc_endpoint_submit_legacy_raw(
+            dcc_app_client(app), DCC_REST_POST, path, NULL,
+            "application/json", json_body, strlen(json_body), cb, user_data
+        )
         : status;
 }
 

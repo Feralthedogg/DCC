@@ -8,6 +8,7 @@
 #include <dcc/rest/request.h>
 #include <dcc/rest/webhooks.h>
 
+#include "internal/rest/dcc_rest_endpoint_internal.h"
 #include "rest_v2_endpoint_smoke_support.h"
 
 #if !defined(_WIN32)
@@ -1149,6 +1150,489 @@ int endpoint_webhook_contract(
         "application/json",
         compat_body
     );
+    return 0;
+}
+
+int endpoint_versioned_prefix_contract(
+    dcc_client_t *client,
+    endpoint_capture_t *capture
+) {
+    dcc_message_builder_t message = DCC_MESSAGE_BUILDER_INIT;
+    if (dcc_message_builder_set_content(&message, "covered-prefix") != DCC_OK) {
+        return 1;
+    }
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    payload.size = offsetof(dcc_rest_message_payload_t, files);
+    payload.message = &message;
+    ENDPOINT_EXPECT_CALL(
+        "message payload covered prefix",
+        capture,
+        dcc_rest_create_message(client, 300U, &payload, NULL, &request),
+        "POST",
+        "/channels/300/messages",
+        "application/json",
+        "covered-prefix"
+    );
+
+    dcc_rest_message_list_query_t list = DCC_REST_MESSAGE_LIST_QUERY_INIT;
+    list.size = offsetof(dcc_rest_message_list_query_t, before);
+    list.present = DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND;
+    list.around = 301U;
+    ENDPOINT_EXPECT_CALL(
+        "message list covered prefix",
+        capture,
+        dcc_rest_get_channel_messages(client, 300U, &list, NULL, &request),
+        "GET",
+        "/channels/300/messages?around=301",
+        NULL,
+        NULL
+    );
+
+    dcc_rest_id_page_t voters = DCC_REST_ID_PAGE_INIT;
+    voters.size = offsetof(dcc_rest_id_page_t, limit);
+    voters.present = DCC_REST_ID_PAGE_PRESENT_AFTER;
+    voters.after = 302U;
+    ENDPOINT_EXPECT_CALL(
+        "poll voter page covered prefix",
+        capture,
+        dcc_rest_get_poll_answer_voters(
+            client, 300U, 303U, 1U, &voters, NULL, &request
+        ),
+        "GET",
+        "/channels/300/polls/303/answers/1?after=302",
+        NULL,
+        NULL
+    );
+
+    dcc_rest_pin_page_t pins = DCC_REST_PIN_PAGE_INIT;
+    pins.size = offsetof(dcc_rest_pin_page_t, limit);
+    pins.present = DCC_REST_PIN_PAGE_PRESENT_BEFORE;
+    pins.before = "2026-08-11T00:00:00Z";
+    ENDPOINT_EXPECT_CALL(
+        "pin page covered prefix",
+        capture,
+        dcc_rest_get_channel_pins(client, 300U, &pins, NULL, &request),
+        "GET",
+        "/channels/300/messages/pins?before=2026-08-11T00%3A00%3A00Z",
+        NULL,
+        NULL
+    );
+
+    dcc_rest_reaction_query_t reactions = DCC_REST_REACTION_QUERY_INIT;
+    reactions.size = offsetof(dcc_rest_reaction_query_t, after);
+    reactions.present = DCC_REST_REACTION_QUERY_PRESENT_TYPE;
+    reactions.type = DCC_REST_REACTION_BURST;
+    ENDPOINT_EXPECT_CALL(
+        "reaction page covered prefix",
+        capture,
+        dcc_rest_get_message_reactions(
+            client, 300U, 303U, "wave", &reactions, NULL, &request
+        ),
+        "GET",
+        "/channels/300/messages/303/reactions/wave?type=1",
+        NULL,
+        NULL
+    );
+
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    response.size = offsetof(dcc_rest_interaction_response_t, with_response);
+    response.type = DCC_INTERACTION_RESPONSE_PONG;
+    ENDPOINT_EXPECT_CALL(
+        "interaction response covered prefix",
+        capture,
+        dcc_rest_interaction_response_create(
+            client, 304U, "prefix-token", &response, NULL, &request
+        ),
+        "POST",
+        "/interactions/304/prefix-token/callback",
+        "application/json",
+        "{\"type\":1}"
+    );
+
+    dcc_rest_webhook_builder_t webhook = DCC_REST_WEBHOOK_BUILDER_INIT;
+    webhook.size = offsetof(dcc_rest_webhook_builder_t, avatar);
+    webhook.present = DCC_REST_WEBHOOK_BUILDER_PRESENT_NAME;
+    webhook.name = "prefix-hook";
+    ENDPOINT_EXPECT_CALL(
+        "webhook builder covered prefix",
+        capture,
+        dcc_rest_create_webhook(client, 300U, &webhook, NULL, &request),
+        "POST",
+        "/channels/300/webhooks",
+        "application/json",
+        "prefix-hook"
+    );
+
+    dcc_rest_webhook_execute_t execute = DCC_REST_WEBHOOK_EXECUTE_INIT;
+    execute.size = offsetof(dcc_rest_webhook_execute_t, files);
+    execute.message = &message;
+    ENDPOINT_EXPECT_CALL(
+        "webhook execute covered prefix",
+        capture,
+        dcc_rest_execute_webhook(
+            client, 305U, "prefix-token", &execute, NULL, &request
+        ),
+        "POST",
+        "/webhooks/305/prefix-token",
+        "application/json",
+        "covered-prefix"
+    );
+
+    dcc_rest_webhook_message_query_t message_query =
+        DCC_REST_WEBHOOK_MESSAGE_QUERY_INIT;
+    message_query.size = offsetof(dcc_rest_webhook_message_query_t, thread_id);
+    ENDPOINT_EXPECT_CALL(
+        "webhook message query covered prefix",
+        capture,
+        dcc_rest_get_webhook_message(
+            client, 305U, "prefix-token", 306U, &message_query, NULL, &request
+        ),
+        "GET",
+        "/webhooks/305/prefix-token/messages/306",
+        NULL,
+        NULL
+    );
+
+    dcc_rest_webhook_message_edit_t edit = DCC_REST_WEBHOOK_MESSAGE_EDIT_INIT;
+    edit.size = offsetof(dcc_rest_webhook_message_edit_t, thread_id);
+    edit.payload = &payload;
+    ENDPOINT_EXPECT_CALL(
+        "webhook message edit covered prefix",
+        capture,
+        dcc_rest_modify_webhook_message(
+            client, 305U, "prefix-token", 306U, &edit, NULL, &request
+        ),
+        "PATCH",
+        "/webhooks/305/prefix-token/messages/306",
+        "application/json",
+        "covered-prefix"
+    );
+
+    dcc_rest_webhook_compat_payload_t compat =
+        DCC_REST_WEBHOOK_COMPAT_PAYLOAD_INIT;
+    compat.size = offsetof(dcc_rest_webhook_compat_payload_t, body_len);
+    compat.body = "ignored-uncovered-length";
+    ENDPOINT_EXPECT_CALL(
+        "webhook compatibility covered prefix",
+        capture,
+        dcc_rest_execute_webhook_slack(
+            client, 305U, "prefix-token", &compat, NULL, &request
+        ),
+        "POST",
+        "/webhooks/305/prefix-token/slack",
+        "application/json",
+        NULL
+    );
+
+#define ENDPOINT_EXPECT_VERSION_REJECTION(label_, call_) \
+    do { \
+        unsigned capture_before = atomic_load_explicit( \
+            &capture->calls, memory_order_acquire \
+        ); \
+        dcc_rest_request_t *rejected = \
+            (dcc_rest_request_t *)(uintptr_t)1U; \
+        dcc_endpoint_test_allocation_probe_begin(0U); \
+        dcc_status_t rejected_status = (call_); \
+        size_t allocation_calls = dcc_endpoint_test_allocation_probe_end(); \
+        if (rejected_status != DCC_ERR_INVALID_ARG || rejected != NULL || \
+            allocation_calls != 0U || \
+            atomic_load_explicit(&capture->calls, memory_order_acquire) != \
+                capture_before) { \
+            fprintf( \
+                stderr, \
+                "%s rejection status=%s request=%p allocations=%zu capture=%u/%u\n", \
+                (label_), dcc_status_string(rejected_status), \
+                (void *)rejected, allocation_calls, capture_before, \
+                atomic_load_explicit(&capture->calls, memory_order_acquire) \
+            ); \
+            return 1; \
+        } \
+    } while (0)
+
+    /* A newer caller may append fields without making this library reject the
+     * covered v1 prefix. */
+    payload.size = sizeof(payload) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "message payload larger record",
+        capture,
+        dcc_rest_create_message(client, 310U, &payload, NULL, &request),
+        "POST", "/channels/310/messages", "application/json", "covered-prefix"
+    );
+    list.size = sizeof(list) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "message list larger record",
+        capture,
+        dcc_rest_get_channel_messages(client, 310U, &list, NULL, &request),
+        "GET", "/channels/310/messages?around=301", NULL, NULL
+    );
+    voters.size = sizeof(voters) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "id page larger record",
+        capture,
+        dcc_rest_get_poll_answer_voters(
+            client, 310U, 311U, 1U, &voters, NULL, &request
+        ),
+        "GET", "/channels/310/polls/311/answers/1?after=302", NULL, NULL
+    );
+    pins.size = sizeof(pins) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "pin page larger record",
+        capture,
+        dcc_rest_get_channel_pins(client, 310U, &pins, NULL, &request),
+        "GET",
+        "/channels/310/messages/pins?before=2026-08-11T00%3A00%3A00Z",
+        NULL, NULL
+    );
+    reactions.size = sizeof(reactions) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "reaction query larger record",
+        capture,
+        dcc_rest_get_message_reactions(
+            client, 310U, 311U, "wave", &reactions, NULL, &request
+        ),
+        "GET", "/channels/310/messages/311/reactions/wave?type=1", NULL, NULL
+    );
+    response.size = sizeof(response) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "interaction response larger record",
+        capture,
+        dcc_rest_interaction_response_create(
+            client, 312U, "prefix-token", &response, NULL, &request
+        ),
+        "POST", "/interactions/312/prefix-token/callback",
+        "application/json", "{\"type\":1}"
+    );
+    webhook.size = sizeof(webhook) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "webhook builder larger record",
+        capture,
+        dcc_rest_create_webhook(client, 310U, &webhook, NULL, &request),
+        "POST", "/channels/310/webhooks", "application/json", "prefix-hook"
+    );
+    execute.size = sizeof(execute) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "webhook execute larger record",
+        capture,
+        dcc_rest_execute_webhook(
+            client, 313U, "prefix-token", &execute, NULL, &request
+        ),
+        "POST", "/webhooks/313/prefix-token", "application/json", "covered-prefix"
+    );
+    message_query.size = sizeof(message_query) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "webhook message query larger record",
+        capture,
+        dcc_rest_get_webhook_message(
+            client, 313U, "prefix-token", 314U, &message_query, NULL, &request
+        ),
+        "GET", "/webhooks/313/prefix-token/messages/314", NULL, NULL
+    );
+    edit.size = sizeof(edit) + 64U;
+    ENDPOINT_EXPECT_CALL(
+        "webhook edit larger record",
+        capture,
+        dcc_rest_modify_webhook_message(
+            client, 313U, "prefix-token", 314U, &edit, NULL, &request
+        ),
+        "PATCH", "/webhooks/313/prefix-token/messages/314",
+        "application/json", "covered-prefix"
+    );
+    compat = (dcc_rest_webhook_compat_payload_t)
+        DCC_REST_WEBHOOK_COMPAT_PAYLOAD_INIT;
+    compat.size = sizeof(compat) + 64U;
+    compat.body = "{}";
+    compat.body_len = 2U;
+    ENDPOINT_EXPECT_CALL(
+        "webhook compat larger record",
+        capture,
+        dcc_rest_execute_webhook_github(
+            client, 313U, "prefix-token", &compat, NULL, &request
+        ),
+        "POST", "/webhooks/313/prefix-token/github",
+        "application/json", "{}"
+    );
+
+    /* A present bit may never authorize reading a field outside the declared
+     * prefix. Every rejection must happen before the allocation probe. */
+    list = (dcc_rest_message_list_query_t)DCC_REST_MESSAGE_LIST_QUERY_INIT;
+    list.size = offsetof(dcc_rest_message_list_query_t, around);
+    list.present = DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND;
+    list.around = 1U;
+    ENDPOINT_EXPECT_VERSION_REJECTION(
+        "message list uncovered present",
+        dcc_rest_get_channel_messages(client, 1U, &list, NULL, &rejected)
+    );
+    voters = (dcc_rest_id_page_t)DCC_REST_ID_PAGE_INIT;
+    voters.size = offsetof(dcc_rest_id_page_t, after);
+    voters.present = DCC_REST_ID_PAGE_PRESENT_AFTER;
+    voters.after = 1U;
+    ENDPOINT_EXPECT_VERSION_REJECTION(
+        "id page uncovered present",
+        dcc_rest_get_poll_answer_voters(
+            client, 1U, 2U, 1U, &voters, NULL, &rejected
+        )
+    );
+    pins = (dcc_rest_pin_page_t)DCC_REST_PIN_PAGE_INIT;
+    pins.size = offsetof(dcc_rest_pin_page_t, before);
+    pins.present = DCC_REST_PIN_PAGE_PRESENT_BEFORE;
+    pins.before = "date";
+    ENDPOINT_EXPECT_VERSION_REJECTION(
+        "pin page uncovered present",
+        dcc_rest_get_channel_pins(client, 1U, &pins, NULL, &rejected)
+    );
+    reactions = (dcc_rest_reaction_query_t)DCC_REST_REACTION_QUERY_INIT;
+    reactions.size = offsetof(dcc_rest_reaction_query_t, type);
+    reactions.present = DCC_REST_REACTION_QUERY_PRESENT_TYPE;
+    reactions.type = DCC_REST_REACTION_BURST;
+    ENDPOINT_EXPECT_VERSION_REJECTION(
+        "reaction query uncovered present",
+        dcc_rest_get_message_reactions(
+            client, 1U, 2U, "wave", &reactions, NULL, &rejected
+        )
+    );
+    response = (dcc_rest_interaction_response_t)
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    response.size = offsetof(dcc_rest_interaction_response_t, data);
+    response.present = DCC_REST_INTERACTION_RESPONSE_PRESENT_MESSAGE;
+    response.type = DCC_INTERACTION_RESPONSE_CHANNEL_MESSAGE_WITH_SOURCE;
+    response.data.message = &message;
+    ENDPOINT_EXPECT_VERSION_REJECTION(
+        "interaction response uncovered present",
+        dcc_rest_interaction_response_create(
+            client, 1U, "token", &response, NULL, &rejected
+        )
+    );
+    webhook = (dcc_rest_webhook_builder_t)DCC_REST_WEBHOOK_BUILDER_INIT;
+    webhook.size = offsetof(dcc_rest_webhook_builder_t, name);
+    webhook.present = DCC_REST_WEBHOOK_BUILDER_PRESENT_NAME;
+    webhook.name = "name";
+    ENDPOINT_EXPECT_VERSION_REJECTION(
+        "webhook builder uncovered present",
+        dcc_rest_create_webhook(client, 1U, &webhook, NULL, &rejected)
+    );
+    execute = (dcc_rest_webhook_execute_t)DCC_REST_WEBHOOK_EXECUTE_INIT;
+    execute.size = offsetof(dcc_rest_webhook_execute_t, username);
+    execute.message = &message;
+    execute.present = DCC_REST_WEBHOOK_EXECUTE_PRESENT_USERNAME;
+    execute.username = "name";
+    ENDPOINT_EXPECT_VERSION_REJECTION(
+        "webhook execute uncovered present",
+        dcc_rest_execute_webhook(
+            client, 1U, "token", &execute, NULL, &rejected
+        )
+    );
+    message_query = (dcc_rest_webhook_message_query_t)
+        DCC_REST_WEBHOOK_MESSAGE_QUERY_INIT;
+    message_query.size = offsetof(dcc_rest_webhook_message_query_t, thread_id);
+    message_query.present = DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID;
+    message_query.thread_id = 1U;
+    ENDPOINT_EXPECT_VERSION_REJECTION(
+        "webhook query uncovered present",
+        dcc_rest_get_webhook_message(
+            client, 1U, "token", 2U, &message_query, NULL, &rejected
+        )
+    );
+    edit = (dcc_rest_webhook_message_edit_t)DCC_REST_WEBHOOK_MESSAGE_EDIT_INIT;
+    edit.size = offsetof(dcc_rest_webhook_message_edit_t, thread_id);
+    edit.payload = &payload;
+    edit.present = DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID;
+    edit.thread_id = 1U;
+    ENDPOINT_EXPECT_VERSION_REJECTION(
+        "webhook edit uncovered present",
+        dcc_rest_modify_webhook_message(
+            client, 1U, "token", 2U, &edit, NULL, &rejected
+        )
+    );
+
+#define ENDPOINT_EXPECT_SHORT_HEADER(label_, value_, call_) \
+    do { \
+        (value_).size = sizeof(size_t); \
+        ENDPOINT_EXPECT_VERSION_REJECTION((label_), (call_)); \
+    } while (0)
+
+    payload = (dcc_rest_message_payload_t)DCC_REST_MESSAGE_PAYLOAD_INIT;
+    payload.message = &message;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "message payload short header", payload,
+        dcc_rest_create_message(client, 1U, &payload, NULL, &rejected)
+    );
+    list = (dcc_rest_message_list_query_t)DCC_REST_MESSAGE_LIST_QUERY_INIT;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "message list short header", list,
+        dcc_rest_get_channel_messages(client, 1U, &list, NULL, &rejected)
+    );
+    voters = (dcc_rest_id_page_t)DCC_REST_ID_PAGE_INIT;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "id page short header", voters,
+        dcc_rest_get_poll_answer_voters(
+            client, 1U, 2U, 1U, &voters, NULL, &rejected
+        )
+    );
+    pins = (dcc_rest_pin_page_t)DCC_REST_PIN_PAGE_INIT;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "pin page short header", pins,
+        dcc_rest_get_channel_pins(client, 1U, &pins, NULL, &rejected)
+    );
+    reactions = (dcc_rest_reaction_query_t)DCC_REST_REACTION_QUERY_INIT;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "reaction query short header", reactions,
+        dcc_rest_get_message_reactions(
+            client, 1U, 2U, "wave", &reactions, NULL, &rejected
+        )
+    );
+    response = (dcc_rest_interaction_response_t)
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    response.type = DCC_INTERACTION_RESPONSE_PONG;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "interaction response short header", response,
+        dcc_rest_interaction_response_create(
+            client, 1U, "token", &response, NULL, &rejected
+        )
+    );
+    webhook = (dcc_rest_webhook_builder_t)DCC_REST_WEBHOOK_BUILDER_INIT;
+    webhook.present = DCC_REST_WEBHOOK_BUILDER_PRESENT_NAME;
+    webhook.name = "name";
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "webhook builder short header", webhook,
+        dcc_rest_create_webhook(client, 1U, &webhook, NULL, &rejected)
+    );
+    execute = (dcc_rest_webhook_execute_t)DCC_REST_WEBHOOK_EXECUTE_INIT;
+    execute.message = &message;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "webhook execute short header", execute,
+        dcc_rest_execute_webhook(
+            client, 1U, "token", &execute, NULL, &rejected
+        )
+    );
+    message_query = (dcc_rest_webhook_message_query_t)
+        DCC_REST_WEBHOOK_MESSAGE_QUERY_INIT;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "webhook query short header", message_query,
+        dcc_rest_get_webhook_message(
+            client, 1U, "token", 2U, &message_query, NULL, &rejected
+        )
+    );
+    payload = (dcc_rest_message_payload_t)DCC_REST_MESSAGE_PAYLOAD_INIT;
+    payload.message = &message;
+    edit = (dcc_rest_webhook_message_edit_t)DCC_REST_WEBHOOK_MESSAGE_EDIT_INIT;
+    edit.payload = &payload;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "webhook edit short header", edit,
+        dcc_rest_modify_webhook_message(
+            client, 1U, "token", 2U, &edit, NULL, &rejected
+        )
+    );
+    compat = (dcc_rest_webhook_compat_payload_t)
+        DCC_REST_WEBHOOK_COMPAT_PAYLOAD_INIT;
+    ENDPOINT_EXPECT_SHORT_HEADER(
+        "webhook compat short header", compat,
+        dcc_rest_execute_webhook_slack(
+            client, 1U, "token", &compat, NULL, &rejected
+        )
+    );
+
+#undef ENDPOINT_EXPECT_SHORT_HEADER
+#undef ENDPOINT_EXPECT_VERSION_REJECTION
     return 0;
 }
 

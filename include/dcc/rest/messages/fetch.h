@@ -8,6 +8,10 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Submits `GET /channels/{channel_id}/messages`.
+ * @details `query` may be NULL. Uses the @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_get_channel_messages(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
@@ -16,6 +20,10 @@ DCC_API dcc_status_t dcc_rest_get_channel_messages(
     dcc_rest_request_t **out_request
 );
 
+/**
+ * @brief Submits `GET /channels/{channel_id}/messages/{message_id}`.
+ * @details Uses the @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_get_message(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,

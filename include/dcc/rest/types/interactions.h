@@ -32,6 +32,16 @@ typedef union dcc_rest_interaction_response_data {
     const dcc_autocomplete_builder_t *autocomplete;
 } dcc_rest_interaction_response_data_t;
 
+/**
+ * @brief Tagged, presence-gated interaction callback input.
+ *
+ * The prefix through `type` is mandatory. The type and data presence bit
+ * select exactly one borrowed union member. A present `with_response` or data
+ * field must be covered by `size`. A historical prefix that does not cover
+ * the complete `files`/`file_count` pair treats files as absent; larger
+ * version-1 records are accepted. Every nested builder and file byte span is
+ * borrowed only for the endpoint call and serialized before return.
+ */
 typedef struct dcc_rest_interaction_response {
     size_t size;
     uint32_t version;

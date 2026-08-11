@@ -89,5 +89,14 @@ int endpoint_webhook_contract(
     dcc_client_t *client,
     endpoint_capture_t *capture
 );
+int endpoint_versioned_prefix_contract(
+    dcc_client_t *client,
+    endpoint_capture_t *capture
+);
+int endpoint_transition_submission_contract(
+    dcc_client_t *client,
+    endpoint_capture_t *capture
+);
+int endpoint_transition_rejection_contract(dcc_client_t *client);
 
 #endif

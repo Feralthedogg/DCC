@@ -3,9 +3,11 @@
 #include <dcc/rest/messages/edit.h>
 #include <dcc/rest/response_helpers.h>
 
+#include "internal/rest/dcc_rest_endpoint_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct dcc_managed_message_publish_state {
     dcc_snowflake_t channel_id;
@@ -86,8 +88,9 @@ static dcc_status_t dcc_managed_message_create(
         (unsigned long long)state->channel_id
     );
     if (status == DCC_OK) {
-        status = dcc_rest_request_method(
-            client, DCC_REST_POST, path, state->payload_json,
+        status = dcc_endpoint_submit_legacy_raw(
+            client, DCC_REST_POST, path, NULL, "application/json",
+            state->payload_json, strlen(state->payload_json),
             dcc_managed_message_create_cb, state
         );
     }
@@ -169,8 +172,8 @@ dcc_status_t dcc_managed_message_publish_latest(
             (unsigned long long)old_ref.message_id
         );
         if (status == DCC_OK) {
-            status = dcc_rest_request_method(
-                client, DCC_REST_DELETE, path, NULL,
+            status = dcc_endpoint_submit_legacy_raw(
+                client, DCC_REST_DELETE, path, NULL, NULL, NULL, 0U,
                 dcc_managed_message_delete_cb, state
             );
         }

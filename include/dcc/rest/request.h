@@ -26,6 +26,30 @@ extern "C" {
 typedef struct dcc_rest_request dcc_rest_request_t;
 
 /**
+ * @page dcc_rest_endpoint_call_contract Endpoint submission contract
+ *
+ * Canonical endpoint functions borrow every scalar-adjacent pointer, typed
+ * input record, nested builder, string, array, and file buffer only for the
+ * duration of the call. Before returning, they validate the complete covered
+ * input and copy or serialize all path, query, body, file metadata, and exact
+ * file bytes needed by the worker.
+ *
+ * A NULL `options` argument selects DCC_REST_CALL_OPTIONS_INIT. When options
+ * install a callback, the callback and its `user_data` remain borrowed until
+ * the one terminal callback returns. A NULL `out_request` selects automatic
+ * release. A non-NULL `out_request` receives a caller-owned handle on success;
+ * pass that handle to dcc_rest_request_destroy() when finished.
+ *
+ * Local validation or admission rejection returns a non-OK status, clears a
+ * supplied `*out_request`, queues nothing, and invokes neither callback nor
+ * error observer. DCC_OK guarantees exactly one terminal result. Versioned
+ * endpoint records accept larger layouts and historical prefixes that cover
+ * all mandatory and present fields; uncovered optional suffix fields are
+ * absent, while unsupported versions, unknown presence bits, and a present
+ * but uncovered field are rejected.
+ */
+
+/**
  * Receives one borrowed terminal REST result.
  *
  * The callback may cancel or destroy its request, but waiting on that same

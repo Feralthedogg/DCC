@@ -3,14 +3,9 @@
 
 #include <stdlib.h>
 
-dcc_status_t dcc_autocomplete_builder_build_json(
-    const dcc_autocomplete_builder_t *builder,
-    char **out_json
+dcc_status_t dcc_autocomplete_builder_validate_for_json(
+    const dcc_autocomplete_builder_t *builder
 ) {
-    if (out_json == NULL) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    *out_json = NULL;
     dcc_builder_abi_view_t view;
     if (dcc_autocomplete_builder_abi_validate(builder, &view) != DCC_OK) {
         return DCC_ERR_INVALID_ARG;
@@ -19,13 +14,54 @@ dcc_status_t dcc_autocomplete_builder_build_json(
         &view, DCC_AUTOCOMPLETE_BUILDER_PRESENT_CHOICES
     );
     size_t choices_count = has_choices ? builder->choices_count : 0U;
-    const dcc_autocomplete_choice_t *choices = has_choices ? builder->choices : NULL;
+    const dcc_autocomplete_choice_t *choices = has_choices
+        ? builder->choices
+        : NULL;
     if ((choices_count != 0U && choices == NULL) ||
         choices_count > DCC_AUTOCOMPLETE_MAX_CHOICES) {
         return DCC_ERR_INVALID_ARG;
     }
     size_t stride = 0U;
     dcc_status_t status = dcc_autocomplete_choice_array_begin(
+        choices, choices_count, &stride
+    );
+    for (size_t i = 0U; status == DCC_OK && i < choices_count; ++i) {
+        const dcc_autocomplete_choice_t *choice =
+            (const dcc_autocomplete_choice_t *)dcc_builder_abi_array_at(
+                choices, stride, i
+            );
+        dcc_builder_abi_view_t choice_view;
+        status = dcc_autocomplete_choice_semantic_validate(
+            choice, &choice_view
+        );
+        if (status == DCC_OK && choice_view.size != stride) {
+            status = DCC_ERR_INVALID_ARG;
+        }
+    }
+    return status;
+}
+
+dcc_status_t dcc_autocomplete_builder_build_json(
+    const dcc_autocomplete_builder_t *builder,
+    char **out_json
+) {
+    if (out_json == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out_json = NULL;
+    dcc_status_t status = dcc_autocomplete_builder_validate_for_json(builder);
+    if (status != DCC_OK) {
+        return status;
+    }
+    dcc_builder_abi_view_t view;
+    (void)dcc_autocomplete_builder_abi_validate(builder, &view);
+    const int has_choices = dcc_builder_abi_view_has(
+        &view, DCC_AUTOCOMPLETE_BUILDER_PRESENT_CHOICES
+    );
+    size_t choices_count = has_choices ? builder->choices_count : 0U;
+    const dcc_autocomplete_choice_t *choices = has_choices ? builder->choices : NULL;
+    size_t stride = 0U;
+    status = dcc_autocomplete_choice_array_begin(
         choices, choices_count, &stride
     );
     if (status != DCC_OK) {

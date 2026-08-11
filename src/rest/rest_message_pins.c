@@ -66,20 +66,13 @@ dcc_status_t dcc_rest_get_channel_pins(
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || channel_id == 0U)
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
-    const uint64_t known = DCC_REST_PIN_PAGE_PRESENT_BEFORE |
-        DCC_REST_PIN_PAGE_PRESENT_LIMIT;
-    if (query != NULL && (query->size < sizeof(*query) ||
-            query->version != DCC_REST_PIN_PAGE_VERSION ||
-            (query->present & ~known) != 0U ||
-            ((query->present & DCC_REST_PIN_PAGE_PRESENT_BEFORE) != 0U &&
-                (query->before == NULL || query->before[0] == '\0')) ||
-            ((query->present & DCC_REST_PIN_PAGE_PRESENT_LIMIT) != 0U &&
-                (query->limit == 0U || query->limit > 50U))))
-        return DCC_ERR_INVALID_ARG;
+    dcc_endpoint_record_view_t view;
+    status = dcc_endpoint_pin_page_preflight(query, &view);
+    if (status != DCC_OK) return status;
     dcc_rest_buffer_t text = {0};
-    if (query != NULL && (query->present & DCC_REST_PIN_PAGE_PRESENT_BEFORE) != 0U)
+    if (query != NULL && (view.present & DCC_REST_PIN_PAGE_PRESENT_BEFORE) != 0U)
         status = dcc_rest_query_append_string(&text, "before", query->before);
-    if (status == DCC_OK && query != NULL && (query->present & DCC_REST_PIN_PAGE_PRESENT_LIMIT) != 0U)
+    if (status == DCC_OK && query != NULL && (view.present & DCC_REST_PIN_PAGE_PRESENT_LIMIT) != 0U)
         status = dcc_rest_query_append_u64_value(&text, "limit", query->limit);
     char *base = NULL;
     char *path = NULL;

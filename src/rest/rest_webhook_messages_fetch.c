@@ -24,13 +24,12 @@ static dcc_status_t dcc_webhook_message_query(
     const dcc_rest_webhook_message_query_t *query,
     dcc_rest_buffer_t *out
 ) {
-    if (query == NULL) return DCC_OK;
-    if (query->size < sizeof(*query) ||
-        query->version != DCC_REST_WEBHOOK_MESSAGE_QUERY_VERSION ||
-        (query->present & ~DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID) != 0U ||
-        ((query->present & DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID) != 0U &&
-            query->thread_id == 0U)) return DCC_ERR_INVALID_ARG;
-    return (query->present & DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID) != 0U
+    dcc_endpoint_record_view_t view;
+    dcc_status_t status = dcc_endpoint_webhook_message_query_preflight(
+        query, &view
+    );
+    if (status != DCC_OK || query == NULL) return status;
+    return (view.present & DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID) != 0U
         ? dcc_rest_query_append_u64_value(out, "thread_id", query->thread_id)
         : DCC_OK;
 }
@@ -43,10 +42,15 @@ dcc_status_t dcc_rest_get_webhook_message(
 ) {
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
-    if (status != DCC_OK || client == NULL)
+    if (status != DCC_OK || client == NULL || webhook_id == 0U ||
+        message_id == 0U || webhook_token == NULL || webhook_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    dcc_endpoint_record_view_t view;
+    status = dcc_endpoint_webhook_message_query_preflight(query, &view);
+    if (status != DCC_OK) return status;
     dcc_rest_buffer_t text = {0};
-    status = dcc_webhook_message_query(query, &text);
+    status = dcc_endpoint_allocation_probe();
+    if (status == DCC_OK) status = dcc_webhook_message_query(query, &text);
     char *base = NULL;
     char *path = NULL;
     if (status == DCC_OK) status = dcc_webhook_message_base(&base,

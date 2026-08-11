@@ -16,6 +16,8 @@ dcc_status_t dcc_rest_create_message(
     if (status != DCC_OK || client == NULL || channel_id == 0U) {
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     }
+    status = dcc_endpoint_message_payload_preflight(payload);
+    if (status != DCC_OK) return status;
     dcc_endpoint_body_t body = {0};
     status = dcc_endpoint_build_message_body(payload, &body);
     char *path = NULL;

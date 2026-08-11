@@ -18,12 +18,16 @@ dcc_status_t dcc_rest_interaction_response_create(
     if (status != DCC_OK || client == NULL || interaction_id == 0U ||
         interaction_token == NULL || interaction_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    dcc_endpoint_interaction_view_t view;
+    status = dcc_endpoint_interaction_response_preflight(response, &view);
+    if (status != DCC_OK) return status;
     dcc_endpoint_body_t body = {0};
-    status = dcc_endpoint_build_interaction_body(response, &body);
+    status = dcc_endpoint_allocation_probe();
+    if (status == DCC_OK) status = dcc_endpoint_build_interaction_body(response, &body);
     dcc_rest_buffer_t query = {0};
     if (status == DCC_OK &&
-        (response->present & DCC_REST_INTERACTION_RESPONSE_PRESENT_WITH_RESPONSE) != 0U)
-        status = dcc_rest_query_append_bool(&query, "with_response", response->with_response);
+        (view.record.present & DCC_REST_INTERACTION_RESPONSE_PRESENT_WITH_RESPONSE) != 0U)
+        status = dcc_rest_query_append_bool(&query, "with_response", view.with_response);
     char *token = NULL;
     char *base = NULL;
     char *path = NULL;

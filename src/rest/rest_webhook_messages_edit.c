@@ -16,22 +16,16 @@ dcc_status_t dcc_rest_modify_webhook_message(
     if (status != DCC_OK || client == NULL || webhook_id == 0U || message_id == 0U ||
         webhook_token == NULL || webhook_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
-    const uint64_t known = DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID |
-        DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_WITH_COMPONENTS;
-    if (edit == NULL || edit->size < sizeof(*edit) ||
-        edit->version != DCC_REST_WEBHOOK_MESSAGE_EDIT_VERSION ||
-        (edit->present & ~known) != 0U || edit->payload == NULL ||
-        ((edit->present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID) != 0U &&
-            edit->thread_id == 0U) ||
-        ((edit->present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_WITH_COMPONENTS) != 0U &&
-            edit->with_components > 1U)) return DCC_ERR_INVALID_ARG;
+    dcc_endpoint_webhook_edit_view_t view;
+    status = dcc_endpoint_webhook_message_edit_preflight(edit, &view);
+    if (status != DCC_OK) return status;
     dcc_endpoint_body_t body = {0};
-    status = dcc_endpoint_build_message_body(edit->payload, &body);
+    status = dcc_endpoint_build_message_body(view.payload, &body);
     dcc_rest_buffer_t query = {0};
-    if (status == DCC_OK && (edit->present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID) != 0U)
-        status = dcc_rest_query_append_u64_value(&query, "thread_id", edit->thread_id);
-    if (status == DCC_OK && (edit->present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_WITH_COMPONENTS) != 0U)
-        status = dcc_rest_query_append_bool(&query, "with_components", edit->with_components);
+    if (status == DCC_OK && (view.record.present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID) != 0U)
+        status = dcc_rest_query_append_u64_value(&query, "thread_id", view.thread_id);
+    if (status == DCC_OK && (view.record.present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_WITH_COMPONENTS) != 0U)
+        status = dcc_rest_query_append_bool(&query, "with_components", view.with_components);
     char *token = NULL;
     char *base = NULL;
     char *path = NULL;

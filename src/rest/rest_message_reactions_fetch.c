@@ -19,28 +19,15 @@ dcc_status_t dcc_rest_get_message_reactions(
     if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U ||
         reaction == NULL || reaction[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
-    const size_t historical_size = offsetof(dcc_rest_reaction_query_t, limit);
-    const uint64_t known = DCC_REST_REACTION_QUERY_PRESENT_TYPE |
-        DCC_REST_REACTION_QUERY_PRESENT_AFTER |
-        DCC_REST_REACTION_QUERY_PRESENT_LIMIT;
-    int current = query != NULL && query->size >= sizeof(*query);
-    if (query != NULL && (query->version != DCC_REST_REACTION_QUERY_VERSION ||
-            (query->size != historical_size && !current) ||
-            (query->present & ~known) != 0U ||
-            (!current && (query->present & DCC_REST_REACTION_QUERY_PRESENT_LIMIT) != 0U) ||
-            ((query->present & DCC_REST_REACTION_QUERY_PRESENT_TYPE) != 0U &&
-                query->type != DCC_REST_REACTION_NORMAL &&
-                query->type != DCC_REST_REACTION_BURST) ||
-            ((query->present & DCC_REST_REACTION_QUERY_PRESENT_AFTER) != 0U && query->after == 0U) ||
-            (current && (query->present & DCC_REST_REACTION_QUERY_PRESENT_LIMIT) != 0U &&
-                (query->limit == 0U || query->limit > 100U))))
-        return DCC_ERR_INVALID_ARG;
+    dcc_endpoint_record_view_t view;
+    status = dcc_endpoint_reaction_query_preflight(query, &view);
+    if (status != DCC_OK) return status;
     dcc_rest_buffer_t text = {0};
-    if (query != NULL && (query->present & DCC_REST_REACTION_QUERY_PRESENT_TYPE) != 0U)
+    if (query != NULL && (view.present & DCC_REST_REACTION_QUERY_PRESENT_TYPE) != 0U)
         status = dcc_rest_query_append_u64_value(&text, "type", (uint64_t)query->type);
-    if (status == DCC_OK && query != NULL && (query->present & DCC_REST_REACTION_QUERY_PRESENT_AFTER) != 0U)
+    if (status == DCC_OK && query != NULL && (view.present & DCC_REST_REACTION_QUERY_PRESENT_AFTER) != 0U)
         status = dcc_rest_query_append_u64_value(&text, "after", query->after);
-    if (status == DCC_OK && current && (query->present & DCC_REST_REACTION_QUERY_PRESENT_LIMIT) != 0U)
+    if (status == DCC_OK && query != NULL && (view.present & DCC_REST_REACTION_QUERY_PRESENT_LIMIT) != 0U)
         status = dcc_rest_query_append_u64_value(&text, "limit", query->limit);
     char *escaped = NULL;
     char *base = NULL;

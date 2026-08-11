@@ -11,6 +11,111 @@ typedef struct dcc_endpoint_body {
     const char *content_type;
 } dcc_endpoint_body_t;
 
+typedef struct dcc_endpoint_record_view {
+    size_t size;
+    uint32_t version;
+    uint64_t present;
+} dcc_endpoint_record_view_t;
+
+typedef struct dcc_endpoint_interaction_view {
+    dcc_endpoint_record_view_t record;
+    dcc_interaction_response_type_t type;
+    uint8_t with_response;
+    dcc_rest_interaction_response_data_t data;
+    const dcc_rest_multipart_file_t *files;
+    size_t file_count;
+} dcc_endpoint_interaction_view_t;
+
+typedef struct dcc_endpoint_webhook_execute_view {
+    dcc_endpoint_record_view_t record;
+    const dcc_message_builder_t *message;
+    const dcc_rest_multipart_file_t *files;
+    size_t file_count;
+    const char *username;
+    const char *avatar_url;
+    const char *thread_name;
+    const dcc_snowflake_t *applied_tag_ids;
+    size_t applied_tag_count;
+    uint8_t wait;
+    dcc_snowflake_t thread_id;
+    uint8_t with_components;
+} dcc_endpoint_webhook_execute_view_t;
+
+typedef struct dcc_endpoint_webhook_edit_view {
+    dcc_endpoint_record_view_t record;
+    const dcc_rest_message_payload_t *payload;
+    dcc_snowflake_t thread_id;
+    uint8_t with_components;
+} dcc_endpoint_webhook_edit_view_t;
+
+#define DCC_ENDPOINT_FIELD_END(type_, field_) \
+    (offsetof(type_, field_) + sizeof(((type_ *)0)->field_))
+
+int dcc_endpoint_field_covered(size_t size, size_t offset, size_t width);
+dcc_status_t dcc_endpoint_record_read(
+    const void *value,
+    size_t version_offset,
+    size_t present_offset,
+    size_t mandatory_size,
+    uint32_t expected_version,
+    uint64_t known_present,
+    dcc_endpoint_record_view_t *out
+);
+int dcc_endpoint_present_field_covered(
+    const dcc_endpoint_record_view_t *view,
+    uint64_t bit,
+    size_t offset,
+    size_t width
+);
+
+dcc_status_t dcc_endpoint_message_payload_preflight(
+    const dcc_rest_message_payload_t *payload
+);
+dcc_status_t dcc_endpoint_message_list_preflight(
+    const dcc_rest_message_list_query_t *query,
+    dcc_endpoint_record_view_t *out
+);
+dcc_status_t dcc_endpoint_id_page_preflight(
+    const dcc_rest_id_page_t *page,
+    uint64_t allowed_present,
+    dcc_endpoint_record_view_t *out
+);
+dcc_status_t dcc_endpoint_pin_page_preflight(
+    const dcc_rest_pin_page_t *page,
+    dcc_endpoint_record_view_t *out
+);
+dcc_status_t dcc_endpoint_reaction_query_preflight(
+    const dcc_rest_reaction_query_t *query,
+    dcc_endpoint_record_view_t *out
+);
+dcc_status_t dcc_endpoint_interaction_response_preflight(
+    const dcc_rest_interaction_response_t *response,
+    dcc_endpoint_interaction_view_t *out
+);
+dcc_status_t dcc_endpoint_webhook_builder_preflight(
+    const dcc_rest_webhook_builder_t *builder,
+    int create,
+    int token_authenticated,
+    dcc_endpoint_record_view_t *out
+);
+dcc_status_t dcc_endpoint_webhook_execute_preflight(
+    const dcc_rest_webhook_execute_t *execute,
+    dcc_endpoint_webhook_execute_view_t *out
+);
+dcc_status_t dcc_endpoint_webhook_message_query_preflight(
+    const dcc_rest_webhook_message_query_t *query,
+    dcc_endpoint_record_view_t *out
+);
+dcc_status_t dcc_endpoint_webhook_message_edit_preflight(
+    const dcc_rest_webhook_message_edit_t *edit,
+    dcc_endpoint_webhook_edit_view_t *out
+);
+dcc_status_t dcc_endpoint_webhook_compat_preflight(
+    const dcc_rest_webhook_compat_payload_t *payload,
+    const void **out_body,
+    size_t *out_body_len
+);
+
 dcc_status_t dcc_endpoint_prepare(
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request,
@@ -24,6 +129,21 @@ dcc_status_t dcc_endpoint_submit(
     const dcc_endpoint_body_t *body,
     const dcc_rest_call_options_t *options,
     dcc_rest_request_t **out_request
+);
+
+/* Transition adapter for public APIs that still expose dcc_rest_cb. The
+ * descriptor submission copies path/query/body before this function returns;
+ * accepted callbacks are therefore always delivered by the REST worker. */
+dcc_status_t dcc_endpoint_submit_legacy_raw(
+    dcc_client_t *client,
+    dcc_rest_method_t method,
+    const char *path,
+    const char *query,
+    const char *content_type,
+    const void *body,
+    size_t body_len,
+    dcc_rest_cb callback,
+    void *user_data
 );
 
 dcc_status_t dcc_endpoint_path_with_query(
@@ -64,6 +184,12 @@ dcc_status_t dcc_endpoint_legacy_options(
 );
 
 void dcc_endpoint_legacy_bridge_release(void *bridge);
+
+/* Test-only construction-allocation probe. It is thread-local and inert until
+ * armed, so production endpoint behavior is unchanged. */
+void dcc_endpoint_test_allocation_probe_begin(size_t successful_allocations);
+size_t dcc_endpoint_test_allocation_probe_end(void);
+dcc_status_t dcc_endpoint_allocation_probe(void);
 
 #define DCC_ENDPOINT_LEGACY_RETURN(callback_, user_data_, endpoint_, ...) \
     do { \

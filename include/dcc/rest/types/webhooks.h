@@ -31,6 +31,13 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Presence-gated webhook create/modify input.
+ *
+ * The header through `present` is mandatory. Strings are borrowed for the
+ * endpoint call. Every present field must be covered by `size`; uncovered
+ * suffix fields are absent, and larger version-1 records are accepted.
+ */
 typedef struct dcc_rest_webhook_builder {
     size_t size;
     uint32_t version;
@@ -53,6 +60,16 @@ static inline void dcc_rest_webhook_builder_init(
     }
 }
 
+/**
+ * @brief Typed webhook execution body, files, and query options.
+ *
+ * The prefix through `message` is mandatory. Every presence-gated field must
+ * be covered by `size`. Historical prefixes that do not cover both `files`
+ * and `file_count` treat files as absent; other uncovered optional suffix
+ * fields are absent. Larger version-1 records are accepted. All nested
+ * strings, arrays, builders, metadata, and file bytes are borrowed only for
+ * the endpoint call and serialized before return.
+ */
 typedef struct dcc_rest_webhook_execute {
     size_t size;
     uint32_t version;
@@ -86,6 +103,13 @@ static inline void dcc_rest_webhook_execute_init(
     }
 }
 
+/**
+ * @brief Presence-gated webhook-message query.
+ *
+ * The header through `present` is mandatory. A present thread ID must be
+ * covered by `size`; an uncovered suffix is absent, and larger version-1
+ * records are accepted.
+ */
 typedef struct dcc_rest_webhook_message_query {
     size_t size;
     uint32_t version;
@@ -107,6 +131,13 @@ static inline void dcc_rest_webhook_message_query_init(
     }
 }
 
+/**
+ * @brief Webhook-message edit payload and presence-gated query options.
+ *
+ * The prefix through `payload` is mandatory. The payload is borrowed for the
+ * endpoint call. Present query fields must be covered by `size`; uncovered
+ * suffix fields are absent, and larger version-1 records are accepted.
+ */
 typedef struct dcc_rest_webhook_message_edit {
     size_t size;
     uint32_t version;
@@ -133,6 +164,14 @@ static inline void dcc_rest_webhook_message_edit_init(
     }
 }
 
+/**
+ * @brief Exact opaque JSON byte span for Slack/GitHub compatible webhooks.
+ *
+ * The size/version header is mandatory. A historical prefix that does not
+ * cover both `body` and `body_len` treats the body as absent; larger version-1
+ * records are accepted. The byte span is borrowed only for the endpoint call
+ * and copied before return.
+ */
 typedef struct dcc_rest_webhook_compat_payload {
     size_t size;
     uint32_t version;

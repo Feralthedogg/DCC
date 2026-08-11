@@ -18,15 +18,18 @@ dcc_status_t dcc_rest_execute_webhook(
     if (status != DCC_OK || client == NULL || webhook_id == 0U ||
         webhook_token == NULL || webhook_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    dcc_endpoint_webhook_execute_view_t view;
+    status = dcc_endpoint_webhook_execute_preflight(execute, &view);
+    if (status != DCC_OK) return status;
     dcc_endpoint_body_t body = {0};
     status = dcc_endpoint_build_webhook_execute_body(execute, &body);
     dcc_rest_buffer_t query = {0};
-    if (status == DCC_OK && (execute->present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_WAIT) != 0U)
-        status = dcc_rest_query_append_bool(&query, "wait", execute->wait);
-    if (status == DCC_OK && (execute->present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_ID) != 0U)
-        status = dcc_rest_query_append_u64_value(&query, "thread_id", execute->thread_id);
-    if (status == DCC_OK && (execute->present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_WITH_COMPONENTS) != 0U)
-        status = dcc_rest_query_append_bool(&query, "with_components", execute->with_components);
+    if (status == DCC_OK && (view.record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_WAIT) != 0U)
+        status = dcc_rest_query_append_bool(&query, "wait", view.wait);
+    if (status == DCC_OK && (view.record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_ID) != 0U)
+        status = dcc_rest_query_append_u64_value(&query, "thread_id", view.thread_id);
+    if (status == DCC_OK && (view.record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_WITH_COMPONENTS) != 0U)
+        status = dcc_rest_query_append_bool(&query, "with_components", view.with_components);
     char *token = NULL;
     char *base = NULL;
     char *path = NULL;

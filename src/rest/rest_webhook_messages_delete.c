@@ -16,13 +16,11 @@ dcc_status_t dcc_rest_delete_webhook_message(
     if (status != DCC_OK || client == NULL || webhook_id == 0U || message_id == 0U ||
         webhook_token == NULL || webhook_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
-    if (query != NULL && (query->size < sizeof(*query) ||
-            query->version != DCC_REST_WEBHOOK_MESSAGE_QUERY_VERSION ||
-            (query->present & ~DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID) != 0U ||
-            ((query->present & DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID) != 0U &&
-                query->thread_id == 0U))) return DCC_ERR_INVALID_ARG;
+    dcc_endpoint_record_view_t view;
+    status = dcc_endpoint_webhook_message_query_preflight(query, &view);
+    if (status != DCC_OK) return status;
     dcc_rest_buffer_t text = {0};
-    if (query != NULL && (query->present & DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID) != 0U)
+    if (query != NULL && (view.present & DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID) != 0U)
         status = dcc_rest_query_append_u64_value(&text, "thread_id", query->thread_id);
     char *token = NULL;
     char *base = NULL;

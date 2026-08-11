@@ -482,6 +482,8 @@ DCC_API dcc_status_t dcc_rest_delete_current_user_application_role_connection(
 
 /**
  * @brief Submits `POST /webhooks/{webhook.id}/{webhook.token}/slack`.
+ * @details `payload` is borrowed for the call. Uses the
+ * @ref dcc_rest_endpoint_call_contract.
  */
 DCC_API dcc_status_t dcc_rest_execute_webhook_slack(
     dcc_client_t *client,
@@ -494,6 +496,8 @@ DCC_API dcc_status_t dcc_rest_execute_webhook_slack(
 
 /**
  * @brief Submits `POST /webhooks/{webhook.id}/{webhook.token}/github`.
+ * @details `payload` is borrowed for the call. Uses the
+ * @ref dcc_rest_endpoint_call_contract.
  */
 DCC_API dcc_status_t dcc_rest_execute_webhook_github(
     dcc_client_t *client,

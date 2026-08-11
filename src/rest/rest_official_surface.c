@@ -1098,11 +1098,14 @@ dcc_status_t dcc_rest_execute_webhook_slack(
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || webhook_id == 0U ||
-        webhook_token == NULL || webhook_token[0] == '\0' || payload == NULL ||
-        payload->size < sizeof(*payload) ||
-        payload->version != DCC_REST_WEBHOOK_COMPAT_PAYLOAD_VERSION ||
-        (payload->body_len != 0U && payload->body == NULL))
+        webhook_token == NULL || webhook_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    const void *payload_body = NULL;
+    size_t payload_body_len = 0U;
+    status = dcc_endpoint_webhook_compat_preflight(
+        payload, &payload_body, &payload_body_len
+    );
+    if (status != DCC_OK) return status;
     char *token = NULL;
     char *path = NULL;
     status = dcc_rest_escape_path_segment(webhook_token, &token);
@@ -1110,7 +1113,7 @@ dcc_status_t dcc_rest_execute_webhook_slack(
         &path, DCC_REST_ROUTE_WEBHOOK_EXECUTE_SLACK,
         (unsigned long long)webhook_id, token);
     dcc_endpoint_body_t body = {
-        (char *)payload->body, payload->body_len, "application/json"
+        (char *)payload_body, payload_body_len, "application/json"
     };
     if (status == DCC_OK) status = dcc_endpoint_submit(
         client, DCC_REST_POST, path, &body, &resolved, out_request);
@@ -1130,11 +1133,14 @@ dcc_status_t dcc_rest_execute_webhook_github(
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
     if (status != DCC_OK || client == NULL || webhook_id == 0U ||
-        webhook_token == NULL || webhook_token[0] == '\0' || payload == NULL ||
-        payload->size < sizeof(*payload) ||
-        payload->version != DCC_REST_WEBHOOK_COMPAT_PAYLOAD_VERSION ||
-        (payload->body_len != 0U && payload->body == NULL))
+        webhook_token == NULL || webhook_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    const void *payload_body = NULL;
+    size_t payload_body_len = 0U;
+    status = dcc_endpoint_webhook_compat_preflight(
+        payload, &payload_body, &payload_body_len
+    );
+    if (status != DCC_OK) return status;
     char *token = NULL;
     char *path = NULL;
     status = dcc_rest_escape_path_segment(webhook_token, &token);
@@ -1142,7 +1148,7 @@ dcc_status_t dcc_rest_execute_webhook_github(
         &path, DCC_REST_ROUTE_WEBHOOK_EXECUTE_GITHUB,
         (unsigned long long)webhook_id, token);
     dcc_endpoint_body_t body = {
-        (char *)payload->body, payload->body_len, "application/json"
+        (char *)payload_body, payload_body_len, "application/json"
     };
     if (status == DCC_OK) status = dcc_endpoint_submit(
         client, DCC_REST_POST, path, &body, &resolved, out_request);

@@ -8,6 +8,11 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Submits `POST /channels/{channel_id}/webhooks`.
+ * @details `builder` is borrowed for the call. Uses the
+ * @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_create_webhook(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,

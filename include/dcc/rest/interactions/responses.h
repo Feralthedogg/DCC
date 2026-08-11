@@ -8,6 +8,11 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Submits `POST /interactions/{id}/{token}/callback`.
+ * @details The tagged response and active builder are borrowed for the call.
+ * Uses the @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_interaction_response_create(
     dcc_client_t *client,
     dcc_snowflake_t interaction_id,

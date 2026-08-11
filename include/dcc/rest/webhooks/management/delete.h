@@ -8,6 +8,11 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Submits `DELETE /webhooks/{webhook_id}[/{webhook_token}]`.
+ * @details `webhook_token` may be NULL but not empty. Uses the
+ * @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_delete_webhook(
     dcc_client_t *client,
     dcc_snowflake_t webhook_id,

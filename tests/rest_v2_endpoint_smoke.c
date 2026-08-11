@@ -7,6 +7,7 @@
 #include <dcc/rest/request.h>
 #include <dcc/rest/webhooks.h>
 
+#include "internal/rest/dcc_rest_endpoint_internal.h"
 #include "internal/rest/dcc_rest_intercept_internal.h"
 
 #if defined(_WIN32)
@@ -270,8 +271,17 @@ int endpoint_completed_contract(
             memory_order_acquire \
         ); \
         dcc_rest_request_t *request = (dcc_rest_request_t *)(uintptr_t)1U; \
+        int allocation_probe_armed = \
+            (expected_status_) == DCC_ERR_INVALID_ARG; \
+        if (allocation_probe_armed) { \
+            dcc_endpoint_test_allocation_probe_begin(0U); \
+        } \
         dcc_status_t rejected_status = (call_); \
+        size_t allocation_calls = allocation_probe_armed \
+            ? dcc_endpoint_test_allocation_probe_end() \
+            : 0U; \
         if (rejected_status != (expected_status_) || request != NULL || \
+            allocation_calls != 0U || \
             atomic_load_explicit(&(capture_)->calls, memory_order_acquire) != \
                 capture_calls_before || \
             atomic_load_explicit(&(callback_)->calls, memory_order_acquire) != \
@@ -280,11 +290,12 @@ int endpoint_completed_contract(
                 observer_calls_before) { \
             fprintf( \
                 stderr, \
-                "%s rejection detail status=%s request=%p capture=%u/%u " \
+                "%s rejection detail status=%s request=%p allocations=%zu capture=%u/%u " \
                 "callback=%u/%u observer=%u/%u\n", \
                 (label_), \
                 dcc_status_string(rejected_status), \
                 (void *)request, \
+                allocation_calls, \
                 capture_calls_before, \
                 atomic_load_explicit(&(capture_)->calls, memory_order_acquire), \
                 callback_calls_before, \
@@ -1143,6 +1154,140 @@ static int endpoint_rejection_contract(
     return 0;
 }
 
+static int endpoint_preflight_precedence_contract(dcc_client_t *client) {
+    dcc_message_builder_t message = DCC_MESSAGE_BUILDER_INIT;
+    if (dcc_message_builder_set_content(&message, "preflight") != DCC_OK) {
+        return 1;
+    }
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_init(&payload, &message);
+
+    dcc_rest_request_t *request = (dcc_rest_request_t *)(uintptr_t)1U;
+    dcc_endpoint_test_allocation_probe_begin(0U);
+    dcc_status_t followup_status = dcc_rest_interaction_followup_edit(
+        client, 0U, "token", 1U, &payload, NULL, &request
+    );
+    size_t followup_allocations = dcc_endpoint_test_allocation_probe_end();
+    if (followup_status != DCC_ERR_INVALID_ARG || request != NULL ||
+        followup_allocations != 0U) {
+        fprintf(
+            stderr,
+            "followup preflight precedence failed: status=%s request=%p allocations=%zu\n",
+            dcc_status_string(followup_status),
+            (void *)request,
+            followup_allocations
+        );
+        return 1;
+    }
+
+    dcc_rest_webhook_message_query_t query =
+        DCC_REST_WEBHOOK_MESSAGE_QUERY_INIT;
+    query.present = DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID;
+    query.thread_id = 1U;
+    request = (dcc_rest_request_t *)(uintptr_t)1U;
+    dcc_endpoint_test_allocation_probe_begin(0U);
+    dcc_status_t webhook_status = dcc_rest_get_webhook_message(
+        client, 0U, "token", 1U, &query, NULL, &request
+    );
+    size_t webhook_allocations = dcc_endpoint_test_allocation_probe_end();
+    if (webhook_status != DCC_ERR_INVALID_ARG || request != NULL ||
+        webhook_allocations != 0U) {
+        fprintf(
+            stderr,
+            "webhook preflight precedence failed: status=%s request=%p allocations=%zu\n",
+            dcc_status_string(webhook_status),
+            (void *)request,
+            webhook_allocations
+        );
+        return 1;
+    }
+
+    static const unsigned char file_bytes[] = {1U};
+    dcc_rest_multipart_file_t file = {
+        "files[0]", "pong.bin", NULL, file_bytes, sizeof(file_bytes),
+    };
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    if (dcc_rest_interaction_response_set_pong(&response) != DCC_OK) {
+        return 1;
+    }
+    response.files = &file;
+    response.file_count = 1U;
+    request = (dcc_rest_request_t *)(uintptr_t)1U;
+    dcc_endpoint_test_allocation_probe_begin(0U);
+    dcc_status_t interaction_status = dcc_rest_interaction_response_create(
+        client, 1U, "token", &response, NULL, &request
+    );
+    size_t interaction_allocations = dcc_endpoint_test_allocation_probe_end();
+    if (interaction_status != DCC_ERR_INVALID_ARG || request != NULL ||
+        interaction_allocations != 0U) {
+        fprintf(
+            stderr,
+            "interaction preflight precedence failed: status=%s request=%p allocations=%zu\n",
+            dcc_status_string(interaction_status),
+            (void *)request,
+            interaction_allocations
+        );
+        return 1;
+    }
+
+    dcc_modal_builder_t invalid_modal = DCC_MODAL_BUILDER_INIT;
+    response = (dcc_rest_interaction_response_t)
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    response.type = DCC_INTERACTION_RESPONSE_MODAL;
+    response.present = DCC_REST_INTERACTION_RESPONSE_PRESENT_MODAL;
+    response.data.modal = &invalid_modal;
+    request = (dcc_rest_request_t *)(uintptr_t)1U;
+    dcc_endpoint_test_allocation_probe_begin(0U);
+    interaction_status = dcc_rest_interaction_response_create(
+        client, 1U, "token", &response, NULL, &request
+    );
+    interaction_allocations = dcc_endpoint_test_allocation_probe_end();
+    if (interaction_status != DCC_ERR_INVALID_ARG || request != NULL ||
+        interaction_allocations != 0U) {
+        fprintf(
+            stderr,
+            "modal preflight precedence failed: status=%s request=%p allocations=%zu\n",
+            dcc_status_string(interaction_status),
+            (void *)request,
+            interaction_allocations
+        );
+        return 1;
+    }
+
+    dcc_autocomplete_choice_t invalid_choice = DCC_AUTOCOMPLETE_CHOICE_INIT;
+    invalid_choice.present = DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE;
+    invalid_choice.value_type = DCC_AUTOCOMPLETE_CHOICE_STRING;
+    invalid_choice.value_string = "value";
+    dcc_autocomplete_builder_t invalid_autocomplete =
+        DCC_AUTOCOMPLETE_BUILDER_INIT;
+    invalid_autocomplete.present = DCC_AUTOCOMPLETE_BUILDER_PRESENT_CHOICES;
+    invalid_autocomplete.choices = &invalid_choice;
+    invalid_autocomplete.choices_count = 1U;
+    response = (dcc_rest_interaction_response_t)
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    response.type = DCC_INTERACTION_RESPONSE_AUTOCOMPLETE;
+    response.present = DCC_REST_INTERACTION_RESPONSE_PRESENT_AUTOCOMPLETE;
+    response.data.autocomplete = &invalid_autocomplete;
+    request = (dcc_rest_request_t *)(uintptr_t)1U;
+    dcc_endpoint_test_allocation_probe_begin(0U);
+    interaction_status = dcc_rest_interaction_response_create(
+        client, 1U, "token", &response, NULL, &request
+    );
+    interaction_allocations = dcc_endpoint_test_allocation_probe_end();
+    if (interaction_status != DCC_ERR_INVALID_ARG || request != NULL ||
+        interaction_allocations != 0U) {
+        fprintf(
+            stderr,
+            "autocomplete preflight precedence failed: status=%s request=%p allocations=%zu\n",
+            dcc_status_string(interaction_status),
+            (void *)request,
+            interaction_allocations
+        );
+        return 1;
+    }
+    return 0;
+}
+
 static int endpoint_message_payload_success_contract(
     dcc_client_t *client,
     endpoint_capture_t *capture
@@ -1739,7 +1884,14 @@ int main(void) {
         return 1;
     }
 
-    int failed = endpoint_rejection_contract(client, &capture, &callback, &observer);
+    int failed = endpoint_transition_submission_contract(client, &capture);
+    dcc_rest_set_interceptor(client, endpoint_intercept, &capture);
+    if (!failed) {
+        failed = endpoint_rejection_contract(client, &capture, &callback, &observer);
+    }
+    if (!failed) {
+        failed = endpoint_preflight_precedence_contract(client);
+    }
     if (!failed) {
         failed = endpoint_message_payload_success_contract(client, &capture);
     }
@@ -1762,6 +1914,9 @@ int main(void) {
         failed = endpoint_webhook_contract(client, &capture);
     }
     if (!failed) {
+        failed = endpoint_versioned_prefix_contract(client, &capture);
+    }
+    if (!failed) {
         failed = endpoint_cancel_destroy_contract(client, &capture, &callback);
     }
     dcc_status_t stop_status = dcc_client_stop(client);
@@ -1773,6 +1928,9 @@ int main(void) {
             &callback,
             &observer
         );
+    }
+    if (!failed && stop_status == DCC_OK) {
+        failed = endpoint_transition_rejection_contract(client);
     }
     dcc_client_destroy(client);
     dcc_rest_result_free(callback.result);

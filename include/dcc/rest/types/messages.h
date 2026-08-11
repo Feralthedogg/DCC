@@ -29,6 +29,15 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Borrowed message body and optional fixed multipart files.
+ *
+ * The prefix through `message` is mandatory. Historical prefixes that stop
+ * before the complete `files`/`file_count` pair treat both fields as absent;
+ * larger version-1 records are accepted. The message, file array, metadata,
+ * and exact file bytes need remain valid only for the endpoint call because
+ * the endpoint serializes or copies them before returning.
+ */
 typedef struct dcc_rest_message_payload {
     size_t size;
     uint32_t version;
@@ -52,6 +61,13 @@ static inline void dcc_rest_message_payload_init(
     }
 }
 
+/**
+ * @brief Presence-gated query for listing channel messages.
+ *
+ * The header through `present` is mandatory. A set bit requires its field to
+ * be covered by `size`; uncovered optional suffix fields are absent. Larger
+ * version-1 records and covered historical prefixes are accepted.
+ */
 typedef struct dcc_rest_message_list_query {
     size_t size;
     uint32_t version;
@@ -76,6 +92,13 @@ static inline void dcc_rest_message_list_query_init(
     }
 }
 
+/**
+ * @brief Reusable presence-gated snowflake page input.
+ *
+ * The header through `present` is mandatory. Endpoints select the allowed
+ * bits. A present field must be covered; uncovered suffix fields are absent,
+ * and larger version-1 records are accepted.
+ */
 typedef struct dcc_rest_id_page {
     size_t size;
     uint32_t version;
@@ -96,6 +119,13 @@ static inline void dcc_rest_id_page_init(dcc_rest_id_page_t *page) {
     }
 }
 
+/**
+ * @brief Presence-gated channel-pin page input.
+ *
+ * The header through `present` is mandatory. `before` is borrowed for the
+ * endpoint call. Present fields must be covered; uncovered suffix fields are
+ * absent, and larger version-1 records are accepted.
+ */
 typedef struct dcc_rest_pin_page {
     size_t size;
     uint32_t version;
@@ -120,6 +150,13 @@ typedef enum dcc_rest_reaction_type {
     DCC_REST_REACTION_BURST = 1
 } dcc_rest_reaction_type_t;
 
+/**
+ * @brief Presence-gated Get Reactions query.
+ *
+ * The header through `present` is mandatory. Present fields must be covered;
+ * uncovered suffix fields are absent, and larger version-1 records are
+ * accepted.
+ */
 typedef struct dcc_rest_reaction_query {
     size_t size;
     uint32_t version;

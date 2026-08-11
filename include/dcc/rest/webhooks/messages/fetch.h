@@ -8,6 +8,10 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Submits `GET /webhooks/{id}/{token}/messages/{message_id}`.
+ * @details `query` may be NULL. Uses the @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_get_webhook_message(
     dcc_client_t *client,
     dcc_snowflake_t webhook_id,

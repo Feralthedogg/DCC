@@ -2094,6 +2094,7 @@ if(DCC_BUILD_TESTS)
     add_executable(dcc_rest_v2_endpoint_smoke
         tests/rest_v2_endpoint_smoke.c
         tests/support/rest_v2_endpoint_resource_contracts.c
+        tests/support/rest_v2_endpoint_transition_contracts.c
     )
     dcc_target_use_private_headers(dcc_rest_v2_endpoint_smoke)
     target_link_libraries(dcc_rest_v2_endpoint_smoke PRIVATE dcc::dcc)

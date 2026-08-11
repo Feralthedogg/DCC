@@ -30,7 +30,9 @@ dcc_status_t dcc_rest_interaction_followup_get(
 ) {
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
-    if (status != DCC_OK || client == NULL)
+    if (status != DCC_OK || client == NULL || application_id == 0U ||
+        message_id == 0U || interaction_token == NULL ||
+        interaction_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     char *path = NULL;
     status = dcc_followup_message_path(&path,
@@ -50,10 +52,15 @@ dcc_status_t dcc_rest_interaction_followup_edit(
 ) {
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
-    if (status != DCC_OK || client == NULL)
+    if (status != DCC_OK || client == NULL || application_id == 0U ||
+        message_id == 0U || interaction_token == NULL ||
+        interaction_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    status = dcc_endpoint_message_payload_preflight(payload);
+    if (status != DCC_OK) return status;
     dcc_endpoint_body_t body = {0};
-    status = dcc_endpoint_build_message_body(payload, &body);
+    status = dcc_endpoint_allocation_probe();
+    if (status == DCC_OK) status = dcc_endpoint_build_message_body(payload, &body);
     char *path = NULL;
     if (status == DCC_OK) status = dcc_followup_message_path(&path,
         DCC_REST_ROUTE_INTERACTION_FOLLOWUP_MESSAGE, application_id,
@@ -72,7 +79,9 @@ dcc_status_t dcc_rest_interaction_followup_delete(
 ) {
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
-    if (status != DCC_OK || client == NULL)
+    if (status != DCC_OK || client == NULL || application_id == 0U ||
+        message_id == 0U || interaction_token == NULL ||
+        interaction_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     char *path = NULL;
     status = dcc_followup_message_path(&path,

@@ -8,6 +8,11 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Submits `PATCH /webhooks/{id}/{token}/messages/{message_id}`.
+ * @details `edit` and its payload are borrowed for the call. Uses the
+ * @ref dcc_rest_endpoint_call_contract.
+ */
 DCC_API dcc_status_t dcc_rest_modify_webhook_message(
     dcc_client_t *client,
     dcc_snowflake_t webhook_id,

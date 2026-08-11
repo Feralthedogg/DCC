@@ -31,7 +31,8 @@ dcc_status_t dcc_rest_interaction_original_response_get(
 ) {
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
-    if (status != DCC_OK || client == NULL)
+    if (status != DCC_OK || client == NULL || application_id == 0U ||
+        interaction_token == NULL || interaction_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     char *path = NULL;
     status = dcc_interaction_original_path(
@@ -54,7 +55,8 @@ dcc_status_t dcc_rest_interaction_original_response_delete(
 ) {
     dcc_rest_call_options_t resolved;
     dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
-    if (status != DCC_OK || client == NULL)
+    if (status != DCC_OK || client == NULL || application_id == 0U ||
+        interaction_token == NULL || interaction_token[0] == '\0')
         return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     char *path = NULL;
     status = dcc_interaction_original_path(

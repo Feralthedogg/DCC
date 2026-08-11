@@ -37,6 +37,9 @@ dcc_status_t dcc_modal_json_append_raw_member(
     const char *name,
     const char *value
 );
+dcc_status_t dcc_modal_builder_validate_for_json(
+    const dcc_modal_builder_t *builder
+);
 
 #ifdef __cplusplus
 }

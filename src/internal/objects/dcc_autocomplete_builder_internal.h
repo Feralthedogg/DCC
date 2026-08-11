@@ -18,6 +18,9 @@ dcc_status_t dcc_autocomplete_choice_semantic_validate(
     const dcc_autocomplete_choice_t *choice,
     dcc_builder_abi_view_t *out_view
 );
+dcc_status_t dcc_autocomplete_builder_validate_for_json(
+    const dcc_autocomplete_builder_t *builder
+);
 
 #ifdef __cplusplus
 }
