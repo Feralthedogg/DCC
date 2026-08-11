@@ -2,6 +2,24 @@
 #include "internal/objects/dcc_message_json_members_internal.h"
 #include "internal/objects/dcc_builder_abi_internal.h"
 
+#include <stdint.h>
+
+static int dcc_allowed_mentions_span_valid(
+    const void *values,
+    size_t count,
+    size_t item_size
+) {
+    if (count == 0U) {
+        return 1;
+    }
+    if (values == NULL || item_size == 0U || count > SIZE_MAX / item_size) {
+        return 0;
+    }
+    size_t span = count * item_size;
+    uintptr_t address = (uintptr_t)values;
+    return address <= UINTPTR_MAX - (span - 1U);
+}
+
 static dcc_status_t dcc_allowed_mentions_append_parse(
     const dcc_allowed_mentions_builder_t *builder,
     dcc_message_json_buffer_t *buffer,
@@ -88,8 +106,16 @@ dcc_status_t dcc_allowed_mentions_validate_for_json(const dcc_allowed_mentions_b
     const int has_roles = dcc_builder_abi_view_has(
         &view, DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_ROLES
     );
-    if ((has_users && builder->user_count != 0U && builder->users == NULL) ||
-        (has_roles && builder->role_count != 0U && builder->roles == NULL) ||
+    if ((has_users && !dcc_allowed_mentions_span_valid(
+            builder->users,
+            builder->user_count,
+            sizeof(*builder->users)
+        )) ||
+        (has_roles && !dcc_allowed_mentions_span_valid(
+            builder->roles,
+            builder->role_count,
+            sizeof(*builder->roles)
+        )) ||
         (dcc_builder_abi_view_has(&view, DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_PARSE_USERS) &&
             builder->parse_users && has_users && builder->user_count != 0U) ||
         (dcc_builder_abi_view_has(&view, DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_PARSE_ROLES) &&

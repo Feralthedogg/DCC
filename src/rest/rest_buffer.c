@@ -4,6 +4,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+static _Thread_local int dcc_rest_buffer_probe_active;
+static _Thread_local size_t dcc_rest_buffer_probe_calls;
+
+void dcc_rest_buffer_test_allocation_probe_begin(void) {
+    dcc_rest_buffer_probe_calls = 0U;
+    dcc_rest_buffer_probe_active = 1;
+}
+
+size_t dcc_rest_buffer_test_allocation_probe_end(void) {
+    size_t calls = dcc_rest_buffer_probe_calls;
+    dcc_rest_buffer_probe_calls = 0U;
+    dcc_rest_buffer_probe_active = 0;
+    return calls;
+}
+
 void dcc_rest_buffer_deinit(dcc_rest_buffer_t *buffer) {
     if (buffer == NULL) {
         return;
@@ -22,6 +37,10 @@ static dcc_status_t dcc_rest_buffer_reserve(dcc_rest_buffer_t *buffer, size_t ex
     size_t needed = buffer->len + extra;
     if (needed <= buffer->cap) {
         return DCC_OK;
+    }
+
+    if (dcc_rest_buffer_probe_active) {
+        ++dcc_rest_buffer_probe_calls;
     }
 
     size_t next_cap = buffer->cap != 0 ? buffer->cap : 1024U;

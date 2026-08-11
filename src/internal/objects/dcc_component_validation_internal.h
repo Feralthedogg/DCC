@@ -11,6 +11,10 @@ int dcc_button_style_valid(dcc_button_style_t style);
 int dcc_text_input_style_valid(dcc_text_input_style_t style);
 dcc_status_t dcc_component_validate_emoji(const dcc_component_emoji_t *emoji);
 dcc_status_t dcc_component_validate(const dcc_component_builder_t *builder);
+dcc_status_t dcc_component_validate_message_array(
+    const dcc_component_builder_t *builders,
+    size_t builder_count
+);
 
 #ifdef __cplusplus
 }

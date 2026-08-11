@@ -93,6 +93,18 @@ int endpoint_versioned_prefix_contract(
     dcc_client_t *client,
     endpoint_capture_t *capture
 );
+int endpoint_nested_message_preflight_contract(
+    dcc_client_t *client,
+    endpoint_capture_t *capture,
+    endpoint_callback_t *callback,
+    endpoint_observer_t *observer
+);
+int endpoint_multipart_overflow_contract(
+    dcc_client_t *client,
+    endpoint_capture_t *capture,
+    endpoint_callback_t *callback,
+    endpoint_observer_t *observer
+);
 int endpoint_transition_submission_contract(
     dcc_client_t *client,
     endpoint_capture_t *capture

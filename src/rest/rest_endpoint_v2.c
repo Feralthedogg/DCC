@@ -14,6 +14,25 @@
 #define DCC_ENDPOINT_MAX_FILES 10U
 #define DCC_ENDPOINT_MAX_APPLIED_TAGS 5U
 
+static dcc_status_t dcc_endpoint_multipart_preflight(
+    const dcc_rest_multipart_file_t *files,
+    size_t file_count
+) {
+    if (file_count == 0U) {
+        return DCC_OK;
+    }
+    const dcc_rest_multipart_field_t payload_json = {
+        "payload_json",
+        "{}",
+    };
+    return dcc_rest_multipart_validate(
+        &payload_json,
+        1U,
+        files,
+        file_count
+    );
+}
+
 static _Thread_local size_t dcc_endpoint_probe_limit = SIZE_MAX;
 static _Thread_local size_t dcc_endpoint_probe_calls;
 
@@ -185,7 +204,7 @@ dcc_status_t dcc_endpoint_message_payload_preflight(
         return DCC_ERR_INVALID_ARG;
     }
     if (file_count != 0U &&
-        dcc_rest_multipart_validate(NULL, 0U, files, file_count) != DCC_OK) {
+        dcc_endpoint_multipart_preflight(files, file_count) != DCC_OK) {
         return DCC_ERR_INVALID_ARG;
     }
     return DCC_OK;
@@ -488,8 +507,8 @@ dcc_status_t dcc_endpoint_interaction_response_preflight(
     if ((out->record.present & data_mask) != expected_data ||
         (!files_allowed && out->file_count != 0U) ||
         (out->file_count != 0U &&
-            dcc_rest_multipart_validate(
-                NULL, 0U, out->files, out->file_count
+            dcc_endpoint_multipart_preflight(
+                out->files, out->file_count
             ) != DCC_OK)) {
         return DCC_ERR_INVALID_ARG;
     }
@@ -653,8 +672,8 @@ dcc_status_t dcc_endpoint_webhook_execute_preflight(
             (out->applied_tag_count > DCC_ENDPOINT_MAX_APPLIED_TAGS ||
              (out->applied_tag_count != 0U && out->applied_tag_ids == NULL))) ||
         (out->file_count != 0U &&
-            dcc_rest_multipart_validate(
-                NULL, 0U, out->files, out->file_count
+            dcc_endpoint_multipart_preflight(
+                out->files, out->file_count
             ) != DCC_OK)) {
         return DCC_ERR_INVALID_ARG;
     }

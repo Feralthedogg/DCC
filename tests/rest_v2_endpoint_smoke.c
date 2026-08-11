@@ -1890,6 +1890,22 @@ int main(void) {
         failed = endpoint_rejection_contract(client, &capture, &callback, &observer);
     }
     if (!failed) {
+        failed = endpoint_nested_message_preflight_contract(
+            client,
+            &capture,
+            &callback,
+            &observer
+        );
+    }
+    if (!failed) {
+        failed = endpoint_multipart_overflow_contract(
+            client,
+            &capture,
+            &callback,
+            &observer
+        );
+    }
+    if (!failed) {
         failed = endpoint_preflight_precedence_contract(client);
     }
     if (!failed) {

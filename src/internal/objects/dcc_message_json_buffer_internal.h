@@ -18,6 +18,8 @@ typedef struct dcc_message_json_buffer {
 } dcc_message_json_buffer_t;
 
 void dcc_message_json_buffer_deinit(dcc_message_json_buffer_t *buffer);
+void dcc_message_json_buffer_test_allocation_probe_begin(void);
+size_t dcc_message_json_buffer_test_allocation_probe_end(void);
 dcc_status_t dcc_message_json_buffer_reserve(dcc_message_json_buffer_t *buffer, size_t extra);
 dcc_status_t dcc_message_json_append(dcc_message_json_buffer_t *buffer, const void *data, size_t len);
 dcc_status_t dcc_message_json_append_cstr(dcc_message_json_buffer_t *buffer, const char *value);

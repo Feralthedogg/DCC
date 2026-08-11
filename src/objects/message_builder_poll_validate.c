@@ -1,6 +1,23 @@
 #include "internal/objects/dcc_message_poll_internal.h"
 #include "internal/objects/dcc_builder_abi_internal.h"
 
+#include <stdint.h>
+
+static int dcc_message_poll_answer_span_valid(
+    const dcc_poll_answer_t *answers,
+    size_t answer_count
+) {
+    if (answer_count == 0U) {
+        return 1;
+    }
+    if (answers == NULL || answer_count > SIZE_MAX / sizeof(*answers)) {
+        return 0;
+    }
+    size_t span = answer_count * sizeof(*answers);
+    uintptr_t address = (uintptr_t)answers;
+    return address <= UINTPTR_MAX - (span - 1U);
+}
+
 dcc_status_t dcc_message_poll_validate_emoji(const dcc_component_emoji_t *emoji) {
     if (emoji == NULL || (!emoji->has_id && emoji->name == NULL)) {
         return DCC_ERR_INVALID_ARG;
@@ -14,8 +31,8 @@ dcc_status_t dcc_message_poll_validate(const dcc_poll_builder_t *poll) {
         !dcc_builder_abi_view_has(&view, DCC_POLL_BUILDER_PRESENT_QUESTION) ||
         !dcc_builder_abi_view_has(&view, DCC_POLL_BUILDER_PRESENT_ANSWERS) ||
         poll->question.text == NULL ||
-        poll->answers == NULL ||
         poll->answer_count == 0U || poll->answer_count > 10U ||
+        !dcc_message_poll_answer_span_valid(poll->answers, poll->answer_count) ||
         (dcc_builder_abi_view_has(&view, DCC_POLL_BUILDER_PRESENT_DURATION_HOURS) &&
             (poll->duration_hours == 0U || poll->duration_hours > 168U)) ||
         (dcc_builder_abi_view_has(&view, DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE) &&

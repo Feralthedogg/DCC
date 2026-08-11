@@ -6,7 +6,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <unistd.h>
+
+static void finish_builder_server(
+    http_server_t *server,
+    pthread_t thread,
+    dcc_status_t submission_status
+) {
+    if (submission_status != DCC_OK) {
+        (void)shutdown(server->fd, SHUT_RDWR);
+    }
+    (void)pthread_join(thread, NULL);
+    close(server->fd);
+}
 
 int run_public_rest_message_builder_smoke(void) {
     dcc_client_t *client = NULL;
@@ -113,7 +126,15 @@ int run_public_rest_message_builder_smoke(void) {
         return 1;
     }
 
-    dcc_component_builder_t components[] = { row, select };
+    dcc_component_builder_t select_row;
+    dcc_component_builder_init(&select_row, DCC_COMPONENT_ACTION_ROW);
+    if (dcc_component_builder_set_children(&select_row, &select, 1U) != DCC_OK) {
+        fprintf(stderr, "failed to build select action row state\n");
+        dcc_client_destroy(client);
+        return 1;
+    }
+
+    dcc_component_builder_t components[] = { row, select_row };
     dcc_poll_answer_t poll_answers[] = {
         {
             .media = {
@@ -200,10 +221,12 @@ int run_public_rest_message_builder_smoke(void) {
         "{\"type\":2,\"style\":1,\"label\":\"Launch\",\"emoji\":{\"id\":\"888\",\"name\":\"wave\"},\"custom_id\":\"launch\",\"disabled\":false},"
         "{\"type\":2,\"style\":5,\"label\":\"Docs\",\"url\":\"https://example.com/docs\"}"
         "]},"
+        "{\"type\":1,\"components\":["
         "{\"type\":3,\"custom_id\":\"select-color\",\"options\":["
         "{\"label\":\"Red\",\"value\":\"red\",\"description\":\"Pick red\",\"default\":true},"
         "{\"label\":\"Blue\",\"value\":\"blue\"}"
         "],\"placeholder\":\"Pick\",\"min_values\":1,\"max_values\":1}"
+        "]}"
         "],"
         "\"attachments\":[{\"id\":\"0\",\"filename\":\"hello.txt\"}],"
         "\"poll\":{"
@@ -233,8 +256,7 @@ int run_public_rest_message_builder_smoke(void) {
     payload.message = &message;
     st = dcc_rest_create_message(client, 222, &payload, &call_options, NULL);
     st = rest_await_submission(client, st);
-    (void)pthread_join(thread, NULL);
-    close(server.fd);
+    finish_builder_server(&server, thread, st);
     if (st != DCC_OK ||
         !seen.called ||
         strcmp(server.method, "POST") != 0 ||
@@ -264,8 +286,7 @@ int run_public_rest_message_builder_smoke(void) {
     call_options = rest_call_options(&seen);
     st = dcc_rest_edit_message(client, 222, 333, &payload, &call_options, NULL);
     st = rest_await_submission(client, st);
-    (void)pthread_join(thread, NULL);
-    close(server.fd);
+    finish_builder_server(&server, thread, st);
     if (st != DCC_OK ||
         !seen.called ||
         strcmp(server.method, "PATCH") != 0 ||
@@ -306,8 +327,7 @@ int run_public_rest_message_builder_smoke(void) {
     payload.file_count = 1U;
     st = dcc_rest_create_message(client, 222, &payload, &call_options, NULL);
     st = rest_await_submission(client, st);
-    (void)pthread_join(thread, NULL);
-    close(server.fd);
+    finish_builder_server(&server, thread, st);
     if (st != DCC_OK ||
         !seen.called ||
         !expect_multipart_request(
@@ -333,8 +353,7 @@ int run_public_rest_message_builder_smoke(void) {
     call_options = rest_call_options(&seen);
     st = dcc_rest_edit_message(client, 222, 333, &payload, &call_options, NULL);
     st = rest_await_submission(client, st);
-    (void)pthread_join(thread, NULL);
-    close(server.fd);
+    finish_builder_server(&server, thread, st);
     if (st != DCC_OK ||
         !seen.called ||
         !expect_multipart_request(

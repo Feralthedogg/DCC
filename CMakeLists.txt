@@ -2093,6 +2093,7 @@ if(DCC_BUILD_TESTS)
 
     add_executable(dcc_rest_v2_endpoint_smoke
         tests/rest_v2_endpoint_smoke.c
+        tests/support/rest_v2_endpoint_preflight_contracts.c
         tests/support/rest_v2_endpoint_resource_contracts.c
         tests/support/rest_v2_endpoint_transition_contracts.c
     )

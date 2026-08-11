@@ -1,6 +1,23 @@
 #include "internal/objects/dcc_component_v2_internal.h"
 
+#include <stdint.h>
 #include <string.h>
+
+static int dcc_component_v2_array_span_valid(
+    const void *values,
+    size_t count,
+    size_t item_size
+) {
+    if (count == 0U) {
+        return 1;
+    }
+    if (values == NULL || item_size == 0U || count > SIZE_MAX / item_size) {
+        return 0;
+    }
+    size_t span = count * item_size;
+    uintptr_t address = (uintptr_t)values;
+    return address <= UINTPTR_MAX - (span - 1U);
+}
 
 static int dcc_component_v2_string_length_between(
     const char *value,
@@ -150,7 +167,11 @@ static dcc_status_t dcc_component_v2_validate_select_defaults(
     if (default_value_count == 0) {
         return DCC_OK;
     }
-    if (default_values == NULL ||
+    if (!dcc_component_v2_array_span_valid(
+            default_values,
+            default_value_count,
+            sizeof(*default_values)
+        ) ||
         default_value_count > DCC_COMPONENT_V2_MAX_SELECT_DEFAULT_VALUES ||
         select_type == DCC_COMPONENT_V2_STRING_SELECT) {
         return DCC_ERR_INVALID_ARG;
@@ -173,7 +194,11 @@ static dcc_status_t dcc_component_v2_validate_channel_types(
         return DCC_OK;
     }
     if (select_type != DCC_COMPONENT_V2_CHANNEL_SELECT ||
-        channel_types == NULL ||
+        !dcc_component_v2_array_span_valid(
+            channel_types,
+            channel_type_count,
+            sizeof(*channel_types)
+        ) ||
         channel_type_count > DCC_COMPONENT_V2_MAX_CHANNEL_TYPES) {
         return DCC_ERR_INVALID_ARG;
     }
@@ -193,7 +218,12 @@ static dcc_status_t dcc_component_v2_validate_options(
     size_t min_count,
     size_t max_count
 ) {
-    if (options_count < min_count || options_count > max_count || options == NULL) {
+    if (options_count < min_count || options_count > max_count ||
+        !dcc_component_v2_array_span_valid(
+            options,
+            options_count,
+            sizeof(*options)
+        )) {
         return DCC_ERR_INVALID_ARG;
     }
     for (size_t i = 0; i < options_count; ++i) {
@@ -215,7 +245,12 @@ static dcc_status_t dcc_component_v2_validate_media(
     size_t min_count,
     size_t max_count
 ) {
-    if (media_count < min_count || media_count > max_count || media == NULL) {
+    if (media_count < min_count || media_count > max_count ||
+        !dcc_component_v2_array_span_valid(
+            media,
+            media_count,
+            sizeof(*media)
+        )) {
         return DCC_ERR_INVALID_ARG;
     }
     for (size_t i = 0; i < media_count; ++i) {
@@ -237,7 +272,12 @@ static dcc_status_t dcc_component_v2_validate_children(
     size_t children_count,
     dcc_component_v2_validation_t *ctx
 ) {
-    if (children_count != 0 && children == NULL) {
+    if (children_count > DCC_COMPONENT_V2_MAX_COMPONENTS ||
+        !dcc_component_v2_array_span_valid(
+            children,
+            children_count,
+            sizeof(*children)
+        )) {
         return DCC_ERR_INVALID_ARG;
     }
     for (size_t i = 0; i < children_count; ++i) {
@@ -527,7 +567,12 @@ dcc_status_t dcc_component_v2_validate_array(
     const dcc_component_v2_builder_t *builders,
     size_t builder_count
 ) {
-    if (builder_count != 0 && builders == NULL) {
+    if (builder_count > DCC_COMPONENT_V2_MAX_COMPONENTS ||
+        !dcc_component_v2_array_span_valid(
+            builders,
+            builder_count,
+            sizeof(*builders)
+        )) {
         return DCC_ERR_INVALID_ARG;
     }
     dcc_component_v2_validation_t ctx = {0};

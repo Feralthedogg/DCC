@@ -17,6 +17,8 @@ typedef struct dcc_rest_buffer {
 } dcc_rest_buffer_t;
 
 void dcc_rest_buffer_deinit(dcc_rest_buffer_t *buffer);
+void dcc_rest_buffer_test_allocation_probe_begin(void);
+size_t dcc_rest_buffer_test_allocation_probe_end(void);
 dcc_status_t dcc_rest_buffer_append(dcc_rest_buffer_t *buffer, const void *data, size_t len);
 dcc_status_t dcc_rest_buffer_append_cstr(dcc_rest_buffer_t *buffer, const char *data);
 dcc_status_t dcc_rest_buffer_append_json_string(dcc_rest_buffer_t *buffer, const char *value);

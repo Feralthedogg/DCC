@@ -17,7 +17,14 @@ dcc_status_t dcc_rest_build_multipart_body(
     *out_body = NULL;
     *out_body_len = 0;
 
-    dcc_status_t status = dcc_rest_multipart_validate(fields, field_count, files, file_count);
+    size_t measured_len = 0U;
+    dcc_status_t status = dcc_rest_multipart_measure(
+        fields,
+        field_count,
+        files,
+        file_count,
+        &measured_len
+    );
     if (status != DCC_OK) {
         return status;
     }
@@ -41,6 +48,10 @@ dcc_status_t dcc_rest_build_multipart_body(
     if (status != DCC_OK) {
         dcc_rest_buffer_deinit(&buffer);
         return status;
+    }
+    if (buffer.len != measured_len) {
+        dcc_rest_buffer_deinit(&buffer);
+        return DCC_ERR_RUNTIME;
     }
 
     *out_body = buffer.data;

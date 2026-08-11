@@ -33,6 +33,10 @@ dcc_status_t dcc_embed_json_append_string_member(
     const char *value
 );
 dcc_status_t dcc_embed_validate(const dcc_embed_builder_t *builder);
+dcc_status_t dcc_embed_builder_validate_array(
+    const dcc_embed_builder_t *builders,
+    size_t builder_count
+);
 dcc_status_t dcc_embed_builder_append_json(
     const dcc_embed_builder_t *builder,
     dcc_embed_json_buffer_t *buffer
