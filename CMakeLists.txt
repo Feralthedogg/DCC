@@ -1991,6 +1991,30 @@ if(DCC_BUILD_TESTS)
         TIMEOUT 180
     )
 
+    add_test(
+        NAME dcc_rest_v2_endpoint_manifest_audit
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_rest_v2_endpoints.py
+            --source ${CMAKE_CURRENT_SOURCE_DIR}
+            --progress-through 6
+    )
+    set_tests_properties(dcc_rest_v2_endpoint_manifest_audit PROPERTIES
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        TIMEOUT 60
+    )
+
+    add_test(
+        NAME dcc_rest_v2_endpoint_manifest_schema_smoke
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_rest_v2_endpoints.py
+            --source ${CMAKE_CURRENT_SOURCE_DIR}
+            --self-test
+    )
+    set_tests_properties(dcc_rest_v2_endpoint_manifest_schema_smoke PROPERTIES
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        TIMEOUT 60
+    )
+
     add_executable(dcc_smoke tests/smoke.c)
     target_link_libraries(dcc_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_smoke)
@@ -2021,6 +2045,13 @@ if(DCC_BUILD_TESTS)
     target_link_libraries(dcc_rest_v2_request_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_rest_v2_request_smoke)
     add_test(NAME dcc_rest_v2_request_smoke COMMAND dcc_rest_v2_request_smoke)
+
+    add_executable(dcc_rest_v2_endpoint_smoke tests/rest_v2_endpoint_smoke.c)
+    dcc_target_use_private_headers(dcc_rest_v2_endpoint_smoke)
+    target_link_libraries(dcc_rest_v2_endpoint_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_rest_v2_endpoint_smoke)
+    add_test(NAME dcc_rest_v2_endpoint_smoke COMMAND dcc_rest_v2_endpoint_smoke)
+    set_tests_properties(dcc_rest_v2_endpoint_smoke PROPERTIES TIMEOUT 60)
 
     add_executable(dcc_builder_v2_abi_smoke tests/builder_v2_abi_smoke.c)
     dcc_target_use_private_headers(dcc_builder_v2_abi_smoke)

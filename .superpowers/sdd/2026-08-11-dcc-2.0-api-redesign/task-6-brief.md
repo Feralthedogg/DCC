@@ -72,6 +72,7 @@ null-safe initializer accepting the message pointer. The record borrows its
 inputs only for the duration of the endpoint call. A nonzero file count
 requires a non-null array; every fixed file record requires a field name,
 filename, valid optional content type, and a valid data pointer/length pair.
+Field names, filenames, and content types reject CR or LF injection.
 The entire multipart body, including exact file bytes and embedded NULs, is
 built before queue admission. Zero files use the JSON request path. A null
 message is allowed only when at least one valid file makes the operation
@@ -81,7 +82,8 @@ files is invalid.
 Use this payload for channel-message create/edit, original interaction response
 edit, followup create/edit, and webhook-message edit. This is the one mechanism
 that replaces every JSON/builder/multipart overload. Bulk message deletion
-instead takes a fixed snowflake array and count and serializes it before return.
+instead takes a fixed snowflake array of 2 through 100 IDs and serializes it
+before return.
 
 ## Typed pagination
 
@@ -89,18 +91,29 @@ Replace raw query strings and `_page` overloads with versioned typed query
 records. Prefer a small reusable `dcc_rest_id_page_t` (`before`, `after`,
 `limit` presence bits) and a message-list query that additionally supports
 `around`; enforce endpoint-specific allowed bits, mutual exclusion, and Discord
-limit ranges. Channel pins use an ISO-8601 `before` string plus limit. Query
+limit ranges. Message-list limits are 1..100. Channel pins use an ISO-8601
+`before` string plus a limit from 1 through 50. Query
 builders must percent-encode values and compare against literal expected paths
 in tests. Null query means endpoint defaults.
+
+Get Reactions is not a `dcc_rest_id_page_t` use: define
+`dcc_rest_reaction_query_t` with presence-gated reaction `type`, `after`, and
+`limit`. Type accepts exactly normal (0) or burst (1), and limit is 1..100.
+Poll voters use `after` and limit 1..100 and reject unrelated page bits.
 
 ## Tagged interaction response input
 
 Add one versioned `dcc_rest_interaction_response_t` with response `type`, an
 explicit `with_response` presence/value, and a named union of borrowed pointers
 to `dcc_message_builder_t`, `dcc_modal_builder_t`, or
-`dcc_autocomplete_builder_t`. Provide constructors or setters for message,
-modal, autocomplete, pong, defer-message, defer-update, premium-required, and
-launch-activity forms without allocation.
+`dcc_autocomplete_builder_t`. It also contains optional fixed file records.
+Provide constructors or setters for message, modal, autocomplete, pong,
+defer-message, defer-update, premium-required, and launch-activity forms
+without allocation.
+
+When `with_response` is present, serialize both true and false explicitly in
+the query. Interaction and webhook path tokens are non-empty when required or
+when an optional token pointer is supplied.
 
 `dcc_rest_interaction_response_create()` is the only initial-callback endpoint:
 
@@ -117,11 +130,15 @@ dcc_status_t dcc_rest_interaction_response_create(
 
 The tag determines the active union member. Reject cross-tag data, missing
 required builders, unsupported types, malformed nested builders, and invalid
-boolean values before admission. Remove all named response and
+boolean values before admission. Optional files are accepted only for channel
+message and update-message tags; those calls build multipart before admission,
+while every other tag rejects a nonzero file count. Remove all named response and
 `_from_interaction` public helpers; App/interaction-flow code extracts IDs and
 tokens and calls this one endpoint. Original-response and followup endpoints
 take application ID/token explicitly and use `dcc_rest_message_payload_t` for
-writes.
+writes. Deferred channel-message data is optional; when present, its message
+builder may contain only the `EPHEMERAL` flag and must reject content, every
+other flag, and every other message field before admission.
 
 ## Webhook inputs
 
@@ -130,14 +147,29 @@ optional files, and presence-gated webhook-only fields/query options: username,
 avatar URL, thread name, applied tag IDs, wait, thread ID, and
 `with_components`. Merge typed webhook-only JSON members with the message
 object without accepting endpoint-specific raw JSON. Build one multipart body
-when files are present.
+when files are present. Reject simultaneous `thread_name` and `thread_id`.
 
 Use one versioned webhook create/update builder for name, avatar, and channel
-ID; create requires a non-empty name, while update remains PATCH-capable. Get,
-modify, and delete accept an optional token in one canonical operation instead
-of `_with_token` overloads. Webhook message get/edit/delete use one optional
-thread-ID field rather than `_thread` suffixes. Preserve current route
-authentication behavior and validate tokens before formatting paths.
+ID. Create accepts only name/avatar, requires a non-empty name, and rejects a
+present `channel_id`; channel ID is reserved for bot-authenticated modify.
+Update remains PATCH-capable. Get, modify, and delete accept an optional token
+in one canonical operation instead of `_with_token` overloads. A
+token-authenticated modify rejects the builder's `channel_id` field. Webhook
+message get/delete use an optional thread ID; webhook message edit
+presence-gates both thread ID and `with_components`, and serializes an explicit
+false value rather than omitting it, without `_thread` suffixes. Preserve
+current route authentication behavior and validate tokens before formatting
+paths.
+
+All record initializer/setter conveniences named `dcc_rest_*_init` or
+`dcc_rest_*_set_*` are null-safe `static inline` public-header support. Do not
+export them, add them to the immutable generic-operation allowlist, or classify
+them as Discord endpoints.
+
+Official contract sources: [message/reactions](https://docs.discord.com/developers/resources/message),
+[interaction callbacks](https://docs.discord.com/developers/interactions/receiving-and-responding),
+[webhooks](https://docs.discord.com/developers/resources/webhook), and
+[polls](https://docs.discord.com/developers/resources/poll).
 
 ## Complete endpoint manifest
 
@@ -149,6 +181,7 @@ stable, sorted entry for every Discord endpoint exposed anywhere under
 - domain and migration task (6, 7, 8, 9, or 10);
 - HTTP method and canonical route-formatter identity;
 - typed input type or `null` for scalar-only operations;
+- complete ordered canonical parameters as exact declaration/role objects;
 - implementation source;
 - multipart capability;
 - every current legacy public symbol collapsed into that endpoint.
@@ -193,6 +226,14 @@ collisions unless explicitly justified by distinct Discord semantics. The
 manifest is the source of truth, not a generated list of whatever headers
 happen to contain.
 
+Canonical parameter roles are exactly client, path, typed input, adjacent
+array count, call options, and request output. The audit checks the common
+parameter positions, exact public declaration/external definition equality,
+typed-input correspondence, and numeric/string path-role arity against every
+normalized route template. Task 6's exact multipart set includes initial
+interaction callbacks, and Get Reactions is fixed to its reaction-specific
+query record.
+
 Create `tools/audit_rest_v2_endpoints.py`. Strict mode is the default and
 requires every manifest entry to have exactly one canonical public declaration
 and external definition, with matching symbol/header/source, typed input, call
@@ -219,17 +260,27 @@ and capture RED for at least:
 - delayed create-message submission returning in under 100 ms while the server
   is delayed at least 250 ms;
 - caller mutation/free of message strings and multiple binary file buffers
-  immediately after return, with the server receiving the original bytes;
+  immediately after return, with a single REST worker held by a blocker request
+  until mutation/free completes and the server receiving the original bytes;
 - callback plus retained handle seeing one identical terminal result;
-- local validation/admission rejection publishing no handle/callback/observer;
+- local validation/admission rejection publishing no handle/callback/observer,
+  including after an active-client drain or stopped-client bounded settle;
 - literal paths and queries for message pagination, reactions, polls, and pins;
-- every interaction response union tag and cross-tag rejection;
+- normal/burst reaction type, `after`, and 1..100 limit validation;
+- every interaction response union tag and active data, required-builder and
+  cross-tag rejection, explicit false `with_response`, callback JSON, and the
+  complete message/update-only multipart allow/deny matrix;
 - original response and followup create/get/edit/delete;
 - webhook execute JSON and multipart, zero/multiple files, optional query
-  combinations, webhook token/no-token management, and message thread query;
+  combinations, webhook token/no-token management, token/channel-ID rejection,
+  and message thread/`with_components` query;
 - cancellation of a delayed multipart request and handle destruction;
-- malformed file metadata, overflowed counts, invalid historical input prefix,
-  unsupported version, and unknown presence bits.
+- JSON and multipart success for all eight multipart-capable canonical
+  operations, including file-only `{}` payload JSON and a covered historical
+  message-payload prefix;
+- malformed/CRLF file metadata, endpoint count/range boundaries, empty tokens,
+  invalid historical input prefix, unsupported version, and unknown presence
+  bits.
 
 Use the local HTTP server/interceptor; no live Discord calls. Preserve embedded
 NUL file bytes. Snapshot input/output/callback counters on rejected calls.
