@@ -131,11 +131,13 @@ held:
 This makes successful wait a callback/observer lifetime barrier. The callback
 gets a borrowed view valid only during the call; wait gets a borrowed view valid
 until handle destruction. Clone retention uses
-`dcc_rest_result_clone()`/`dcc_rest_result_free()`. Normal terminal delivery is
-on a runtime worker, but pending cancellation and teardown may finalize on the
-calling thread; promise no callback affinity. Detect same-request recursive
-waits with terminal-delivery context. Cancel/destroy from the callback must be
-safe.
+`dcc_rest_result_clone()`/`dcc_rest_result_free()`. Normal terminal delivery and
+exact cancellation while work can be admitted run on an existing runtime
+worker. Exact public cancel/destroy never invokes terminal user code on its own
+stack. Bulk pending cancellation and teardown may finalize on the thread
+performing that operation, so promise no fixed callback thread. Detect
+same-request recursive waits with terminal-delivery context. Cancel/destroy
+from the callback must be safe.
 
 Refactor `rest_error_observer.c` enough to deliver observers from the same
 already-built result rather than observing twice. Preserve the legacy
@@ -146,17 +148,26 @@ already-built result rather than observing twice. Preserve the legacy
 Represent queued, active, terminalizing, and completed state so cancellation
 and worker completion have one winner. Exact request cancellation must:
 
-- detach only that request if pending/retry-queued, then finalize outside the
-  REST lock;
+- publish cancellation while keeping a pending/retry-queued request owned by
+  its queue, then deliver it through an existing runtime worker when work can
+  be admitted;
+- bypass route, rate-limit, and retry-delay eligibility for a canceled entry
+  while preserving priority and concurrency;
+- record whether each job actually claimed its route so canceled same-route
+  completion cannot release another active request's exclusion;
+- restore the exact queue position after spawn failure and retain queue
+  ownership during stopping for later bulk teardown;
 - atomically mark active cancellation, exchange the fd, unlock, then close it;
 - be a no-op success if already requested or terminal;
+- never invoke terminal user code on the exact public cancel/destroy stack;
 - never free memory still owned by a caller or runtime worker.
 
 Bulk pending cancellation and shutdown must dispatch handle-backed requests
-through the same finalizer. Admission rollback releases both possible refs and
-does not finalize. Preserve route exclusion, priority, retry ordering,
-firewall, rate limits, and active-worker ownership. Carry raw body length and
-content type in the async job; never recover binary length with `strlen`.
+through the same finalizer and may deliver on the bulk-operation or teardown
+caller. Admission rollback releases both possible refs and does not finalize.
+Preserve route exclusion, priority, retry ordering, firewall, rate limits, and
+active-worker ownership. Carry raw body length and content type in the async
+job; never recover binary length with `strlen`.
 
 For an interceptor, accept only its first valid synchronous response. Returning
 success without a response becomes one `DCC_ERR_RUNTIME` terminal result.

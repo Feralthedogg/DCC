@@ -1358,57 +1358,90 @@ static int request_client_teardown_contract(void) {
             &pending_request
         ) == DCC_OK;
     dcc_status_t stop_status = ok ? dcc_client_stop(client) : DCC_ERR_STATE;
-    unsigned callback_before_teardown = atomic_load_explicit(
+    unsigned callback_before_cancel = atomic_load_explicit(
         &pending_callback.called,
         memory_order_acquire
     );
 
-    request_start_gate_t start_gate;
-    atomic_init(&start_gate.ready, 0U);
-    atomic_init(&start_gate.release, 0U);
+    request_start_gate_t cancel_gate;
+    atomic_init(&cancel_gate.ready, 0U);
+    atomic_init(&cancel_gate.release, 0U);
     request_control_t cancel_control = {
         .request = pending_request,
         .action = REQUEST_CONTROL_CANCEL,
-        .start_gate = &start_gate,
+        .start_gate = &cancel_gate,
         .status = DCC_ERR_STATE,
     };
     atomic_init(&cancel_control.returned, 0U);
-    request_client_destroyer_t destroyer = {
-        .client = client,
-        .start_gate = &start_gate,
-    };
-    atomic_init(&destroyer.returned, 0U);
     pthread_t cancel_thread;
-    pthread_t destroy_thread;
     int cancel_started = pthread_create(
         &cancel_thread,
         NULL,
         request_control_main,
         &cancel_control
     ) == 0;
+    int cancel_ready = cancel_started && request_wait_for_atomic_at_least(
+        &cancel_gate.ready,
+        1U,
+        1000U
+    );
+    atomic_store_explicit(&cancel_gate.release, 1U, memory_order_release);
+    int cancel_returned = cancel_ready && request_wait_for_atomic(
+        &cancel_control.returned,
+        1000U
+    );
+    unsigned callback_after_cancel = atomic_load_explicit(
+        &pending_callback.called,
+        memory_order_acquire
+    );
+    if (!cancel_returned) {
+        /* Failure cleanup must not leave the active interceptor gate closed. */
+        atomic_store_explicit(
+            &intercept.cooperative_release,
+            1U,
+            memory_order_release
+        );
+    }
+    if (cancel_started) {
+        (void)pthread_join(cancel_thread, NULL);
+    }
+
+    request_start_gate_t destroy_gate;
+    atomic_init(&destroy_gate.ready, 0U);
+    atomic_init(&destroy_gate.release, 0U);
+    request_client_destroyer_t destroyer = {
+        .client = client,
+        .start_gate = &destroy_gate,
+    };
+    atomic_init(&destroyer.returned, 0U);
+    pthread_t destroy_thread;
     int destroy_started = pthread_create(
         &destroy_thread,
         NULL,
         request_client_destroyer_main,
         &destroyer
     ) == 0;
-    int race_ready = cancel_started && destroy_started &&
-        request_wait_for_atomic_at_least(&start_gate.ready, 2U, 1000U);
-    atomic_store_explicit(&start_gate.release, 1U, memory_order_release);
-    int pending_delivered = race_ready && request_wait_for_atomic(
+    int destroy_ready = destroy_started && request_wait_for_atomic_at_least(
+        &destroy_gate.ready,
+        1U,
+        1000U
+    );
+    atomic_store_explicit(&destroy_gate.release, 1U, memory_order_release);
+    int pending_delivered = destroy_ready && request_wait_for_atomic(
         &pending_callback.stage,
         1000U
     );
-    int cancel_returned = race_ready && request_wait_for_atomic(
-        &cancel_control.returned,
-        1000U
+    unsigned pending_calls_during_teardown = atomic_load_explicit(
+        &pending_callback.called,
+        memory_order_acquire
     );
-    int destroy_waited_for_active = race_ready &&
+    unsigned active_calls_before_release = atomic_load_explicit(
+        &callback.called,
+        memory_order_acquire
+    );
+    int destroy_waited_for_active = destroy_ready && pending_delivered &&
         atomic_load_explicit(&destroyer.returned, memory_order_acquire) == 0U;
     atomic_store_explicit(&intercept.cooperative_release, 1U, memory_order_release);
-    if (cancel_started) {
-        (void)pthread_join(cancel_thread, NULL);
-    }
     if (destroy_started) {
         (void)pthread_join(destroy_thread, NULL);
     } else {
@@ -1419,8 +1452,9 @@ static int request_client_teardown_contract(void) {
     const dcc_rest_result_t *result = NULL;
     const dcc_rest_result_t *pending_result = NULL;
     if (!ok || stop_status != DCC_OK || cancel_control.status != DCC_OK ||
-        callback_before_teardown != 0U || !race_ready || !pending_delivered ||
-        !cancel_returned ||
+        callback_before_cancel != 0U || !cancel_ready || !cancel_returned ||
+        callback_after_cancel != 0U || !destroy_ready || !pending_delivered ||
+        pending_calls_during_teardown != 1U || active_calls_before_release != 0U ||
         !destroy_waited_for_active ||
         atomic_load_explicit(&destroyer.returned, memory_order_acquire) != 1U ||
         request == NULL || runner.status != DCC_OK ||
