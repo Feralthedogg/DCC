@@ -92,7 +92,25 @@ _Static_assert(
 _Static_assert(
     offsetof(dcc_rest_call_options_t, auth_token) >
         offsetof(dcc_rest_call_options_t, auth_mode),
-    "auth token must be the final Task 7 field"
+    "auth token must follow auth mode"
+);
+_Static_assert(
+    offsetof(dcc_rest_call_options_t, flags) >
+        offsetof(dcc_rest_call_options_t, auth_token),
+    "flags must be the final Task 7 call-options field"
+);
+_Static_assert(
+    _Generic(
+        ((dcc_rest_request_desc_t *)0)->options,
+        const dcc_rest_call_options_t *: 1,
+        default: 0
+    ),
+    "raw descriptor options must be a pointer to independent call options"
+);
+_Static_assert(
+    offsetof(dcc_rest_request_desc_t, options) >
+        offsetof(dcc_rest_request_desc_t, body_len),
+    "raw descriptor options pointer must be its final field"
 );
 
 #define TASK7_EXPECT_CALL(label_, capture_, call_, method_, path_) \
@@ -204,7 +222,7 @@ static int task7_options_layout_contract(
         initialized.callback != NULL || initialized.user_data != NULL ||
         initialized.audit_log_reason != NULL ||
         initialized.auth_mode != DCC_REST_AUTH_DEFAULT ||
-        initialized.auth_token != NULL) {
+        initialized.auth_token != NULL || initialized.flags != 0U) {
         fprintf(stderr, "Task 7 call-options initializer is incomplete\n");
         return 1;
     }
@@ -238,6 +256,7 @@ static int task7_options_layout_contract(
         offsetof(dcc_rest_call_options_t, audit_log_reason) + 1U,
         offsetof(dcc_rest_call_options_t, auth_mode) + 1U,
         offsetof(dcc_rest_call_options_t, auth_token) + 1U,
+        offsetof(dcc_rest_call_options_t, flags) + 1U,
     };
     for (size_t index = 0U; index < sizeof(partial_sizes) / sizeof(partial_sizes[0]); ++index) {
         dcc_rest_call_options_t partial = DCC_REST_CALL_OPTIONS_INIT;
@@ -266,13 +285,23 @@ static int task7_options_layout_contract(
 
     dcc_rest_request_desc_t nested = DCC_REST_REQUEST_DESC_INIT;
     nested.path = "/channels/44";
-    nested.size = offsetof(dcc_rest_request_desc_t, options) +
-        sizeof(task7_historical_call_options_t);
-    nested.options.size = sizeof(dcc_rest_call_options_t);
+    nested.options = (const dcc_rest_call_options_t *)historical;
+    TASK7_EXPECT_CALL(
+        "raw descriptor with independent historical options",
+        capture,
+        dcc_rest_submit(client, &nested, &request),
+        "GET",
+        "/channels/44"
+    );
+
+    dcc_rest_call_options_t raw_options = DCC_REST_CALL_OPTIONS_INIT;
+    nested.path = "/channels/45";
+    nested.options = &raw_options;
+    nested.size = offsetof(dcc_rest_request_desc_t, options) + 1U;
     dcc_rest_request_t *request = (dcc_rest_request_t *)(uintptr_t)1U;
     if (dcc_rest_submit(client, &nested, &request) != DCC_ERR_INVALID_ARG ||
         request != NULL) {
-        fprintf(stderr, "nested options escaped outer descriptor coverage\n");
+        fprintf(stderr, "partial raw options pointer field was accepted\n");
         dcc_rest_request_destroy(request);
         return 1;
     }
@@ -524,7 +553,9 @@ static int task7_auth_policy_contract(
         "GET",
         "/task7/raw-auth"
     );
-    raw.options.auth_mode = DCC_REST_AUTH_NONE;
+    options = (dcc_rest_call_options_t)DCC_REST_CALL_OPTIONS_INIT;
+    options.auth_mode = DCC_REST_AUTH_NONE;
+    raw.options = &options;
     TASK7_EXPECT_CALL(
         "relative raw None",
         capture,
@@ -532,8 +563,8 @@ static int task7_auth_policy_contract(
         "GET",
         "/task7/raw-auth"
     );
-    raw.options.auth_mode = DCC_REST_AUTH_BEARER;
-    raw.options.auth_token = "raw-bearer";
+    options.auth_mode = DCC_REST_AUTH_BEARER;
+    options.auth_token = "raw-bearer";
     TASK7_EXPECT_CALL(
         "relative raw Bearer",
         capture,
@@ -557,9 +588,11 @@ static int task7_auth_policy_contract(
         "GET",
         "https://example.invalid/task7"
     );
-    raw.options.callback = endpoint_result_callback;
-    raw.options.user_data = callback;
-    raw.options.auth_mode = DCC_REST_AUTH_NONE;
+    options = (dcc_rest_call_options_t)DCC_REST_CALL_OPTIONS_INIT;
+    options.callback = endpoint_result_callback;
+    options.user_data = callback;
+    options.auth_mode = DCC_REST_AUTH_NONE;
+    raw.options = &options;
     TASK7_EXPECT_LOCAL_REJECTION(
         "absolute raw rejects auth override",
         capture,
@@ -567,8 +600,8 @@ static int task7_auth_policy_contract(
         observer,
         dcc_rest_submit(client, &raw, &request)
     );
-    raw.options.auth_mode = DCC_REST_AUTH_DEFAULT;
-    raw.options.audit_log_reason = "reason";
+    options.auth_mode = DCC_REST_AUTH_DEFAULT;
+    options.audit_log_reason = "reason";
     TASK7_EXPECT_LOCAL_REJECTION(
         "absolute raw rejects audit reason",
         capture,
@@ -631,7 +664,8 @@ static int task7_audit_reason_contract(
 
     dcc_rest_request_desc_t raw = DCC_REST_REQUEST_DESC_INIT;
     raw.path = "/task7/audit";
-    raw.options.audit_log_reason = "100% done";
+    options.audit_log_reason = "100% done";
+    raw.options = &options;
     TASK7_EXPECT_PREPARED_CALL(
         "raw audit percent encoded once",
         capture,
@@ -647,7 +681,7 @@ static int task7_audit_reason_contract(
     char boundary_512[513];
     memset(boundary_512, 'a', sizeof(boundary_512) - 1U);
     boundary_512[sizeof(boundary_512) - 1U] = '\0';
-    raw.options.audit_log_reason = boundary_512;
+    options.audit_log_reason = boundary_512;
     TASK7_EXPECT_PREPARED_CALL(
         "audit reason 512 scalar boundary",
         capture,
