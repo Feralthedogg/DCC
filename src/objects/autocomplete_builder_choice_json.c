@@ -14,12 +14,15 @@ static int dcc_autocomplete_choice_type_valid(dcc_autocomplete_choice_value_type
     }
 }
 
-static dcc_status_t dcc_autocomplete_choice_validate(const dcc_autocomplete_choice_t *choice) {
-    dcc_builder_abi_view_t view;
-    if (dcc_autocomplete_choice_abi_validate(choice, &view) != DCC_OK ||
-        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME) ||
+dcc_status_t dcc_autocomplete_choice_semantic_validate(
+    const dcc_autocomplete_choice_t *choice,
+    dcc_builder_abi_view_t *out_view
+) {
+    if (out_view == NULL ||
+        dcc_autocomplete_choice_abi_validate(choice, out_view) != DCC_OK ||
+        !dcc_builder_abi_view_has(out_view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME) ||
         choice->name == NULL ||
-        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE) ||
+        !dcc_builder_abi_view_has(out_view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE) ||
         !dcc_autocomplete_choice_type_valid(choice->value_type)) {
         return DCC_ERR_INVALID_ARG;
     }
@@ -29,6 +32,11 @@ static dcc_status_t dcc_autocomplete_choice_validate(const dcc_autocomplete_choi
     if (choice->value_type == DCC_AUTOCOMPLETE_CHOICE_NUMBER && !isfinite(choice->value_number)) {
         return DCC_ERR_INVALID_ARG;
     }
+    if (dcc_builder_abi_view_has(
+            out_view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS_JSON
+        ) && choice->name_localizations_json == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
     return DCC_OK;
 }
 
@@ -36,12 +44,11 @@ dcc_status_t dcc_autocomplete_append_choice(
     const dcc_autocomplete_choice_t *choice,
     dcc_autocomplete_json_buffer_t *buffer
 ) {
-    dcc_status_t status = dcc_autocomplete_choice_validate(choice);
+    dcc_builder_abi_view_t view;
+    dcc_status_t status = dcc_autocomplete_choice_semantic_validate(choice, &view);
     if (status != DCC_OK) {
         return status;
     }
-    dcc_builder_abi_view_t view;
-    status = dcc_autocomplete_choice_abi_validate(choice, &view);
 
     status = dcc_autocomplete_json_append_cstr(buffer, "{");
     if (status != DCC_OK) {

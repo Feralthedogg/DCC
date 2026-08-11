@@ -1,19 +1,8 @@
 #include "internal/objects/dcc_application_command_builder_internal.h"
+#include "internal/objects/dcc_autocomplete_builder_internal.h"
 #include "internal/objects/dcc_builder_abi_internal.h"
 
-#include <math.h>
 #include <stdlib.h>
-
-static int dcc_command_choice_type_valid(dcc_autocomplete_choice_value_type_t type) {
-    switch (type) {
-        case DCC_AUTOCOMPLETE_CHOICE_STRING:
-        case DCC_AUTOCOMPLETE_CHOICE_INTEGER:
-        case DCC_AUTOCOMPLETE_CHOICE_NUMBER:
-            return 1;
-        default:
-            return 0;
-    }
-}
 
 static int dcc_command_choice_matches_option(
     const dcc_autocomplete_choice_t *choice,
@@ -36,18 +25,8 @@ static dcc_status_t dcc_command_choice_validate(
     uint32_t option_type
 ) {
     dcc_builder_abi_view_t view;
-    if (dcc_autocomplete_choice_abi_validate(choice, &view) != DCC_OK ||
-        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME) ||
-        choice->name == NULL ||
-        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE) ||
-        !dcc_command_choice_type_valid(choice->value_type) ||
+    if (dcc_autocomplete_choice_semantic_validate(choice, &view) != DCC_OK ||
         !dcc_command_choice_matches_option(choice, option_type)) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    if (choice->value_type == DCC_AUTOCOMPLETE_CHOICE_STRING && choice->value_string == NULL) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    if (choice->value_type == DCC_AUTOCOMPLETE_CHOICE_NUMBER && !isfinite(choice->value_number)) {
         return DCC_ERR_INVALID_ARG;
     }
     return DCC_OK;

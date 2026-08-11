@@ -14,6 +14,7 @@
 #include "internal/objects/dcc_builder_abi_internal.h"
 #include "internal/rest/dcc_rest_intercept_internal.h"
 
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -1348,10 +1349,90 @@ static int check_autocomplete_filter_stride_and_atomicity(void) {
     ctx.interaction = &interaction;
 
     aligned_builder_bytes_t outputs;
+    unsigned char output_snapshot[sizeof(outputs.bytes)];
+    size_t out_count = 99U;
+    CHECK(dcc_ctx_autocomplete_filter_choices(
+              &ctx, NULL, 0U, NULL, 0U, &out_count
+          ) == DCC_OK &&
+              out_count == 0U,
+          "valid empty autocomplete input accepts zero output capacity");
+
+#define CHECK_FILTER_REJECTS_UNCHANGED(source_, source_count_, capacity_, label_) \
+    do { \
+        init_filter_output( \
+            &outputs, sizeof(dcc_autocomplete_choice_t), 2U, 0xD7 \
+        ); \
+        memcpy(output_snapshot, outputs.bytes, sizeof(output_snapshot)); \
+        out_count = 99U; \
+        CHECK(dcc_ctx_autocomplete_filter_choices( \
+                  &ctx, (source_), (source_count_), \
+                  choice_record(&outputs, sizeof(dcc_autocomplete_choice_t), 0U), \
+                  (capacity_), &out_count \
+              ) == DCC_ERR_INVALID_ARG && \
+                  out_count == 0U && \
+                  memcmp(output_snapshot, outputs.bytes, sizeof(output_snapshot)) == 0, \
+              (label_)); \
+    } while (0)
+
+    dcc_autocomplete_choice_t invalid_choice =
+        DCC_AUTOCOMPLETE_CHOICE_NAMED_INIT("Future");
+    invalid_choice.present |= DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE;
+    invalid_choice.value_string = "future";
+    invalid_choice.value_type = DCC_AUTOCOMPLETE_CHOICE_STRING;
+    invalid_choice.version++;
+    CHECK_FILTER_REJECTS_UNCHANGED(
+        &invalid_choice, 1U, 0U,
+        "zero-capacity filter validates future-version source without mutation"
+    );
+
+    dcc_autocomplete_choice_t malformed_later[2] = {
+        DCC_AUTOCOMPLETE_CHOICE_NAMED_INIT("First"),
+        DCC_AUTOCOMPLETE_CHOICE_NAMED_INIT("Later"),
+    };
+    malformed_later[0].present |= DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE;
+    malformed_later[0].value_string = "first";
+    malformed_later[0].value_type = DCC_AUTOCOMPLETE_CHOICE_STRING;
+    malformed_later[1].present |= DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE;
+    malformed_later[1].value_string = "later";
+    malformed_later[1].value_type = DCC_AUTOCOMPLETE_CHOICE_STRING;
+    malformed_later[1].version++;
+    CHECK_FILTER_REJECTS_UNCHANGED(
+        malformed_later, 2U, 0U,
+        "zero-capacity filter validates malformed later source without mutation"
+    );
+
+    dcc_autocomplete_choice_init(&invalid_choice, "Number");
+    invalid_choice.present |= DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE;
+    invalid_choice.value_type = DCC_AUTOCOMPLETE_CHOICE_NUMBER;
+    invalid_choice.value_number = NAN;
+    CHECK_FILTER_REJECTS_UNCHANGED(
+        &invalid_choice, 1U, 1U, "filter rejects NaN without output mutation"
+    );
+    invalid_choice.value_number = INFINITY;
+    CHECK_FILTER_REJECTS_UNCHANGED(
+        &invalid_choice, 1U, 1U, "filter rejects positive infinity without output mutation"
+    );
+    invalid_choice.value_number = -INFINITY;
+    CHECK_FILTER_REJECTS_UNCHANGED(
+        &invalid_choice, 1U, 1U, "filter rejects negative infinity without output mutation"
+    );
+
+    dcc_autocomplete_choice_init(&invalid_choice, "Localized");
+    invalid_choice.present |= DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE |
+        DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS_JSON;
+    invalid_choice.value_string = "localized";
+    invalid_choice.value_type = DCC_AUTOCOMPLETE_CHOICE_STRING;
+    invalid_choice.name_localizations_json = NULL;
+    CHECK_FILTER_REJECTS_UNCHANGED(
+        &invalid_choice, 1U, 1U,
+        "filter rejects present null localizations without output mutation"
+    );
+#undef CHECK_FILTER_REJECTS_UNCHANGED
+
     init_filter_output(&outputs, CHOICE_HISTORICAL_STRIDE, 2U, 0xD7);
     unsigned char *terminal_canary =
         outputs.bytes + 2U * CHOICE_HISTORICAL_STRIDE;
-    size_t out_count = 99U;
+    out_count = 99U;
     CHECK(dcc_ctx_autocomplete_filter_choices(
               &ctx, input0, 2U, choice_record(&outputs, CHOICE_HISTORICAL_STRIDE, 0U),
               2U, &out_count
@@ -1365,7 +1446,6 @@ static int check_autocomplete_filter_stride_and_atomicity(void) {
           "autocomplete historical input/output stride and canary");
 
     init_filter_output(&outputs, CHOICE_HISTORICAL_STRIDE, 2U, 0xD7);
-    unsigned char output_snapshot[sizeof(outputs.bytes)];
     memcpy(output_snapshot, outputs.bytes, sizeof(output_snapshot));
     input1->version++;
     out_count = 99U;

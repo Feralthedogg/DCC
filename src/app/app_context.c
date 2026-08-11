@@ -1,5 +1,6 @@
 #include "internal/app/dcc_app_internal.h"
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"
+#include "internal/objects/dcc_autocomplete_builder_internal.h"
 #include "internal/objects/dcc_builder_abi_internal.h"
 
 #include <dcc/cache.h>
@@ -1044,13 +1045,6 @@ static uint8_t dcc_ctx_autocomplete_choice_matches_query(
     const dcc_autocomplete_choice_t *choice,
     const char *query
 ) {
-    dcc_builder_abi_view_t view;
-    if (dcc_autocomplete_choice_abi_validate(choice, &view) != DCC_OK ||
-        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME) ||
-        choice->name == NULL ||
-        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE)) {
-        return 0U;
-    }
     if (query == NULL || query[0] == '\0') {
         return 1U;
     }
@@ -1060,23 +1054,6 @@ static uint8_t dcc_ctx_autocomplete_choice_matches_query(
     return choice->value_type == DCC_AUTOCOMPLETE_CHOICE_STRING
         ? dcc_ctx_autocomplete_starts_with_ignore_case(choice->value_string, query)
         : 0U;
-}
-
-static dcc_status_t dcc_ctx_autocomplete_choice_validate_filter_input(
-    const dcc_autocomplete_choice_t *choice,
-    dcc_builder_abi_view_t *view
-) {
-    if (dcc_autocomplete_choice_abi_validate(choice, view) != DCC_OK ||
-        !dcc_builder_abi_view_has(view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME) ||
-        choice->name == NULL ||
-        !dcc_builder_abi_view_has(view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE) ||
-        choice->value_type < DCC_AUTOCOMPLETE_CHOICE_STRING ||
-        choice->value_type > DCC_AUTOCOMPLETE_CHOICE_NUMBER ||
-        (choice->value_type == DCC_AUTOCOMPLETE_CHOICE_STRING &&
-         choice->value_string == NULL)) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    return DCC_OK;
 }
 
 static int dcc_ctx_autocomplete_choice_output_covers(
@@ -1104,17 +1081,16 @@ dcc_status_t dcc_ctx_autocomplete_filter_choices(
     size_t out_capacity,
     size_t *out_count
 ) {
-    if (out_count == NULL ||
-        (choices_count != 0U && choices == NULL) ||
+    if (out_count == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out_count = 0U;
+    if ((choices_count != 0U && choices == NULL) ||
         (out_capacity != 0U && out_choices == NULL) ||
         out_capacity > DCC_AUTOCOMPLETE_MAX_CHOICES) {
         return DCC_ERR_INVALID_ARG;
     }
 
-    *out_count = 0U;
-    if (out_capacity == 0U) {
-        return DCC_OK;
-    }
     const char *query = dcc_ctx_focused_option_string(ctx, "");
     size_t stride = 0U;
     dcc_status_t status = dcc_autocomplete_choice_array_begin(
@@ -1122,6 +1098,18 @@ dcc_status_t dcc_ctx_autocomplete_filter_choices(
     );
     if (status != DCC_OK) {
         return status;
+    }
+    for (size_t i = 0U; i < choices_count; ++i) {
+        const dcc_autocomplete_choice_t *choice = (const dcc_autocomplete_choice_t *)
+            dcc_builder_abi_array_at(choices, stride, i);
+        dcc_builder_abi_view_t source_view;
+        if (dcc_autocomplete_choice_semantic_validate(choice, &source_view) != DCC_OK ||
+            source_view.size != stride) {
+            return DCC_ERR_INVALID_ARG;
+        }
+    }
+    if (out_capacity == 0U) {
+        return DCC_OK;
     }
     size_t out_stride = 0U;
     status = dcc_autocomplete_choice_array_begin(
@@ -1150,9 +1138,8 @@ dcc_status_t dcc_ctx_autocomplete_filter_choices(
         const dcc_autocomplete_choice_t *choice = (const dcc_autocomplete_choice_t *)
             dcc_builder_abi_array_at(choices, stride, i);
         dcc_builder_abi_view_t source_view;
-        if (dcc_ctx_autocomplete_choice_validate_filter_input(
-                choice, &source_view
-            ) != DCC_OK || source_view.size != stride) {
+        if (dcc_autocomplete_choice_semantic_validate(choice, &source_view) != DCC_OK ||
+            source_view.size != stride) {
             return DCC_ERR_INVALID_ARG;
         }
         if (matched < out_capacity &&

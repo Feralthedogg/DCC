@@ -140,6 +140,10 @@ dcc_status_t status = dcc_ctx_autocomplete_filter_choices(
 
 DCC validates all input and output records before writing the first result, so
 an invalid later record cannot leave a partially updated output array.
+Source records are validated even when the output capacity is zero. `out_count`
+is required, is cleared before validation, and remains zero on every error. A
+valid empty source with zero output capacity succeeds without requiring an
+output array.
 
 ## Command Serialization Versus Creation
 
