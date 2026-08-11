@@ -39,6 +39,22 @@ void dcc_rest_deliver_terminal(
     void *callback_user_data
 );
 
+dcc_status_t dcc_rest_terminal_result_clone(
+    const dcc_rest_terminal_completion_t *completion,
+    dcc_rest_result_t **out
+);
+
+void dcc_rest_deliver_terminal_result(
+    dcc_client_t *client,
+    const char *operation,
+    const dcc_rest_result_t *result,
+    dcc_status_t legacy_error,
+    dcc_rest_cb legacy_callback,
+    void *legacy_user_data,
+    dcc_rest_result_fn result_callback,
+    void *result_user_data
+);
+
 /* Deliver an already-observed composed response to its public callback while
  * retaining the same terminal-lifetime guard as a normal REST completion. */
 void dcc_rest_deliver_terminal_callback_only(

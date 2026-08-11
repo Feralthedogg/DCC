@@ -20,10 +20,13 @@ struct dcc_rest_async_request {
     char *method;
     char *path;
     char *body;
+    size_t body_len;
+    char *content_type;
     char route[DCC_REST_ROUTE_KEY_CAP];
     dcc_rest_priority_t priority;
     dcc_rest_cb cb;
     void *user_data;
+    dcc_rest_request_t *request_handle;
     int callback_called;
     uint32_t retry_attempt;
     uint64_t not_before_ms;
@@ -37,10 +40,13 @@ dcc_rest_async_request_t *dcc_rest_async_request_new(
     dcc_client_t *client,
     const char *method,
     const char *path,
-    const char *body,
+    const void *body,
+    size_t body_len,
+    const char *content_type,
     dcc_rest_priority_t priority,
     dcc_rest_cb cb,
-    void *user_data
+    void *user_data,
+    dcc_rest_request_t *request_handle
 );
 void dcc_rest_async_request_free(dcc_rest_async_request_t *request);
 uint32_t dcc_rest_async_concurrency(const dcc_client_t *client);

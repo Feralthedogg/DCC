@@ -1474,6 +1474,8 @@ target_sources(dcc
         src/rest/rest_rate_limit_update.c
         src/rest/rest_error_observer.c
         src/rest/rest_result.c
+        src/rest/rest_request_handle.c
+        src/rest/rest_submit.c
         src/rest/rest_request.c
         src/rest/rest_request_headers.c
         src/rest/rest_request_prepare.c
@@ -2012,6 +2014,12 @@ if(DCC_BUILD_TESTS)
     target_link_libraries(dcc_event_surface_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_event_surface_smoke)
     add_test(NAME dcc_event_surface_smoke COMMAND dcc_event_surface_smoke)
+
+    add_executable(dcc_rest_v2_request_smoke tests/rest_v2_request_smoke.c)
+    dcc_target_use_private_headers(dcc_rest_v2_request_smoke)
+    target_link_libraries(dcc_rest_v2_request_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_rest_v2_request_smoke)
+    add_test(NAME dcc_rest_v2_request_smoke COMMAND dcc_rest_v2_request_smoke)
 
     add_executable(dcc_json_smoke
         tests/json_smoke.c

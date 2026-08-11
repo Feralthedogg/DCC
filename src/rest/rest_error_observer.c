@@ -212,6 +212,25 @@ static void dcc_rest_result_view_deinit(dcc_rest_result_view_t *view) {
     view->json = NULL;
 }
 
+dcc_status_t dcc_rest_terminal_result_clone(
+    const dcc_rest_terminal_completion_t *completion,
+    dcc_rest_result_t **out
+) {
+    if (out == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out = NULL;
+    if (completion == NULL ||
+        (completion->body_len != 0U && completion->body == NULL)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_rest_result_view_t view;
+    dcc_rest_result_view_init(&view, completion);
+    dcc_status_t status = dcc_rest_result_clone(&view.result, out);
+    dcc_rest_result_view_deinit(&view);
+    return status;
+}
+
 static void dcc_rest_log_error(
     dcc_client_t *client,
     const dcc_error_t *error
@@ -230,13 +249,17 @@ static void dcc_rest_log_error(
     dcc_emit_log(client, DCC_LOG_ERROR, message);
 }
 
-void dcc_rest_deliver_terminal(
+void dcc_rest_deliver_terminal_result(
     dcc_client_t *client,
-    const dcc_rest_terminal_completion_t *completion,
-    dcc_rest_cb callback,
-    void *callback_user_data
+    const char *operation,
+    const dcc_rest_result_t *result,
+    dcc_status_t legacy_error,
+    dcc_rest_cb legacy_callback,
+    void *legacy_user_data,
+    dcc_rest_result_fn result_callback,
+    void *result_user_data
 ) {
-    if (client == NULL || completion == NULL) {
+    if (client == NULL || result == NULL) {
         return;
     }
 
@@ -244,24 +267,25 @@ void dcc_rest_deliver_terminal(
     if (!dcc_rest_terminal_enter(&terminal_frame, client)) {
         return;
     }
-    dcc_rest_result_view_t view;
-    dcc_rest_result_view_init(&view, completion);
-    dcc_status_t mapped_status = dcc_rest_result_status(&view.result);
+    dcc_status_t mapped_status = dcc_rest_result_status(result);
     dcc_rest_observer_snapshot_t observers;
     memset(&observers, 0, sizeof(observers));
     if (mapped_status != DCC_OK) {
         observers = dcc_rest_error_observer_snapshot(client);
     }
 
-    if (callback != NULL) {
+    if (legacy_callback != NULL) {
         dcc_rest_response_t response = {
             .size = sizeof(response),
-            .status = completion->http_status,
-            .error = completion->legacy_error,
-            .body = completion->body,
-            .body_len = completion->body_len,
+            .status = result->http_status,
+            .error = legacy_error,
+            .body = result->body,
+            .body_len = result->body_len,
         };
-        callback(client, &response, callback_user_data);
+        legacy_callback(client, &response, legacy_user_data);
+    }
+    if (result_callback != NULL) {
+        result_callback(client, result, result_user_data);
     }
 
     if (mapped_status != DCC_OK) {
@@ -270,12 +294,12 @@ void dcc_rest_deliver_terminal(
             .version = DCC_ERROR_VERSION,
             .origin = DCC_ERROR_REST,
             .status = mapped_status,
-            .http_status = view.result.http_status,
-            .discord_code = view.result.discord_code,
-            .operation = completion->operation,
-            .message = view.result.discord_message,
-            .body = view.result.body,
-            .body_len = view.result.body_len,
+            .http_status = result->http_status,
+            .discord_code = result->discord_code,
+            .operation = operation,
+            .message = result->discord_message,
+            .body = result->body,
+            .body_len = result->body_len,
         };
         dcc_rest_log_error(client, &error);
         if (observers.app_sink != NULL) {
@@ -285,7 +309,6 @@ void dcc_rest_deliver_terminal(
             observers.public_handler(client, &error, observers.public_user_data);
         }
     }
-    dcc_rest_result_view_deinit(&view);
     if (observers.app_sink != NULL) {
         atomic_fetch_sub_explicit(
             &client->rest_app_error_sink_in_flight,
@@ -294,6 +317,30 @@ void dcc_rest_deliver_terminal(
         );
     }
     dcc_rest_terminal_leave(&terminal_frame);
+}
+
+void dcc_rest_deliver_terminal(
+    dcc_client_t *client,
+    const dcc_rest_terminal_completion_t *completion,
+    dcc_rest_cb callback,
+    void *callback_user_data
+) {
+    if (client == NULL || completion == NULL) {
+        return;
+    }
+    dcc_rest_result_view_t view;
+    dcc_rest_result_view_init(&view, completion);
+    dcc_rest_deliver_terminal_result(
+        client,
+        completion->operation,
+        &view.result,
+        completion->legacy_error,
+        callback,
+        callback_user_data,
+        NULL,
+        NULL
+    );
+    dcc_rest_result_view_deinit(&view);
 }
 
 void dcc_rest_deliver_terminal_callback_only(

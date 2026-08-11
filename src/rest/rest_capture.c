@@ -2,6 +2,7 @@
 #include "internal/rest/dcc_rest_error_observer_internal.h"
 
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 
 void dcc_rest_capture_cb(
@@ -9,9 +10,13 @@ void dcc_rest_capture_cb(
     const dcc_rest_response_t *response,
     void *user_data
 ) {
-    (void)client;
     dcc_rest_captured_response_t *captured = (dcc_rest_captured_response_t *)user_data;
-    if (captured == NULL || response == NULL) {
+    const size_t required_size = offsetof(dcc_rest_response_t, body_len) +
+        sizeof(((dcc_rest_response_t *)0)->body_len);
+    if (captured == NULL || captured->called || response == NULL ||
+        (captured->expected_client != NULL && captured->expected_client != client) ||
+        response->size < required_size ||
+        (response->body_len != 0U && response->body == NULL)) {
         return;
     }
 

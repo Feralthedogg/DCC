@@ -76,9 +76,12 @@ dcc_status_t dcc_rest_request_async_priority(
         method,
         path,
         body,
+        body != NULL ? strlen(body) : 0U,
+        body != NULL ? "application/json" : NULL,
         priority,
         cb,
-        user_data
+        user_data,
+        NULL
     );
     if (request == NULL) {
         dcc_rest_operation_end(client);

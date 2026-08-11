@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 typedef struct dcc_rest_captured_response {
+    dcc_client_t *expected_client;
     int called;
     uint16_t status;
     dcc_status_t error;
