@@ -2665,7 +2665,7 @@
       "task": 8,
       "method": "PUT",
       "route_formatter": "dpp_guild_add_member",
-      "input": "dcc_guild_member_params_t",
+      "input": "dcc_rest_guild_member_add_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -2680,7 +2680,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_member_params_t *params",
+          "declaration": "const dcc_rest_guild_member_add_t *body",
           "role": "input"
         },
         {
@@ -3017,7 +3017,7 @@
       "task": 8,
       "method": "POST",
       "route_formatter": "dpp_guild_begin_prune",
-      "input": "dcc_guild_prune_params_t",
+      "input": "dcc_rest_guild_prune_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -3028,7 +3028,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_prune_params_t *params",
+          "declaration": "const dcc_rest_guild_prune_t *body",
           "role": "input"
         },
         {
@@ -3088,7 +3088,7 @@
       "task": 8,
       "method": "POST",
       "route_formatter": "dcc_dcc_rest_bulk_ban_guild_members",
-      "input": "dcc_bulk_ban_params_t",
+      "input": "dcc_rest_guild_bulk_ban_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -3099,7 +3099,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_bulk_ban_params_t *params",
+          "declaration": "const dcc_rest_guild_bulk_ban_t *body",
           "role": "input"
         },
         {
@@ -3899,7 +3899,7 @@
       "task": 8,
       "method": "PUT",
       "route_formatter": "dpp_guild_ban_add",
-      "input": "dcc_guild_ban_params_t",
+      "input": "dcc_rest_guild_ban_create_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -3914,7 +3914,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_ban_params_t *params",
+          "declaration": "const dcc_rest_guild_ban_create_t *body",
           "role": "input"
         },
         {
@@ -4176,7 +4176,7 @@
       "task": 8,
       "method": "POST",
       "route_formatter": "dpp_role_create",
-      "input": "dcc_role_params_t",
+      "input": "dcc_rest_guild_role_create_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -4187,7 +4187,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_role_params_t *params",
+          "declaration": "const dcc_rest_guild_role_create_t *body",
           "role": "input"
         },
         {
@@ -4308,7 +4308,7 @@
       "task": 8,
       "method": "POST",
       "route_formatter": "dcc_dcc_rest_create_guild_soundboard_sound",
-      "input": "dcc_guild_soundboard_sound_params_t",
+      "input": "dcc_rest_guild_soundboard_sound_create_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -4319,7 +4319,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_soundboard_sound_params_t *params",
+          "declaration": "const dcc_rest_guild_soundboard_sound_create_t *body",
           "role": "input"
         },
         {
@@ -8460,14 +8460,14 @@
       "task": 8,
       "method": "GET",
       "route_formatter": "dpp_current_user_get_guilds",
-      "input": "dcc_rest_id_page_t",
+      "input": "dcc_rest_current_user_guilds_query_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
           "role": "client"
         },
         {
-          "declaration": "const dcc_rest_id_page_t *page",
+          "declaration": "const dcc_rest_current_user_guilds_query_t *query",
           "role": "input"
         },
         {
@@ -8973,7 +8973,7 @@
       "task": 8,
       "method": "GET",
       "route_formatter": "dpp_guild_get",
-      "input": null,
+      "input": "dcc_rest_guild_query_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -8982,6 +8982,10 @@
         {
           "declaration": "dcc_snowflake_t guild_id",
           "role": "path"
+        },
+        {
+          "declaration": "const dcc_rest_guild_query_t *query",
+          "role": "input"
         },
         {
           "declaration": "const dcc_rest_call_options_t *options",
@@ -9153,7 +9157,7 @@
       "task": 8,
       "method": "GET",
       "route_formatter": "dpp_guild_get_bans",
-      "input": "dcc_rest_id_page_t",
+      "input": "dcc_rest_guild_bans_query_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -9164,7 +9168,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_rest_id_page_t *page",
+          "declaration": "const dcc_rest_guild_bans_query_t *query",
           "role": "input"
         },
         {
@@ -13800,7 +13804,7 @@
       "task": 8,
       "method": "GET",
       "route_formatter": "dpp_guild_get_members",
-      "input": "dcc_rest_id_page_t",
+      "input": "dcc_rest_guild_members_query_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -13811,7 +13815,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_rest_id_page_t *page",
+          "declaration": "const dcc_rest_guild_members_query_t *query",
           "role": "input"
         },
         {
@@ -14219,7 +14223,7 @@
       "task": 8,
       "method": "PATCH",
       "route_formatter": "dpp_guild_current_member_edit",
-      "input": "dcc_current_guild_member_params_t",
+      "input": "dcc_rest_current_guild_member_update_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -14230,7 +14234,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_current_guild_member_params_t *params",
+          "declaration": "const dcc_rest_current_guild_member_update_t *body",
           "role": "input"
         },
         {
@@ -14413,7 +14417,7 @@
       "task": 8,
       "method": "PATCH",
       "route_formatter": "dpp_guild_edit",
-      "input": "dcc_guild_params_t",
+      "input": "dcc_rest_guild_update_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -14424,7 +14428,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_params_t *params",
+          "declaration": "const dcc_rest_guild_update_t *body",
           "role": "input"
         },
         {
@@ -14615,7 +14619,7 @@
       "task": 8,
       "method": "PUT",
       "route_formatter": "dcc_dcc_rest_modify_guild_incident_actions",
-      "input": "dcc_guild_incident_actions_params_t",
+      "input": "dcc_rest_guild_incident_actions_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -14626,7 +14630,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_incident_actions_params_t *params",
+          "declaration": "const dcc_rest_guild_incident_actions_t *body",
           "role": "input"
         },
         {
@@ -14686,7 +14690,7 @@
       "task": 8,
       "method": "PATCH",
       "route_formatter": "dpp_guild_edit_member",
-      "input": "dcc_guild_member_params_t",
+      "input": "dcc_rest_guild_member_update_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -14701,7 +14705,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_member_params_t *params",
+          "declaration": "const dcc_rest_guild_member_update_t *body",
           "role": "input"
         },
         {
@@ -14837,7 +14841,7 @@
       "task": 8,
       "method": "PATCH",
       "route_formatter": "dpp_role_edit",
-      "input": "dcc_role_params_t",
+      "input": "dcc_rest_guild_role_update_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -14852,7 +14856,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_role_params_t *params",
+          "declaration": "const dcc_rest_guild_role_update_t *body",
           "role": "input"
         },
         {
@@ -14907,7 +14911,7 @@
       "task": 8,
       "method": "PATCH",
       "route_formatter": "dpp_roles_edit_position",
-      "input": "dcc_role_position_t[]",
+      "input": "dcc_rest_guild_role_position_t[]",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -14918,7 +14922,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_role_position_t *positions",
+          "declaration": "const dcc_rest_guild_role_position_t *positions",
           "role": "input"
         },
         {
@@ -15047,7 +15051,7 @@
       "task": 8,
       "method": "PATCH",
       "route_formatter": "dcc_dcc_rest_modify_guild_soundboard_sound",
-      "input": "dcc_guild_soundboard_sound_params_t",
+      "input": "dcc_rest_guild_soundboard_sound_update_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -15062,7 +15066,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_soundboard_sound_params_t *params",
+          "declaration": "const dcc_rest_guild_soundboard_sound_update_t *body",
           "role": "input"
         },
         {
@@ -15255,7 +15259,7 @@
       "task": 8,
       "method": "PATCH",
       "route_formatter": "dpp_guild_edit_welcome_screen",
-      "input": "dcc_welcome_screen_params_t",
+      "input": "dcc_rest_guild_welcome_screen_update_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -15266,7 +15270,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_welcome_screen_params_t *params",
+          "declaration": "const dcc_rest_guild_welcome_screen_update_t *body",
           "role": "input"
         },
         {
@@ -15321,7 +15325,7 @@
       "task": 8,
       "method": "PATCH",
       "route_formatter": "dpp_guild_edit_widget",
-      "input": "dcc_guild_widget_params_t",
+      "input": "dcc_rest_guild_widget_update_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -15332,7 +15336,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_widget_params_t *params",
+          "declaration": "const dcc_rest_guild_widget_update_t *body",
           "role": "input"
         },
         {
@@ -16461,7 +16465,7 @@
       "task": 8,
       "method": "PATCH",
       "route_formatter": "dpp_guild_set_nickname",
-      "input": "dcc_guild_member_nickname_params_t",
+      "input": "dcc_rest_current_guild_member_nickname_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -16472,7 +16476,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_guild_member_nickname_params_t *params",
+          "declaration": "const dcc_rest_current_guild_member_nickname_t *body",
           "role": "input"
         },
         {
