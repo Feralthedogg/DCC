@@ -153,9 +153,40 @@ stable, sorted entry for every Discord endpoint exposed anywhere under
 - multipart capability;
 - every current legacy public symbol collapsed into that endpoint.
 
-Exclude only a small immutable list of generic REST infrastructure operations
-(request/result/firewall/configuration helpers) that are not Discord
-endpoints. A public endpoint symbol may belong to exactly one manifest entry.
+The reviewed inventory is normative: there are 231 canonical entries with
+Task 6/7/8/9/10 counts 41/35/51/59/45. Their domain counts are messages 21,
+interactions 8, webhooks 12; channels 12, threads 13, invites 10; guilds 32,
+guild-members 12, roles 7; application-commands 21, auto-moderation 5,
+emojis/stickers 13, message-search 1, onboarding 2, scheduled-events 6,
+stage-instances 4, templates 7; applications 3, direct-messages 1,
+entitlements 6, gateway 2, group-DMs 2, lobbies 13, role-connections 5, SKUs 2,
+soundboard 2, users 4, and voice-states 5.
+
+Classify the 473 unique baseline public symbols exactly once. Keep exactly 60
+immutable generic operations. Track `dcc_rest_official_body_json_free` as a
+Task 10 transition helper rather than permanent infrastructure. Track the
+seven application-command dispatcher and direct-message create-and-send
+symbols as transition composites with exact owners, composed canonical
+endpoints, and removal tasks. Endpoint records cover 405 current public
+symbols. They additionally introduce planned canonical
+`dcc_rest_create_forum_thread` and `dcc_rest_create_guild_sticker`, yielding
+407 canonical-plus-legacy endpoint identifiers; those two declarations may be
+absent only before their owning migration task.
+
+Include a sorted, hand-authored route catalog. Each route identity records its
+normalized template set, allowed methods, and exact formatter token or
+transition literal. The audit checks the token inside the owning endpoint
+definition body and calculates collisions from every normalized
+`(method, template)` pair, not from identity labels. Optional-token operations
+therefore list both templates. Justified same-method/template collisions are
+limited to the reviewed webhook/followup pairs and the ordinary/forum thread
+POST pair; aliases reaching the same Discord operation are collapsed.
+
+Exclude only the exact immutable generic REST infrastructure list
+(request/result/firewall/configuration helpers) that is not a Discord
+endpoint. Transition helpers and composites are explicit classifications, not
+generic exclusions. A public endpoint symbol may belong to exactly one
+manifest entry.
 Reject duplicate canonical symbols, duplicate legacy symbols, missing files,
 unknown fields/domains/tasks/methods, unsorted entries, and method/route
 collisions unless explicitly justified by distinct Discord semantics. The
@@ -171,11 +202,13 @@ future/sync/async variants, and terminal overload suffixes; public App REST
 mirrors are checked in Task 10.
 
 An explicit `--progress-through 6` mode permits legacy violations only for the
-exact Task 7–10 domains recorded in the manifest. Task 6 domains are always
-strict. The command must fail if an allowed later-task set contains no
-remaining violation, so stale progress allowances cannot survive a later
-migration. With tests enabled, Python and all manifest/header/source inputs are
-required; the gate must not disappear silently.
+exact Task 7-10 domains recorded in the manifest. Task 6 domains are always
+strict. Method, normalized route, owner, body-builder, transition-helper,
+composite, and opaque-payload truth is never exempted. The command must fail if
+an allowed later `(task, domain)` set contains no remaining violation, so stale
+progress allowances cannot survive a later migration. With tests enabled,
+Python and all manifest/header/source inputs are required; the gate must not
+disappear silently.
 
 ## Required RED tests
 
