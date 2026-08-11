@@ -3,6 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+void dcc_embed_json_buffer_init_count(dcc_embed_json_buffer_t *buffer) {
+    if (buffer != NULL) {
+        *buffer = (dcc_embed_json_buffer_t){0};
+        buffer->count_only = 1U;
+    }
+}
+
 void dcc_embed_json_buffer_deinit(dcc_embed_json_buffer_t *buffer) {
     if (buffer == NULL) {
         return;
@@ -11,6 +18,7 @@ void dcc_embed_json_buffer_deinit(dcc_embed_json_buffer_t *buffer) {
     buffer->data = NULL;
     buffer->len = 0;
     buffer->cap = 0;
+    buffer->count_only = 0U;
 }
 
 static dcc_status_t dcc_embed_json_buffer_reserve(dcc_embed_json_buffer_t *buffer, size_t extra) {
@@ -47,6 +55,11 @@ dcc_status_t dcc_embed_json_append(dcc_embed_json_buffer_t *buffer, const void *
     }
     if (buffer->len > SIZE_MAX - 1U || len > SIZE_MAX - buffer->len - 1U) {
         return DCC_ERR_NOMEM;
+    }
+
+    if (buffer->count_only != 0U) {
+        buffer->len += len;
+        return DCC_OK;
     }
 
     dcc_status_t status = dcc_embed_json_buffer_reserve(buffer, len + 1U);

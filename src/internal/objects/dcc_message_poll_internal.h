@@ -15,6 +15,10 @@ dcc_status_t dcc_message_poll_append_media(
     const dcc_poll_media_t *media,
     dcc_message_json_buffer_t *buffer
 );
+dcc_status_t dcc_message_poll_append_json(
+    const dcc_poll_builder_t *poll,
+    dcc_message_json_buffer_t *buffer
+);
 
 #ifdef __cplusplus
 }

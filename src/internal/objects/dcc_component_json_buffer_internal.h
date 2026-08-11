@@ -14,8 +14,10 @@ typedef struct dcc_component_json_buffer {
     char *data;
     size_t len;
     size_t cap;
+    uint8_t count_only;
 } dcc_component_json_buffer_t;
 
+void dcc_component_json_buffer_init_count(dcc_component_json_buffer_t *buffer);
 void dcc_component_json_buffer_deinit(dcc_component_json_buffer_t *buffer);
 dcc_status_t dcc_component_json_append(
     dcc_component_json_buffer_t *buffer,

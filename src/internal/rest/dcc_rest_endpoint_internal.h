@@ -161,6 +161,11 @@ dcc_status_t dcc_endpoint_build_interaction_body(
     const dcc_rest_interaction_response_t *response,
     dcc_endpoint_body_t *out_body
 );
+dcc_status_t dcc_endpoint_measure_interaction_message_json(
+    dcc_interaction_response_type_t type,
+    const dcc_message_builder_t *message,
+    size_t *out_json_len
+);
 
 dcc_status_t dcc_endpoint_build_webhook_builder_body(
     const dcc_rest_webhook_builder_t *builder,
@@ -172,6 +177,10 @@ dcc_status_t dcc_endpoint_build_webhook_builder_body(
 dcc_status_t dcc_endpoint_build_webhook_execute_body(
     const dcc_rest_webhook_execute_t *execute,
     dcc_endpoint_body_t *out_body
+);
+dcc_status_t dcc_endpoint_measure_webhook_execute_json(
+    const dcc_endpoint_webhook_execute_view_t *view,
+    size_t *out_json_len
 );
 
 void dcc_endpoint_body_deinit(dcc_endpoint_body_t *body);

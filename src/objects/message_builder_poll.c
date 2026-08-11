@@ -4,60 +4,64 @@
 
 #include <stdlib.h>
 
-dcc_status_t dcc_message_poll_builder_build_json(const dcc_poll_builder_t *poll, char **out_json) {
-    if (poll == NULL || out_json == NULL) {
+dcc_status_t dcc_message_poll_append_json(
+    const dcc_poll_builder_t *poll,
+    dcc_message_json_buffer_t *buffer
+) {
+    if (poll == NULL || buffer == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    *out_json = NULL;
     dcc_status_t status = dcc_message_poll_validate(poll);
     if (status != DCC_OK) {
         return status;
     }
     dcc_builder_abi_view_t view;
     status = dcc_poll_builder_abi_validate(poll, &view);
+    if (status != DCC_OK) {
+        return status;
+    }
 
-    dcc_message_json_buffer_t buffer = {0};
-    status = dcc_message_json_append_cstr(&buffer, "{");
+    status = dcc_message_json_append_cstr(buffer, "{");
     int first = 1;
 
     if (status == DCC_OK) {
-        status = dcc_message_json_member_prefix(&buffer, &first, "question");
+        status = dcc_message_json_member_prefix(buffer, &first, "question");
     }
     if (status == DCC_OK) {
-        status = dcc_message_poll_append_media(&poll->question, &buffer);
+        status = dcc_message_poll_append_media(&poll->question, buffer);
     }
     if (status == DCC_OK) {
-        status = dcc_message_json_member_prefix(&buffer, &first, "answers");
+        status = dcc_message_json_member_prefix(buffer, &first, "answers");
     }
     if (status == DCC_OK) {
-        status = dcc_message_json_append_cstr(&buffer, "[");
+        status = dcc_message_json_append_cstr(buffer, "[");
     }
     for (size_t i = 0; status == DCC_OK && i < poll->answer_count; ++i) {
         if (i != 0U) {
-            status = dcc_message_json_append_cstr(&buffer, ",");
+            status = dcc_message_json_append_cstr(buffer, ",");
         }
         if (status == DCC_OK) {
-            status = dcc_message_json_append_cstr(&buffer, "{\"poll_media\":");
+            status = dcc_message_json_append_cstr(buffer, "{\"poll_media\":");
         }
         if (status == DCC_OK) {
-            status = dcc_message_poll_append_media(&poll->answers[i].media, &buffer);
+            status = dcc_message_poll_append_media(&poll->answers[i].media, buffer);
         }
         if (status == DCC_OK) {
-            status = dcc_message_json_append_cstr(&buffer, "}");
+            status = dcc_message_json_append_cstr(buffer, "}");
         }
     }
     if (status == DCC_OK) {
-        status = dcc_message_json_append_cstr(&buffer, "]");
+        status = dcc_message_json_append_cstr(buffer, "]");
     }
     if (status == DCC_OK) {
         uint32_t duration = dcc_builder_abi_view_has(
             &view, DCC_POLL_BUILDER_PRESENT_DURATION_HOURS
         ) ? poll->duration_hours : 24U;
-        status = dcc_message_json_append_u64_member(&buffer, &first, "duration", duration);
+        status = dcc_message_json_append_u64_member(buffer, &first, "duration", duration);
     }
     if (status == DCC_OK) {
         status = dcc_message_json_append_bool_member(
-            &buffer,
+            buffer,
             &first,
             "allow_multiselect",
             dcc_builder_abi_view_has(&view, DCC_POLL_BUILDER_PRESENT_ALLOW_MULTISELECT)
@@ -68,12 +72,22 @@ dcc_status_t dcc_message_poll_builder_build_json(const dcc_poll_builder_t *poll,
         dcc_poll_layout_type_t layout = dcc_builder_abi_view_has(
             &view, DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE
         ) ? poll->layout_type : DCC_POLL_LAYOUT_DEFAULT;
-        status = dcc_message_json_append_u64_member(&buffer, &first, "layout_type", (uint64_t)layout);
+        status = dcc_message_json_append_u64_member(buffer, &first, "layout_type", (uint64_t)layout);
     }
     if (status == DCC_OK) {
-        status = dcc_message_json_append_cstr(&buffer, "}");
+        status = dcc_message_json_append_cstr(buffer, "}");
     }
+    return status;
+}
 
+dcc_status_t dcc_message_poll_builder_build_json(const dcc_poll_builder_t *poll, char **out_json) {
+    if (poll == NULL || out_json == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out_json = NULL;
+
+    dcc_message_json_buffer_t buffer = {0};
+    dcc_status_t status = dcc_message_poll_append_json(poll, &buffer);
     if (status != DCC_OK) {
         dcc_message_json_buffer_deinit(&buffer);
         return status;

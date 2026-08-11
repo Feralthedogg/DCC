@@ -11,8 +11,10 @@ typedef struct dcc_embed_json_buffer {
     char *data;
     size_t len;
     size_t cap;
+    uint8_t count_only;
 } dcc_embed_json_buffer_t;
 
+void dcc_embed_json_buffer_init_count(dcc_embed_json_buffer_t *buffer);
 void dcc_embed_json_buffer_deinit(dcc_embed_json_buffer_t *buffer);
 dcc_status_t dcc_embed_json_append(dcc_embed_json_buffer_t *buffer, const void *data, size_t len);
 dcc_status_t dcc_embed_json_append_cstr(dcc_embed_json_buffer_t *buffer, const char *value);
@@ -40,6 +42,11 @@ dcc_status_t dcc_embed_builder_validate_array(
 dcc_status_t dcc_embed_builder_append_json(
     const dcc_embed_builder_t *builder,
     dcc_embed_json_buffer_t *buffer
+);
+dcc_status_t dcc_embed_builder_measure_array_json(
+    const dcc_embed_builder_t *builders,
+    size_t builder_count,
+    size_t *out_json_len
 );
 
 #ifdef __cplusplus

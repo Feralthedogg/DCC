@@ -25,6 +25,19 @@ dcc_status_t dcc_message_builder_append_rich_json(
     int *first,
     const dcc_message_builder_t *builder
 );
+dcc_status_t dcc_message_builder_append_members_json(
+    dcc_message_json_buffer_t *buffer,
+    int *first,
+    const dcc_message_builder_t *builder
+);
+dcc_status_t dcc_message_builder_append_json(
+    dcc_message_json_buffer_t *buffer,
+    const dcc_message_builder_t *builder
+);
+dcc_status_t dcc_message_builder_measure_json(
+    const dcc_message_builder_t *builder,
+    size_t *out_json_len
+);
 
 #ifdef __cplusplus
 }

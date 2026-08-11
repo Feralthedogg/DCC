@@ -41,6 +41,11 @@ dcc_status_t dcc_component_v2_append_array_json(
     size_t builder_count,
     dcc_component_json_buffer_t *buffer
 );
+dcc_status_t dcc_component_v2_builder_measure_array_json(
+    const dcc_component_v2_builder_t *builders,
+    size_t builder_count,
+    size_t *out_json_len
+);
 
 #ifdef __cplusplus
 }

@@ -53,6 +53,86 @@ static int dcc_rest_multipart_header_value_valid(const char *value) {
     return 1;
 }
 
+static dcc_status_t dcc_rest_multipart_measure_field_part(
+    size_t *body_len,
+    const char *name,
+    size_t value_len
+) {
+    if (!dcc_rest_multipart_quoted_token_valid(name) ||
+        !dcc_rest_multipart_size_add(
+            body_len,
+            sizeof("--" DCC_REST_MULTIPART_BOUNDARY "\r\n") - 1U
+        ) ||
+        !dcc_rest_multipart_size_add(
+            body_len,
+            sizeof("Content-Disposition: form-data; name=\"") - 1U
+        ) ||
+        !dcc_rest_multipart_size_add(body_len, strlen(name)) ||
+        !dcc_rest_multipart_size_add(body_len, sizeof("\"\r\n\r\n") - 1U) ||
+        !dcc_rest_multipart_size_add(body_len, value_len) ||
+        !dcc_rest_multipart_size_add(body_len, sizeof("\r\n") - 1U)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    return DCC_OK;
+}
+
+static dcc_status_t dcc_rest_multipart_measure_file_part(
+    size_t *body_len,
+    const dcc_rest_multipart_file_t *file
+) {
+    const char *content_type =
+        file->content_type != NULL && file->content_type[0] != '\0'
+            ? file->content_type
+            : "application/octet-stream";
+    if (!dcc_rest_multipart_quoted_token_valid(file->field_name) ||
+        !dcc_rest_multipart_quoted_token_valid(file->filename) ||
+        (file->content_type != NULL &&
+         file->content_type[0] != '\0' &&
+         !dcc_rest_multipart_header_value_valid(file->content_type)) ||
+        (file->data_len != 0U && file->data == NULL) ||
+        !dcc_rest_multipart_size_add(
+            body_len,
+            sizeof("--" DCC_REST_MULTIPART_BOUNDARY "\r\n") - 1U
+        ) ||
+        !dcc_rest_multipart_size_add(
+            body_len,
+            sizeof("Content-Disposition: form-data; name=\"") - 1U
+        ) ||
+        !dcc_rest_multipart_size_add(body_len, strlen(file->field_name)) ||
+        !dcc_rest_multipart_size_add(body_len, sizeof("\"; filename=\"") - 1U) ||
+        !dcc_rest_multipart_size_add(body_len, strlen(file->filename)) ||
+        !dcc_rest_multipart_size_add(
+            body_len,
+            sizeof("\"\r\nContent-Type: ") - 1U
+        ) ||
+        !dcc_rest_multipart_size_add(body_len, strlen(content_type)) ||
+        !dcc_rest_multipart_size_add(body_len, sizeof("\r\n\r\n") - 1U) ||
+        !dcc_rest_multipart_size_add(body_len, file->data_len) ||
+        !dcc_rest_multipart_size_add(body_len, sizeof("\r\n") - 1U)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    return DCC_OK;
+}
+
+static dcc_status_t dcc_rest_multipart_measure_files_and_close(
+    size_t *body_len,
+    const dcc_rest_multipart_file_t *files,
+    size_t file_count
+) {
+    for (size_t i = 0U; i < file_count; ++i) {
+        dcc_status_t status = dcc_rest_multipart_measure_file_part(
+            body_len, &files[i]
+        );
+        if (status != DCC_OK) {
+            return status;
+        }
+    }
+    return dcc_rest_multipart_size_add(
+        body_len,
+        sizeof("--" DCC_REST_MULTIPART_BOUNDARY "--\r\n") - 1U
+    ) ? DCC_OK : DCC_ERR_INVALID_ARG;
+}
+
 dcc_status_t dcc_rest_multipart_measure(
     const dcc_rest_multipart_field_t *fields,
     size_t field_count,
@@ -80,70 +160,58 @@ dcc_status_t dcc_rest_multipart_measure(
 
     size_t body_len = 0U;
     for (size_t i = 0; i < field_count; ++i) {
-        if (!dcc_rest_multipart_quoted_token_valid(fields[i].name) || fields[i].value == NULL) {
+        if (!dcc_rest_multipart_quoted_token_valid(fields[i].name) ||
+            fields[i].value == NULL) {
             return DCC_ERR_INVALID_ARG;
         }
-        if (!dcc_rest_multipart_size_add(
-                &body_len,
-                sizeof("--" DCC_REST_MULTIPART_BOUNDARY "\r\n") - 1U
-            ) ||
-            !dcc_rest_multipart_size_add(
-                &body_len,
-                sizeof("Content-Disposition: form-data; name=\"") - 1U
-            ) ||
-            !dcc_rest_multipart_size_add(&body_len, strlen(fields[i].name)) ||
-            !dcc_rest_multipart_size_add(&body_len, sizeof("\"\r\n\r\n") - 1U) ||
-            !dcc_rest_multipart_size_add(&body_len, strlen(fields[i].value)) ||
-            !dcc_rest_multipart_size_add(&body_len, sizeof("\r\n") - 1U)) {
-            return DCC_ERR_INVALID_ARG;
+        dcc_status_t status = dcc_rest_multipart_measure_field_part(
+            &body_len, fields[i].name, strlen(fields[i].value)
+        );
+        if (status != DCC_OK) {
+            return status;
         }
     }
 
-    for (size_t i = 0; i < file_count; ++i) {
-        const dcc_rest_multipart_file_t *file = &files[i];
-        const char *content_type =
-            file->content_type != NULL && file->content_type[0] != '\0'
-                ? file->content_type
-                : "application/octet-stream";
-        if (!dcc_rest_multipart_quoted_token_valid(file->field_name) ||
-            !dcc_rest_multipart_quoted_token_valid(file->filename) ||
-            (file->content_type != NULL &&
-             file->content_type[0] != '\0' &&
-             !dcc_rest_multipart_header_value_valid(file->content_type)) ||
-            (file->data_len != 0 && file->data == NULL)) {
-            return DCC_ERR_INVALID_ARG;
-        }
-        if (!dcc_rest_multipart_size_add(
-                &body_len,
-                sizeof("--" DCC_REST_MULTIPART_BOUNDARY "\r\n") - 1U
-            ) ||
-            !dcc_rest_multipart_size_add(
-                &body_len,
-                sizeof("Content-Disposition: form-data; name=\"") - 1U
-            ) ||
-            !dcc_rest_multipart_size_add(&body_len, strlen(file->field_name)) ||
-            !dcc_rest_multipart_size_add(&body_len, sizeof("\"; filename=\"") - 1U) ||
-            !dcc_rest_multipart_size_add(&body_len, strlen(file->filename)) ||
-            !dcc_rest_multipart_size_add(
-                &body_len,
-                sizeof("\"\r\nContent-Type: ") - 1U
-            ) ||
-            !dcc_rest_multipart_size_add(&body_len, strlen(content_type)) ||
-            !dcc_rest_multipart_size_add(&body_len, sizeof("\r\n\r\n") - 1U) ||
-            !dcc_rest_multipart_size_add(&body_len, file->data_len) ||
-            !dcc_rest_multipart_size_add(&body_len, sizeof("\r\n") - 1U)) {
-            return DCC_ERR_INVALID_ARG;
-        }
-    }
-
-    if (!dcc_rest_multipart_size_add(
-            &body_len,
-            sizeof("--" DCC_REST_MULTIPART_BOUNDARY "--\r\n") - 1U
-        )) {
-        return DCC_ERR_INVALID_ARG;
+    dcc_status_t status = dcc_rest_multipart_measure_files_and_close(
+        &body_len, files, file_count
+    );
+    if (status != DCC_OK) {
+        return status;
     }
     *out_body_len = body_len;
     return DCC_OK;
+}
+
+dcc_status_t dcc_rest_multipart_measure_field_value_length(
+    const char *field_name,
+    size_t field_value_len,
+    const dcc_rest_multipart_file_t *files,
+    size_t file_count,
+    size_t *out_body_len
+) {
+    if (out_body_len == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out_body_len = 0U;
+    if (!dcc_rest_multipart_array_span_valid(
+            files, file_count, sizeof(*files)
+        )) {
+        return DCC_ERR_INVALID_ARG;
+    }
+
+    size_t body_len = 0U;
+    dcc_status_t status = dcc_rest_multipart_measure_field_part(
+        &body_len, field_name, field_value_len
+    );
+    if (status == DCC_OK) {
+        status = dcc_rest_multipart_measure_files_and_close(
+            &body_len, files, file_count
+        );
+    }
+    if (status == DCC_OK) {
+        *out_body_len = body_len;
+    }
+    return status;
 }
 
 dcc_status_t dcc_rest_multipart_validate(

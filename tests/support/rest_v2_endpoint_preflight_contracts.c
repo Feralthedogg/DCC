@@ -7,6 +7,7 @@
 #include <dcc/rest/messages.h>
 #include <dcc/rest/webhooks.h>
 
+#include "internal/objects/dcc_message_builder_serialize_internal.h"
 #include "internal/objects/dcc_message_json_buffer_internal.h"
 #include "internal/rest/dcc_rest_buffer_internal.h"
 #include "internal/rest/dcc_rest_endpoint_internal.h"
@@ -17,9 +18,23 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define ENDPOINT_EXPECT_PREFLIGHT_REJECTION( \
-    label_, capture_, callback_, observer_, call_ \
+#define ENDPOINT_TEST_ALIGN_UP(value_, alignment_) \
+    (((value_) + (alignment_) - 1U) / (alignment_) * (alignment_))
+#define ENDPOINT_TEST_EMBED_HISTORICAL_STRIDE \
+    ENDPOINT_TEST_ALIGN_UP( \
+        offsetof(dcc_embed_builder_t, url), \
+        _Alignof(dcc_embed_builder_t) \
+    )
+
+typedef union endpoint_historical_embed_storage {
+    max_align_t alignment;
+    unsigned char bytes[ENDPOINT_TEST_EMBED_HISTORICAL_STRIDE * 2U];
+} endpoint_historical_embed_storage_t;
+
+#define ENDPOINT_CHECK_PREFLIGHT_REJECTION( \
+    label_, capture_, callback_, observer_, probe_limit_, failure_, call_ \
 ) \
     do { \
         unsigned capture_calls_before = atomic_load_explicit( \
@@ -35,7 +50,7 @@
             memory_order_acquire \
         ); \
         dcc_rest_request_t *request = (dcc_rest_request_t *)(uintptr_t)1U; \
-        dcc_endpoint_test_allocation_probe_begin(0U); \
+        dcc_endpoint_test_allocation_probe_begin((probe_limit_)); \
         dcc_message_json_buffer_test_allocation_probe_begin(); \
         dcc_rest_buffer_test_allocation_probe_begin(); \
         dcc_status_t rejected_status = (call_); \
@@ -71,9 +86,22 @@
                 observer_calls_before, \
                 atomic_load_explicit(&(observer_)->calls, memory_order_acquire) \
             ); \
-            return 1; \
+            failure_; \
         } \
     } while (0)
+
+#define ENDPOINT_EXPECT_PREFLIGHT_REJECTION( \
+    label_, capture_, callback_, observer_, call_ \
+) \
+    ENDPOINT_CHECK_PREFLIGHT_REJECTION( \
+        (label_), \
+        (capture_), \
+        (callback_), \
+        (observer_), \
+        0U, \
+        return 1, \
+        (call_) \
+    )
 
 static int endpoint_message_serializer_rejects(
     const char *label,
@@ -289,12 +317,280 @@ static int endpoint_generic_multipart_rejects(
     return 0;
 }
 
+static dcc_embed_builder_t *endpoint_historical_embed_at(
+    endpoint_historical_embed_storage_t *storage,
+    size_t index
+) {
+    return (dcc_embed_builder_t *)(
+        storage->bytes + ENDPOINT_TEST_EMBED_HISTORICAL_STRIDE * index
+    );
+}
+
+static int endpoint_exact_json_measure_contract(void) {
+    endpoint_historical_embed_storage_t embed_storage;
+    memset(&embed_storage, 0, sizeof(embed_storage));
+    for (size_t i = 0U; i < 2U; ++i) {
+        dcc_embed_builder_t *embed = endpoint_historical_embed_at(
+            &embed_storage,
+            i
+        );
+        embed->size = ENDPOINT_TEST_EMBED_HISTORICAL_STRIDE;
+        embed->version = DCC_EMBED_BUILDER_VERSION;
+        embed->present = DCC_EMBED_BUILDER_PRESENT_TITLE |
+            DCC_EMBED_BUILDER_PRESENT_DESCRIPTION;
+        embed->title = i == 0U ? "historical-left" : "historical-right";
+        embed->description = i == 0U ? "line\none" : "line \"two\"";
+    }
+
+    dcc_component_builder_t button;
+    dcc_component_builder_init(&button, DCC_COMPONENT_BUTTON);
+    dcc_component_builder_t row;
+    dcc_component_builder_init(&row, DCC_COMPONENT_ACTION_ROW);
+    if (dcc_component_builder_set_style(&button, DCC_BUTTON_PRIMARY) != DCC_OK ||
+        dcc_component_builder_set_label(&button, "Measure") != DCC_OK ||
+        dcc_component_builder_set_custom_id(&button, "measure.button") != DCC_OK ||
+        dcc_component_builder_set_children(&row, &button, 1U) != DCC_OK) {
+        return 1;
+    }
+
+    const dcc_poll_answer_t answer = {
+        .media = { .text = "yes" },
+    };
+    dcc_poll_builder_t poll = DCC_POLL_BUILDER_INIT;
+    poll.present = DCC_POLL_BUILDER_PRESENT_QUESTION |
+        DCC_POLL_BUILDER_PRESENT_ANSWERS;
+    poll.question.text = "ready?";
+    poll.answers = &answer;
+    poll.answer_count = 1U;
+
+    const dcc_snowflake_t users[] = {42U};
+    const dcc_snowflake_t roles[] = {84U};
+    dcc_allowed_mentions_builder_t mentions = DCC_ALLOWED_MENTIONS_BUILDER_INIT;
+    mentions.present = DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_USERS |
+        DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_ROLES |
+        DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_REPLIED_USER;
+    mentions.users = users;
+    mentions.user_count = sizeof(users) / sizeof(users[0]);
+    mentions.roles = roles;
+    mentions.role_count = sizeof(roles) / sizeof(roles[0]);
+    mentions.replied_user = 1U;
+
+    const dcc_snowflake_t stickers[] = {123U};
+    dcc_message_builder_t message = DCC_MESSAGE_BUILDER_INIT;
+    if (dcc_message_builder_set_content(&message, "exact \"message\"\n") != DCC_OK ||
+        dcc_message_builder_set_sticker_ids(
+            &message,
+            stickers,
+            sizeof(stickers) / sizeof(stickers[0])
+        ) != DCC_OK ||
+        dcc_message_builder_set_message_reference_json(
+            &message,
+            " {\"message_id\":\"raw\"} "
+        ) != DCC_OK ||
+        dcc_message_builder_set_allowed_mentions(&message, &mentions) != DCC_OK ||
+        dcc_message_builder_set_embeds(
+            &message,
+            endpoint_historical_embed_at(&embed_storage, 0U),
+            2U
+        ) != DCC_OK ||
+        dcc_message_builder_set_components(&message, &row, 1U) != DCC_OK ||
+        dcc_message_builder_set_attachments_json(
+            &message,
+            " [ {\"id\":\"raw-attachment\"} ] "
+        ) != DCC_OK ||
+        dcc_message_builder_set_poll(&message, &poll) != DCC_OK) {
+        return 1;
+    }
+
+    dcc_component_v2_builder_t text_display;
+    dcc_component_v2_builder_init(
+        &text_display,
+        DCC_COMPONENT_V2_TEXT_DISPLAY
+    );
+    dcc_message_builder_t v2_message = DCC_MESSAGE_BUILDER_INIT;
+    if (dcc_component_v2_builder_set_content(
+            &text_display,
+            "v2 exact \"text\""
+        ) != DCC_OK ||
+        dcc_message_builder_set_components_v2(
+            &v2_message,
+            &text_display,
+            1U
+        ) != DCC_OK ||
+        dcc_message_builder_set_attachments_json(
+            &v2_message,
+            "[{\"id\":\"v2-raw\"}]"
+        ) != DCC_OK) {
+        return 1;
+    }
+
+    dcc_message_builder_t raw_message = DCC_MESSAGE_BUILDER_INIT;
+    if (dcc_message_builder_set_message_reference_json(
+            &raw_message,
+            " {\"message_id\":\"raw-only\"} "
+        ) != DCC_OK ||
+        dcc_message_builder_set_allowed_mentions_json(
+            &raw_message,
+            " {\"parse\":[\"users\"]} "
+        ) != DCC_OK ||
+        dcc_message_builder_set_embeds_json(
+            &raw_message,
+            " [ {\"description\":\"raw embed\"} ] "
+        ) != DCC_OK ||
+        dcc_message_builder_set_components_json(
+            &raw_message,
+            " [ {\"type\":1,\"components\":[]} ] "
+        ) != DCC_OK ||
+        dcc_message_builder_set_attachments_json(
+            &raw_message,
+            " [ {\"id\":\"raw-only\"} ] "
+        ) != DCC_OK ||
+        dcc_message_builder_set_poll_json(
+            &raw_message,
+            " {\"question\":{\"text\":\"raw poll\"}} "
+        ) != DCC_OK) {
+        return 1;
+    }
+
+    dcc_rest_interaction_response_t response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    if (dcc_rest_interaction_response_set_message(&response, &message) != DCC_OK) {
+        return 1;
+    }
+
+    const dcc_snowflake_t applied_tags[] = {55U, 66U};
+    dcc_rest_webhook_execute_t execute = DCC_REST_WEBHOOK_EXECUTE_INIT;
+    dcc_rest_webhook_execute_init(&execute, &v2_message);
+    execute.present = DCC_REST_WEBHOOK_EXECUTE_PRESENT_USERNAME |
+        DCC_REST_WEBHOOK_EXECUTE_PRESENT_AVATAR_URL |
+        DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_NAME |
+        DCC_REST_WEBHOOK_EXECUTE_PRESENT_APPLIED_TAG_IDS |
+        DCC_REST_WEBHOOK_EXECUTE_PRESENT_WAIT |
+        DCC_REST_WEBHOOK_EXECUTE_PRESENT_WITH_COMPONENTS;
+    execute.username = "webhook \"name\"";
+    execute.avatar_url = "https://example.com/avatar.png";
+    execute.thread_name = "thread\nname";
+    execute.applied_tag_ids = applied_tags;
+    execute.applied_tag_count =
+        sizeof(applied_tags) / sizeof(applied_tags[0]);
+    execute.wait = 1U;
+    execute.with_components = 1U;
+
+    dcc_endpoint_webhook_execute_view_t execute_view;
+    if (dcc_endpoint_webhook_execute_preflight(&execute, &execute_view) != DCC_OK) {
+        return 1;
+    }
+
+    size_t message_len = 0U;
+    size_t raw_message_len = 0U;
+    size_t interaction_len = 0U;
+    size_t webhook_len = 0U;
+    dcc_message_json_buffer_test_allocation_probe_begin();
+    dcc_rest_buffer_test_allocation_probe_begin();
+    dcc_status_t message_status = dcc_message_builder_measure_json(
+        &message,
+        &message_len
+    );
+    dcc_status_t raw_message_status = dcc_message_builder_measure_json(
+        &raw_message,
+        &raw_message_len
+    );
+    dcc_status_t interaction_status =
+        dcc_endpoint_measure_interaction_message_json(
+            response.type,
+            response.data.message,
+            &interaction_len
+        );
+    dcc_status_t webhook_status = dcc_endpoint_measure_webhook_execute_json(
+        &execute_view,
+        &webhook_len
+    );
+    size_t rest_allocations = dcc_rest_buffer_test_allocation_probe_end();
+    size_t message_allocations =
+        dcc_message_json_buffer_test_allocation_probe_end();
+    if (message_status != DCC_OK || raw_message_status != DCC_OK ||
+        interaction_status != DCC_OK ||
+        webhook_status != DCC_OK || message_allocations != 0U ||
+        rest_allocations != 0U) {
+        fprintf(
+            stderr,
+            "exact JSON measure detail message=%s raw=%s interaction=%s webhook=%s "
+            "allocations=%zu/%zu\n",
+            dcc_status_string(message_status),
+            dcc_status_string(raw_message_status),
+            dcc_status_string(interaction_status),
+            dcc_status_string(webhook_status),
+            message_allocations,
+            rest_allocations
+        );
+        return 1;
+    }
+
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_init(&payload, &message);
+    dcc_endpoint_body_t message_body = {0};
+    dcc_endpoint_body_t interaction_body = {0};
+    dcc_endpoint_body_t webhook_body = {0};
+    char *raw_message_json = NULL;
+    message_status = dcc_endpoint_build_message_body(&payload, &message_body);
+    raw_message_status = dcc_message_builder_build_json(
+        &raw_message,
+        &raw_message_json
+    );
+    interaction_status = dcc_endpoint_build_interaction_body(
+        &response,
+        &interaction_body
+    );
+    webhook_status = dcc_endpoint_build_webhook_execute_body(
+        &execute,
+        &webhook_body
+    );
+    int matches = message_status == DCC_OK && raw_message_status == DCC_OK &&
+        interaction_status == DCC_OK && webhook_status == DCC_OK &&
+        message_len == message_body.len && raw_message_json != NULL &&
+        raw_message_len == strlen(raw_message_json) &&
+        interaction_len == interaction_body.len && webhook_len == webhook_body.len &&
+        strstr(message_body.data, "historical-left") != NULL &&
+        strstr(message_body.data, "raw-attachment") != NULL &&
+        strstr(raw_message_json, "raw embed") != NULL &&
+        strstr(raw_message_json, "raw poll") != NULL &&
+        strstr(webhook_body.data, "v2-raw") != NULL &&
+        strstr(webhook_body.data, "applied_tags") != NULL;
+    if (!matches) {
+        fprintf(
+            stderr,
+            "exact JSON build detail status=%s/%s/%s/%s "
+            "length=%zu/%zu %zu/%zu %zu/%zu %zu/%zu\n",
+            dcc_status_string(message_status),
+            dcc_status_string(raw_message_status),
+            dcc_status_string(interaction_status),
+            dcc_status_string(webhook_status),
+            message_len,
+            message_body.len,
+            raw_message_len,
+            raw_message_json != NULL ? strlen(raw_message_json) : 0U,
+            interaction_len,
+            interaction_body.len,
+            webhook_len,
+            webhook_body.len
+        );
+    }
+    dcc_endpoint_body_deinit(&message_body);
+    dcc_endpoint_body_deinit(&interaction_body);
+    dcc_endpoint_body_deinit(&webhook_body);
+    dcc_message_builder_json_free(raw_message_json);
+    return matches ? 0 : 1;
+}
+
 int endpoint_multipart_overflow_contract(
     dcc_client_t *client,
     endpoint_capture_t *capture,
     endpoint_callback_t *callback,
     endpoint_observer_t *observer
 ) {
+    if (endpoint_exact_json_measure_contract() != 0) {
+        return 1;
+    }
     static const unsigned char one_byte[] = {0xa5U};
     dcc_rest_multipart_file_t huge_file = {
         "files[0]",
@@ -401,6 +697,93 @@ int endpoint_multipart_overflow_contract(
             &request
         )
     );
+
+    dcc_rest_multipart_file_t exact_file = huge_file;
+    exact_file.data_len = SIZE_MAX - 272U;
+    size_t minimum_envelope_len = 0U;
+    if (dcc_rest_multipart_measure(
+            &payload_json,
+            1U,
+            &exact_file,
+            1U,
+            &minimum_envelope_len
+        ) != DCC_OK || minimum_envelope_len != SIZE_MAX - 1U) {
+        fprintf(
+            stderr,
+            "actual JSON boundary fixture detail length=%zu expected=%zu\n",
+            minimum_envelope_len,
+            SIZE_MAX - 1U
+        );
+        return 1;
+    }
+    size_t known_length_envelope_len = 0U;
+    if (dcc_rest_multipart_measure_field_value_length(
+            payload_json.name,
+            strlen(payload_json.value),
+            &exact_file,
+            1U,
+            &known_length_envelope_len
+        ) != DCC_OK ||
+        known_length_envelope_len != minimum_envelope_len) {
+        fprintf(
+            stderr,
+            "known-length multipart parity detail length=%zu expected=%zu\n",
+            known_length_envelope_len,
+            minimum_envelope_len
+        );
+        return 1;
+    }
+
+    int exact_boundary_failed = 0;
+    payload.files = &exact_file;
+    ENDPOINT_CHECK_PREFLIGHT_REJECTION(
+        "message rejects actual payload length overflow before allocation",
+        capture,
+        callback,
+        observer,
+        SIZE_MAX - 1U,
+        exact_boundary_failed = 1,
+        dcc_rest_create_message(client, 123U, &payload, &options, &request)
+    );
+
+    response.files = &exact_file;
+    ENDPOINT_CHECK_PREFLIGHT_REJECTION(
+        "interaction rejects actual payload length overflow before allocation",
+        capture,
+        callback,
+        observer,
+        SIZE_MAX - 1U,
+        exact_boundary_failed = 1,
+        dcc_rest_interaction_response_create(
+            client,
+            124U,
+            "token",
+            &response,
+            &options,
+            &request
+        )
+    );
+
+    execute.files = &exact_file;
+    ENDPOINT_CHECK_PREFLIGHT_REJECTION(
+        "webhook rejects actual payload length overflow before allocation",
+        capture,
+        callback,
+        observer,
+        SIZE_MAX - 1U,
+        exact_boundary_failed = 1,
+        dcc_rest_execute_webhook(
+            client,
+            125U,
+            "token",
+            &execute,
+            &options,
+            &request
+        )
+    );
+    if (exact_boundary_failed) {
+        return 1;
+    }
 
     dcc_rest_multipart_file_t files[] = {
         {

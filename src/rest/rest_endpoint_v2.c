@@ -2,6 +2,7 @@
 #include "internal/objects/dcc_autocomplete_builder_internal.h"
 #include "internal/objects/dcc_builder_abi_internal.h"
 #include "internal/objects/dcc_message_builder_serialize_internal.h"
+#include "internal/objects/dcc_message_json_members_internal.h"
 #include "internal/objects/dcc_modal_builder_internal.h"
 #include "internal/rest/dcc_rest_config_internal.h"
 #include "internal/rest/dcc_rest_json_internal.h"
@@ -15,21 +16,20 @@
 #define DCC_ENDPOINT_MAX_APPLIED_TAGS 5U
 
 static dcc_status_t dcc_endpoint_multipart_preflight(
+    size_t payload_json_len,
     const dcc_rest_multipart_file_t *files,
     size_t file_count
 ) {
     if (file_count == 0U) {
         return DCC_OK;
     }
-    const dcc_rest_multipart_field_t payload_json = {
+    size_t body_len = 0U;
+    return dcc_rest_multipart_measure_field_value_length(
         "payload_json",
-        "{}",
-    };
-    return dcc_rest_multipart_validate(
-        &payload_json,
-        1U,
+        payload_json_len,
         files,
-        file_count
+        file_count,
+        &body_len
     );
 }
 
@@ -203,9 +203,17 @@ dcc_status_t dcc_endpoint_message_payload_preflight(
             dcc_message_builder_validate_for_json(message) != DCC_OK)) {
         return DCC_ERR_INVALID_ARG;
     }
-    if (file_count != 0U &&
-        dcc_endpoint_multipart_preflight(files, file_count) != DCC_OK) {
-        return DCC_ERR_INVALID_ARG;
+    if (file_count != 0U) {
+        size_t payload_json_len = 2U;
+        if ((message != NULL &&
+                dcc_message_builder_measure_json(
+                    message, &payload_json_len
+                ) != DCC_OK) ||
+            dcc_endpoint_multipart_preflight(
+                payload_json_len, files, file_count
+            ) != DCC_OK) {
+            return DCC_ERR_INVALID_ARG;
+        }
     }
     return DCC_OK;
 }
@@ -505,12 +513,19 @@ dcc_status_t dcc_endpoint_interaction_response_preflight(
             return DCC_ERR_INVALID_ARG;
     }
     if ((out->record.present & data_mask) != expected_data ||
-        (!files_allowed && out->file_count != 0U) ||
-        (out->file_count != 0U &&
-            dcc_endpoint_multipart_preflight(
-                out->files, out->file_count
-            ) != DCC_OK)) {
+        (!files_allowed && out->file_count != 0U)) {
         return DCC_ERR_INVALID_ARG;
+    }
+    if (out->file_count != 0U) {
+        size_t payload_json_len = 0U;
+        if (dcc_endpoint_measure_interaction_message_json(
+                out->type, out->data.message, &payload_json_len
+            ) != DCC_OK ||
+            dcc_endpoint_multipart_preflight(
+                payload_json_len, out->files, out->file_count
+            ) != DCC_OK) {
+            return DCC_ERR_INVALID_ARG;
+        }
     }
     return DCC_OK;
 }
@@ -670,15 +685,22 @@ dcc_status_t dcc_endpoint_webhook_execute_preflight(
             (out->record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_ID) != 0U) ||
         ((out->record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_APPLIED_TAG_IDS) != 0U &&
             (out->applied_tag_count > DCC_ENDPOINT_MAX_APPLIED_TAGS ||
-             (out->applied_tag_count != 0U && out->applied_tag_ids == NULL))) ||
-        (out->file_count != 0U &&
-            dcc_endpoint_multipart_preflight(
-                out->files, out->file_count
-            ) != DCC_OK)) {
+             (out->applied_tag_count != 0U && out->applied_tag_ids == NULL)))) {
         return DCC_ERR_INVALID_ARG;
     }
     for (size_t i = 0U; i < out->applied_tag_count; ++i) {
         if (out->applied_tag_ids[i] == 0U) {
+            return DCC_ERR_INVALID_ARG;
+        }
+    }
+    if (out->file_count != 0U) {
+        size_t payload_json_len = 0U;
+        if (dcc_endpoint_measure_webhook_execute_json(
+                out, &payload_json_len
+            ) != DCC_OK ||
+            dcc_endpoint_multipart_preflight(
+                payload_json_len, out->files, out->file_count
+            ) != DCC_OK) {
             return DCC_ERR_INVALID_ARG;
         }
     }
@@ -1011,29 +1033,71 @@ dcc_status_t dcc_endpoint_build_message_body(
         : status;
 }
 
+static dcc_status_t dcc_endpoint_append_interaction_message_json(
+    dcc_interaction_response_type_t type,
+    const dcc_message_builder_t *message,
+    dcc_message_json_buffer_t *body
+) {
+    if (message == NULL || body == NULL ||
+        dcc_message_builder_validate_for_json(message) != DCC_OK) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_status_t status = dcc_message_json_append_cstr(body, "{\"type\":");
+    if (status == DCC_OK) {
+        status = dcc_message_json_append_u64(body, (uint64_t)type);
+    }
+    if (status == DCC_OK) {
+        status = dcc_message_json_append_cstr(body, ",\"data\":");
+    }
+    if (status == DCC_OK) {
+        status = dcc_message_builder_append_json(body, message);
+    }
+    if (status == DCC_OK) {
+        status = dcc_message_json_append_cstr(body, "}");
+    }
+    return status;
+}
+
 static dcc_status_t dcc_endpoint_interaction_message_json(
     dcc_interaction_response_type_t type,
     const dcc_message_builder_t *message,
     char **out_json
 ) {
-    char *message_json = NULL;
-    dcc_status_t status = dcc_message_builder_build_json(message, &message_json);
-    if (status != DCC_OK) {
-        return status;
+    if (out_json == NULL) {
+        return DCC_ERR_INVALID_ARG;
     }
-    dcc_rest_buffer_t body = {0};
-    status = dcc_rest_buffer_append_cstr(&body, "{\"type\":");
-    if (status == DCC_OK) status = dcc_rest_buffer_append_u64_text(&body, (uint64_t)type);
-    if (status == DCC_OK) status = dcc_rest_buffer_append_cstr(&body, ",\"data\":");
-    if (status == DCC_OK) status = dcc_rest_buffer_append_cstr(&body, message_json);
-    if (status == DCC_OK) status = dcc_rest_buffer_append_cstr(&body, "}");
-    free(message_json);
+    *out_json = NULL;
+    dcc_message_json_buffer_t body = {0};
+    dcc_status_t status = dcc_endpoint_append_interaction_message_json(
+        type, message, &body
+    );
     if (status != DCC_OK) {
-        dcc_rest_buffer_deinit(&body);
+        dcc_message_json_buffer_deinit(&body);
         return status;
     }
     *out_json = body.data;
     return DCC_OK;
+}
+
+dcc_status_t dcc_endpoint_measure_interaction_message_json(
+    dcc_interaction_response_type_t type,
+    const dcc_message_builder_t *message,
+    size_t *out_json_len
+) {
+    if (out_json_len == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out_json_len = 0U;
+    dcc_message_json_buffer_t body;
+    dcc_message_json_buffer_init_count(&body);
+    dcc_status_t status = dcc_endpoint_append_interaction_message_json(
+        type, message, &body
+    );
+    if (status == DCC_OK) {
+        *out_json_len = body.len;
+    }
+    dcc_message_json_buffer_deinit(&body);
+    return status;
 }
 
 static dcc_status_t dcc_endpoint_interaction_type_json(
@@ -1144,6 +1208,103 @@ dcc_status_t dcc_endpoint_build_webhook_builder_body(
     return DCC_OK;
 }
 
+static dcc_status_t dcc_endpoint_message_append_snowflake_array_member(
+    dcc_message_json_buffer_t *json,
+    int *first,
+    const char *name,
+    const dcc_snowflake_t *values,
+    size_t count
+) {
+    if (json == NULL || first == NULL || name == NULL ||
+        (count != 0U && values == NULL)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_status_t status = dcc_message_json_member_prefix(json, first, name);
+    if (status == DCC_OK) {
+        status = dcc_message_json_append_cstr(json, "[");
+    }
+    for (size_t i = 0U; status == DCC_OK && i < count; ++i) {
+        if (i != 0U) {
+            status = dcc_message_json_append_cstr(json, ",");
+        }
+        if (status == DCC_OK) {
+            status = dcc_message_json_append_snowflake_string(json, values[i]);
+        }
+    }
+    if (status == DCC_OK) {
+        status = dcc_message_json_append_cstr(json, "]");
+    }
+    return status;
+}
+
+static dcc_status_t dcc_endpoint_append_webhook_execute_json(
+    const dcc_endpoint_webhook_execute_view_t *view,
+    dcc_message_json_buffer_t *json
+) {
+    if (view == NULL || json == NULL ||
+        (view->message != NULL &&
+            dcc_message_builder_validate_for_json(view->message) != DCC_OK)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+
+    int first = 1;
+    dcc_status_t status = dcc_message_json_append_cstr(json, "{");
+    if (status == DCC_OK && view->message != NULL) {
+        status = dcc_message_builder_append_members_json(
+            json, &first, view->message
+        );
+    }
+    if (status == DCC_OK &&
+        (view->record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_USERNAME) != 0U) {
+        status = dcc_message_json_append_string_member(
+            json, &first, "username", view->username
+        );
+    }
+    if (status == DCC_OK &&
+        (view->record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_AVATAR_URL) != 0U) {
+        status = dcc_message_json_append_string_member(
+            json, &first, "avatar_url", view->avatar_url
+        );
+    }
+    if (status == DCC_OK &&
+        (view->record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_NAME) != 0U) {
+        status = dcc_message_json_append_string_member(
+            json, &first, "thread_name", view->thread_name
+        );
+    }
+    if (status == DCC_OK &&
+        (view->record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_APPLIED_TAG_IDS) != 0U) {
+        status = dcc_endpoint_message_append_snowflake_array_member(
+            json, &first, "applied_tags", view->applied_tag_ids,
+            view->applied_tag_count
+        );
+    }
+    if (status == DCC_OK) {
+        status = dcc_message_json_append_cstr(json, "}");
+    }
+    return status;
+}
+
+dcc_status_t dcc_endpoint_measure_webhook_execute_json(
+    const dcc_endpoint_webhook_execute_view_t *view,
+    size_t *out_json_len
+) {
+    if (view == NULL || out_json_len == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out_json_len = 0U;
+    dcc_message_json_buffer_t json;
+    dcc_message_json_buffer_init_count(&json);
+    dcc_status_t status = dcc_endpoint_append_webhook_execute_json(
+        view, &json
+    );
+    if (status == DCC_OK) {
+        *out_json_len = json.len;
+    }
+    dcc_message_json_buffer_deinit(&json);
+    return status;
+}
+
 dcc_status_t dcc_endpoint_build_webhook_execute_body(
     const dcc_rest_webhook_execute_t *execute,
     dcc_endpoint_body_t *out_body
@@ -1153,43 +1314,13 @@ dcc_status_t dcc_endpoint_build_webhook_execute_body(
     }
     dcc_endpoint_webhook_execute_view_t view;
     dcc_status_t status = dcc_endpoint_webhook_execute_preflight(execute, &view);
-    if (status != DCC_OK) return status;
-    char *message_json = NULL;
-    status = view.message != NULL
-        ? dcc_message_builder_build_json(view.message, &message_json)
-        : DCC_OK;
-    if (status != DCC_OK) return status;
-    dcc_rest_buffer_t json = {0};
-    int first = 1;
-    status = dcc_rest_buffer_append_cstr(&json, "{");
-    if (status == DCC_OK && message_json != NULL) {
-        size_t length = strlen(message_json);
-        if (length < 2U || message_json[0] != '{' || message_json[length - 1U] != '}') {
-            status = DCC_ERR_INVALID_ARG;
-        } else if (length > 2U) {
-            status = dcc_rest_buffer_append(&json, message_json + 1U, length - 2U);
-            first = 0;
-        }
-    }
-    free(message_json);
-    if (status == DCC_OK && (view.record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_USERNAME) != 0U) {
-        status = dcc_rest_json_append_string_member(&json, &first, "username", view.username);
-    }
-    if (status == DCC_OK && (view.record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_AVATAR_URL) != 0U) {
-        status = dcc_rest_json_append_string_member(&json, &first, "avatar_url", view.avatar_url);
-    }
-    if (status == DCC_OK && (view.record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_NAME) != 0U) {
-        status = dcc_rest_json_append_string_member(&json, &first, "thread_name", view.thread_name);
-    }
-    if (status == DCC_OK && (view.record.present & DCC_REST_WEBHOOK_EXECUTE_PRESENT_APPLIED_TAG_IDS) != 0U) {
-        status = dcc_rest_json_append_snowflake_string_array_member(
-            &json, &first, "applied_tags", view.applied_tag_ids,
-            view.applied_tag_count
-        );
-    }
-    if (status == DCC_OK) status = dcc_rest_buffer_append_cstr(&json, "}");
     if (status != DCC_OK) {
-        dcc_rest_buffer_deinit(&json);
+        return status;
+    }
+    dcc_message_json_buffer_t json = {0};
+    status = dcc_endpoint_append_webhook_execute_json(&view, &json);
+    if (status != DCC_OK) {
+        dcc_message_json_buffer_deinit(&json);
         return status;
     }
     return dcc_endpoint_body_from_json_files(

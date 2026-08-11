@@ -19,6 +19,13 @@ size_t dcc_message_json_buffer_test_allocation_probe_end(void) {
     return calls;
 }
 
+void dcc_message_json_buffer_init_count(dcc_message_json_buffer_t *buffer) {
+    if (buffer != NULL) {
+        *buffer = (dcc_message_json_buffer_t){0};
+        buffer->count_only = 1U;
+    }
+}
+
 void dcc_message_json_buffer_deinit(dcc_message_json_buffer_t *buffer) {
     if (buffer == NULL) {
         return;
@@ -27,6 +34,7 @@ void dcc_message_json_buffer_deinit(dcc_message_json_buffer_t *buffer) {
     buffer->data = NULL;
     buffer->len = 0;
     buffer->cap = 0;
+    buffer->count_only = 0U;
 }
 
 dcc_status_t dcc_message_json_buffer_reserve(dcc_message_json_buffer_t *buffer, size_t extra) {
@@ -69,6 +77,11 @@ dcc_status_t dcc_message_json_append(dcc_message_json_buffer_t *buffer, const vo
         return DCC_ERR_NOMEM;
     }
 
+    if (buffer->count_only != 0U) {
+        buffer->len += len;
+        return DCC_OK;
+    }
+
     dcc_status_t status = dcc_message_json_buffer_reserve(buffer, len + 1U);
     if (status != DCC_OK) {
         return status;
@@ -78,6 +91,21 @@ dcc_status_t dcc_message_json_append(dcc_message_json_buffer_t *buffer, const vo
         buffer->len += len;
     }
     buffer->data[buffer->len] = '\0';
+    return DCC_OK;
+}
+
+dcc_status_t dcc_message_json_append_length(
+    dcc_message_json_buffer_t *buffer,
+    size_t len
+) {
+    if (buffer == NULL || buffer->count_only == 0U) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (buffer->len > SIZE_MAX - 1U ||
+        len > SIZE_MAX - buffer->len - 1U) {
+        return DCC_ERR_NOMEM;
+    }
+    buffer->len += len;
     return DCC_OK;
 }
 

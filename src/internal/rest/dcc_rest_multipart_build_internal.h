@@ -24,6 +24,13 @@ dcc_status_t dcc_rest_multipart_measure(
     size_t file_count,
     size_t *out_body_len
 );
+dcc_status_t dcc_rest_multipart_measure_field_value_length(
+    const char *field_name,
+    size_t field_value_len,
+    const dcc_rest_multipart_file_t *files,
+    size_t file_count,
+    size_t *out_body_len
+);
 dcc_status_t dcc_rest_multipart_append_field(dcc_rest_buffer_t *buffer, const dcc_rest_multipart_field_t *field);
 dcc_status_t dcc_rest_multipart_append_file(dcc_rest_buffer_t *buffer, const dcc_rest_multipart_file_t *file);
 

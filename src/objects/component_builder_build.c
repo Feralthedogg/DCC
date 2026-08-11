@@ -1,5 +1,25 @@
 #include "internal/objects/dcc_component_builder_internal.h"
 
+static dcc_status_t dcc_component_builder_append_array_json(
+    const dcc_component_builder_t *builders,
+    size_t builder_count,
+    dcc_component_json_buffer_t *buffer
+) {
+    dcc_status_t status = dcc_component_json_append_cstr(buffer, "[");
+    for (size_t i = 0; status == DCC_OK && i < builder_count; ++i) {
+        if (i != 0U) {
+            status = dcc_component_json_append_cstr(buffer, ",");
+        }
+        if (status == DCC_OK) {
+            status = dcc_component_builder_append_json(&builders[i], buffer);
+        }
+    }
+    if (status == DCC_OK) {
+        status = dcc_component_json_append_cstr(buffer, "]");
+    }
+    return status;
+}
+
 dcc_status_t dcc_component_builder_build_json(const dcc_component_builder_t *builder, char **out_json) {
     if (builder == NULL || out_json == NULL) {
         return DCC_ERR_INVALID_ARG;
@@ -28,18 +48,9 @@ dcc_status_t dcc_component_builder_build_array_json(
     *out_json = NULL;
 
     dcc_component_json_buffer_t buffer = {0};
-    dcc_status_t status = dcc_component_json_append_cstr(&buffer, "[");
-    for (size_t i = 0; status == DCC_OK && i < builder_count; ++i) {
-        if (i != 0) {
-            status = dcc_component_json_append_cstr(&buffer, ",");
-        }
-        if (status == DCC_OK) {
-            status = dcc_component_builder_append_json(&builders[i], &buffer);
-        }
-    }
-    if (status == DCC_OK) {
-        status = dcc_component_json_append_cstr(&buffer, "]");
-    }
+    dcc_status_t status = dcc_component_builder_append_array_json(
+        builders, builder_count, &buffer
+    );
     if (status != DCC_OK) {
         dcc_component_json_buffer_deinit(&buffer);
         return status;
@@ -47,4 +58,27 @@ dcc_status_t dcc_component_builder_build_array_json(
 
     *out_json = buffer.data;
     return DCC_OK;
+}
+
+dcc_status_t dcc_component_builder_measure_array_json(
+    const dcc_component_builder_t *builders,
+    size_t builder_count,
+    size_t *out_json_len
+) {
+    if (out_json_len == NULL ||
+        dcc_component_validate_message_array(builders, builder_count) != DCC_OK) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    *out_json_len = 0U;
+
+    dcc_component_json_buffer_t buffer;
+    dcc_component_json_buffer_init_count(&buffer);
+    dcc_status_t status = dcc_component_builder_append_array_json(
+        builders, builder_count, &buffer
+    );
+    if (status == DCC_OK) {
+        *out_json_len = buffer.len;
+    }
+    dcc_component_json_buffer_deinit(&buffer);
+    return status;
 }
