@@ -2060,6 +2060,33 @@ if(DCC_BUILD_TESTS)
         TIMEOUT 60
     )
 
+    add_test(
+        NAME dcc_rest_v2_task7_red_audit_contract
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/rest_v2_task7_red_audit_contract.py
+            --source ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    set_tests_properties(dcc_rest_v2_task7_red_audit_contract PROPERTIES
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        TIMEOUT 60
+        LABELS "rest-v2;task7;red-contract"
+    )
+
+    add_test(
+        NAME dcc_rest_v2_task7_red_compile_contract
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/rest_v2_task7_red_compile_contract.py
+            --compiler ${CMAKE_C_COMPILER}
+            --source ${CMAKE_CURRENT_SOURCE_DIR}
+            --binary ${CMAKE_CURRENT_BINARY_DIR}
+            --llam-include ${DCC_V2_SURFACE_LLAM_INCLUDE}
+    )
+    set_tests_properties(dcc_rest_v2_task7_red_compile_contract PROPERTIES
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        TIMEOUT 60
+        LABELS "rest-v2;task7;red-contract"
+    )
+
     add_executable(dcc_smoke tests/smoke.c)
     target_link_libraries(dcc_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_smoke)

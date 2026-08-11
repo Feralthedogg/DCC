@@ -83,11 +83,25 @@ static dcc_status_t endpoint_intercept(
     atomic_fetch_add_explicit(&capture->calls, 1U, memory_order_acq_rel);
     endpoint_sleep_ms(atomic_load_explicit(&capture->delay_ms, memory_order_acquire));
 
+    dcc_status_t admission_status = (dcc_status_t)atomic_load_explicit(
+        &capture->admission_status,
+        memory_order_acquire
+    );
+    if (admission_status != DCC_OK) {
+        return admission_status;
+    }
+
     static const char response_body[] = "{\"id\":\"42\"}";
     dcc_rest_response_t response = {
         .size = sizeof(response),
-        .status = 200U,
-        .error = DCC_OK,
+        .status = (uint16_t)atomic_load_explicit(
+            &capture->response_status,
+            memory_order_acquire
+        ),
+        .error = (dcc_status_t)atomic_load_explicit(
+            &capture->response_error,
+            memory_order_acquire
+        ),
         .body = response_body,
         .body_len = sizeof(response_body) - 1U,
     };
@@ -153,6 +167,9 @@ void endpoint_capture_reset(endpoint_capture_t *capture, uint32_t delay_ms) {
     atomic_store_explicit(&capture->delay_ms, delay_ms, memory_order_release);
     atomic_store_explicit(&capture->entered, 0U, memory_order_release);
     atomic_store_explicit(&capture->capture_release, 0U, memory_order_release);
+    atomic_store_explicit(&capture->admission_status, DCC_OK, memory_order_release);
+    atomic_store_explicit(&capture->response_status, 200U, memory_order_release);
+    atomic_store_explicit(&capture->response_error, DCC_OK, memory_order_release);
 }
 
 int endpoint_wait_for_atomic(
@@ -1864,6 +1881,9 @@ int main(void) {
     atomic_init(&capture.delay_ms, 0U);
     atomic_init(&capture.entered, 0U);
     atomic_init(&capture.capture_release, 1U);
+    atomic_init(&capture.admission_status, DCC_OK);
+    atomic_init(&capture.response_status, 200U);
+    atomic_init(&capture.response_error, DCC_OK);
     dcc_rest_set_interceptor(client, endpoint_intercept, &capture);
 
     endpoint_callback_t callback;

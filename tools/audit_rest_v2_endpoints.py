@@ -20,13 +20,14 @@ ROUTE_DEFINITION_HEADER = "src/internal/rest/dcc_rest_endpoint_routes_internal.h
 
 TOP_LEVEL_FIELDS = frozenset({
     "schema_version", "generic_operations", "transition_helpers",
-    "route_catalog", "endpoints", "transition_composites",
+    "route_catalog", "endpoints", "transition_composites", "removed_candidates",
 })
 ENTRY_REQUIRED_FIELDS = frozenset({
     "canonical", "canonical_state", "header", "domain", "task", "method",
     "route_formatter", "route_evidence", "method_evidence", "input",
     "canonical_parameters",
-    "source", "multipart", "legacy_symbols", "legacy_owners",
+    "source", "multipart", "auth_policy", "audit_log_reason", "sensitive_path",
+    "legacy_symbols", "legacy_owners",
 })
 ENTRY_OPTIONAL_FIELDS = frozenset({
     "collision_justification", "deprecated", "opaque_payload",
@@ -39,6 +40,10 @@ COMPOSITE_FIELDS = frozenset({
     "name", "symbols", "owners", "removal_task", "composed_endpoints",
 })
 OWNER_FIELDS = frozenset({"header", "source"})
+REMOVED_CANDIDATE_FIELDS = frozenset({
+    "canonical", "domain", "inventory_task", "legacy_symbols", "owners",
+    "reason", "removal_task",
+})
 EVIDENCE_PHASES = frozenset({"baseline", "canonical"})
 METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE"})
 DOMAIN_TASKS = {
@@ -79,19 +84,18 @@ EXPECTED_DOMAIN_COUNTS = {
     "channels": 12,
     "threads": 13,
     "invites": 10,
-    "guilds": 32,
+    "guilds": 28,
     "guild_members": 12,
     "roles": 7,
-    "application_commands": 21,
+    "application_commands": 20,
     "auto_moderation": 5,
     "emojis_stickers": 13,
     "message_search": 1,
     "onboarding": 2,
     "scheduled_events": 6,
     "stage_instances": 4,
-    "templates": 7,
+    "templates": 6,
     "applications": 3,
-    "direct_messages": 1,
     "entitlements": 6,
     "gateway": 2,
     "group_dms": 2,
@@ -237,8 +241,106 @@ PLANNED_CANONICALS = frozenset({
     "dcc_rest_create_forum_thread",
     "dcc_rest_create_guild_sticker",
 })
-BASELINE_IDENTIFIER_COUNTS = {6: 107, 7: 53, 8: 83, 9: 91, 10: 73}
-BASELINE_CURRENT_COUNTS = {6: 107, 7: 52, 8: 83, 9: 90, 10: 73}
+BASELINE_IDENTIFIER_COUNTS = {6: 107, 7: 53, 8: 78, 9: 87, 10: 72}
+BASELINE_CURRENT_COUNTS = {6: 107, 7: 52, 8: 78, 9: 86, 10: 72}
+REMOVED_CANDIDATE_SPECS = {
+    "dcc_rest_bulk_edit_guild_command_permissions": {
+        "domain": "application_commands",
+        "inventory_task": 9,
+        "legacy_symbols": ("dcc_rest_bulk_edit_guild_command_permissions_params",),
+        "owners": {
+            "dcc_rest_bulk_edit_guild_command_permissions": {
+                "header": "include/dcc/rest/application_commands/permissions.h",
+                "source": "src/rest/rest_application_command_permissions.c",
+            },
+            "dcc_rest_bulk_edit_guild_command_permissions_params": {
+                "header": "include/dcc/rest/application_commands/permissions.h",
+                "source": "src/rest/rest_application_command_permissions_params.c",
+            },
+        },
+        "reason": "disabled bulk guild command permission edit",
+    },
+    "dcc_rest_create_guild": {
+        "domain": "guilds",
+        "inventory_task": 8,
+        "legacy_symbols": ("dcc_rest_create_guild_params",),
+        "owners": {
+            "dcc_rest_create_guild": {
+                "header": "include/dcc/rest/guilds/core.h",
+                "source": "src/rest/rest_guilds_core.c",
+            },
+            "dcc_rest_create_guild_params": {
+                "header": "include/dcc/rest/guilds/core.h",
+                "source": "src/rest/rest_guilds_core.c",
+            },
+        },
+        "reason": "unavailable Discord operation",
+    },
+    "dcc_rest_create_guild_from_template": {
+        "domain": "templates",
+        "inventory_task": 9,
+        "legacy_symbols": ("dcc_rest_create_guild_from_template_params",),
+        "owners": {
+            "dcc_rest_create_guild_from_template": {
+                "header": "include/dcc/rest/resources/templates.h",
+                "source": "src/rest/rest_templates_create.c",
+            },
+            "dcc_rest_create_guild_from_template_params": {
+                "header": "include/dcc/rest/resources/templates.h",
+                "source": "src/rest/rest_templates_create.c",
+            },
+        },
+        "reason": "unavailable guild creation from template",
+    },
+    "dcc_rest_delete_guild": {
+        "domain": "guilds",
+        "inventory_task": 8,
+        "legacy_symbols": (),
+        "owners": {
+            "dcc_rest_delete_guild": {
+                "header": "include/dcc/rest/guilds/core.h",
+                "source": "src/rest/rest_guilds_core.c",
+            },
+        },
+        "reason": "unavailable Discord operation",
+    },
+    "dcc_rest_get_current_user_dms": {
+        "domain": "direct_messages",
+        "inventory_task": 10,
+        "legacy_symbols": (),
+        "owners": {
+            "dcc_rest_get_current_user_dms": {
+                "header": "include/dcc/rest/resources/users.h",
+                "source": "src/rest/rest_users_dms.c",
+            },
+        },
+        "reason": "obsolete bot-facing current-user DM listing",
+    },
+    "dcc_rest_modify_guild_integration": {
+        "domain": "guilds",
+        "inventory_task": 8,
+        "legacy_symbols": (),
+        "owners": {
+            "dcc_rest_modify_guild_integration": {
+                "header": "include/dcc/rest/guilds/integrations.h",
+                "source": "src/rest/rest_guilds_integrations.c",
+            },
+        },
+        "reason": "unavailable Discord operation",
+    },
+    "dcc_rest_sync_guild_integration": {
+        "domain": "guilds",
+        "inventory_task": 8,
+        "legacy_symbols": (),
+        "owners": {
+            "dcc_rest_sync_guild_integration": {
+                "header": "include/dcc/rest/guilds/integrations.h",
+                "source": "src/rest/rest_guilds_integrations.c",
+            },
+        },
+        "reason": "unavailable Discord operation",
+    },
+}
 TRANSITION_DECLARATIONS = {
     "dcc_rest_get_current_application": (
         "include/dcc/rest/official_surface.h",
@@ -364,9 +466,235 @@ TASK6_MULTIPART_ENDPOINTS = frozenset({
     "dcc_rest_interaction_response_create",
     "dcc_rest_modify_webhook_message",
 })
+TASK7_MULTIPART_ENDPOINTS = frozenset({
+    "dcc_rest_create_channel_invite",
+    "dcc_rest_create_forum_thread",
+    "dcc_rest_put_invite_target_users",
+})
+MULTIPART_ENDPOINTS = (
+    TASK6_MULTIPART_ENDPOINTS
+    | TASK7_MULTIPART_ENDPOINTS
+    | frozenset({"dcc_rest_create_guild_sticker"})
+)
+TASK7_LEGACY_SYMBOLS = frozenset({
+    "dcc_rest_add_thread_member_params",
+    "dcc_rest_create_channel_invite_params",
+    "dcc_rest_create_dm_channel_params",
+    "dcc_rest_create_forum_thread_params",
+    "dcc_rest_create_guild_channel_params",
+    "dcc_rest_create_thread_params",
+    "dcc_rest_create_thread_from_message_params",
+    "dcc_rest_get_invite_full",
+    "dcc_rest_get_joined_private_archived_threads_page",
+    "dcc_rest_get_private_archived_threads_page",
+    "dcc_rest_get_public_archived_threads_page",
+    "dcc_rest_get_thread",
+    "dcc_rest_modify_channel_params",
+    "dcc_rest_modify_channel_permission_params",
+    "dcc_rest_modify_guild_channel_positions_params",
+    "dcc_rest_modify_thread",
+    "dcc_rest_modify_thread_params",
+    "dcc_rest_set_channel_voice_status_params",
+})
+AUDIT_REASON_ENDPOINTS = frozenset({
+    # Task 6
+    "dcc_rest_bulk_delete_messages",
+    "dcc_rest_create_webhook",
+    "dcc_rest_delete_message",
+    "dcc_rest_delete_webhook",
+    "dcc_rest_legacy_pin_message",
+    "dcc_rest_legacy_unpin_message",
+    "dcc_rest_modify_webhook",
+    "dcc_rest_pin_message",
+    "dcc_rest_unpin_message",
+    # Task 7
+    "dcc_rest_create_channel_invite",
+    "dcc_rest_create_forum_thread",
+    "dcc_rest_create_guild_channel",
+    "dcc_rest_create_thread",
+    "dcc_rest_create_thread_from_message",
+    "dcc_rest_delete_channel",
+    "dcc_rest_delete_channel_permission",
+    "dcc_rest_delete_invite",
+    "dcc_rest_follow_news_channel",
+    "dcc_rest_modify_channel",
+    "dcc_rest_modify_channel_permission",
+    "dcc_rest_set_channel_voice_status",
+    # Task 8
+    "dcc_rest_add_guild_member_role",
+    "dcc_rest_begin_guild_prune",
+    "dcc_rest_bulk_ban_guild_members",
+    "dcc_rest_create_guild_ban",
+    "dcc_rest_create_guild_role",
+    "dcc_rest_create_guild_soundboard_sound",
+    "dcc_rest_delete_guild_ban",
+    "dcc_rest_delete_guild_integration",
+    "dcc_rest_delete_guild_role",
+    "dcc_rest_delete_guild_soundboard_sound",
+    "dcc_rest_modify_current_guild_member",
+    "dcc_rest_modify_guild",
+    "dcc_rest_modify_guild_member",
+    "dcc_rest_modify_guild_role",
+    "dcc_rest_modify_guild_role_positions",
+    "dcc_rest_modify_guild_soundboard_sound",
+    "dcc_rest_modify_guild_welcome_screen",
+    "dcc_rest_modify_guild_widget",
+    "dcc_rest_remove_guild_member",
+    "dcc_rest_remove_guild_member_role",
+    "dcc_rest_set_current_guild_member_nickname",
+    # Task 9
+    "dcc_rest_create_auto_moderation_rule",
+    "dcc_rest_create_guild_emoji",
+    "dcc_rest_create_guild_scheduled_event",
+    "dcc_rest_create_guild_sticker",
+    "dcc_rest_create_stage_instance",
+    "dcc_rest_delete_auto_moderation_rule",
+    "dcc_rest_delete_guild_emoji",
+    "dcc_rest_delete_guild_sticker",
+    "dcc_rest_delete_stage_instance",
+    "dcc_rest_modify_auto_moderation_rule",
+    "dcc_rest_modify_guild_emoji",
+    "dcc_rest_modify_guild_onboarding",
+    "dcc_rest_modify_guild_scheduled_event",
+    "dcc_rest_modify_guild_sticker",
+    "dcc_rest_modify_stage_instance",
+})
+AUTH_POLICIES = frozenset({
+    "BOT", "NONE", "BEARER", "BOT_OR_BEARER", "NONE_OR_BOT",
+    "WEBHOOK_TOKEN_OR_BOT",
+})
+AUTH_NONE_ENDPOINTS = frozenset({
+    "dcc_rest_delete_webhook_message",
+    "dcc_rest_execute_webhook",
+    "dcc_rest_execute_webhook_github",
+    "dcc_rest_execute_webhook_slack",
+    "dcc_rest_get_webhook_message",
+    "dcc_rest_modify_webhook_message",
+    "dcc_rest_interaction_followup_create",
+    "dcc_rest_interaction_followup_delete",
+    "dcc_rest_interaction_followup_edit",
+    "dcc_rest_interaction_followup_get",
+    "dcc_rest_interaction_original_response_delete",
+    "dcc_rest_interaction_original_response_edit",
+    "dcc_rest_interaction_original_response_get",
+    "dcc_rest_interaction_response_create",
+    "dcc_rest_get_guild_widget_json",
+    "dcc_rest_get_guild_widget_png",
+    "dcc_rest_get_gateway",
+})
+AUTH_BEARER_ENDPOINTS = frozenset({
+    "dcc_rest_create_lobby_channel_invite_for_self",
+    "dcc_rest_get_current_user_guild_member",
+    "dcc_rest_edit_guild_command_permissions",
+    "dcc_rest_add_group_dm_recipient",
+    "dcc_rest_remove_group_dm_recipient",
+    "dcc_rest_create_or_join_lobby",
+    "dcc_rest_get_lobby_messages",
+    "dcc_rest_leave_lobby",
+    "dcc_rest_link_lobby_channel",
+    "dcc_rest_send_lobby_message",
+    "dcc_rest_delete_current_user_application_role_connection",
+    "dcc_rest_get_current_user_application_role_connection",
+    "dcc_rest_update_current_user_application_role_connection",
+    "dcc_rest_get_current_user_connections",
+})
+AUTH_BOT_OR_BEARER_ENDPOINTS = frozenset({
+    "dcc_rest_get_current_user_guilds",
+    "dcc_rest_bulk_overwrite_global_commands",
+    "dcc_rest_bulk_overwrite_guild_commands",
+    "dcc_rest_create_global_command",
+    "dcc_rest_create_guild_command",
+    "dcc_rest_delete_global_command",
+    "dcc_rest_delete_guild_command",
+    "dcc_rest_edit_global_command",
+    "dcc_rest_edit_guild_command",
+    "dcc_rest_get_all_guild_command_permissions",
+    "dcc_rest_get_global_command",
+    "dcc_rest_get_global_commands",
+    "dcc_rest_get_guild_command",
+    "dcc_rest_get_guild_command_permissions",
+    "dcc_rest_get_guild_commands",
+    "dcc_rest_get_sku_subscription",
+    "dcc_rest_get_sku_subscriptions",
+    "dcc_rest_get_current_user",
+})
+AUTH_NONE_OR_BOT_ENDPOINTS = frozenset({"dcc_rest_get_invite"})
+AUTH_WEBHOOK_TOKEN_OR_BOT_ENDPOINTS = frozenset({
+    "dcc_rest_delete_webhook",
+    "dcc_rest_get_webhook",
+    "dcc_rest_modify_webhook",
+})
+SENSITIVE_PATH_ENDPOINTS = frozenset({
+    "dcc_rest_delete_webhook",
+    "dcc_rest_delete_webhook_message",
+    "dcc_rest_execute_webhook",
+    "dcc_rest_execute_webhook_github",
+    "dcc_rest_execute_webhook_slack",
+    "dcc_rest_get_webhook",
+    "dcc_rest_get_webhook_message",
+    "dcc_rest_interaction_followup_create",
+    "dcc_rest_interaction_followup_delete",
+    "dcc_rest_interaction_followup_edit",
+    "dcc_rest_interaction_followup_get",
+    "dcc_rest_interaction_original_response_delete",
+    "dcc_rest_interaction_original_response_edit",
+    "dcc_rest_interaction_original_response_get",
+    "dcc_rest_interaction_response_create",
+    "dcc_rest_modify_webhook",
+    "dcc_rest_modify_webhook_message",
+})
+EXPECTED_AUTH_COUNTS = {
+    6: {"BOT": 24, "NONE": 14, "WEBHOOK_TOKEN_OR_BOT": 3},
+    7: {"BEARER": 1, "BOT": 33, "NONE_OR_BOT": 1},
+    8: {"BEARER": 1, "BOT": 43, "BOT_OR_BEARER": 1, "NONE": 2},
+    9: {"BEARER": 1, "BOT": 42, "BOT_OR_BEARER": 14},
+    10: {"BEARER": 11, "BOT": 29, "BOT_OR_BEARER": 3, "NONE": 1},
+}
+EXPECTED_AUDIT_COUNTS = {6: 9, 7: 12, 8: 21, 9: 15, 10: 0}
+EXPECTED_MULTIPART_COUNTS = {6: 8, 7: 3, 8: 0, 9: 1, 10: 0}
 REVIEWED_ENDPOINT_INPUTS = {
     "dcc_rest_get_message_reactions": "dcc_rest_reaction_query_t",
+    "dcc_rest_get_thread_member": "dcc_rest_thread_member_query_t",
+    "dcc_rest_get_thread_members": "dcc_rest_thread_member_query_t",
 }
+
+
+def expected_auth_policy(canonical: str) -> str:
+    if canonical in AUTH_NONE_ENDPOINTS:
+        return "NONE"
+    if canonical in AUTH_BEARER_ENDPOINTS:
+        return "BEARER"
+    if canonical in AUTH_BOT_OR_BEARER_ENDPOINTS:
+        return "BOT_OR_BEARER"
+    if canonical in AUTH_NONE_OR_BOT_ENDPOINTS:
+        return "NONE_OR_BOT"
+    if canonical in AUTH_WEBHOOK_TOKEN_OR_BOT_ENDPOINTS:
+        return "WEBHOOK_TOKEN_OR_BOT"
+    return "BOT"
+
+
+def capability_evidence_tokens(entry: dict[str, Any]) -> tuple[str, ...]:
+    policy = entry["auth_policy"]
+    auth = f"DCC_ENDPOINT_AUTH_POLICY_{policy}"
+    audit = (
+        "DCC_ENDPOINT_AUDIT_REASON_ALLOWED"
+        if entry["audit_log_reason"]
+        else "DCC_ENDPOINT_AUDIT_REASON_DENIED"
+    )
+    path = (
+        "DCC_ENDPOINT_PATH_SENSITIVE"
+        if entry["sensitive_path"]
+        else "DCC_ENDPOINT_PATH_PUBLIC"
+    )
+    if entry["sensitive_path"]:
+        return (
+            auth,
+            audit,
+            path,
+            "DCC_ENDPOINT_ROUTE_KEY_OPAQUE",
+            json.dumps(entry["canonical"]),
+        )
+    return auth, audit, path
 
 
 @dataclass(frozen=True)
@@ -1221,6 +1549,38 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
     if helpers != [TRANSITION_HELPER]:
         errors.append("transition_helpers differs from the exact Task 10 helper classification")
 
+    removed_candidates = data.get("removed_candidates")
+    if not isinstance(removed_candidates, list):
+        errors.append("removed_candidates must be an array")
+        removed_candidates = []
+    expected_removed_candidates = [
+        {
+            "canonical": canonical,
+            "domain": spec["domain"],
+            "inventory_task": spec["inventory_task"],
+            "legacy_symbols": list(spec["legacy_symbols"]),
+            "owners": spec["owners"],
+            "reason": spec["reason"],
+            "removal_task": 7,
+        }
+        for canonical, spec in sorted(REMOVED_CANDIDATE_SPECS.items())
+    ]
+    if removed_candidates != expected_removed_candidates:
+        errors.append(
+            "removed_candidates differs from the exact seven-operation removal ledger"
+        )
+    for index, candidate in enumerate(removed_candidates):
+        label = f"removed_candidates[{index}]"
+        if not isinstance(candidate, dict):
+            continue
+        unknown = sorted(set(candidate) - REMOVED_CANDIDATE_FIELDS)
+        missing = sorted(REMOVED_CANDIDATE_FIELDS - set(candidate))
+        if unknown:
+            errors.append(f"{label} has unknown field(s): {', '.join(unknown)}")
+        if missing:
+            errors.append(f"{label} is missing field(s): {', '.join(missing)}")
+            continue
+
     route_catalog = data.get("route_catalog")
     if not isinstance(route_catalog, dict):
         errors.append("route_catalog must be an object")
@@ -1275,6 +1635,15 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
     classified.extend(
         helper["symbol"] for helper in helpers if isinstance(helper, dict) and isinstance(helper.get("symbol"), str)
     )
+    for candidate in removed_candidates:
+        if not isinstance(candidate, dict):
+            continue
+        canonical = candidate.get("canonical")
+        legacy = candidate.get("legacy_symbols")
+        if isinstance(canonical, str):
+            classified.append(canonical)
+        if isinstance(legacy, list):
+            classified.extend(symbol for symbol in legacy if isinstance(symbol, str))
     route_owners: dict[tuple[str, str], set[str]] = defaultdict(set)
     entry_by_canonical: dict[str, dict[str, Any]] = {}
     entry_by_symbol: dict[str, dict[str, Any]] = {}
@@ -1334,16 +1703,55 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
             errors.append(f"{label}.input must be null for the reviewed scalar-only endpoint")
         if not isinstance(entry["multipart"], bool):
             errors.append(f"{label}.multipart must be boolean")
+        auth_policy = entry["auth_policy"]
+        if not isinstance(auth_policy, str) or auth_policy not in AUTH_POLICIES:
+            errors.append(f"{label}.auth_policy is unknown: {auth_policy!r}")
+        expected_policy = expected_auth_policy(canonical)
+        if auth_policy != expected_policy:
+            errors.append(
+                f"{label}.auth_policy must be {expected_policy} for the reviewed endpoint"
+            )
+        if not isinstance(entry["audit_log_reason"], bool):
+            errors.append(f"{label}.audit_log_reason must be boolean")
+        expected_audit = canonical in AUDIT_REASON_ENDPOINTS
+        if entry["audit_log_reason"] is not expected_audit:
+            errors.append(
+                f"{label}.audit_log_reason differs from the exact reviewed capability"
+            )
+        if not isinstance(entry["sensitive_path"], bool):
+            errors.append(f"{label}.sensitive_path must be boolean")
+        expected_sensitive_path = canonical in SENSITIVE_PATH_ENDPOINTS
+        sensitive_parameters = (
+            entry["canonical_parameters"]
+            if isinstance(entry["canonical_parameters"], list)
+            else []
+        )
+        path_declares_token = any(
+            parameter.get("role") == "path"
+            and parameter.get("declaration") in {
+                "const char *interaction_token", "const char *webhook_token",
+            }
+            for parameter in sensitive_parameters
+            if isinstance(parameter, dict)
+        )
+        if entry["sensitive_path"] is not expected_sensitive_path:
+            errors.append(
+                f"{label}.sensitive_path differs from the exact reviewed capability"
+            )
+        if path_declares_token is not expected_sensitive_path:
+            errors.append(
+                f"{label}.sensitive_path disagrees with token-bearing path roles"
+            )
         expected_input = REVIEWED_ENDPOINT_INPUTS.get(canonical)
         if expected_input is not None and entry["input"] != expected_input:
             errors.append(
                 f"{label}.input must be {expected_input} for the reviewed endpoint contract"
             )
-        if task == 6 and isinstance(entry["multipart"], bool):
-            expected_multipart = canonical in TASK6_MULTIPART_ENDPOINTS
+        if isinstance(entry["multipart"], bool):
+            expected_multipart = canonical in MULTIPART_ENDPOINTS
             if entry["multipart"] != expected_multipart:
                 errors.append(
-                    f"{label}.multipart differs from the exact reviewed Task 6 capability"
+                    f"{label}.multipart differs from the exact reviewed capability"
                 )
         legacy = entry["legacy_symbols"]
         if not isinstance(legacy, list) or not all(isinstance(item, str) and IDENTIFIER.fullmatch(item) for item in legacy):
@@ -1652,8 +2060,8 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
         for entry in endpoints
         if isinstance(entry, dict) and isinstance(entry.get("task"), int)
     )
-    expected_entries = {6: 41, 7: 35, 8: 51, 9: 59, 10: 45}
-    if len(endpoints) != 231 or dict(sorted(task_entry_counts.items())) != expected_entries:
+    expected_entries = {6: 41, 7: 35, 8: 47, 9: 57, 10: 44}
+    if len(endpoints) != 224 or dict(sorted(task_entry_counts.items())) != expected_entries:
         errors.append(
             f"endpoint count invariant failed: total={len(endpoints)} tasks={dict(sorted(task_entry_counts.items()))}"
         )
@@ -1664,6 +2072,56 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
     )
     if dict(sorted(domain_counts.items())) != dict(sorted(EXPECTED_DOMAIN_COUNTS.items())):
         errors.append(f"endpoint domain count invariant failed: {dict(sorted(domain_counts.items()))}")
+
+    task7_legacy = {
+        symbol
+        for entry in endpoints
+        if isinstance(entry, dict) and entry.get("task") == 7
+        for symbol in entry.get("legacy_symbols", [])
+        if isinstance(symbol, str)
+    }
+    if task7_legacy != TASK7_LEGACY_SYMBOLS:
+        errors.append(
+            "Task 7 legacy-symbol set differs from the exact 18-symbol removal contract"
+        )
+    active_canonicals = {
+        entry.get("canonical") for entry in endpoints if isinstance(entry, dict)
+    }
+    unavailable_active = sorted(active_canonicals & set(REMOVED_CANDIDATE_SPECS))
+    if unavailable_active:
+        errors.append(
+            "removal-ledger endpoint resurrected in active inventory: "
+            + ", ".join(unavailable_active)
+        )
+
+    auth_counts: dict[int, Counter[str]] = defaultdict(Counter)
+    audit_counts: Counter[int] = Counter()
+    multipart_counts: Counter[int] = Counter()
+    for entry in endpoints:
+        if not isinstance(entry, dict) or not isinstance(entry.get("task"), int):
+            continue
+        task = entry["task"]
+        if isinstance(entry.get("auth_policy"), str):
+            auth_counts[task][entry["auth_policy"]] += 1
+        if entry.get("audit_log_reason") is True:
+            audit_counts[task] += 1
+        if entry.get("multipart") is True:
+            multipart_counts[task] += 1
+    normalized_auth_counts = {
+        task: dict(sorted(counts.items())) for task, counts in sorted(auth_counts.items())
+    }
+    if normalized_auth_counts != EXPECTED_AUTH_COUNTS:
+        errors.append(f"endpoint auth-policy count invariant failed: {normalized_auth_counts}")
+    normalized_audit_counts = {
+        task: audit_counts.get(task, 0) for task in sorted(expected_entries)
+    }
+    if normalized_audit_counts != EXPECTED_AUDIT_COUNTS:
+        errors.append(f"endpoint audit-reason count invariant failed: {normalized_audit_counts}")
+    normalized_multipart_counts = {
+        task: multipart_counts.get(task, 0) for task in sorted(expected_entries)
+    }
+    if normalized_multipart_counts != EXPECTED_MULTIPART_COUNTS:
+        errors.append(f"endpoint multipart count invariant failed: {normalized_multipart_counts}")
 
     task_symbol_counts = Counter()
     current_symbol_counts = Counter()
@@ -1683,13 +2141,32 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
         errors.append(
             f"baseline current endpoint symbol count invariant failed: {dict(sorted(current_symbol_counts.items()))}"
         )
-    if len(generic) != 60 or len(helpers) != 1 or sum(task_symbol_counts.values()) != 407 or composite_symbol_count != 7:
+    removed_symbol_count = sum(
+        1 + len(candidate.get("legacy_symbols", []))
+        for candidate in removed_candidates
+        if isinstance(candidate, dict)
+    )
+    if (
+        len(generic) != 60
+        or len(helpers) != 1
+        or sum(task_symbol_counts.values()) != 397
+        or removed_symbol_count != 10
+        or composite_symbol_count != 7
+    ):
         errors.append(
             "public classification count invariant failed: "
             f"generic={len(generic)} helper={len(helpers)} "
-            f"endpoint_identifiers={sum(task_symbol_counts.values())} composite={composite_symbol_count}"
+            f"endpoint_identifiers={sum(task_symbol_counts.values())} "
+            f"removed={removed_symbol_count} composite={composite_symbol_count}"
         )
-    if len(generic) + len(helpers) + sum(current_symbol_counts.values()) + composite_symbol_count != 473:
+    if (
+        len(generic)
+        + len(helpers)
+        + sum(current_symbol_counts.values())
+        + removed_symbol_count
+        + composite_symbol_count
+        != 473
+    ):
         errors.append("baseline 473-public-symbol classification invariant failed")
 
     body_builder_owners: dict[str, str] = {}
@@ -1823,6 +2300,24 @@ def canonical_endpoint_errors(
     return errors
 
 
+def canonical_capability_errors(
+    entry: dict[str, Any],
+    definitions: dict[str, list[Definition]],
+) -> list[str]:
+    canonical = entry["canonical"]
+    defs = definitions.get(canonical, [])
+    if len(defs) != 1:
+        return []
+    errors: list[str] = []
+    for token in capability_evidence_tokens(entry):
+        if not exact_c_evidence_present(defs[0].body, token):
+            errors.append(
+                f"{canonical}: capability token {token!r} is absent from exact "
+                f"definition body {defs[0].path}"
+            )
+    return errors
+
+
 def baseline_endpoint_errors(
     entry: dict[str, Any],
     declarations: dict[str, list[Declaration]],
@@ -1924,6 +2419,127 @@ def opaque_payload_contract_errors(root: Path) -> list[str]:
     return errors
 
 
+def sensitive_transport_contract_errors(root: Path) -> list[str]:
+    """Check Task 7's shared secret ownership and redacted identity seam."""
+    source_paths = [
+        *sorted((root / "src/rest").rglob("*.c")),
+        *sorted((root / "src/internal/rest").rglob("*.h")),
+    ]
+    active_sources = {
+        path.relative_to(root).as_posix(): c_active_source(
+            path.read_text(encoding="utf-8")
+        )
+        for path in source_paths
+    }
+    combined = "\n".join(active_sources.values())
+    identifiers = c_active_identifiers(combined)
+    errors: list[str] = []
+    required_identifiers = {
+        "dcc_endpoint_secure_zero",
+        "dcc_endpoint_sensitive_route_fingerprint",
+        "dcc_endpoint_test_sensitive_probe_begin",
+        "dcc_endpoint_test_sensitive_probe_snapshot",
+        "dcc_endpoint_test_sensitive_probe_end",
+        "dcc_endpoint_test_sensitive_force_failure_once",
+        "dcc_endpoint_test_preparation_probe_begin",
+        "dcc_endpoint_test_preparation_probe_snapshot",
+        "dcc_endpoint_test_preparation_probe_end",
+        "DCC_ENDPOINT_PATH_SENSITIVE",
+        "DCC_ENDPOINT_PATH_PUBLIC",
+        "DCC_ENDPOINT_ROUTE_KEY_OPAQUE",
+    }
+    missing = sorted(required_identifiers - identifiers)
+    if missing:
+        errors.append(
+            "sensitive transport contract token(s) missing: " + ", ".join(missing)
+        )
+    if not exact_c_evidence_present(combined, '"dcc-rest-route-token-v1"'):
+        errors.append(
+            "sensitive route fingerprint omits the exact dcc-rest-route-token-v1 domain"
+        )
+
+    def private_definition_body(name: str) -> str:
+        match = re.search(
+            rf"\b{re.escape(name)}\s*\([^;{{}}]*\)\s*\{{",
+            combined,
+            re.S,
+        )
+        return c_definition_body(combined, match.end() - 1) if match else ""
+
+    secure_zero_body = private_definition_body("dcc_endpoint_secure_zero")
+    if not secure_zero_body or not any(
+        exact_c_evidence_present(secure_zero_body, token)
+        for token in ("volatile", "memset_s", "explicit_bzero", "SecureZeroMemory")
+    ):
+        errors.append(
+            "secure-zero primitive lacks optimization-resistant write evidence"
+        )
+    fingerprint_body = private_definition_body(
+        "dcc_endpoint_sensitive_route_fingerprint"
+    )
+    if (
+        not fingerprint_body
+        or not exact_c_evidence_present(
+            fingerprint_body, '"dcc-rest-route-token-v1"'
+        )
+        or not exact_c_evidence_present(
+            fingerprint_body, "dcc_endpoint_secure_zero"
+        )
+    ):
+        errors.append(
+            "sensitive route fingerprint must use the exact domain and wipe temporaries"
+        )
+
+    async_header = active_sources.get(
+        "src/internal/rest/dcc_rest_async_request_internal.h", ""
+    )
+    if re.search(r"\bchar\s*\*\s*wire_path\s*;", async_header) is None or \
+            re.search(r"\bchar\s*\*\s*operation\s*;", async_header) is None:
+        errors.append(
+            "async REST state must own distinct wire_path and nonsecret operation strings"
+        )
+
+    definitions = external_definitions(root)
+    submit_defs = definitions.get("dcc_rest_submit", [])
+    if len(submit_defs) != 1 or not exact_c_evidence_present(
+        submit_defs[0].body if submit_defs else "",
+        '"dcc_rest_submit"',
+    ):
+        errors.append("dcc_rest_submit must submit the fixed nonsecret operation identity")
+    route_defs = definitions.get("dcc_rest_route_key", [])
+    if len(route_defs) != 1 or not exact_c_evidence_present(
+        route_defs[0].body if route_defs else "",
+        "dcc_endpoint_sensitive_route_fingerprint",
+    ):
+        errors.append("rate-limit route keys must use the sensitive route fingerprint helper")
+    free_defs = definitions.get("dcc_rest_async_request_free", [])
+    if len(free_defs) != 1 or not exact_c_evidence_present(
+        free_defs[0].body if free_defs else "",
+        "dcc_endpoint_secure_zero",
+    ):
+        errors.append("async request teardown does not use the secure-zero primitive")
+    prepared_defs = definitions.get("dcc_rest_prepared_request_deinit", [])
+    if len(prepared_defs) != 1 or not exact_c_evidence_present(
+        prepared_defs[0].body if prepared_defs else "",
+        "dcc_endpoint_secure_zero",
+    ):
+        errors.append(
+            "prepared Authorization/token teardown does not use the secure-zero primitive"
+        )
+
+    raw_operation_assignments = sorted(
+        path
+        for path, source in active_sources.items()
+        if re.search(r"\.operation\s*=\s*(?:request->)?path\b", c_discovery_mask(source))
+    )
+    if raw_operation_assignments:
+        errors.append(
+            "observer operation still aliases a wire path in: "
+            + ", ".join(raw_operation_assignments)
+        )
+    return errors
+
+
 def audit_state_from_inventory(
     data: dict[str, Any],
     root: Path,
@@ -1944,6 +2560,9 @@ def audit_state_from_inventory(
     for entry in data["endpoints"]:
         classified.add(entry["canonical"])
         classified.update(entry["legacy_symbols"])
+    for candidate in data["removed_candidates"]:
+        classified.add(candidate["canonical"])
+        classified.update(candidate["legacy_symbols"])
     for composite in data["transition_composites"]:
         classified.update(composite["symbols"])
 
@@ -1987,6 +2606,37 @@ def audit_state_from_inventory(
             present=helper_present,
         )
     )
+
+    removal_required = progress_through is None or progress_through >= 7
+    for candidate in data["removed_candidates"]:
+        for symbol, owner in candidate["owners"].items():
+            if removal_required:
+                errors.extend(
+                    exact_symbol_owner_errors(
+                        symbol,
+                        [],
+                        "",
+                        declarations,
+                        definitions,
+                        present=False,
+                    )
+                )
+                continue
+            # Before Task 7 the reviewed unavailable symbol may still be in
+            # its exact baseline owner or may have been removed early. A
+            # partial/moved resurrection is never accepted.
+            if not declarations.get(symbol) and not definitions.get(symbol):
+                continue
+            errors.extend(
+                exact_symbol_owner_errors(
+                    symbol,
+                    [owner["header"]],
+                    owner["source"],
+                    declarations,
+                    definitions,
+                    present=True,
+                )
+            )
 
     for composite in data["transition_composites"]:
         composite_present = (
@@ -2062,6 +2712,8 @@ def audit_state_from_inventory(
         task = entry["task"]
         if progress_through is None or task <= progress_through:
             errors.extend(canonical_endpoint_errors(entry, declarations, definitions))
+            if progress_through is None or progress_through >= 7:
+                errors.extend(canonical_capability_errors(entry, definitions))
         else:
             errors.extend(future_endpoint_errors(entry, declarations, definitions))
             if canonical_endpoint_errors(entry, declarations, definitions):
@@ -2082,6 +2734,8 @@ def audit_state_from_inventory(
 
     if check_opaque_contract:
         errors.extend(opaque_payload_contract_errors(root))
+        if progress_through is None or progress_through >= 7:
+            errors.extend(sensitive_transport_contract_errors(root))
     return errors, dict(debt)
 
 
@@ -2188,6 +2842,9 @@ def synthetic_set_endpoint_state(
             tokens = token_value if isinstance(token_value, list) else [token_value]
             for token in tokens:
                 synthetic_append_evidence(definitions, symbol, token)
+    if canonical:
+        for token in capability_evidence_tokens(entry):
+            synthetic_append_evidence(definitions, entry["canonical"], token)
 
 
 def synthetic_inventory(
@@ -2220,6 +2877,17 @@ def synthetic_inventory(
             helper["source"],
             "char *json",
         )
+    if progress_through is not None and progress_through < 7:
+        for candidate in data["removed_candidates"]:
+            for symbol, owner in candidate["owners"].items():
+                synthetic_add_symbol(
+                    declarations,
+                    definitions,
+                    symbol,
+                    [owner["header"]],
+                    owner["source"],
+                    "dcc_client_t *client, dcc_rest_cb cb, void *user_data",
+                )
     for composite in data["transition_composites"]:
         if progress_through is not None and progress_through < composite["removal_task"]:
             for symbol in composite["symbols"]:
@@ -2752,6 +3420,125 @@ void dcc_rest_other_init(void) {
         "expanded planned canonical allowlist",
         lambda value: value["endpoints"][0].update({"canonical_state": "planned-at-baseline"}),
     )
+    expect_rejected(
+        "missing auth-policy field",
+        lambda value: value["endpoints"][0].pop("auth_policy"),
+    )
+    expect_rejected(
+        "invalid auth-policy value",
+        lambda value: value["endpoints"][0].update({"auth_policy": "ANY"}),
+    )
+    expect_rejected(
+        "wrong Get Invite None-or-Bot auth policy",
+        lambda value: next(
+            entry for entry in value["endpoints"]
+            if entry["canonical"] == "dcc_rest_get_invite"
+        ).update({"auth_policy": "BOT"}),
+    )
+    expect_rejected(
+        "wrong self-lobby Bearer-only auth policy",
+        lambda value: next(
+            entry for entry in value["endpoints"]
+            if entry["canonical"] == "dcc_rest_create_lobby_channel_invite_for_self"
+        ).update({"auth_policy": "BOT"}),
+    )
+    expect_rejected(
+        "missing audit-reason capability",
+        lambda value: value["endpoints"][0].pop("audit_log_reason"),
+    )
+    expect_rejected(
+        "non-boolean audit-reason capability",
+        lambda value: value["endpoints"][0].update({"audit_log_reason": "no"}),
+    )
+    expect_rejected(
+        "false channel-position audit capability",
+        lambda value: next(
+            entry for entry in value["endpoints"]
+            if entry["canonical"] == "dcc_rest_modify_guild_channel_positions"
+        ).update({"audit_log_reason": True}),
+    )
+    expect_rejected(
+        "missing sensitive-path capability",
+        lambda value: value["endpoints"][0].pop("sensitive_path"),
+    )
+    expect_rejected(
+        "token-bearing path marked public",
+        lambda value: next(
+            entry for entry in value["endpoints"]
+            if entry["canonical"] == "dcc_rest_interaction_response_create"
+        ).update({"sensitive_path": False}),
+    )
+    expect_rejected(
+        "public path marked sensitive",
+        lambda value: next(
+            entry for entry in value["endpoints"]
+            if entry["canonical"] == "dcc_rest_get_channel"
+        ).update({"sensitive_path": True}),
+    )
+    expect_rejected(
+        "missing removal ledger",
+        lambda value: value.pop("removed_candidates"),
+    )
+    expect_rejected(
+        "missing removal-ledger owner",
+        lambda value: value["removed_candidates"][0]["owners"].pop(
+            value["removed_candidates"][0]["canonical"]
+        ),
+    )
+    expect_rejected(
+        "wrong removal-ledger reason",
+        lambda value: value["removed_candidates"][0].update({"reason": "available"}),
+    )
+
+    def stale_231_inventory(value: dict[str, Any]) -> None:
+        for index, original in enumerate(value["endpoints"][:7]):
+            duplicate = json.loads(json.dumps(original))
+            duplicate["canonical"] = f"dcc_rest_stale_candidate_{index}"
+            value["endpoints"].append(duplicate)
+        value["endpoints"].sort(key=lambda entry: entry["canonical"])
+
+    expect_rejected("stale 231-entry candidate inventory", stale_231_inventory)
+
+    def resurrect_unavailable_candidate(value: dict[str, Any]) -> None:
+        entry = json.loads(json.dumps(value["endpoints"][0]))
+        old = entry["canonical"]
+        new = "dcc_rest_create_guild"
+        entry["canonical"] = new
+        for evidence_field in ("route_evidence", "method_evidence"):
+            for phase in EVIDENCE_PHASES:
+                evidence = entry[evidence_field][phase]
+                if old in evidence:
+                    evidence[new] = evidence.pop(old)
+                    entry[evidence_field][phase] = dict(sorted(evidence.items()))
+        value["endpoints"].append(entry)
+        value["endpoints"].sort(key=lambda item: item["canonical"])
+
+    expect_rejected("unavailable endpoint resurrection", resurrect_unavailable_candidate)
+
+    def swap_task7_multipart_capability(value: dict[str, Any]) -> None:
+        next(
+            entry for entry in value["endpoints"]
+            if entry["canonical"] == "dcc_rest_create_forum_thread"
+        )["multipart"] = False
+        next(
+            entry for entry in value["endpoints"]
+            if entry["canonical"] == "dcc_rest_get_active_threads"
+        )["multipart"] = True
+
+    expect_rejected("wrong Task 7 multipart set with unchanged count", swap_task7_multipart_capability)
+
+    def remove_thread_member_query(value: dict[str, Any]) -> None:
+        entry = next(
+            item for item in value["endpoints"]
+            if item["canonical"] == "dcc_rest_get_thread_member"
+        )
+        entry["input"] = None
+        entry["canonical_parameters"] = [
+            parameter for parameter in entry["canonical_parameters"]
+            if parameter["role"] != "input"
+        ]
+
+    expect_rejected("missing Get Thread Member query", remove_thread_member_query)
     def coherent_suffix_rename(value: dict[str, Any], suffix: str) -> None:
         entry = next(
             item for item in value["endpoints"]
@@ -2948,6 +3735,24 @@ void dcc_rest_other_init(void) {
     if state_errors:
         failures.append("synthetic progress-through-6 inventory failed: " + " | ".join(state_errors[:3]))
 
+    declarations, definitions, internal = synthetic_inventory(data, 7)
+    state_errors, state_debt = audit_state_from_inventory(
+        data,
+        root,
+        7,
+        declarations,
+        definitions,
+        internal,
+        validate_schema=False,
+        check_opaque_contract=False,
+    )
+    if state_errors or sum(state_debt.values()) != 148:
+        failures.append(
+            "synthetic progress-through-7 inventory failed: "
+            + " | ".join(state_errors[:3])
+            + f" (deferred={sum(state_debt.values())})"
+        )
+
     expect_state_rejected(
         "unclassified public declaration",
         6,
@@ -2978,6 +3783,140 @@ void dcc_rest_other_init(void) {
             ],
         }),
         "neither public nor internal",
+    )
+
+    def resurrect_removed_candidate(
+        declarations: Any,
+        definitions: Any,
+        internal: Any,
+    ) -> None:
+        candidate = data["removed_candidates"][0]
+        symbol = candidate["canonical"]
+        owner = candidate["owners"][symbol]
+        synthetic_add_symbol(
+            declarations,
+            definitions,
+            symbol,
+            [owner["header"]],
+            owner["source"],
+            "dcc_client_t *client, dcc_rest_cb cb, void *user_data",
+        )
+
+    expect_state_rejected(
+        "removal-ledger symbol resurrection",
+        7,
+        resurrect_removed_candidate,
+        "removal task",
+    )
+
+    def replace_capability_token(
+        definitions: Any,
+        symbol: str,
+        old: str,
+        new: str,
+    ) -> None:
+        item = definitions[symbol][0]
+        definitions[symbol][0] = Definition(
+            item.name,
+            item.return_type,
+            item.args,
+            item.path,
+            item.body.replace(old, new),
+        )
+
+    def wrong_task7_auth_capability(
+        declarations: Any,
+        definitions: Any,
+        internal: Any,
+    ) -> None:
+        replace_capability_token(
+            definitions,
+            "dcc_rest_get_invite",
+            "DCC_ENDPOINT_AUTH_POLICY_NONE_OR_BOT",
+            "DCC_ENDPOINT_AUTH_POLICY_BOT",
+        )
+
+    expect_state_rejected(
+        "source auth capability mismatch",
+        7,
+        wrong_task7_auth_capability,
+        "AUTH_POLICY_NONE_OR_BOT",
+    )
+
+    def wrong_task7_audit_capability(
+        declarations: Any,
+        definitions: Any,
+        internal: Any,
+    ) -> None:
+        replace_capability_token(
+            definitions,
+            "dcc_rest_modify_guild_channel_positions",
+            "DCC_ENDPOINT_AUDIT_REASON_DENIED",
+            "DCC_ENDPOINT_AUDIT_REASON_ALLOWED",
+        )
+
+    expect_state_rejected(
+        "source audit capability mismatch",
+        7,
+        wrong_task7_audit_capability,
+        "AUDIT_REASON_DENIED",
+    )
+
+    def wrong_sensitive_path_capability(
+        declarations: Any,
+        definitions: Any,
+        internal: Any,
+    ) -> None:
+        replace_capability_token(
+            definitions,
+            "dcc_rest_interaction_response_create",
+            "DCC_ENDPOINT_PATH_SENSITIVE",
+            "DCC_ENDPOINT_PATH_PUBLIC",
+        )
+
+    expect_state_rejected(
+        "source sensitive-path capability mismatch",
+        7,
+        wrong_sensitive_path_capability,
+        "PATH_SENSITIVE",
+    )
+
+    def missing_opaque_route_key_capability(
+        declarations: Any,
+        definitions: Any,
+        internal: Any,
+    ) -> None:
+        replace_capability_token(
+            definitions,
+            "dcc_rest_execute_webhook",
+            "DCC_ENDPOINT_ROUTE_KEY_OPAQUE",
+            "DCC_ENDPOINT_ROUTE_KEY_RAW",
+        )
+
+    expect_state_rejected(
+        "sensitive route key is not opaque",
+        7,
+        missing_opaque_route_key_capability,
+        "ROUTE_KEY_OPAQUE",
+    )
+
+    def raw_sensitive_operation_identity(
+        declarations: Any,
+        definitions: Any,
+        internal: Any,
+    ) -> None:
+        replace_capability_token(
+            definitions,
+            "dcc_rest_interaction_followup_get",
+            '"dcc_rest_interaction_followup_get"',
+            '"/webhooks/123/raw-secret/messages/456"',
+        )
+
+    expect_state_rejected(
+        "sensitive observer operation is a raw path",
+        7,
+        raw_sensitive_operation_identity,
+        '"dcc_rest_interaction_followup_get"',
     )
 
     first_task6 = next(entry for entry in data["endpoints"] if entry["task"] == 6)
@@ -3268,6 +4207,31 @@ void dcc_rest_other_init(void) {
         6,
         migrate_future_domain,
         "task 7 domain channels",
+    )
+
+    def complete_task7_under_stale_progress(
+        declarations: Any,
+        definitions: Any,
+        internal: Any,
+    ) -> None:
+        for entry in data["endpoints"]:
+            if entry["task"] == 7:
+                synthetic_set_endpoint_state(
+                    entry,
+                    declarations,
+                    definitions,
+                    canonical=True,
+                )
+        for candidate in data["removed_candidates"]:
+            for symbol in candidate["owners"]:
+                declarations.pop(symbol, None)
+                definitions.pop(symbol, None)
+
+    expect_state_rejected(
+        "stale progress-through-6 after complete Task 7 migration",
+        6,
+        complete_task7_under_stale_progress,
+        "task 7 domain",
     )
 
     def stale_task9_composite(declarations: Any, definitions: Any, internal: Any) -> None:

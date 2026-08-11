@@ -13,6 +13,9 @@ typedef struct endpoint_capture {
     atomic_uint delay_ms;
     atomic_uint entered;
     atomic_uint capture_release;
+    atomic_int admission_status;
+    atomic_uint response_status;
+    atomic_int response_error;
     char method[16];
     char path[512];
     char content_type[256];
@@ -110,5 +113,11 @@ int endpoint_transition_submission_contract(
     endpoint_capture_t *capture
 );
 int endpoint_transition_rejection_contract(dcc_client_t *client);
+int endpoint_task7_contract(
+    dcc_client_t *client,
+    endpoint_capture_t *capture,
+    endpoint_callback_t *callback,
+    endpoint_observer_t *observer
+);
 
 #endif

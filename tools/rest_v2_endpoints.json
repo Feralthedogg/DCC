@@ -1050,18 +1050,6 @@
         "DCC_REST_ROUTE_DPP_CURRENT_USER_GET"
       ]
     },
-    "dpp_current_user_get_dms": {
-      "templates": [
-        "/users/@me/channels"
-      ],
-      "methods": [
-        "GET"
-      ],
-      "source_tokens": [
-        "/users/@me/channels",
-        "DCC_REST_ROUTE_DPP_CURRENT_USER_GET_DMS"
-      ]
-    },
     "dpp_current_user_get_guilds": {
       "templates": [
         "/users/@me/guilds"
@@ -1374,18 +1362,6 @@
         "DCC_REST_ROUTE_DPP_GUILD_BULK_COMMAND_CREATE"
       ]
     },
-    "dpp_guild_bulk_command_edit_permissions": {
-      "templates": [
-        "/applications/{snowflake_1}/guilds/{snowflake_2}/commands/permissions"
-      ],
-      "methods": [
-        "PUT"
-      ],
-      "source_tokens": [
-        "/applications/%llu/guilds/%llu/commands/permissions",
-        "DCC_REST_ROUTE_DPP_GUILD_BULK_COMMAND_EDIT_PERMISSIONS"
-      ]
-    },
     "dpp_guild_command_create": {
       "templates": [
         "/applications/{snowflake_1}/guilds/{snowflake_2}/commands"
@@ -1482,30 +1458,6 @@
         "DCC_REST_ROUTE_DPP_GUILD_COMMANDS_GET_PERMISSIONS"
       ]
     },
-    "dpp_guild_create": {
-      "templates": [
-        "/guilds"
-      ],
-      "methods": [
-        "POST"
-      ],
-      "source_tokens": [
-        "/guilds",
-        "DCC_REST_ROUTE_DPP_GUILD_CREATE"
-      ]
-    },
-    "dpp_guild_create_from_template": {
-      "templates": [
-        "/guilds/templates/{template_code}"
-      ],
-      "methods": [
-        "POST"
-      ],
-      "source_tokens": [
-        "DCC_REST_ROUTE_DPP_GUILD_CREATE_FROM_TEMPLATE",
-        "dcc_rest_alloc_template_path"
-      ]
-    },
     "dpp_guild_current_member_edit": {
       "templates": [
         "/guilds/{snowflake_1}/members/@me"
@@ -1516,18 +1468,6 @@
       "source_tokens": [
         "/guilds/%llu/members/@me",
         "DCC_REST_ROUTE_DPP_GUILD_CURRENT_MEMBER_EDIT"
-      ]
-    },
-    "dpp_guild_delete": {
-      "templates": [
-        "/guilds/{snowflake_1}"
-      ],
-      "methods": [
-        "DELETE"
-      ],
-      "source_tokens": [
-        "/guilds/%llu",
-        "DCC_REST_ROUTE_DPP_GUILD_DELETE"
       ]
     },
     "dpp_guild_delete_integration": {
@@ -1950,18 +1890,6 @@
         "DCC_REST_ROUTE_DPP_GUILD_MESSAGES_SEARCH"
       ]
     },
-    "dpp_guild_modify_integration": {
-      "templates": [
-        "/guilds/{snowflake_1}/integrations/{snowflake_2}"
-      ],
-      "methods": [
-        "PATCH"
-      ],
-      "source_tokens": [
-        "/guilds/%llu/integrations/%llu",
-        "DCC_REST_ROUTE_DPP_GUILD_MODIFY_INTEGRATION"
-      ]
-    },
     "dpp_guild_search_members": {
       "templates": [
         "/guilds/{snowflake_1}/members/search"
@@ -2044,18 +1972,6 @@
       "source_tokens": [
         "/guilds/%llu/stickers",
         "DCC_REST_ROUTE_DPP_GUILD_STICKERS_GET"
-      ]
-    },
-    "dpp_guild_sync_integration": {
-      "templates": [
-        "/guilds/{snowflake_1}/integrations/{snowflake_2}"
-      ],
-      "methods": [
-        "POST"
-      ],
-      "source_tokens": [
-        "/guilds/%llu/integrations/%llu",
-        "DCC_REST_ROUTE_DPP_GUILD_SYNC_INTEGRATION"
       ]
     },
     "dpp_guild_template_create": {
@@ -2737,7 +2653,10 @@
         "canonical": {
           "dcc_rest_add_group_dm_recipient": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_add_guild_member",
@@ -2804,7 +2723,10 @@
         "canonical": {
           "dcc_rest_add_guild_member": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_add_guild_member_role",
@@ -2871,7 +2793,10 @@
         "canonical": {
           "dcc_rest_add_guild_member_role": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_add_lobby_member",
@@ -2943,7 +2868,10 @@
         "canonical": {
           "dcc_rest_add_lobby_member": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_add_message_reaction",
@@ -3011,7 +2939,10 @@
         "canonical": {
           "dcc_rest_add_message_reaction": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_add_thread_member",
@@ -3074,7 +3005,10 @@
         "canonical": {
           "dcc_rest_add_thread_member": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_begin_guild_prune",
@@ -3142,7 +3076,10 @@
         "canonical": {
           "dcc_rest_begin_guild_prune": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_bulk_ban_guild_members",
@@ -3210,7 +3147,10 @@
         "canonical": {
           "dcc_rest_bulk_ban_guild_members": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_bulk_delete_messages",
@@ -3270,74 +3210,10 @@
         "canonical": {
           "dcc_rest_bulk_delete_messages": "DCC_REST_POST"
         }
-      }
-    },
-    {
-      "canonical": "dcc_rest_bulk_edit_guild_command_permissions",
-      "header": "include/dcc/rest/application_commands/permissions.h",
-      "domain": "application_commands",
-      "task": 9,
-      "method": "PUT",
-      "route_formatter": "dpp_guild_bulk_command_edit_permissions",
-      "input": "dcc_bulk_guild_command_permissions_params_t",
-      "canonical_parameters": [
-        {
-          "declaration": "dcc_client_t *client",
-          "role": "client"
-        },
-        {
-          "declaration": "dcc_snowflake_t application_id",
-          "role": "path"
-        },
-        {
-          "declaration": "dcc_snowflake_t guild_id",
-          "role": "path"
-        },
-        {
-          "declaration": "const dcc_bulk_guild_command_permissions_params_t *params",
-          "role": "input"
-        },
-        {
-          "declaration": "const dcc_rest_call_options_t *options",
-          "role": "options"
-        },
-        {
-          "declaration": "dcc_rest_request_t **out_request",
-          "role": "out_request"
-        }
-      ],
-      "source": "src/rest/rest_application_command_permissions.c",
-      "multipart": false,
-      "legacy_symbols": [
-        "dcc_rest_bulk_edit_guild_command_permissions_params"
-      ],
-      "canonical_state": "current",
-      "legacy_owners": {
-        "dcc_rest_bulk_edit_guild_command_permissions_params": {
-          "header": "include/dcc/rest/application_commands/permissions.h",
-          "source": "src/rest/rest_application_command_permissions_params.c"
-        }
       },
-      "route_evidence": {
-        "baseline": {
-          "dcc_rest_bulk_edit_guild_command_permissions": [
-            "/applications/%llu/guilds/%llu/commands/permissions"
-          ]
-        },
-        "canonical": {
-          "dcc_rest_bulk_edit_guild_command_permissions": [
-            "DCC_REST_ROUTE_DPP_GUILD_BULK_COMMAND_EDIT_PERMISSIONS"
-          ]
-        }
-      },
-      "method_evidence": {
-        "baseline": {
-          "dcc_rest_bulk_edit_guild_command_permissions": "DCC_REST_PUT"
-        },
-        "canonical": {
-          "dcc_rest_bulk_edit_guild_command_permissions": "DCC_REST_PUT"
-        }
-      }
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_bulk_overwrite_global_commands",
@@ -3409,7 +3285,10 @@
         "canonical": {
           "dcc_rest_bulk_overwrite_global_commands": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_bulk_overwrite_guild_commands",
@@ -3485,7 +3364,10 @@
         "canonical": {
           "dcc_rest_bulk_overwrite_guild_commands": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_bulk_update_lobby_members",
@@ -3553,7 +3435,10 @@
         "canonical": {
           "dcc_rest_bulk_update_lobby_members": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_consume_entitlement",
@@ -3609,7 +3494,10 @@
         "canonical": {
           "dcc_rest_consume_entitlement": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_application_emoji",
@@ -3672,7 +3560,10 @@
         "canonical": {
           "dcc_rest_create_application_emoji": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_auto_moderation_rule",
@@ -3735,7 +3626,10 @@
         "canonical": {
           "dcc_rest_create_auto_moderation_rule": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_channel_invite",
@@ -3768,7 +3662,7 @@
         }
       ],
       "source": "src/rest/rest_channel_invites.c",
-      "multipart": false,
+      "multipart": true,
       "legacy_symbols": [
         "dcc_rest_create_channel_invite_params"
       ],
@@ -3798,7 +3692,10 @@
         "canonical": {
           "dcc_rest_create_channel_invite": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_dm_channel",
@@ -3857,7 +3754,10 @@
         "canonical": {
           "dcc_rest_create_dm_channel": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_forum_thread",
@@ -3890,7 +3790,7 @@
         }
       ],
       "source": "src/rest/rest_thread_create.c",
-      "multipart": false,
+      "multipart": true,
       "legacy_symbols": [
         "dcc_rest_create_forum_thread_params"
       ],
@@ -3921,7 +3821,10 @@
           "dcc_rest_create_forum_thread": "DCC_REST_POST"
         }
       },
-      "collision_justification": "Discord ordinary-thread and forum-thread creation share the channel-thread route with distinct payload semantics."
+      "collision_justification": "Discord ordinary-thread and forum-thread creation share the channel-thread route with distinct payload semantics.",
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_global_command",
@@ -3984,66 +3887,10 @@
         "canonical": {
           "dcc_rest_create_global_command": "DCC_REST_POST"
         }
-      }
-    },
-    {
-      "canonical": "dcc_rest_create_guild",
-      "header": "include/dcc/rest/guilds/core.h",
-      "domain": "guilds",
-      "task": 8,
-      "method": "POST",
-      "route_formatter": "dpp_guild_create",
-      "input": "dcc_guild_params_t",
-      "canonical_parameters": [
-        {
-          "declaration": "dcc_client_t *client",
-          "role": "client"
-        },
-        {
-          "declaration": "const dcc_guild_params_t *params",
-          "role": "input"
-        },
-        {
-          "declaration": "const dcc_rest_call_options_t *options",
-          "role": "options"
-        },
-        {
-          "declaration": "dcc_rest_request_t **out_request",
-          "role": "out_request"
-        }
-      ],
-      "source": "src/rest/rest_guilds_core.c",
-      "multipart": false,
-      "legacy_symbols": [
-        "dcc_rest_create_guild_params"
-      ],
-      "canonical_state": "current",
-      "legacy_owners": {
-        "dcc_rest_create_guild_params": {
-          "header": "include/dcc/rest/guilds/core.h",
-          "source": "src/rest/rest_guilds_core.c"
-        }
       },
-      "route_evidence": {
-        "baseline": {
-          "dcc_rest_create_guild": [
-            "/guilds"
-          ]
-        },
-        "canonical": {
-          "dcc_rest_create_guild": [
-            "DCC_REST_ROUTE_DPP_GUILD_CREATE"
-          ]
-        }
-      },
-      "method_evidence": {
-        "baseline": {
-          "dcc_rest_create_guild": "DCC_REST_POST"
-        },
-        "canonical": {
-          "dcc_rest_create_guild": "DCC_REST_POST"
-        }
-      }
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_guild_ban",
@@ -4115,7 +3962,10 @@
         "canonical": {
           "dcc_rest_create_guild_ban": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_guild_channel",
@@ -4178,7 +4028,10 @@
         "canonical": {
           "dcc_rest_create_guild_channel": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_guild_command",
@@ -4245,7 +4098,10 @@
         "canonical": {
           "dcc_rest_create_guild_command": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_guild_emoji",
@@ -4308,70 +4164,10 @@
         "canonical": {
           "dcc_rest_create_guild_emoji": "DCC_REST_POST"
         }
-      }
-    },
-    {
-      "canonical": "dcc_rest_create_guild_from_template",
-      "header": "include/dcc/rest/resources/templates.h",
-      "domain": "templates",
-      "task": 9,
-      "method": "POST",
-      "route_formatter": "dpp_guild_create_from_template",
-      "input": "dcc_template_params_t",
-      "canonical_parameters": [
-        {
-          "declaration": "dcc_client_t *client",
-          "role": "client"
-        },
-        {
-          "declaration": "const char *code",
-          "role": "path"
-        },
-        {
-          "declaration": "const dcc_template_params_t *params",
-          "role": "input"
-        },
-        {
-          "declaration": "const dcc_rest_call_options_t *options",
-          "role": "options"
-        },
-        {
-          "declaration": "dcc_rest_request_t **out_request",
-          "role": "out_request"
-        }
-      ],
-      "source": "src/rest/rest_templates_create.c",
-      "multipart": false,
-      "legacy_symbols": [
-        "dcc_rest_create_guild_from_template_params"
-      ],
-      "canonical_state": "current",
-      "legacy_owners": {
-        "dcc_rest_create_guild_from_template_params": {
-          "header": "include/dcc/rest/resources/templates.h",
-          "source": "src/rest/rest_templates_create.c"
-        }
       },
-      "route_evidence": {
-        "baseline": {
-          "dcc_rest_create_guild_from_template": [
-            "dcc_rest_alloc_template_path"
-          ]
-        },
-        "canonical": {
-          "dcc_rest_create_guild_from_template": [
-            "DCC_REST_ROUTE_DPP_GUILD_CREATE_FROM_TEMPLATE"
-          ]
-        }
-      },
-      "method_evidence": {
-        "baseline": {
-          "dcc_rest_create_guild_from_template": "DCC_REST_POST"
-        },
-        "canonical": {
-          "dcc_rest_create_guild_from_template": "DCC_REST_POST"
-        }
-      }
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_guild_role",
@@ -4434,7 +4230,10 @@
         "canonical": {
           "dcc_rest_create_guild_role": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_guild_scheduled_event",
@@ -4497,7 +4296,10 @@
         "canonical": {
           "dcc_rest_create_guild_scheduled_event": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_guild_soundboard_sound",
@@ -4565,7 +4367,10 @@
         "canonical": {
           "dcc_rest_create_guild_soundboard_sound": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_guild_sticker",
@@ -4633,7 +4438,10 @@
         "canonical": {
           "dcc_rest_create_guild_sticker": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_guild_template",
@@ -4696,7 +4504,10 @@
         "canonical": {
           "dcc_rest_create_guild_template": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_lobby",
@@ -4760,7 +4571,10 @@
         "canonical": {
           "dcc_rest_create_lobby": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_lobby_channel_invite_for_self",
@@ -4812,7 +4626,10 @@
         "canonical": {
           "dcc_rest_create_lobby_channel_invite_for_self": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_lobby_channel_invite_for_user",
@@ -4868,7 +4685,10 @@
         "canonical": {
           "dcc_rest_create_lobby_channel_invite_for_user": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_message",
@@ -4941,7 +4761,10 @@
         "canonical": {
           "dcc_rest_create_message": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_or_join_lobby",
@@ -5005,7 +4828,10 @@
         "canonical": {
           "dcc_rest_create_or_join_lobby": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_stage_instance",
@@ -5064,7 +4890,10 @@
         "canonical": {
           "dcc_rest_create_stage_instance": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_test_entitlement",
@@ -5127,7 +4956,10 @@
         "canonical": {
           "dcc_rest_create_test_entitlement": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_thread",
@@ -5191,7 +5023,10 @@
           "dcc_rest_create_thread": "DCC_REST_POST"
         }
       },
-      "collision_justification": "Discord ordinary-thread and forum-thread creation share the channel-thread route with distinct payload semantics."
+      "collision_justification": "Discord ordinary-thread and forum-thread creation share the channel-thread route with distinct payload semantics.",
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_thread_from_message",
@@ -5258,7 +5093,10 @@
         "canonical": {
           "dcc_rest_create_thread_from_message": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_create_webhook",
@@ -5321,7 +5159,10 @@
         "canonical": {
           "dcc_rest_create_webhook": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_crosspost_message",
@@ -5377,7 +5218,10 @@
         "canonical": {
           "dcc_rest_crosspost_message": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_all_message_reactions",
@@ -5433,7 +5277,10 @@
         "canonical": {
           "dcc_rest_delete_all_message_reactions": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_all_message_reactions_for_emoji",
@@ -5494,7 +5341,10 @@
         "canonical": {
           "dcc_rest_delete_all_message_reactions_for_emoji": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_application_emoji",
@@ -5550,7 +5400,10 @@
         "canonical": {
           "dcc_rest_delete_application_emoji": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_auto_moderation_rule",
@@ -5606,7 +5459,10 @@
         "canonical": {
           "dcc_rest_delete_auto_moderation_rule": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_channel",
@@ -5658,7 +5514,10 @@
         "canonical": {
           "dcc_rest_delete_channel": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_channel_permission",
@@ -5714,7 +5573,10 @@
         "canonical": {
           "dcc_rest_delete_channel_permission": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_current_user_application_role_connection",
@@ -5766,7 +5628,10 @@
         "canonical": {
           "dcc_rest_delete_current_user_application_role_connection": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_global_command",
@@ -5822,59 +5687,10 @@
         "canonical": {
           "dcc_rest_delete_global_command": "DCC_REST_DELETE"
         }
-      }
-    },
-    {
-      "canonical": "dcc_rest_delete_guild",
-      "header": "include/dcc/rest/guilds/core.h",
-      "domain": "guilds",
-      "task": 8,
-      "method": "DELETE",
-      "route_formatter": "dpp_guild_delete",
-      "input": null,
-      "canonical_parameters": [
-        {
-          "declaration": "dcc_client_t *client",
-          "role": "client"
-        },
-        {
-          "declaration": "dcc_snowflake_t guild_id",
-          "role": "path"
-        },
-        {
-          "declaration": "const dcc_rest_call_options_t *options",
-          "role": "options"
-        },
-        {
-          "declaration": "dcc_rest_request_t **out_request",
-          "role": "out_request"
-        }
-      ],
-      "source": "src/rest/rest_guilds_core.c",
-      "multipart": false,
-      "legacy_symbols": [],
-      "canonical_state": "current",
-      "legacy_owners": {},
-      "route_evidence": {
-        "baseline": {
-          "dcc_rest_delete_guild": [
-            "/guilds/%llu"
-          ]
-        },
-        "canonical": {
-          "dcc_rest_delete_guild": [
-            "DCC_REST_ROUTE_DPP_GUILD_DELETE"
-          ]
-        }
       },
-      "method_evidence": {
-        "baseline": {
-          "dcc_rest_delete_guild": "DCC_REST_DELETE"
-        },
-        "canonical": {
-          "dcc_rest_delete_guild": "DCC_REST_DELETE"
-        }
-      }
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_guild_ban",
@@ -5930,7 +5746,10 @@
         "canonical": {
           "dcc_rest_delete_guild_ban": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_guild_command",
@@ -5990,7 +5809,10 @@
         "canonical": {
           "dcc_rest_delete_guild_command": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_guild_emoji",
@@ -6046,7 +5868,10 @@
         "canonical": {
           "dcc_rest_delete_guild_emoji": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_guild_integration",
@@ -6102,7 +5927,10 @@
         "canonical": {
           "dcc_rest_delete_guild_integration": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_guild_role",
@@ -6158,7 +5986,10 @@
         "canonical": {
           "dcc_rest_delete_guild_role": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_guild_scheduled_event",
@@ -6214,7 +6045,10 @@
         "canonical": {
           "dcc_rest_delete_guild_scheduled_event": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_guild_soundboard_sound",
@@ -6270,7 +6104,10 @@
         "canonical": {
           "dcc_rest_delete_guild_soundboard_sound": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_guild_sticker",
@@ -6326,7 +6163,10 @@
         "canonical": {
           "dcc_rest_delete_guild_sticker": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_guild_template",
@@ -6382,7 +6222,10 @@
         "canonical": {
           "dcc_rest_delete_guild_template": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_invite",
@@ -6434,7 +6277,10 @@
         "canonical": {
           "dcc_rest_delete_invite": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_lobby",
@@ -6486,7 +6332,10 @@
         "canonical": {
           "dcc_rest_delete_lobby": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_message",
@@ -6542,7 +6391,10 @@
         "canonical": {
           "dcc_rest_delete_message": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_own_message_reaction",
@@ -6603,7 +6455,10 @@
         "canonical": {
           "dcc_rest_delete_own_message_reaction": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_stage_instance",
@@ -6655,7 +6510,10 @@
         "canonical": {
           "dcc_rest_delete_stage_instance": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_test_entitlement",
@@ -6711,7 +6569,10 @@
         "canonical": {
           "dcc_rest_delete_test_entitlement": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_user_message_reaction",
@@ -6776,7 +6637,10 @@
         "canonical": {
           "dcc_rest_delete_user_message_reaction": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_delete_webhook",
@@ -6844,7 +6708,10 @@
         "canonical": {
           "dcc_rest_delete_webhook": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "WEBHOOK_TOKEN_OR_BOT",
+      "audit_log_reason": true,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_delete_webhook_message",
@@ -6917,7 +6784,10 @@
           "dcc_rest_delete_webhook_message": "DCC_REST_DELETE"
         }
       },
-      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route."
+      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route.",
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_edit_global_command",
@@ -6984,7 +6854,10 @@
         "canonical": {
           "dcc_rest_edit_global_command": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_edit_guild_command",
@@ -7055,7 +6928,10 @@
         "canonical": {
           "dcc_rest_edit_guild_command": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_edit_guild_command_permissions",
@@ -7126,7 +7002,10 @@
         "canonical": {
           "dcc_rest_edit_guild_command_permissions": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_edit_message",
@@ -7213,7 +7092,10 @@
         "canonical": {
           "dcc_rest_edit_message": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_end_poll",
@@ -7269,7 +7151,10 @@
         "canonical": {
           "dcc_rest_end_poll": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_execute_webhook",
@@ -7348,7 +7233,10 @@
           "dcc_rest_execute_webhook": "DCC_REST_POST"
         }
       },
-      "collision_justification": "Discord webhook execution and interaction followup creation share the tokenized webhook route."
+      "collision_justification": "Discord webhook execution and interaction followup creation share the tokenized webhook route.",
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_execute_webhook_github",
@@ -7410,7 +7298,10 @@
         "canonical": {
           "dcc_rest_execute_webhook_github": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_execute_webhook_slack",
@@ -7472,7 +7363,10 @@
         "canonical": {
           "dcc_rest_execute_webhook_slack": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_follow_news_channel",
@@ -7528,7 +7422,10 @@
         "canonical": {
           "dcc_rest_follow_news_channel": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_active_threads",
@@ -7580,7 +7477,10 @@
         "canonical": {
           "dcc_rest_get_active_threads": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_activity_instance",
@@ -7636,7 +7536,10 @@
         "canonical": {
           "dcc_rest_get_activity_instance": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_all_guild_command_permissions",
@@ -7692,7 +7595,10 @@
         "canonical": {
           "dcc_rest_get_all_guild_command_permissions": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_application_emoji",
@@ -7748,7 +7654,10 @@
         "canonical": {
           "dcc_rest_get_application_emoji": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_application_emojis",
@@ -7800,7 +7709,10 @@
         "canonical": {
           "dcc_rest_get_application_emojis": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_application_role_connection_metadata",
@@ -7852,7 +7764,10 @@
         "canonical": {
           "dcc_rest_get_application_role_connection_metadata": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_auto_moderation_rule",
@@ -7908,7 +7823,10 @@
         "canonical": {
           "dcc_rest_get_auto_moderation_rule": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_auto_moderation_rules",
@@ -7960,7 +7878,10 @@
         "canonical": {
           "dcc_rest_get_auto_moderation_rules": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_channel",
@@ -8019,7 +7940,10 @@
         "canonical": {
           "dcc_rest_get_channel": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_channel_invites",
@@ -8071,7 +7995,10 @@
         "canonical": {
           "dcc_rest_get_channel_invites": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_channel_messages",
@@ -8134,7 +8061,10 @@
         "canonical": {
           "dcc_rest_get_channel_messages": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_channel_pins",
@@ -8197,7 +8127,10 @@
         "canonical": {
           "dcc_rest_get_channel_pins": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_channel_webhooks",
@@ -8249,7 +8182,10 @@
         "canonical": {
           "dcc_rest_get_channel_webhooks": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_current_application",
@@ -8300,7 +8236,10 @@
         "canonical": {
           "dcc_rest_get_current_application": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_current_user",
@@ -8348,7 +8287,10 @@
         "canonical": {
           "dcc_rest_get_current_user": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_current_user_application_role_connection",
@@ -8400,7 +8342,10 @@
         "canonical": {
           "dcc_rest_get_current_user_application_role_connection": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_current_user_connections",
@@ -8448,55 +8393,10 @@
         "canonical": {
           "dcc_rest_get_current_user_connections": "DCC_REST_GET"
         }
-      }
-    },
-    {
-      "canonical": "dcc_rest_get_current_user_dms",
-      "header": "include/dcc/rest/resources/users.h",
-      "domain": "direct_messages",
-      "task": 10,
-      "method": "GET",
-      "route_formatter": "dpp_current_user_get_dms",
-      "input": null,
-      "canonical_parameters": [
-        {
-          "declaration": "dcc_client_t *client",
-          "role": "client"
-        },
-        {
-          "declaration": "const dcc_rest_call_options_t *options",
-          "role": "options"
-        },
-        {
-          "declaration": "dcc_rest_request_t **out_request",
-          "role": "out_request"
-        }
-      ],
-      "source": "src/rest/rest_users_dms.c",
-      "multipart": false,
-      "legacy_symbols": [],
-      "canonical_state": "current",
-      "legacy_owners": {},
-      "route_evidence": {
-        "baseline": {
-          "dcc_rest_get_current_user_dms": [
-            "/users/@me/channels"
-          ]
-        },
-        "canonical": {
-          "dcc_rest_get_current_user_dms": [
-            "DCC_REST_ROUTE_DPP_CURRENT_USER_GET_DMS"
-          ]
-        }
       },
-      "method_evidence": {
-        "baseline": {
-          "dcc_rest_get_current_user_dms": "DCC_REST_GET"
-        },
-        "canonical": {
-          "dcc_rest_get_current_user_dms": "DCC_REST_GET"
-        }
-      }
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_current_user_guild_member",
@@ -8548,7 +8448,10 @@
         "canonical": {
           "dcc_rest_get_current_user_guild_member": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_current_user_guilds",
@@ -8600,7 +8503,10 @@
         "canonical": {
           "dcc_rest_get_current_user_guilds": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_current_user_voice_state",
@@ -8652,7 +8558,10 @@
         "canonical": {
           "dcc_rest_get_current_user_voice_state": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_default_soundboard_sounds",
@@ -8700,7 +8609,10 @@
         "canonical": {
           "dcc_rest_get_default_soundboard_sounds": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_entitlement",
@@ -8756,7 +8668,10 @@
         "canonical": {
           "dcc_rest_get_entitlement": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_entitlements",
@@ -8819,7 +8734,10 @@
         "canonical": {
           "dcc_rest_get_entitlements": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_gateway",
@@ -8867,7 +8785,10 @@
         "canonical": {
           "dcc_rest_get_gateway": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_gateway_bot",
@@ -8915,7 +8836,10 @@
         "canonical": {
           "dcc_rest_get_gateway_bot": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_global_command",
@@ -8971,7 +8895,10 @@
         "canonical": {
           "dcc_rest_get_global_command": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_global_commands",
@@ -9034,7 +8961,10 @@
         "canonical": {
           "dcc_rest_get_global_commands": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild",
@@ -9086,7 +9016,10 @@
         "canonical": {
           "dcc_rest_get_guild": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_audit_log",
@@ -9149,7 +9082,10 @@
         "canonical": {
           "dcc_rest_get_guild_audit_log": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_ban",
@@ -9205,7 +9141,10 @@
         "canonical": {
           "dcc_rest_get_guild_ban": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_bans",
@@ -9268,7 +9207,10 @@
         "canonical": {
           "dcc_rest_get_guild_bans": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_channels",
@@ -9320,7 +9262,10 @@
         "canonical": {
           "dcc_rest_get_guild_channels": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_command",
@@ -9380,7 +9325,10 @@
         "canonical": {
           "dcc_rest_get_guild_command": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_command_permissions",
@@ -9440,7 +9388,10 @@
         "canonical": {
           "dcc_rest_get_guild_command_permissions": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_commands",
@@ -9507,7 +9458,10 @@
         "canonical": {
           "dcc_rest_get_guild_commands": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_emoji",
@@ -9563,7 +9517,10 @@
         "canonical": {
           "dcc_rest_get_guild_emoji": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_emojis",
@@ -9615,7 +9572,10 @@
         "canonical": {
           "dcc_rest_get_guild_emojis": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_integrations",
@@ -9667,7 +9627,10 @@
         "canonical": {
           "dcc_rest_get_guild_integrations": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_invites",
@@ -9719,7 +9682,10 @@
         "canonical": {
           "dcc_rest_get_guild_invites": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_member",
@@ -9775,7 +9741,10 @@
         "canonical": {
           "dcc_rest_get_guild_member": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_onboarding",
@@ -9827,7 +9796,10 @@
         "canonical": {
           "dcc_rest_get_guild_onboarding": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_preview",
@@ -9879,7 +9851,10 @@
         "canonical": {
           "dcc_rest_get_guild_preview": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_prune_count",
@@ -9942,7 +9917,10 @@
         "canonical": {
           "dcc_rest_get_guild_prune_count": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_role",
@@ -9998,7 +9976,10 @@
         "canonical": {
           "dcc_rest_get_guild_role": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_role_member_counts",
@@ -10050,7 +10031,10 @@
         "canonical": {
           "dcc_rest_get_guild_role_member_counts": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_roles",
@@ -10102,7 +10086,10 @@
         "canonical": {
           "dcc_rest_get_guild_roles": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_scheduled_event",
@@ -10169,7 +10156,10 @@
         "canonical": {
           "dcc_rest_get_guild_scheduled_event": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_scheduled_event_users",
@@ -10236,7 +10226,10 @@
         "canonical": {
           "dcc_rest_get_guild_scheduled_event_users": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_scheduled_events",
@@ -10299,7 +10292,10 @@
         "canonical": {
           "dcc_rest_get_guild_scheduled_events": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_soundboard_sound",
@@ -10355,7 +10351,10 @@
         "canonical": {
           "dcc_rest_get_guild_soundboard_sound": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_soundboard_sounds",
@@ -10407,7 +10406,10 @@
         "canonical": {
           "dcc_rest_get_guild_soundboard_sounds": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_sticker",
@@ -10463,7 +10465,10 @@
         "canonical": {
           "dcc_rest_get_guild_sticker": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_stickers",
@@ -10515,7 +10520,10 @@
         "canonical": {
           "dcc_rest_get_guild_stickers": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_templates",
@@ -10567,7 +10575,10 @@
         "canonical": {
           "dcc_rest_get_guild_templates": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_vanity_url",
@@ -10619,7 +10630,10 @@
         "canonical": {
           "dcc_rest_get_guild_vanity_url": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_voice_regions",
@@ -10671,7 +10685,10 @@
         "canonical": {
           "dcc_rest_get_guild_voice_regions": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_webhooks",
@@ -10723,7 +10740,10 @@
         "canonical": {
           "dcc_rest_get_guild_webhooks": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_welcome_screen",
@@ -10775,7 +10795,10 @@
         "canonical": {
           "dcc_rest_get_guild_welcome_screen": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_widget",
@@ -10827,7 +10850,10 @@
         "canonical": {
           "dcc_rest_get_guild_widget": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_widget_json",
@@ -10879,7 +10905,10 @@
         "canonical": {
           "dcc_rest_get_guild_widget_json": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_guild_widget_png",
@@ -10935,7 +10964,10 @@
         "canonical": {
           "dcc_rest_get_guild_widget_png": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_invite",
@@ -10998,7 +11030,10 @@
         "canonical": {
           "dcc_rest_get_invite": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "NONE_OR_BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_invite_target_users",
@@ -11050,7 +11085,10 @@
         "canonical": {
           "dcc_rest_get_invite_target_users": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_invite_target_users_job_status",
@@ -11102,7 +11140,10 @@
         "canonical": {
           "dcc_rest_get_invite_target_users_job_status": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_joined_private_archived_threads",
@@ -11165,7 +11206,10 @@
         "canonical": {
           "dcc_rest_get_joined_private_archived_threads": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_legacy_channel_pins",
@@ -11218,7 +11262,10 @@
         "canonical": {
           "dcc_rest_get_legacy_channel_pins": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_lobby",
@@ -11270,7 +11317,10 @@
         "canonical": {
           "dcc_rest_get_lobby": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_lobby_messages",
@@ -11326,7 +11376,10 @@
         "canonical": {
           "dcc_rest_get_lobby_messages": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_message",
@@ -11382,7 +11435,10 @@
         "canonical": {
           "dcc_rest_get_message": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_message_reactions",
@@ -11454,7 +11510,10 @@
         "canonical": {
           "dcc_rest_get_message_reactions": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_poll_answer_voters",
@@ -11525,7 +11584,10 @@
         "canonical": {
           "dcc_rest_get_poll_answer_voters": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_private_archived_threads",
@@ -11588,7 +11650,10 @@
         "canonical": {
           "dcc_rest_get_private_archived_threads": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_public_archived_threads",
@@ -11651,7 +11716,10 @@
         "canonical": {
           "dcc_rest_get_public_archived_threads": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_sku_subscription",
@@ -11707,7 +11775,10 @@
         "canonical": {
           "dcc_rest_get_sku_subscription": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_sku_subscriptions",
@@ -11763,7 +11834,10 @@
         "canonical": {
           "dcc_rest_get_sku_subscriptions": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT_OR_BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_skus",
@@ -11815,7 +11889,10 @@
         "canonical": {
           "dcc_rest_get_skus": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_stage_instance",
@@ -11867,7 +11944,10 @@
         "canonical": {
           "dcc_rest_get_stage_instance": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_sticker",
@@ -11919,7 +11999,10 @@
         "canonical": {
           "dcc_rest_get_sticker": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_sticker_pack",
@@ -11971,7 +12054,10 @@
         "canonical": {
           "dcc_rest_get_sticker_pack": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_sticker_packs",
@@ -12019,7 +12105,10 @@
         "canonical": {
           "dcc_rest_get_sticker_packs": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_template",
@@ -12071,7 +12160,10 @@
         "canonical": {
           "dcc_rest_get_template": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_thread_member",
@@ -12080,7 +12172,7 @@
       "task": 7,
       "method": "GET",
       "route_formatter": "dpp_thread_member_get",
-      "input": null,
+      "input": "dcc_rest_thread_member_query_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -12093,6 +12185,10 @@
         {
           "declaration": "dcc_snowflake_t user_id",
           "role": "path"
+        },
+        {
+          "declaration": "const dcc_rest_thread_member_query_t *query",
+          "role": "input"
         },
         {
           "declaration": "const dcc_rest_call_options_t *options",
@@ -12127,7 +12223,10 @@
         "canonical": {
           "dcc_rest_get_thread_member": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_thread_members",
@@ -12183,7 +12282,10 @@
         "canonical": {
           "dcc_rest_get_thread_members": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_user",
@@ -12235,7 +12337,10 @@
         "canonical": {
           "dcc_rest_get_user": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_user_voice_state",
@@ -12291,7 +12396,10 @@
         "canonical": {
           "dcc_rest_get_user_voice_state": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_voice_regions",
@@ -12339,7 +12447,10 @@
         "canonical": {
           "dcc_rest_get_voice_regions": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_get_webhook",
@@ -12407,7 +12518,10 @@
         "canonical": {
           "dcc_rest_get_webhook": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "WEBHOOK_TOKEN_OR_BOT",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_get_webhook_message",
@@ -12480,7 +12594,10 @@
           "dcc_rest_get_webhook_message": "DCC_REST_GET"
         }
       },
-      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route."
+      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route.",
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_guild_message_search",
@@ -12543,7 +12660,10 @@
         "canonical": {
           "dcc_rest_guild_message_search": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_interaction_followup_create",
@@ -12632,7 +12752,10 @@
           "dcc_rest_interaction_followup_create": "DCC_REST_POST"
         }
       },
-      "collision_justification": "Discord webhook execution and interaction followup creation share the tokenized webhook route."
+      "collision_justification": "Discord webhook execution and interaction followup creation share the tokenized webhook route.",
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_interaction_followup_delete",
@@ -12701,7 +12824,10 @@
           "dcc_rest_interaction_followup_delete": "DCC_REST_DELETE"
         }
       },
-      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route."
+      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route.",
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_interaction_followup_edit",
@@ -12794,7 +12920,10 @@
           "dcc_rest_interaction_followup_edit": "DCC_REST_PATCH"
         }
       },
-      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route."
+      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route.",
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_interaction_followup_get",
@@ -12863,7 +12992,10 @@
           "dcc_rest_interaction_followup_get": "DCC_REST_GET"
         }
       },
-      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route."
+      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route.",
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_interaction_original_response_delete",
@@ -12927,7 +13059,10 @@
         "canonical": {
           "dcc_rest_interaction_original_response_delete": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_interaction_original_response_edit",
@@ -13015,7 +13150,10 @@
         "canonical": {
           "dcc_rest_interaction_original_response_edit": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_interaction_original_response_get",
@@ -13079,7 +13217,10 @@
         "canonical": {
           "dcc_rest_interaction_original_response_get": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_interaction_response_create",
@@ -13231,7 +13372,10 @@
         "canonical": {
           "dcc_rest_interaction_response_create": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_join_thread",
@@ -13283,7 +13427,10 @@
         "canonical": {
           "dcc_rest_join_thread": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_leave_guild",
@@ -13335,7 +13482,10 @@
         "canonical": {
           "dcc_rest_leave_guild": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_leave_lobby",
@@ -13387,7 +13537,10 @@
         "canonical": {
           "dcc_rest_leave_lobby": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_leave_thread",
@@ -13439,7 +13592,10 @@
         "canonical": {
           "dcc_rest_leave_thread": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_legacy_pin_message",
@@ -13496,7 +13652,10 @@
         "canonical": {
           "dcc_rest_legacy_pin_message": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_legacy_unpin_message",
@@ -13553,7 +13712,10 @@
         "canonical": {
           "dcc_rest_legacy_unpin_message": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_link_lobby_channel",
@@ -13626,7 +13788,10 @@
         "canonical": {
           "dcc_rest_link_lobby_channel": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_list_guild_members",
@@ -13689,7 +13854,10 @@
         "canonical": {
           "dcc_rest_list_guild_members": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_application_emoji",
@@ -13756,7 +13924,10 @@
         "canonical": {
           "dcc_rest_modify_application_emoji": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_auto_moderation_rule",
@@ -13823,7 +13994,10 @@
         "canonical": {
           "dcc_rest_modify_auto_moderation_rule": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_channel",
@@ -13896,7 +14070,10 @@
         "canonical": {
           "dcc_rest_modify_channel": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_channel_permission",
@@ -13963,7 +14140,10 @@
         "canonical": {
           "dcc_rest_modify_channel_permission": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_current_application",
@@ -14027,7 +14207,10 @@
         "canonical": {
           "dcc_rest_modify_current_application": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_current_guild_member",
@@ -14090,7 +14273,10 @@
         "canonical": {
           "dcc_rest_modify_current_guild_member": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_current_user",
@@ -14149,7 +14335,10 @@
         "canonical": {
           "dcc_rest_modify_current_user": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_current_user_voice_state",
@@ -14212,7 +14401,10 @@
         "canonical": {
           "dcc_rest_modify_current_user_voice_state": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild",
@@ -14275,7 +14467,10 @@
         "canonical": {
           "dcc_rest_modify_guild": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_channel_positions",
@@ -14338,7 +14533,10 @@
         "canonical": {
           "dcc_rest_modify_guild_channel_positions": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_emoji",
@@ -14405,7 +14603,10 @@
         "canonical": {
           "dcc_rest_modify_guild_emoji": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_incident_actions",
@@ -14473,67 +14674,10 @@
         "canonical": {
           "dcc_rest_modify_guild_incident_actions": "DCC_REST_PUT"
         }
-      }
-    },
-    {
-      "canonical": "dcc_rest_modify_guild_integration",
-      "header": "include/dcc/rest/guilds/integrations.h",
-      "domain": "guilds",
-      "task": 8,
-      "method": "PATCH",
-      "route_formatter": "dpp_guild_modify_integration",
-      "input": "dcc_rest_guild_integration_update_t",
-      "canonical_parameters": [
-        {
-          "declaration": "dcc_client_t *client",
-          "role": "client"
-        },
-        {
-          "declaration": "dcc_snowflake_t guild_id",
-          "role": "path"
-        },
-        {
-          "declaration": "dcc_snowflake_t integration_id",
-          "role": "path"
-        },
-        {
-          "declaration": "const dcc_rest_guild_integration_update_t *update",
-          "role": "input"
-        },
-        {
-          "declaration": "const dcc_rest_call_options_t *options",
-          "role": "options"
-        },
-        {
-          "declaration": "dcc_rest_request_t **out_request",
-          "role": "out_request"
-        }
-      ],
-      "source": "src/rest/rest_guilds_integrations.c",
-      "multipart": false,
-      "legacy_symbols": [],
-      "canonical_state": "current",
-      "legacy_owners": {},
-      "route_evidence": {
-        "baseline": {
-          "dcc_rest_modify_guild_integration": [
-            "/guilds/%llu/integrations/%llu"
-          ]
-        },
-        "canonical": {
-          "dcc_rest_modify_guild_integration": [
-            "DCC_REST_ROUTE_DPP_GUILD_MODIFY_INTEGRATION"
-          ]
-        }
       },
-      "method_evidence": {
-        "baseline": {
-          "dcc_rest_modify_guild_integration": "DCC_REST_PATCH"
-        },
-        "canonical": {
-          "dcc_rest_modify_guild_integration": "DCC_REST_PATCH"
-        }
-      }
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_member",
@@ -14615,7 +14759,10 @@
         "canonical": {
           "dcc_rest_modify_guild_member": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_onboarding",
@@ -14678,7 +14825,10 @@
         "canonical": {
           "dcc_rest_modify_guild_onboarding": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_role",
@@ -14745,7 +14895,10 @@
         "canonical": {
           "dcc_rest_modify_guild_role": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_role_positions",
@@ -14812,7 +14965,10 @@
         "canonical": {
           "dcc_rest_modify_guild_role_positions": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_scheduled_event",
@@ -14879,7 +15035,10 @@
         "canonical": {
           "dcc_rest_modify_guild_scheduled_event": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_soundboard_sound",
@@ -14951,7 +15110,10 @@
         "canonical": {
           "dcc_rest_modify_guild_soundboard_sound": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_sticker",
@@ -15011,7 +15173,10 @@
         "canonical": {
           "dcc_rest_modify_guild_sticker": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_template",
@@ -15078,7 +15243,10 @@
         "canonical": {
           "dcc_rest_modify_guild_template": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_welcome_screen",
@@ -15141,7 +15309,10 @@
         "canonical": {
           "dcc_rest_modify_guild_welcome_screen": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_guild_widget",
@@ -15204,7 +15375,10 @@
         "canonical": {
           "dcc_rest_modify_guild_widget": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_lobby",
@@ -15267,7 +15441,10 @@
         "canonical": {
           "dcc_rest_modify_lobby": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_stage_instance",
@@ -15330,7 +15507,10 @@
         "canonical": {
           "dcc_rest_modify_stage_instance": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_user_voice_state",
@@ -15397,7 +15577,10 @@
         "canonical": {
           "dcc_rest_modify_user_voice_state": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_modify_webhook",
@@ -15479,7 +15662,10 @@
         "canonical": {
           "dcc_rest_modify_webhook": "DCC_REST_PATCH"
         }
-      }
+      },
+      "auth_policy": "WEBHOOK_TOKEN_OR_BOT",
+      "audit_log_reason": true,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_modify_webhook_message",
@@ -15572,7 +15758,10 @@
           "dcc_rest_modify_webhook_message": "DCC_REST_PATCH"
         }
       },
-      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route."
+      "collision_justification": "Discord webhook messages and interaction followups share the tokenized webhook-message route.",
+      "auth_policy": "NONE",
+      "audit_log_reason": false,
+      "sensitive_path": true
     },
     {
       "canonical": "dcc_rest_pin_message",
@@ -15628,7 +15817,10 @@
         "canonical": {
           "dcc_rest_pin_message": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_put_invite_target_users",
@@ -15661,7 +15853,7 @@
         }
       ],
       "source": "src/rest/rest_official_surface.c",
-      "multipart": false,
+      "multipart": true,
       "legacy_symbols": [],
       "canonical_state": "current",
       "legacy_owners": {},
@@ -15684,7 +15876,10 @@
         "canonical": {
           "dcc_rest_put_invite_target_users": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_remove_group_dm_recipient",
@@ -15740,7 +15935,10 @@
         "canonical": {
           "dcc_rest_remove_group_dm_recipient": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_remove_guild_member",
@@ -15796,7 +15994,10 @@
         "canonical": {
           "dcc_rest_remove_guild_member": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_remove_guild_member_role",
@@ -15856,7 +16057,10 @@
         "canonical": {
           "dcc_rest_remove_guild_member_role": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_remove_lobby_member",
@@ -15912,7 +16116,10 @@
         "canonical": {
           "dcc_rest_remove_lobby_member": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_remove_thread_member",
@@ -15968,7 +16175,10 @@
         "canonical": {
           "dcc_rest_remove_thread_member": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_search_guild_members",
@@ -16031,7 +16241,10 @@
         "canonical": {
           "dcc_rest_search_guild_members": "DCC_REST_GET"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_send_lobby_message",
@@ -16099,7 +16312,10 @@
         "canonical": {
           "dcc_rest_send_lobby_message": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_send_soundboard_sound",
@@ -16167,7 +16383,10 @@
         "canonical": {
           "dcc_rest_send_soundboard_sound": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_set_channel_voice_status",
@@ -16230,7 +16449,10 @@
         "canonical": {
           "dcc_rest_set_channel_voice_status": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_set_current_guild_member_nickname",
@@ -16293,63 +16515,10 @@
         "canonical": {
           "dcc_rest_set_current_guild_member_nickname": "DCC_REST_PATCH"
         }
-      }
-    },
-    {
-      "canonical": "dcc_rest_sync_guild_integration",
-      "header": "include/dcc/rest/guilds/integrations.h",
-      "domain": "guilds",
-      "task": 8,
-      "method": "POST",
-      "route_formatter": "dpp_guild_sync_integration",
-      "input": null,
-      "canonical_parameters": [
-        {
-          "declaration": "dcc_client_t *client",
-          "role": "client"
-        },
-        {
-          "declaration": "dcc_snowflake_t guild_id",
-          "role": "path"
-        },
-        {
-          "declaration": "dcc_snowflake_t integration_id",
-          "role": "path"
-        },
-        {
-          "declaration": "const dcc_rest_call_options_t *options",
-          "role": "options"
-        },
-        {
-          "declaration": "dcc_rest_request_t **out_request",
-          "role": "out_request"
-        }
-      ],
-      "source": "src/rest/rest_guilds_integrations.c",
-      "multipart": false,
-      "legacy_symbols": [],
-      "canonical_state": "current",
-      "legacy_owners": {},
-      "route_evidence": {
-        "baseline": {
-          "dcc_rest_sync_guild_integration": [
-            "/guilds/%llu/integrations/%llu"
-          ]
-        },
-        "canonical": {
-          "dcc_rest_sync_guild_integration": [
-            "DCC_REST_ROUTE_DPP_GUILD_SYNC_INTEGRATION"
-          ]
-        }
       },
-      "method_evidence": {
-        "baseline": {
-          "dcc_rest_sync_guild_integration": "DCC_REST_POST"
-        },
-        "canonical": {
-          "dcc_rest_sync_guild_integration": "DCC_REST_POST"
-        }
-      }
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_sync_guild_template",
@@ -16405,7 +16574,10 @@
         "canonical": {
           "dcc_rest_sync_guild_template": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_trigger_channel_typing",
@@ -16457,7 +16629,10 @@
         "canonical": {
           "dcc_rest_trigger_channel_typing": "DCC_REST_POST"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_unpin_message",
@@ -16513,7 +16688,10 @@
         "canonical": {
           "dcc_rest_unpin_message": "DCC_REST_DELETE"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": true,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_update_application_role_connection_metadata",
@@ -16580,7 +16758,10 @@
         "canonical": {
           "dcc_rest_update_application_role_connection_metadata": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_update_current_user_application_role_connection",
@@ -16643,7 +16824,10 @@
         "canonical": {
           "dcc_rest_update_current_user_application_role_connection": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BEARER",
+      "audit_log_reason": false,
+      "sensitive_path": false
     },
     {
       "canonical": "dcc_rest_update_lobby_message_moderation_metadata",
@@ -16715,7 +16899,10 @@
         "canonical": {
           "dcc_rest_update_lobby_message_moderation_metadata": "DCC_REST_PUT"
         }
-      }
+      },
+      "auth_policy": "BOT",
+      "audit_log_reason": false,
+      "sensitive_path": false
     }
   ],
   "transition_composites": [
@@ -16801,6 +16988,124 @@
         "dcc_rest_create_dm_channel",
         "dcc_rest_create_message"
       ]
+    }
+  ],
+  "removed_candidates": [
+    {
+      "canonical": "dcc_rest_bulk_edit_guild_command_permissions",
+      "domain": "application_commands",
+      "inventory_task": 9,
+      "legacy_symbols": [
+        "dcc_rest_bulk_edit_guild_command_permissions_params"
+      ],
+      "owners": {
+        "dcc_rest_bulk_edit_guild_command_permissions": {
+          "header": "include/dcc/rest/application_commands/permissions.h",
+          "source": "src/rest/rest_application_command_permissions.c"
+        },
+        "dcc_rest_bulk_edit_guild_command_permissions_params": {
+          "header": "include/dcc/rest/application_commands/permissions.h",
+          "source": "src/rest/rest_application_command_permissions_params.c"
+        }
+      },
+      "reason": "disabled bulk guild command permission edit",
+      "removal_task": 7
+    },
+    {
+      "canonical": "dcc_rest_create_guild",
+      "domain": "guilds",
+      "inventory_task": 8,
+      "legacy_symbols": [
+        "dcc_rest_create_guild_params"
+      ],
+      "owners": {
+        "dcc_rest_create_guild": {
+          "header": "include/dcc/rest/guilds/core.h",
+          "source": "src/rest/rest_guilds_core.c"
+        },
+        "dcc_rest_create_guild_params": {
+          "header": "include/dcc/rest/guilds/core.h",
+          "source": "src/rest/rest_guilds_core.c"
+        }
+      },
+      "reason": "unavailable Discord operation",
+      "removal_task": 7
+    },
+    {
+      "canonical": "dcc_rest_create_guild_from_template",
+      "domain": "templates",
+      "inventory_task": 9,
+      "legacy_symbols": [
+        "dcc_rest_create_guild_from_template_params"
+      ],
+      "owners": {
+        "dcc_rest_create_guild_from_template": {
+          "header": "include/dcc/rest/resources/templates.h",
+          "source": "src/rest/rest_templates_create.c"
+        },
+        "dcc_rest_create_guild_from_template_params": {
+          "header": "include/dcc/rest/resources/templates.h",
+          "source": "src/rest/rest_templates_create.c"
+        }
+      },
+      "reason": "unavailable guild creation from template",
+      "removal_task": 7
+    },
+    {
+      "canonical": "dcc_rest_delete_guild",
+      "domain": "guilds",
+      "inventory_task": 8,
+      "legacy_symbols": [],
+      "owners": {
+        "dcc_rest_delete_guild": {
+          "header": "include/dcc/rest/guilds/core.h",
+          "source": "src/rest/rest_guilds_core.c"
+        }
+      },
+      "reason": "unavailable Discord operation",
+      "removal_task": 7
+    },
+    {
+      "canonical": "dcc_rest_get_current_user_dms",
+      "domain": "direct_messages",
+      "inventory_task": 10,
+      "legacy_symbols": [],
+      "owners": {
+        "dcc_rest_get_current_user_dms": {
+          "header": "include/dcc/rest/resources/users.h",
+          "source": "src/rest/rest_users_dms.c"
+        }
+      },
+      "reason": "obsolete bot-facing current-user DM listing",
+      "removal_task": 7
+    },
+    {
+      "canonical": "dcc_rest_modify_guild_integration",
+      "domain": "guilds",
+      "inventory_task": 8,
+      "legacy_symbols": [],
+      "owners": {
+        "dcc_rest_modify_guild_integration": {
+          "header": "include/dcc/rest/guilds/integrations.h",
+          "source": "src/rest/rest_guilds_integrations.c"
+        }
+      },
+      "reason": "unavailable Discord operation",
+      "removal_task": 7
+    },
+    {
+      "canonical": "dcc_rest_sync_guild_integration",
+      "domain": "guilds",
+      "inventory_task": 8,
+      "legacy_symbols": [],
+      "owners": {
+        "dcc_rest_sync_guild_integration": {
+          "header": "include/dcc/rest/guilds/integrations.h",
+          "source": "src/rest/rest_guilds_integrations.c"
+        }
+      },
+      "reason": "unavailable Discord operation",
+      "removal_task": 7
     }
   ]
 }
