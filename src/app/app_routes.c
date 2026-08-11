@@ -1,6 +1,7 @@
 #include "internal/app/dcc_app_internal.h"
 
 #include "internal/dcc_core_internal.h"
+#include "internal/objects/dcc_builder_abi_internal.h"
 
 #include <limits.h>
 #include <stdlib.h>
@@ -664,7 +665,11 @@ dcc_status_t dcc_app_slash_builder_route(
     void *user_data,
     dcc_app_route_id_t *out_route
 ) {
-    if (app == NULL || command == NULL || command->name == NULL || command->name[0] == '\0' || handler == NULL) {
+    dcc_builder_abi_view_t view;
+    if (app == NULL || command == NULL || handler == NULL ||
+        dcc_application_command_builder_abi_validate(command, &view) != DCC_OK ||
+        !dcc_builder_abi_view_has(&view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME) ||
+        command->name == NULL || command->name[0] == '\0') {
         return DCC_ERR_INVALID_ARG;
     }
     dcc_status_t status = dcc_command_registry_add_builder(&app->registry, command);

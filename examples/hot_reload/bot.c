@@ -166,7 +166,7 @@ static void on_test_command(dcc_client_t *client, const dcc_event_t *event, void
         DCC_HOT_RELOAD_TEST_BUILD_STAMP
     );
     embed.footer = DCC_EMBED_FOOTER(footer_text, NULL);
-    embed.has_footer = 1U;
+    embed.present |= DCC_EMBED_BUILDER_PRESENT_FOOTER;
 
     printf(
         "responding /%s: generation=%llu, build=%s, embed=\"%s\"\n",

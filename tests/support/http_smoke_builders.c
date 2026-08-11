@@ -136,6 +136,12 @@ int run_public_rest_message_builder_smoke(void) {
     };
     dcc_poll_builder_t poll = {
         .size = sizeof(poll),
+        .version = DCC_POLL_BUILDER_VERSION,
+        .present = DCC_POLL_BUILDER_PRESENT_QUESTION |
+            DCC_POLL_BUILDER_PRESENT_ANSWERS |
+            DCC_POLL_BUILDER_PRESENT_DURATION_HOURS |
+            DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE |
+            DCC_POLL_BUILDER_PRESENT_ALLOW_MULTISELECT,
         .question = {
             .text = "Pick \"one\"",
         },
@@ -143,10 +149,7 @@ int run_public_rest_message_builder_smoke(void) {
         .answer_count = sizeof(poll_answers) / sizeof(poll_answers[0]),
         .duration_hours = 48,
         .layout_type = DCC_POLL_LAYOUT_DEFAULT,
-        .allow_multiselect = 1,
-        .has_duration = 1,
-        .has_layout_type = 1,
-        .has_allow_multiselect = 1,
+        .allow_multiselect = 1
     };
     dcc_message_builder_t message;
     dcc_message_builder_init(&message);

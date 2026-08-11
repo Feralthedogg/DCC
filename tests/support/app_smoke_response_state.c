@@ -205,7 +205,7 @@ static int app_smoke_check_auto_defer_local_retry(void) {
 
     dcc_message_builder_t invalid;
     dcc_message_builder_init(&invalid);
-    invalid.has_content = 1U;
+    invalid.present |= DCC_MESSAGE_BUILDER_PRESENT_CONTENT;
     dcc_status_t status = dcc_ctx_reply(&ctx, &invalid, NULL, NULL);
     int local_failure_ok = status == DCC_ERR_INVALID_ARG &&
         dcc_ctx_response_state(&ctx) == DCC_INTERACTION_FLOW_FAILED &&

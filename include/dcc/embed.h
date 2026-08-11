@@ -10,6 +10,20 @@
 extern "C" {
 #endif
 
+#define DCC_EMBED_BUILDER_VERSION 1U
+
+#define DCC_EMBED_BUILDER_PRESENT_TITLE UINT64_C(1)
+#define DCC_EMBED_BUILDER_PRESENT_TYPE (UINT64_C(1) << 1U)
+#define DCC_EMBED_BUILDER_PRESENT_DESCRIPTION (UINT64_C(1) << 2U)
+#define DCC_EMBED_BUILDER_PRESENT_URL (UINT64_C(1) << 3U)
+#define DCC_EMBED_BUILDER_PRESENT_TIMESTAMP (UINT64_C(1) << 4U)
+#define DCC_EMBED_BUILDER_PRESENT_FOOTER (UINT64_C(1) << 5U)
+#define DCC_EMBED_BUILDER_PRESENT_IMAGE (UINT64_C(1) << 6U)
+#define DCC_EMBED_BUILDER_PRESENT_THUMBNAIL (UINT64_C(1) << 7U)
+#define DCC_EMBED_BUILDER_PRESENT_AUTHOR (UINT64_C(1) << 8U)
+#define DCC_EMBED_BUILDER_PRESENT_FIELDS (UINT64_C(1) << 9U)
+#define DCC_EMBED_BUILDER_PRESENT_COLOR (UINT64_C(1) << 10U)
+
 typedef struct dcc_embed_field {
     const char *name;
     const char *value;
@@ -33,6 +47,9 @@ typedef struct dcc_embed_author {
 } dcc_embed_author_t;
 
 typedef struct dcc_embed_builder {
+    size_t size;
+    uint32_t version;
+    uint64_t present;
     const char *title;
     const char *type;
     const char *description;
@@ -45,12 +62,14 @@ typedef struct dcc_embed_builder {
     const dcc_embed_field_t *fields;
     size_t field_count;
     uint32_t color;
-    uint8_t has_color;
-    uint8_t has_footer;
-    uint8_t has_image;
-    uint8_t has_thumbnail;
-    uint8_t has_author;
 } dcc_embed_builder_t;
+
+#define DCC_EMBED_BUILDER_INIT \
+    { \
+        sizeof(dcc_embed_builder_t), DCC_EMBED_BUILDER_VERSION, UINT64_C(0), \
+        NULL, NULL, NULL, NULL, NULL, { NULL, NULL }, { NULL }, { NULL }, \
+        { NULL, NULL, NULL }, NULL, 0U, 0U \
+    }
 
 DCC_API void dcc_embed_builder_init(dcc_embed_builder_t *builder);
 DCC_API dcc_status_t dcc_embed_builder_set_title(dcc_embed_builder_t *builder, const char *title);

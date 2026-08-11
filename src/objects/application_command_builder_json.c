@@ -1,4 +1,5 @@
 #include "internal/objects/dcc_application_command_builder_internal.h"
+#include "internal/objects/dcc_builder_abi_internal.h"
 
 #include <stdlib.h>
 
@@ -32,14 +33,32 @@ dcc_status_t dcc_application_command_builder_build_array_json(
     }
     *out_json = NULL;
 
+    size_t stride = 0U;
+    dcc_status_t status = dcc_application_command_builder_array_begin(
+        builders, builder_count, &stride
+    );
+    if (status != DCC_OK) {
+        return status;
+    }
+
     dcc_application_command_json_buffer_t buffer = {0};
-    dcc_status_t status = dcc_command_json_append_cstr(&buffer, "[");
+    status = dcc_command_json_append_cstr(&buffer, "[");
     for (size_t i = 0; status == DCC_OK && i < builder_count; ++i) {
         if (i != 0) {
             status = dcc_command_json_append_cstr(&buffer, ",");
         }
         if (status == DCC_OK) {
-            status = dcc_application_command_builder_append_json(&builders[i], &buffer);
+            const dcc_application_command_builder_t *builder =
+                (const dcc_application_command_builder_t *)
+                    dcc_builder_abi_array_at(builders, stride, i);
+            dcc_builder_abi_view_t view;
+            status = dcc_application_command_builder_abi_validate(builder, &view);
+            if (status == DCC_OK && view.size != stride) {
+                status = DCC_ERR_INVALID_ARG;
+            }
+            if (status == DCC_OK) {
+                status = dcc_application_command_builder_append_json(builder, &buffer);
+            }
         }
     }
     if (status == DCC_OK) {

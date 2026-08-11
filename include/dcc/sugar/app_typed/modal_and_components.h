@@ -235,13 +235,14 @@
     ((dcc_app_modal_flow_t){ \
         .size = sizeof(dcc_app_modal_flow_t), \
         .modal = { \
+            .size = sizeof(dcc_modal_builder_t), \
+            .version = DCC_MODAL_BUILDER_VERSION, \
+            .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS, \
             .custom_id = (custom_id_), \
             .title = (title_), \
             .components = (dcc_component_builder_t[]){ __VA_ARGS__ }, \
             .components_count = sizeof((dcc_component_builder_t[]){ __VA_ARGS__ }) / \
-                sizeof(dcc_component_builder_t), \
-            .has_custom_id = 1U, \
-            .has_title = 1U \
+                sizeof(dcc_component_builder_t) \
         }, \
         .route = DCC_TYPED_MODAL((custom_id_), args_type_, (handler_), (user_data_), (bindings_), (validators_)) \
     })
@@ -250,13 +251,14 @@
     ((dcc_app_modal_flow_t){ \
         .size = sizeof(dcc_app_modal_flow_t), \
         .modal = { \
+            .size = sizeof(dcc_modal_builder_t), \
+            .version = DCC_MODAL_BUILDER_VERSION, \
+            .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS, \
             .custom_id = (custom_id_), \
             .title = (title_), \
             .components = (dcc_component_builder_t[]){ __VA_ARGS__ }, \
             .components_count = sizeof((dcc_component_builder_t[]){ __VA_ARGS__ }) / \
-                sizeof(dcc_component_builder_t), \
-            .has_custom_id = 1U, \
-            .has_title = 1U \
+                sizeof(dcc_component_builder_t) \
         }, \
         .route = DCC_TYPED_MODAL_POLICY( \
             (custom_id_), \
@@ -273,13 +275,14 @@
     ((dcc_app_modal_flow_t){ \
         .size = sizeof(dcc_app_modal_flow_t), \
         .modal = { \
+            .size = sizeof(dcc_modal_builder_t), \
+            .version = DCC_MODAL_BUILDER_VERSION, \
+            .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2, \
             .custom_id = (custom_id_), \
             .title = (title_), \
             .components_v2 = (dcc_component_v2_builder_t[]){ __VA_ARGS__ }, \
             .components_v2_count = sizeof((dcc_component_v2_builder_t[]){ __VA_ARGS__ }) / \
-                sizeof(dcc_component_v2_builder_t), \
-            .has_custom_id = 1U, \
-            .has_title = 1U \
+                sizeof(dcc_component_v2_builder_t) \
         }, \
         .route = DCC_TYPED_MODAL((custom_id_), args_type_, (handler_), (user_data_), (bindings_), (validators_)) \
     })
@@ -298,13 +301,14 @@
     ((dcc_app_modal_flow_t){ \
         .size = sizeof(dcc_app_modal_flow_t), \
         .modal = { \
+            .size = sizeof(dcc_modal_builder_t), \
+            .version = DCC_MODAL_BUILDER_VERSION, \
+            .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2, \
             .custom_id = (custom_id_), \
             .title = (title_), \
             .components_v2 = (dcc_component_v2_builder_t[]){ __VA_ARGS__ }, \
             .components_v2_count = sizeof((dcc_component_v2_builder_t[]){ __VA_ARGS__ }) / \
-                sizeof(dcc_component_v2_builder_t), \
-            .has_custom_id = 1U, \
-            .has_title = 1U \
+                sizeof(dcc_component_v2_builder_t) \
         }, \
         .route = DCC_TYPED_MODAL_POLICY( \
             (custom_id_), \
@@ -686,4 +690,3 @@
         (validators_), \
         __VA_ARGS__ \
     )
-

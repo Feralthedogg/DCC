@@ -14,11 +14,13 @@
     })
 #define DCC_SLASH_PARAM_OPTION_INT(type_, field_, name_, description_, required_, fallback_) \
     ((dcc_application_command_option_builder_t){ \
+        .size = sizeof(dcc_application_command_option_builder_t), \
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, \
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED, \
         .type = DCC_APPLICATION_COMMAND_OPTION_INTEGER, \
         .name = (name_), \
         .description = (description_), \
-        .required = (required_) ? 1U : 0U, \
-        .has_required = 1U \
+        .required = (required_) ? 1U : 0U \
     })
 #define DCC_SLASH_PARAM_BIND_INTEGER(type_, field_, name_, description_, required_, fallback_) \
     DCC_SLASH_PARAM_BIND_INT(type_, field_, (name_), (description_), (required_), (fallback_))
@@ -36,15 +38,15 @@
     DCC_SLASH_PARAM_BIND_INT(type_, field_, (name_), (description_), (required_), (fallback_))
 #define DCC_SLASH_PARAM_OPTION_INT_RANGE(type_, field_, name_, description_, required_, fallback_, min_, max_) \
     ((dcc_application_command_option_builder_t){ \
+        .size = sizeof(dcc_application_command_option_builder_t), \
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, \
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MIN_INTEGER_VALUE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MAX_INTEGER_VALUE, \
         .type = DCC_APPLICATION_COMMAND_OPTION_INTEGER, \
         .name = (name_), \
         .description = (description_), \
         .required = (required_) ? 1U : 0U, \
-        .has_required = 1U, \
         .min_integer_value = (min_), \
-        .max_integer_value = (max_), \
-        .has_min_integer_value = 1U, \
-        .has_max_integer_value = 1U \
+        .max_integer_value = (max_) \
     })
 #define DCC_SLASH_PARAM_BIND_INTEGER_RANGE(type_, field_, name_, description_, required_, fallback_, min_, max_) \
     DCC_SLASH_PARAM_BIND_INT_RANGE(type_, field_, (name_), (description_), (required_), (fallback_), (min_), (max_))
@@ -62,11 +64,13 @@
     })
 #define DCC_SLASH_PARAM_OPTION_NUMBER(type_, field_, name_, description_, required_, fallback_) \
     ((dcc_application_command_option_builder_t){ \
+        .size = sizeof(dcc_application_command_option_builder_t), \
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, \
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED, \
         .type = DCC_APPLICATION_COMMAND_OPTION_NUMBER, \
         .name = (name_), \
         .description = (description_), \
-        .required = (required_) ? 1U : 0U, \
-        .has_required = 1U \
+        .required = (required_) ? 1U : 0U \
     })
 #define DCC_SLASH_PARAM_BIND_REQUIRED_NUMBER(type_, field_, name_, description_) \
     DCC_SLASH_PARAM_BIND_NUMBER(type_, field_, (name_), (description_), 1U, 0.0)
@@ -76,15 +80,15 @@
     DCC_SLASH_PARAM_BIND_NUMBER(type_, field_, (name_), (description_), (required_), (fallback_))
 #define DCC_SLASH_PARAM_OPTION_NUMBER_RANGE(type_, field_, name_, description_, required_, fallback_, min_, max_) \
     ((dcc_application_command_option_builder_t){ \
+        .size = sizeof(dcc_application_command_option_builder_t), \
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, \
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MIN_NUMBER_VALUE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MAX_NUMBER_VALUE, \
         .type = DCC_APPLICATION_COMMAND_OPTION_NUMBER, \
         .name = (name_), \
         .description = (description_), \
         .required = (required_) ? 1U : 0U, \
-        .has_required = 1U, \
         .min_number_value = (min_), \
-        .max_number_value = (max_), \
-        .has_min_number_value = 1U, \
-        .has_max_number_value = 1U \
+        .max_number_value = (max_) \
     })
 
 #endif /* DCC_SUGAR_APP_TYPED_ARGS_AND_SLASH_SLASH_PARAM_NUMBERS_H */

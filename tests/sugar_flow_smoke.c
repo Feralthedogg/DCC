@@ -20,10 +20,11 @@ int main(void) {
     dcc_interaction_flow_t private_auto_flow =
         DCC_FLOW_AUTO_DEFER_PRIVATE_STARTED(client, interaction, 3000U, 2000U);
     dcc_modal_builder_t modal = {
+        .size = sizeof(dcc_modal_builder_t),
+        .version = DCC_MODAL_BUILDER_VERSION,
+        .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE,
         .custom_id = "flow.modal",
-        .title = "Flow modal",
-        .has_custom_id = 1U,
-        .has_title = 1U
+        .title = "Flow modal"
     };
 
     if (!expect("constructor size", flow.size == sizeof(flow)) ||
@@ -40,7 +41,10 @@ int main(void) {
         !expect("state null", DCC_FLOW_STATE(NULL) == DCC_INTERACTION_FLOW_FAILED) ||
         !expect("state name null", strcmp(DCC_FLOW_STATE_NAME(NULL), "failed") == 0) ||
         !expect("message text", strcmp(DCC_FLOW_MESSAGE_TEXT("pong").content, "pong") == 0) ||
-        !expect("message text flag", DCC_FLOW_MESSAGE_TEXT("pong").has_content == 1U) ||
+        !expect(
+            "message text flag",
+            (DCC_FLOW_MESSAGE_TEXT("pong").present & DCC_MESSAGE_BUILDER_PRESENT_CONTENT) != 0U
+        ) ||
         !expect("defer invalid", DCC_FLOW_DEFER(NULL) == DCC_ERR_INVALID_ARG) ||
         !expect("defer cb invalid", DCC_FLOW_DEFER_CB(NULL, NULL, NULL) == DCC_ERR_INVALID_ARG) ||
         !expect("defer ephemeral invalid", DCC_FLOW_DEFER_EPHEMERAL(NULL) == DCC_ERR_INVALID_ARG) ||

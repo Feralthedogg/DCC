@@ -47,12 +47,14 @@ static void focused_interaction_handler(dcc_ctx_t *ctx, void *user_data) {
 
 static int check_null_app_aliases(void) {
     dcc_application_command_builder_t builder = {
+        .size = sizeof(dcc_application_command_builder_t),
+        .version = DCC_APPLICATION_COMMAND_BUILDER_VERSION,
+        .present = DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME |
+            DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION |
+            DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE,
         .name = "builder",
         .description = "Builder",
-        .type = DCC_APPLICATION_COMMAND_CHAT_INPUT,
-        .has_name = 1U,
-        .has_description = 1U,
-        .has_type = 1U,
+        .type = DCC_APPLICATION_COMMAND_CHAT_INPUT
     };
 
     int ok =

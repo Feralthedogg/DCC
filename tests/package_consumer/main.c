@@ -155,11 +155,14 @@ int main(void) {
     };
     const dcc_poll_builder_t poll_builder = {
         .size = sizeof(poll_builder),
+        .version = DCC_POLL_BUILDER_VERSION,
+        .present = DCC_POLL_BUILDER_PRESENT_QUESTION |
+            DCC_POLL_BUILDER_PRESENT_ANSWERS |
+            DCC_POLL_BUILDER_PRESENT_DURATION_HOURS,
         .question = { .text = "vote" },
         .answers = poll_answers,
         .answer_count = sizeof(poll_answers) / sizeof(poll_answers[0]),
-        .duration_hours = 24,
-        .has_duration = 1
+        .duration_hours = 24
     };
     const char sticker_data[] = "png";
     const dcc_guild_sticker_params_t sticker = {
@@ -428,7 +431,7 @@ int main(void) {
             message_builder_set_components_v2(&package_v2_message, &package_v2_component, 1U) ==
                 DCC_OK &&
             dcc_message_builder_build_json(&package_v2_message, &message_v2_json) == DCC_OK &&
-            package_v2_message.has_flags != 0U &&
+            (package_v2_message.present & DCC_MESSAGE_BUILDER_PRESENT_FLAGS) != 0U &&
             (package_v2_message.flags & DCC_MESSAGE_FLAG_IS_COMPONENTS_V2) != 0U;
     }
     dcc_component_v2_t package_message_components[3] = {
@@ -526,7 +529,7 @@ int main(void) {
                    voice_state.channel_id == 789U &&
                    reaction.message_id == 456U &&
                    message_flags.flags == 4U &&
-                   direct_message_builder.has_content != 0U &&
+                   (direct_message_builder.present & DCC_MESSAGE_BUILDER_PRESENT_CONTENT) != 0U &&
                    direct_message_builder.poll == &poll_builder &&
                    poll_json_ok != 0 &&
                    component_v2_ok != 0 &&

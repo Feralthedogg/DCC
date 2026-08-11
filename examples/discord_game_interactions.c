@@ -82,7 +82,7 @@ static dcc_status_t build_game_message(
 
     *message = DCC_MESSAGE_COMPONENTS_ARRAY(rows, 3U);
     message->content = content;
-    message->has_content = 1U;
+    message->present |= DCC_MESSAGE_BUILDER_PRESENT_CONTENT;
     return DCC_OK;
 }
 

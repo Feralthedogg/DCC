@@ -1158,6 +1158,7 @@ target_sources(dcc
         src/objects/autocomplete_json_escape.c
         src/objects/autocomplete_json_members.c
         src/objects/autocomplete_json_numbers.c
+        src/objects/builder_abi.c
         src/objects/component_builder_build.c
         src/objects/component_builder_core.c
         src/objects/component_builder_serialize.c
@@ -2020,6 +2021,12 @@ if(DCC_BUILD_TESTS)
     target_link_libraries(dcc_rest_v2_request_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_rest_v2_request_smoke)
     add_test(NAME dcc_rest_v2_request_smoke COMMAND dcc_rest_v2_request_smoke)
+
+    add_executable(dcc_builder_v2_abi_smoke tests/builder_v2_abi_smoke.c)
+    dcc_target_use_private_headers(dcc_builder_v2_abi_smoke)
+    target_link_libraries(dcc_builder_v2_abi_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_builder_v2_abi_smoke)
+    add_test(NAME dcc_builder_v2_abi_smoke COMMAND dcc_builder_v2_abi_smoke)
 
     add_executable(dcc_json_smoke
         tests/json_smoke.c

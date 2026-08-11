@@ -34,8 +34,8 @@ static int require_contains(const char *json, const char *needle) {
 static int check_manual_command_dsl(void) {
     dcc_application_command_builder_t ping = DCC_SLASH_CMD("ping", "Latency check");
     if (ping.type != DCC_APPLICATION_COMMAND_CHAT_INPUT ||
-        ping.has_name != 1U ||
-        ping.has_description != 1U ||
+        (ping.present & DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME) == 0U ||
+        (ping.present & DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION) == 0U ||
         strcmp(ping.name, "ping") != 0) {
         return 1;
     }

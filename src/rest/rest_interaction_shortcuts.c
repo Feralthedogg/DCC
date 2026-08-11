@@ -26,8 +26,10 @@ dcc_status_t dcc_interaction_reply_text(
     void *user_data
 ) {
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
         .content = content,
-        .has_content = 1U,
     };
     return dcc_interaction_reply_message(client, interaction, &message, cb, user_data);
 }
@@ -40,10 +42,11 @@ dcc_status_t dcc_interaction_reply_ephemeral_text(
     void *user_data
 ) {
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
         .content = content,
         .flags = DCC_MESSAGE_FLAG_EPHEMERAL,
-        .has_content = 1U,
-        .has_flags = 1U,
     };
     return dcc_interaction_reply_message(client, interaction, &message, cb, user_data);
 }
@@ -63,18 +66,25 @@ dcc_status_t dcc_interaction_reply_embed(
     }
 
     dcc_embed_builder_t embed = {
+        .size = sizeof(embed),
+        .version = DCC_EMBED_BUILDER_VERSION,
+        .present = (title != NULL ? DCC_EMBED_BUILDER_PRESENT_TITLE : 0U) |
+            (description != NULL ? DCC_EMBED_BUILDER_PRESENT_DESCRIPTION : 0U) |
+            DCC_EMBED_BUILDER_PRESENT_COLOR,
         .title = title,
         .description = description,
         .color = color,
-        .has_color = 1U,
     };
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS,
         .embeds = &embed,
         .embeds_count = 1U,
     };
     if (ephemeral) {
         message.flags = DCC_MESSAGE_FLAG_EPHEMERAL;
-        message.has_flags = 1U;
+        message.present |= DCC_MESSAGE_BUILDER_PRESENT_FLAGS;
     }
     return dcc_interaction_reply_message(client, interaction, &message, cb, user_data);
 }
@@ -140,8 +150,10 @@ dcc_status_t dcc_interaction_defer_ephemeral(
     void *user_data
 ) {
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
         .flags = DCC_MESSAGE_FLAG_EPHEMERAL,
-        .has_flags = 1U,
     };
     return dcc_rest_interaction_response_create_from_interaction_message_builder(
         client,

@@ -6,15 +6,40 @@
 #include <dcc/embed.h>
 #include <dcc/message.h>
 
+static inline dcc_message_builder_t dcc_sugar_message_actions_make(
+    const char *content,
+    const dcc_embed_builder_t *embeds,
+    size_t embed_count,
+    const dcc_component_builder_t *components,
+    size_t component_count,
+    uint64_t flags
+) {
+    dcc_message_builder_t message = DCC_MESSAGE_BUILDER_INIT;
+    message.content = content;
+    message.embeds = embeds;
+    message.embeds_count = embed_count;
+    message.components = components;
+    message.components_count = component_count;
+    message.flags = flags;
+    if (content != NULL) {
+        message.present |= DCC_MESSAGE_BUILDER_PRESENT_CONTENT;
+    }
+    if (embed_count != 0U) {
+        message.present |= DCC_MESSAGE_BUILDER_PRESENT_EMBEDS;
+    }
+    if (component_count != 0U) {
+        message.present |= DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS;
+    }
+    if (flags != 0U) {
+        message.present |= DCC_MESSAGE_BUILDER_PRESENT_FLAGS;
+    }
+    return message;
+}
+
 #define DCC_MESSAGE_COMPONENT_ACTIONS_ARRAY(content_, components_, component_count_, flags_) \
-    ((dcc_message_builder_t){ \
-        .content = (content_), \
-        .components = (components_), \
-        .components_count = (component_count_), \
-        .flags = (flags_), \
-        .has_content = 1U, \
-        .has_flags = ((flags_) != 0U ? 1U : 0U) \
-    })
+    dcc_sugar_message_actions_make( \
+        (content_), NULL, 0U, (components_), (component_count_), (flags_) \
+    )
 
 #define DCC_MESSAGE_TEXT_ACTIONS(content_, ...) \
     DCC_MESSAGE_COMPONENT_ACTIONS_ARRAY( \
@@ -33,14 +58,9 @@
     )
 
 #define DCC_MESSAGE_EMBEDS_ACTIONS_ARRAY(embeds_, embed_count_, components_, component_count_, flags_) \
-    ((dcc_message_builder_t){ \
-        .embeds = (embeds_), \
-        .embeds_count = (embed_count_), \
-        .components = (components_), \
-        .components_count = (component_count_), \
-        .flags = (flags_), \
-        .has_flags = ((flags_) != 0U ? 1U : 0U) \
-    })
+    dcc_sugar_message_actions_make( \
+        NULL, (embeds_), (embed_count_), (components_), (component_count_), (flags_) \
+    )
 
 #define DCC_MESSAGE_TEXT_EMBEDS_ACTIONS_ARRAY( \
     content_, \
@@ -50,16 +70,9 @@
     component_count_, \
     flags_ \
 ) \
-    ((dcc_message_builder_t){ \
-        .content = (content_), \
-        .embeds = (embeds_), \
-        .embeds_count = (embed_count_), \
-        .components = (components_), \
-        .components_count = (component_count_), \
-        .flags = (flags_), \
-        .has_content = 1U, \
-        .has_flags = ((flags_) != 0U ? 1U : 0U) \
-    })
+    dcc_sugar_message_actions_make( \
+        (content_), (embeds_), (embed_count_), (components_), (component_count_), (flags_) \
+    )
 
 #define DCC_MESSAGE_EMBED_ACTIONS(embed_, ...) \
     DCC_MESSAGE_EMBEDS_ACTIONS_ARRAY( \

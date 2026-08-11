@@ -606,11 +606,11 @@ static dcc_application_command_builder_t autocomplete_command(
     dcc_application_command_builder_t command;
     dcc_application_command_builder_init(&command);
     command.name = name;
-    command.has_name = 1U;
+    command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME;
     command.description = description;
-    command.has_description = 1U;
+    command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION;
     command.type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
-    command.has_type = 1U;
+    command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE;
     return command;
 }
 

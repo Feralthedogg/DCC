@@ -41,6 +41,9 @@ int main(void) {
         DCC_AUTOCOMPLETE_INTEGER_CHOICE("Count", 5),
     };
     dcc_autocomplete_choice_t filtered[DCC_AUTOCOMPLETE_MAX_CHOICES];
+    for (size_t i = 0U; i < DCC_AUTOCOMPLETE_MAX_CHOICES; ++i) {
+        dcc_autocomplete_choice_init(&filtered[i], NULL);
+    }
     size_t filtered_count = 99U;
 
     if (!autocomplete_sugar_smoke_expect(
@@ -83,6 +86,44 @@ int main(void) {
         return 1;
     }
 
+    struct {
+        dcc_autocomplete_choice_t choice;
+        unsigned char canary[16];
+    } guarded = {
+        .choice = DCC_AUTOCOMPLETE_STRING_CHOICE("Occupied", "occupied"),
+        .canary = {
+            0xA5U, 0xA5U, 0xA5U, 0xA5U, 0xA5U, 0xA5U, 0xA5U, 0xA5U,
+            0xA5U, 0xA5U, 0xA5U, 0xA5U, 0xA5U, 0xA5U, 0xA5U, 0xA5U,
+        },
+    };
+    const dcc_autocomplete_choice_t guarded_before = guarded.choice;
+    unsigned char canary_before[sizeof(guarded.canary)];
+    memcpy(canary_before, guarded.canary, sizeof(canary_before));
+    filtered_count = 99U;
+    status = dcc_ctx_autocomplete_filter_choices(
+        &ctx,
+        choices,
+        sizeof(choices) / sizeof(choices[0]),
+        &guarded.choice,
+        1U,
+        &filtered_count
+    );
+    if (!autocomplete_sugar_smoke_expect(
+            "occupied limited output rejected",
+            status == DCC_ERR_INVALID_ARG
+        ) ||
+        !autocomplete_sugar_smoke_expect(
+            "occupied limited output unchanged",
+            memcmp(&guarded.choice, &guarded_before, sizeof(guarded.choice)) == 0
+        ) ||
+        !autocomplete_sugar_smoke_expect(
+            "occupied limited canary unchanged",
+            memcmp(guarded.canary, canary_before, sizeof(canary_before)) == 0
+        )) {
+        return 1;
+    }
+
+    dcc_autocomplete_choice_init(&filtered[0], NULL);
     filtered_count = 99U;
     status = dcc_ctx_autocomplete_filter_choices(
         &ctx,
@@ -101,6 +142,9 @@ int main(void) {
         return 1;
     }
 
+    for (size_t i = 0U; i < DCC_AUTOCOMPLETE_MAX_CHOICES; ++i) {
+        dcc_autocomplete_choice_init(&filtered[i], NULL);
+    }
     focused.string_value = "";
     filtered_count = 99U;
     status = dcc_ctx_autocomplete_filter_choices(

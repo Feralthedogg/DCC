@@ -484,6 +484,9 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_AUTOCOMPLETE_STRING_CHOICE("Package", "package"),
     };
     dcc_autocomplete_choice_t package_autocomplete_filtered[DCC_AUTOCOMPLETE_MAX_CHOICES];
+    for (size_t i = 0U; i < DCC_AUTOCOMPLETE_MAX_CHOICES; ++i) {
+        dcc_autocomplete_choice_init(&package_autocomplete_filtered[i], NULL);
+    }
     size_t package_autocomplete_filtered_count = 99U;
     dcc_status_t package_autocomplete_filter_status =
         dcc_ctx_autocomplete_filter_choices(
@@ -1590,8 +1593,10 @@ int dcc_package_consumer_check_app_api(void) {
         params_typed_slash.command->options[3].required == 1U &&
         strcmp(params_schema_command.name, "package_params_schema") == 0 &&
         params_schema_command.options_count == 5U &&
-        params_schema_command.options[1].has_min_integer_value == 1U &&
-        params_schema_command.options[1].has_max_integer_value == 1U &&
+        (params_schema_command.options[1].present &
+         DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MIN_INTEGER_VALUE) != 0U &&
+        (params_schema_command.options[1].present &
+         DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MAX_INTEGER_VALUE) != 0U &&
         params_schema_command.options[4].type == DCC_APPLICATION_COMMAND_OPTION_BOOLEAN &&
         strcmp(params_subcommand_command.name, "package_admin_params") == 0 &&
         params_subcommand_command.options_count == 1U &&
@@ -1735,7 +1740,7 @@ int dcc_package_consumer_check_app_api(void) {
         store_managed.load == dcc_store_load_managed_message_ref &&
         store_managed.save == dcc_store_save_managed_message_ref &&
         ui_message.flags == DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 &&
-        ui_message.has_flags == 1U &&
+        (ui_message.present & DCC_MESSAGE_BUILDER_PRESENT_FLAGS) != 0U &&
         ui_message.components_v2_count == 1U &&
         ui_message.components_v2[0].type == DCC_COMPONENT_V2_CONTAINER &&
         ui_message.components_v2[0].accent_color == 0x5865F2U &&
@@ -1749,7 +1754,7 @@ int dcc_package_consumer_check_app_api(void) {
         ui_ephemeral.flags == (DCC_MESSAGE_FLAG_EPHEMERAL | DCC_MESSAGE_FLAG_IS_COMPONENTS_V2) &&
         ui_ephemeral.components_v2_count == 1U &&
         strcmp(ui_ephemeral.components_v2[0].content, "Private") == 0 &&
-        confirm_message.has_content == 1U &&
+        (confirm_message.present & DCC_MESSAGE_BUILDER_PRESENT_CONTENT) != 0U &&
         confirm_message.components_count == 1U &&
         strcmp(confirm_message.components[0].children[0].custom_id, "package.confirm") == 0 &&
         paginator_message.flags == DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 &&

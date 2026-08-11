@@ -11,6 +11,39 @@
 extern "C" {
 #endif
 
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION 1U
+#define DCC_APPLICATION_COMMAND_BUILDER_VERSION 1U
+
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME UINT64_C(1)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION (UINT64_C(1) << 1U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME_LOCALIZATIONS_JSON (UINT64_C(1) << 2U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION_LOCALIZATIONS_JSON (UINT64_C(1) << 3U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHOICES_JSON (UINT64_C(1) << 4U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHOICES (UINT64_C(1) << 5U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_OPTIONS_JSON (UINT64_C(1) << 6U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_OPTIONS (UINT64_C(1) << 7U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHANNEL_TYPES (UINT64_C(1) << 8U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MIN_INTEGER_VALUE (UINT64_C(1) << 9U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MAX_INTEGER_VALUE (UINT64_C(1) << 10U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MIN_NUMBER_VALUE (UINT64_C(1) << 11U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MAX_NUMBER_VALUE (UINT64_C(1) << 12U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE (UINT64_C(1) << 13U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED (UINT64_C(1) << 14U)
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_AUTOCOMPLETE (UINT64_C(1) << 15U)
+
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME UINT64_C(1)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME_LOCALIZATIONS_JSON (UINT64_C(1) << 1U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION (UINT64_C(1) << 2U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION_LOCALIZATIONS_JSON (UINT64_C(1) << 3U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_OPTIONS_JSON (UINT64_C(1) << 4U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_OPTIONS (UINT64_C(1) << 5U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_INTEGRATION_TYPES_JSON (UINT64_C(1) << 6U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_CONTEXTS_JSON (UINT64_C(1) << 7U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE (UINT64_C(1) << 8U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DEFAULT_MEMBER_PERMISSIONS (UINT64_C(1) << 9U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DM_PERMISSION (UINT64_C(1) << 10U)
+#define DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NSFW (UINT64_C(1) << 11U)
+
 typedef enum dcc_application_command_type {
     DCC_APPLICATION_COMMAND_CHAT_INPUT = 1,
     DCC_APPLICATION_COMMAND_USER = 2,
@@ -33,8 +66,12 @@ typedef enum dcc_application_command_option_type {
 } dcc_application_command_option_type_t;
 
 typedef struct dcc_application_command_option_builder {
+    size_t size;
+    uint32_t version;
+    uint64_t present;
     const char *name;
     const char *description;
+    uint32_t type;
     const char *name_localizations_json;
     const char *description_localizations_json;
     const char *choices_json;
@@ -49,18 +86,14 @@ typedef struct dcc_application_command_option_builder {
     int64_t max_integer_value;
     double min_number_value;
     double max_number_value;
-    uint32_t type;
     uint8_t required;
-    uint8_t has_required;
     uint8_t autocomplete;
-    uint8_t has_autocomplete;
-    uint8_t has_min_integer_value;
-    uint8_t has_max_integer_value;
-    uint8_t has_min_number_value;
-    uint8_t has_max_number_value;
 } dcc_application_command_option_builder_t;
 
 typedef struct dcc_application_command_builder {
+    size_t size;
+    uint32_t version;
+    uint64_t present;
     const char *name;
     const char *name_localizations_json;
     const char *description;
@@ -74,15 +107,27 @@ typedef struct dcc_application_command_builder {
     uint64_t default_member_permissions;
     uint8_t dm_permission;
     uint8_t nsfw;
-    uint8_t has_name;
-    uint8_t has_description;
-    uint8_t has_type;
-    uint8_t has_default_member_permissions;
     uint8_t default_member_permissions_null;
-    uint8_t has_dm_permission;
-    uint8_t has_nsfw;
 } dcc_application_command_builder_t;
 
+#define DCC_APPLICATION_COMMAND_OPTION_BUILDER_INIT \
+    { \
+        sizeof(dcc_application_command_option_builder_t), \
+        DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, UINT64_C(0), \
+        NULL, NULL, 0U, NULL, NULL, NULL, NULL, 0U, NULL, NULL, 0U, \
+        NULL, 0U, INT64_C(0), INT64_C(0), 0.0, 0.0, 0U, 0U \
+    }
+#define DCC_APPLICATION_COMMAND_BUILDER_INIT \
+    { \
+        sizeof(dcc_application_command_builder_t), \
+        DCC_APPLICATION_COMMAND_BUILDER_VERSION, UINT64_C(0), \
+        NULL, NULL, NULL, NULL, NULL, NULL, 0U, NULL, NULL, 0U, \
+        UINT64_C(0), 0U, 0U, 0U \
+    }
+
+DCC_API void dcc_application_command_option_builder_init(
+    dcc_application_command_option_builder_t *builder
+);
 DCC_API void dcc_application_command_builder_init(dcc_application_command_builder_t *builder);
 DCC_API dcc_status_t dcc_application_command_builder_set_name(
     dcc_application_command_builder_t *builder,

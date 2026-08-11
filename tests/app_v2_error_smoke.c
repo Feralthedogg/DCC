@@ -1403,7 +1403,7 @@ static dcc_status_t responded_route(dcc_ctx_t *ctx, void *user_data) {
 static dcc_message_builder_t invalid_message_builder(void) {
     dcc_message_builder_t message;
     dcc_message_builder_init(&message);
-    message.has_content = 1U;
+    message.present |= DCC_MESSAGE_BUILDER_PRESENT_CONTENT;
     message.content = NULL;
     return message;
 }

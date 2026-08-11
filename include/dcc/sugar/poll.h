@@ -29,61 +29,61 @@
 #define DCC_POLL_ARRAY(question_, answers_, answer_count_, duration_hours_) \
     ((dcc_poll_builder_t){ \
         .size = sizeof(dcc_poll_builder_t), \
+        .version = DCC_POLL_BUILDER_VERSION, \
+        .present = DCC_POLL_BUILDER_PRESENT_QUESTION | DCC_POLL_BUILDER_PRESENT_ANSWERS | DCC_POLL_BUILDER_PRESENT_DURATION_HOURS | DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE, \
         .question = DCC_POLL_MEDIA(question_), \
         .answers = (answers_), \
         .answer_count = (answer_count_), \
         .duration_hours = (duration_hours_), \
-        .layout_type = DCC_POLL_LAYOUT_DEFAULT, \
-        .has_duration = 1U, \
-        .has_layout_type = 1U \
+        .layout_type = DCC_POLL_LAYOUT_DEFAULT \
     })
 
 #define DCC_POLL(question_, duration_hours_, ...) \
     ((dcc_poll_builder_t){ \
         .size = sizeof(dcc_poll_builder_t), \
+        .version = DCC_POLL_BUILDER_VERSION, \
+        .present = DCC_POLL_BUILDER_PRESENT_QUESTION | DCC_POLL_BUILDER_PRESENT_ANSWERS | DCC_POLL_BUILDER_PRESENT_DURATION_HOURS | DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE, \
         .question = DCC_POLL_MEDIA(question_), \
         .answers = (dcc_poll_answer_t[]){ __VA_ARGS__ }, \
         .answer_count = sizeof((dcc_poll_answer_t[]){ __VA_ARGS__ }) / sizeof(dcc_poll_answer_t), \
         .duration_hours = (duration_hours_), \
-        .layout_type = DCC_POLL_LAYOUT_DEFAULT, \
-        .has_duration = 1U, \
-        .has_layout_type = 1U \
+        .layout_type = DCC_POLL_LAYOUT_DEFAULT \
     })
 
 #define DCC_POLL_DEFAULT(question_, ...) \
     ((dcc_poll_builder_t){ \
         .size = sizeof(dcc_poll_builder_t), \
+        .version = DCC_POLL_BUILDER_VERSION, \
+        .present = DCC_POLL_BUILDER_PRESENT_QUESTION | DCC_POLL_BUILDER_PRESENT_ANSWERS | DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE, \
         .question = DCC_POLL_MEDIA(question_), \
         .answers = (dcc_poll_answer_t[]){ __VA_ARGS__ }, \
         .answer_count = sizeof((dcc_poll_answer_t[]){ __VA_ARGS__ }) / sizeof(dcc_poll_answer_t), \
-        .layout_type = DCC_POLL_LAYOUT_DEFAULT, \
-        .has_layout_type = 1U \
+        .layout_type = DCC_POLL_LAYOUT_DEFAULT \
     })
 
 #define DCC_POLL_MULTI(question_, duration_hours_, ...) \
     ((dcc_poll_builder_t){ \
         .size = sizeof(dcc_poll_builder_t), \
+        .version = DCC_POLL_BUILDER_VERSION, \
+        .present = DCC_POLL_BUILDER_PRESENT_QUESTION | DCC_POLL_BUILDER_PRESENT_ANSWERS | DCC_POLL_BUILDER_PRESENT_DURATION_HOURS | DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE | DCC_POLL_BUILDER_PRESENT_ALLOW_MULTISELECT, \
         .question = DCC_POLL_MEDIA(question_), \
         .answers = (dcc_poll_answer_t[]){ __VA_ARGS__ }, \
         .answer_count = sizeof((dcc_poll_answer_t[]){ __VA_ARGS__ }) / sizeof(dcc_poll_answer_t), \
         .duration_hours = (duration_hours_), \
         .layout_type = DCC_POLL_LAYOUT_DEFAULT, \
-        .allow_multiselect = 1U, \
-        .has_duration = 1U, \
-        .has_layout_type = 1U, \
-        .has_allow_multiselect = 1U \
+        .allow_multiselect = 1U \
     })
 
 #define DCC_POLL_MULTI_DEFAULT(question_, ...) \
     ((dcc_poll_builder_t){ \
         .size = sizeof(dcc_poll_builder_t), \
+        .version = DCC_POLL_BUILDER_VERSION, \
+        .present = DCC_POLL_BUILDER_PRESENT_QUESTION | DCC_POLL_BUILDER_PRESENT_ANSWERS | DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE | DCC_POLL_BUILDER_PRESENT_ALLOW_MULTISELECT, \
         .question = DCC_POLL_MEDIA(question_), \
         .answers = (dcc_poll_answer_t[]){ __VA_ARGS__ }, \
         .answer_count = sizeof((dcc_poll_answer_t[]){ __VA_ARGS__ }) / sizeof(dcc_poll_answer_t), \
         .layout_type = DCC_POLL_LAYOUT_DEFAULT, \
-        .allow_multiselect = 1U, \
-        .has_layout_type = 1U, \
-        .has_allow_multiselect = 1U \
+        .allow_multiselect = 1U \
     })
 
 #define DCC_POLL_YES_NO(question_) \
@@ -94,26 +94,36 @@
 
 #define DCC_MESSAGE_POLL(poll_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_POLL, \
         .poll = &((dcc_poll_builder_t[]){ (poll_) })[0] \
     })
 
 #define DCC_MESSAGE_TEXT_POLL(content_, poll_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_POLL, \
         .content = (content_), \
-        .poll = &((dcc_poll_builder_t[]){ (poll_) })[0], \
-        .has_content = 1U \
+        .poll = &((dcc_poll_builder_t[]){ (poll_) })[0] \
     })
 
 #define DCC_MESSAGE_POLL_JSON(poll_json_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_POLL_JSON, \
         .poll_json = (poll_json_) \
     })
 
 #define DCC_MESSAGE_TEXT_POLL_JSON(content_, poll_json_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_POLL_JSON, \
         .content = (content_), \
-        .poll_json = (poll_json_), \
-        .has_content = 1U \
+        .poll_json = (poll_json_) \
     })
 
 #endif

@@ -12,37 +12,43 @@ static inline dcc_message_builder_t dcc_sugar_message_with_flags(
     uint64_t flags
 ) {
     message.flags |= flags;
-    message.has_flags = 1U;
+    message.present |= DCC_MESSAGE_BUILDER_PRESENT_FLAGS;
     return message;
 }
 
 #define DCC_MESSAGE_FLAGS(flags_) \
     ((dcc_message_builder_t){ \
-        .flags = (flags_), \
-        .has_flags = 1U \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
+        .flags = (flags_) \
     })
 #define DCC_MESSAGE_TEXT_FLAGS(content_, flags_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .content = (content_), \
-        .flags = (flags_), \
-        .has_content = 1U, \
-        .has_flags = 1U \
+        .flags = (flags_) \
     })
 #define DCC_MESSAGE_EMBED_FLAGS(embed_, flags_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .embeds = DCC_SUGAR_FLAGS_ARRAY(dcc_embed_builder_t, (embed_)), \
         .embeds_count = 1U, \
-        .flags = (flags_), \
-        .has_flags = 1U \
+        .flags = (flags_) \
     })
 #define DCC_MESSAGE_TEXT_EMBED_FLAGS(content_, embed_, flags_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_EMBEDS | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .content = (content_), \
         .embeds = DCC_SUGAR_FLAGS_ARRAY(dcc_embed_builder_t, (embed_)), \
         .embeds_count = 1U, \
-        .flags = (flags_), \
-        .has_content = 1U, \
-        .has_flags = 1U \
+        .flags = (flags_) \
     })
 
 #define DCC_MESSAGE_WITH_FLAGS(message_, flags_) \
@@ -74,17 +80,21 @@ static inline dcc_message_builder_t dcc_sugar_message_with_flags(
 
 #define DCC_MESSAGE_PRIVATE_V2(...) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2 | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .components_v2 = DCC_SUGAR_FLAGS_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
         .components_v2_count = DCC_SUGAR_FLAGS_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
-        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 | DCC_MESSAGE_FLAG_EPHEMERAL, \
-        .has_flags = 1U \
+        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 | DCC_MESSAGE_FLAG_EPHEMERAL \
     })
 #define DCC_MESSAGE_SILENT_V2(...) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2 | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .components_v2 = DCC_SUGAR_FLAGS_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
         .components_v2_count = DCC_SUGAR_FLAGS_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
-        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 | DCC_MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS, \
-        .has_flags = 1U \
+        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 | DCC_MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS \
     })
 
 #endif

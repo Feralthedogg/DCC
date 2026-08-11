@@ -8,8 +8,10 @@
 
 #define DCC_FLOW_MESSAGE_TEXT(content_) \
     ((dcc_message_builder_t){ \
-        .content = (content_), \
-        .has_content = 1U \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT, \
+        .content = (content_) \
     })
 
 #define DCC_FLOW(client_, interaction_) \

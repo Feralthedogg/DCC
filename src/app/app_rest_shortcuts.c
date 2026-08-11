@@ -599,8 +599,10 @@ dcc_status_t dcc_app_edit_message_text(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
         .content = content,
-        .has_content = 1U,
     };
     return dcc_app_edit_message(app, channel_id, message_id, &message, cb, user_data);
 }

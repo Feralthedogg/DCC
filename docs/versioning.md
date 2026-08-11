@@ -10,14 +10,19 @@ CMake generates `<dcc/version_generated.h>` from it, and the runtime
 - Patch releases fix defects without intentionally changing source or binary compatibility.
 - Minor releases may add APIs. Existing public symbols remain available and retain their behavior.
 - Major releases may remove or redesign APIs after a documented deprecation period.
-- Size-versioned caller-initialized structs may append fields. Callers set `size`, and
-  implementations must gate access to fields beyond the historical minimum.
+- Size-versioned caller-initialized structs may append fields. Callers set
+  `size`, `version`, and the authoritative `present` mask; implementations gate
+  every read and write beyond the historical minimum. Versioned arrays use the
+  first record's declared byte size as their common stride.
 - Public declarations use `DCC_API`; deprecated APIs use `DCC_DEPRECATED("replacement")`.
 
 The release check compiles every standalone public header as its own translation
 unit (declaration fragments are compiled through their documented umbrella),
 verifies every `DCC_API` function is present in the built library when the platform
 provides `nm`, and rejects public API removals relative to `origin/main`.
+
+See [Versioned Public Builders](concepts/versioned-builders.md) for the exact
+record, presence, array-stride, ownership, and command-creation rules.
 
 ## Deprecation policy
 

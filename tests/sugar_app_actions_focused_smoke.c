@@ -45,13 +45,14 @@ static int check_message_literals(void) {
     dcc_message_builder_t v2_private =
         DCC_MESSAGE_EPHEMERAL_COMPONENTS_V2(focused_text_component());
 
-    if (text.content == NULL || text.has_content != 1U) {
+    if (text.content == NULL ||
+        (text.present & DCC_MESSAGE_BUILDER_PRESENT_CONTENT) == 0U) {
         fprintf(stderr, "DCC_MESSAGE_TEXT did not set content\n");
         return 1;
     }
     if (v2.components_v2_count != 1U ||
         (v2.flags & DCC_MESSAGE_FLAG_IS_COMPONENTS_V2) == 0U ||
-        v2.has_flags != 1U) {
+        (v2.present & DCC_MESSAGE_BUILDER_PRESENT_FLAGS) == 0U) {
         fprintf(stderr, "DCC_MESSAGE_COMPONENTS_V2 did not set v2 fields\n");
         return 1;
     }

@@ -59,6 +59,43 @@ int run_public_rest_application_command_builder_smoke(void) {
     pthread_t thread;
     rest_seen_t seen;
 
+    dcc_application_command_builder_t partial;
+    dcc_application_command_builder_init(&partial);
+    if (dcc_application_command_builder_set_description(&partial, "patched only") != DCC_OK ||
+        dcc_rest_create_global_command_builder(
+            client, 123, &partial, rest_cb, &seen
+        ) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_bulk_overwrite_global_commands_builder(
+            client, 123, &partial, 1U, rest_cb, &seen
+        ) != DCC_ERR_INVALID_ARG) {
+        fprintf(stderr, "POST/PUT command builders accepted an incomplete create schema\n");
+        dcc_client_destroy(client);
+        return 1;
+    }
+    if (start_server(&server, &thread) != 0) {
+        fprintf(stderr, "failed to start partial PATCH builder server: %s\n", strerror(errno));
+        dcc_client_destroy(client);
+        return 1;
+    }
+    set_api_base_for_server(&server);
+    memset(&seen, 0, sizeof(seen));
+    st = dcc_rest_edit_global_command_builder(
+        client, 123, 456, &partial, rest_cb, &seen
+    );
+    (void)pthread_join(thread, NULL);
+    close(server.fd);
+    if (st != DCC_OK || !seen.called || strcmp(server.method, "PATCH") != 0 ||
+        strcmp(server.path, "/applications/123/commands/456") != 0 ||
+        strcmp(server.body, "{\"description\":\"patched only\"}") != 0) {
+        fprintf(stderr,
+                "PATCH command builder rejected/changed a valid partial payload: "
+                "st=%s method=%s path=%s body=%s\n",
+                dcc_status_string(st), server.method, server.path, server.body);
+        (void)unsetenv("DCC_DISCORD_API_BASE");
+        dcc_client_destroy(client);
+        return 1;
+    }
+
     if (start_server(&server, &thread) != 0) {
         fprintf(stderr, "failed to start application command builder server: %s\n", strerror(errno));
         dcc_client_destroy(client);

@@ -19,11 +19,13 @@ function.
 
 Read [Choose An API Layer](concepts/api-layers.md) for a task-oriented map and
 [Ownership And Async](concepts/ownership-and-async.md) before retaining pointers
-from callbacks or caches.
+from callbacks or caches. When constructing message, modal, autocomplete, or
+command records directly, read [Versioned Public Builders](concepts/versioned-builders.md).
 
 ## How To Read API Names
 
-- `*_init()` initializes caller-owned storage; set documented `size` fields.
+- `*_init()` initializes caller-owned storage, including documented `size`,
+  `version`, and `present` fields.
 - `*_create()` returns an owned runtime object paired with `*_destroy()`.
 - `*_clone()` returns owned heap storage paired with the matching `*_free()`.
 - `dcc_event_*()` and cache getters normally return borrowed views.

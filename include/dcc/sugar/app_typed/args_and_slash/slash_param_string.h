@@ -14,11 +14,13 @@
     })
 #define DCC_SLASH_PARAM_OPTION_STRING(type_, field_, name_, description_, required_, fallback_) \
     ((dcc_application_command_option_builder_t){ \
+        .size = sizeof(dcc_application_command_option_builder_t), \
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, \
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED, \
         .type = DCC_APPLICATION_COMMAND_OPTION_STRING, \
         .name = (name_), \
         .description = (description_), \
-        .required = (required_) ? 1U : 0U, \
-        .has_required = 1U \
+        .required = (required_) ? 1U : 0U \
     })
 #define DCC_SLASH_PARAM_BIND_REQUIRED_STRING(type_, field_, name_, description_) \
     DCC_SLASH_PARAM_BIND_STRING(type_, field_, (name_), (description_), 1U, NULL)
@@ -28,13 +30,14 @@
     DCC_SLASH_PARAM_BIND_STRING(type_, field_, (name_), (description_), (required_), (fallback_))
 #define DCC_SLASH_PARAM_OPTION_STRING_AUTOCOMPLETE(type_, field_, name_, description_, required_, fallback_) \
     ((dcc_application_command_option_builder_t){ \
+        .size = sizeof(dcc_application_command_option_builder_t), \
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, \
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_AUTOCOMPLETE, \
         .type = DCC_APPLICATION_COMMAND_OPTION_STRING, \
         .name = (name_), \
         .description = (description_), \
         .required = (required_) ? 1U : 0U, \
-        .has_required = 1U, \
-        .autocomplete = 1U, \
-        .has_autocomplete = 1U \
+        .autocomplete = 1U \
     })
 #define DCC_SLASH_PARAM_BIND_REQUIRED_STRING_AUTOCOMPLETE(type_, field_, name_, description_) \
     DCC_SLASH_PARAM_BIND_STRING_AUTOCOMPLETE(type_, field_, (name_), (description_), 1U, NULL)

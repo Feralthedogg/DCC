@@ -309,17 +309,22 @@ static int check_initial_reentry_claims(dcc_client_t *client) {
         state.nested_variant = cases[i].nested_variant;
         state.nested_status = DCC_OK;
         state.message = (dcc_message_builder_t){
-            .content = "reentry",
-            .has_content = 1U,
+            .size = sizeof(dcc_message_builder_t),
+            .version = DCC_MESSAGE_BUILDER_VERSION,
+            .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
+            .content = "reentry"
         };
         state.modal = (dcc_modal_builder_t){
+            .size = sizeof(dcc_modal_builder_t),
+            .version = DCC_MODAL_BUILDER_VERSION,
+            .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID |
+                DCC_MODAL_BUILDER_PRESENT_TITLE |
+                DCC_MODAL_BUILDER_PRESENT_COMPONENTS_JSON,
             .custom_id = "reentry-modal",
             .title = "Reentry",
-            .components_json = "[]",
-            .has_custom_id = 1U,
-            .has_title = 1U,
+            .components_json = "[]"
         };
-        state.autocomplete = (dcc_autocomplete_builder_t){0};
+        dcc_autocomplete_builder_init(&state.autocomplete);
         if (cases[i].outer_variant == FLOW_REENTRY_MAYBE_AUTO_DEFER &&
             (dcc_flow_set_started_at(&state.ctx.flow, 1U) != DCC_OK ||
              dcc_flow_auto_defer(&state.ctx.flow, 1U) != DCC_OK)) {
@@ -398,8 +403,10 @@ int main(void) {
     };
     historical_flow->interaction = &historical_interaction;
     dcc_message_builder_t historical_message = {
-        .content = "historical",
-        .has_content = 1U,
+        .size = sizeof(dcc_message_builder_t),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
+        .content = "historical"
     };
     historical_flow_reentry_t historical_reentry = {
         .flow = historical_flow,
@@ -547,7 +554,7 @@ int main(void) {
     dcc_flow_init(&flow, client, &interaction);
     dcc_message_builder_t invalid_message;
     dcc_message_builder_init(&invalid_message);
-    invalid_message.has_content = 1U;
+    invalid_message.present |= DCC_MESSAGE_BUILDER_PRESENT_CONTENT;
     invalid_message.content = NULL;
     if (dcc_flow_reply(&flow, &invalid_message, flow_rest_cb, &seen) !=
             DCC_ERR_INVALID_ARG ||

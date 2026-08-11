@@ -2348,29 +2348,40 @@ must outlive the current block.
 ```c
 static const dcc_autocomplete_choice_t rank_sort_choices[] = {
     {
+        .size = sizeof(dcc_autocomplete_choice_t),
+        .version = DCC_AUTOCOMPLETE_CHOICE_VERSION,
+        .present = DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME |
+                   DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE,
         .name = "Members",
         .value_string = "members",
-        .value_type = DCC_AUTOCOMPLETE_CHOICE_STRING,
-        .has_name = 1U,
-        .has_value = 1U
+        .value_type = DCC_AUTOCOMPLETE_CHOICE_STRING
     },
     {
+        .size = sizeof(dcc_autocomplete_choice_t),
+        .version = DCC_AUTOCOMPLETE_CHOICE_VERSION,
+        .present = DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME |
+                   DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE,
         .name = "Score",
         .value_string = "score",
-        .value_type = DCC_AUTOCOMPLETE_CHOICE_STRING,
-        .has_name = 1U,
-        .has_value = 1U
+        .value_type = DCC_AUTOCOMPLETE_CHOICE_STRING
     }
 };
 
 static const dcc_application_command_option_builder_t rank_options[] = {
     {
+        .size = sizeof(dcc_application_command_option_builder_t),
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION,
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME |
+                   DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION |
+                   DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE |
+                   DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHOICES |
+                   DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED,
         .type = DCC_APPLICATION_COMMAND_OPTION_STRING,
         .name = "sort",
         .description = "Sort mode",
         .choices = rank_sort_choices,
         .choices_count = DCC_ARRAY_LEN(rank_sort_choices),
-        .has_required = 1U
+        .required = 0U
     }
 };
 

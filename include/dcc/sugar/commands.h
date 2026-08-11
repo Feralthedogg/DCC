@@ -22,92 +22,104 @@
 #define DCC_COMMAND_CHOICES_COUNT(...) \
     (sizeof((dcc_autocomplete_choice_t[]){ __VA_ARGS__ }) / sizeof(dcc_autocomplete_choice_t))
 
+static inline dcc_autocomplete_choice_t dcc_sugar_command_choice(
+    const char *name,
+    const char *name_localizations_json,
+    dcc_autocomplete_choice_value_type_t type,
+    const char *string_value,
+    int64_t integer_value,
+    double number_value
+) {
+    dcc_autocomplete_choice_t choice = DCC_AUTOCOMPLETE_CHOICE_INIT;
+    choice.name = name;
+    choice.present = DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME |
+        DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE;
+    if (name_localizations_json != NULL) {
+        choice.present |= DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS_JSON;
+    }
+    choice.name_localizations_json = name_localizations_json;
+    choice.value_type = type;
+    choice.value_string = string_value;
+    choice.value_integer = integer_value;
+    choice.value_number = number_value;
+    return choice;
+}
+
 #define DCC_STRING_CHOICE(name_, value_) \
-    ((dcc_autocomplete_choice_t){ \
-        .name = (name_), \
-        .value_string = (value_), \
-        .value_type = DCC_AUTOCOMPLETE_CHOICE_STRING, \
-        .has_name = 1U, \
-        .has_value = 1U \
-    })
+    dcc_sugar_command_choice( \
+        (name_), NULL, DCC_AUTOCOMPLETE_CHOICE_STRING, (value_), 0, 0.0 \
+    )
 
 #define DCC_INT_CHOICE(name_, value_) \
-    ((dcc_autocomplete_choice_t){ \
-        .name = (name_), \
-        .value_integer = (value_), \
-        .value_type = DCC_AUTOCOMPLETE_CHOICE_INTEGER, \
-        .has_name = 1U, \
-        .has_value = 1U \
-    })
+    dcc_sugar_command_choice( \
+        (name_), NULL, DCC_AUTOCOMPLETE_CHOICE_INTEGER, NULL, (value_), 0.0 \
+    )
 
 #define DCC_INTEGER_CHOICE(name_, value_) DCC_INT_CHOICE((name_), (value_))
 
 #define DCC_NUMBER_CHOICE(name_, value_) \
-    ((dcc_autocomplete_choice_t){ \
-        .name = (name_), \
-        .value_number = (value_), \
-        .value_type = DCC_AUTOCOMPLETE_CHOICE_NUMBER, \
-        .has_name = 1U, \
-        .has_value = 1U \
-    })
+    dcc_sugar_command_choice( \
+        (name_), NULL, DCC_AUTOCOMPLETE_CHOICE_NUMBER, NULL, 0, (value_) \
+    )
 
 #define DCC_STRING_CHOICE_LOCALIZED(name_, value_, name_localizations_json_) \
-    ((dcc_autocomplete_choice_t){ \
-        .name = (name_), \
-        .name_localizations_json = (name_localizations_json_), \
-        .value_string = (value_), \
-        .value_type = DCC_AUTOCOMPLETE_CHOICE_STRING, \
-        .has_name = 1U, \
-        .has_value = 1U \
-    })
+    dcc_sugar_command_choice( \
+        (name_), (name_localizations_json_), DCC_AUTOCOMPLETE_CHOICE_STRING, \
+        (value_), 0, 0.0 \
+    )
 
 #define DCC_INT_CHOICE_LOCALIZED(name_, value_, name_localizations_json_) \
-    ((dcc_autocomplete_choice_t){ \
-        .name = (name_), \
-        .name_localizations_json = (name_localizations_json_), \
-        .value_integer = (value_), \
-        .value_type = DCC_AUTOCOMPLETE_CHOICE_INTEGER, \
-        .has_name = 1U, \
-        .has_value = 1U \
-    })
+    dcc_sugar_command_choice( \
+        (name_), (name_localizations_json_), DCC_AUTOCOMPLETE_CHOICE_INTEGER, \
+        NULL, (value_), 0.0 \
+    )
 
 #define DCC_INTEGER_CHOICE_LOCALIZED(name_, value_, name_localizations_json_) \
     DCC_INT_CHOICE_LOCALIZED((name_), (value_), (name_localizations_json_))
 
 #define DCC_NUMBER_CHOICE_LOCALIZED(name_, value_, name_localizations_json_) \
-    ((dcc_autocomplete_choice_t){ \
-        .name = (name_), \
-        .name_localizations_json = (name_localizations_json_), \
-        .value_number = (value_), \
-        .value_type = DCC_AUTOCOMPLETE_CHOICE_NUMBER, \
-        .has_name = 1U, \
-        .has_value = 1U \
-    })
+    dcc_sugar_command_choice( \
+        (name_), (name_localizations_json_), DCC_AUTOCOMPLETE_CHOICE_NUMBER, \
+        NULL, 0, (value_) \
+    )
+
+static inline dcc_application_command_builder_t dcc_sugar_command_make(
+    const char *name,
+    const char *description,
+    dcc_application_command_type_t type,
+    const dcc_application_command_option_builder_t *options,
+    size_t options_count
+) {
+    dcc_application_command_builder_t command = DCC_APPLICATION_COMMAND_BUILDER_INIT;
+    command.present = DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME |
+        DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE;
+    command.name = name;
+    command.type = (uint32_t)type;
+    if (type != DCC_APPLICATION_COMMAND_USER && type != DCC_APPLICATION_COMMAND_MESSAGE) {
+        command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION;
+        command.description = description;
+    }
+    if (options_count != 0U) {
+        command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_OPTIONS;
+        command.options = options;
+        command.options_count = options_count;
+    }
+    return command;
+}
 
 #define DCC_SLASH_CMD(name_, description_) \
-    ((dcc_application_command_builder_t){ \
-        .name = (name_), \
-        .description = (description_), \
-        .type = DCC_APPLICATION_COMMAND_CHAT_INPUT, \
-        .has_name = 1U, \
-        .has_description = 1U, \
-        .has_type = 1U \
-    })
+    dcc_sugar_command_make( \
+        (name_), (description_), DCC_APPLICATION_COMMAND_CHAT_INPUT, NULL, 0U \
+    )
 
 #define DCC_CMD(name_, description_) \
     DCC_SLASH_CMD((name_), (description_))
 
 #define DCC_SLASH_OPTIONS(name_, description_, ...) \
-    ((dcc_application_command_builder_t){ \
-        .name = (name_), \
-        .description = (description_), \
-        .options = DCC_COMMAND_OPTIONS(__VA_ARGS__), \
-        .options_count = DCC_COMMAND_OPTIONS_COUNT(__VA_ARGS__), \
-        .type = DCC_APPLICATION_COMMAND_CHAT_INPUT, \
-        .has_name = 1U, \
-        .has_description = 1U, \
-        .has_type = 1U \
-    })
+    dcc_sugar_command_make( \
+        (name_), (description_), DCC_APPLICATION_COMMAND_CHAT_INPUT, \
+        DCC_COMMAND_OPTIONS(__VA_ARGS__), DCC_COMMAND_OPTIONS_COUNT(__VA_ARGS__) \
+    )
 
 #define DCC_SLASH_GROUP(name_, description_, ...) \
     DCC_SLASH_OPTIONS((name_), (description_), __VA_ARGS__)
@@ -119,38 +131,119 @@
     DCC_SLASH_OPTIONS((name_), (description_), __VA_ARGS__)
 
 #define DCC_USER_MENU(name_) \
-    ((dcc_application_command_builder_t){ \
-        .name = (name_), \
-        .type = DCC_APPLICATION_COMMAND_USER, \
-        .has_name = 1U, \
-        .has_type = 1U \
-    })
+    dcc_sugar_command_make((name_), NULL, DCC_APPLICATION_COMMAND_USER, NULL, 0U)
 
 #define DCC_MESSAGE_MENU(name_) \
-    ((dcc_application_command_builder_t){ \
-        .name = (name_), \
-        .type = DCC_APPLICATION_COMMAND_MESSAGE, \
-        .has_name = 1U, \
-        .has_type = 1U \
-    })
+    dcc_sugar_command_make((name_), NULL, DCC_APPLICATION_COMMAND_MESSAGE, NULL, 0U)
+
+static inline dcc_application_command_option_builder_t dcc_sugar_command_option_make(
+    uint32_t type,
+    const char *name,
+    const char *description,
+    uint8_t required,
+    uint8_t has_required
+) {
+    dcc_application_command_option_builder_t option = DCC_APPLICATION_COMMAND_OPTION_BUILDER_INIT;
+    option.present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME |
+        DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION |
+        DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE;
+    option.type = type;
+    option.name = name;
+    option.description = description;
+    option.required = required != 0U;
+    if (has_required) {
+        option.present |= DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED;
+    }
+    return option;
+}
+
+static inline dcc_application_command_option_builder_t dcc_sugar_option_autocomplete(
+    dcc_application_command_option_builder_t option
+) {
+    option.present |= DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_AUTOCOMPLETE;
+    option.autocomplete = 1U;
+    return option;
+}
+
+static inline dcc_application_command_option_builder_t dcc_sugar_option_choices_json(
+    dcc_application_command_option_builder_t option,
+    const char *choices_json
+) {
+    option.choices_json = choices_json;
+    if (choices_json != NULL) {
+        option.present |= DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHOICES_JSON;
+    }
+    return option;
+}
+
+static inline dcc_application_command_option_builder_t dcc_sugar_option_choices(
+    dcc_application_command_option_builder_t option,
+    const dcc_autocomplete_choice_t *choices,
+    size_t choices_count
+) {
+    option.choices = choices;
+    option.choices_count = choices_count;
+    if (choices_count != 0U) {
+        option.present |= DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHOICES;
+    }
+    return option;
+}
+
+static inline dcc_application_command_option_builder_t dcc_sugar_option_integer_range(
+    dcc_application_command_option_builder_t option,
+    int64_t minimum,
+    int64_t maximum
+) {
+    option.present |= DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MIN_INTEGER_VALUE |
+        DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MAX_INTEGER_VALUE;
+    option.min_integer_value = minimum;
+    option.max_integer_value = maximum;
+    return option;
+}
+
+static inline dcc_application_command_option_builder_t dcc_sugar_option_number_range(
+    dcc_application_command_option_builder_t option,
+    double minimum,
+    double maximum
+) {
+    option.present |= DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MIN_NUMBER_VALUE |
+        DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_MAX_NUMBER_VALUE;
+    option.min_number_value = minimum;
+    option.max_number_value = maximum;
+    return option;
+}
+
+static inline dcc_application_command_option_builder_t dcc_sugar_option_channel_types(
+    dcc_application_command_option_builder_t option,
+    const uint32_t *channel_types,
+    size_t channel_types_count
+) {
+    option.channel_types = channel_types;
+    option.channel_types_count = channel_types_count;
+    if (channel_types_count != 0U) {
+        option.present |= DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHANNEL_TYPES;
+    }
+    return option;
+}
+
+static inline dcc_application_command_option_builder_t dcc_sugar_option_nested(
+    dcc_application_command_option_builder_t option,
+    const dcc_application_command_option_builder_t *options,
+    size_t options_count
+) {
+    option.options = options;
+    option.options_count = options_count;
+    if (options_count != 0U) {
+        option.present |= DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_OPTIONS;
+    }
+    return option;
+}
 
 #define DCC_COMMAND_OPTION_REQUIRED(type_, name_, description_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = (type_), \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 1U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_command_option_make((type_), (name_), (description_), 1U, 1U)
 
 #define DCC_COMMAND_OPTION_OPTIONAL(type_, name_, description_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = (type_), \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 0U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_command_option_make((type_), (name_), (description_), 0U, 1U)
 
 #define DCC_REQUIRED_STRING(name_, description_) \
     DCC_COMMAND_OPTION_REQUIRED(DCC_APPLICATION_COMMAND_OPTION_STRING, (name_), (description_))
@@ -194,189 +287,90 @@
     DCC_COMMAND_OPTION_OPTIONAL(DCC_APPLICATION_COMMAND_OPTION_ATTACHMENT, (name_), (description_))
 
 #define DCC_REQUIRED_STRING_AUTOCOMPLETE(name_, description_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_STRING, \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 1U, \
-        .has_required = 1U, \
-        .autocomplete = 1U, \
-        .has_autocomplete = 1U \
-    })
+    dcc_sugar_option_autocomplete(DCC_REQUIRED_STRING((name_), (description_)))
 #define DCC_OPTIONAL_STRING_AUTOCOMPLETE(name_, description_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_STRING, \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 0U, \
-        .has_required = 1U, \
-        .autocomplete = 1U, \
-        .has_autocomplete = 1U \
-    })
+    dcc_sugar_option_autocomplete(DCC_OPTIONAL_STRING((name_), (description_)))
 #define DCC_REQUIRED_STRING_CHOICES_JSON(name_, description_, choices_json_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_STRING, \
-        .name = (name_), \
-        .description = (description_), \
-        .choices_json = (choices_json_), \
-        .required = 1U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_option_choices_json( \
+        DCC_REQUIRED_STRING((name_), (description_)), (choices_json_) \
+    )
 #define DCC_OPTIONAL_STRING_CHOICES_JSON(name_, description_, choices_json_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_STRING, \
-        .name = (name_), \
-        .description = (description_), \
-        .choices_json = (choices_json_), \
-        .required = 0U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_option_choices_json( \
+        DCC_OPTIONAL_STRING((name_), (description_)), (choices_json_) \
+    )
 #define DCC_REQUIRED_STRING_CHOICES(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_STRING, \
-        .name = (name_), \
-        .description = (description_), \
-        .choices = DCC_COMMAND_CHOICES(__VA_ARGS__), \
-        .choices_count = DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__), \
-        .required = 1U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_option_choices( \
+        DCC_REQUIRED_STRING((name_), (description_)), DCC_COMMAND_CHOICES(__VA_ARGS__), \
+        DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__) \
+    )
 #define DCC_OPTIONAL_STRING_CHOICES(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_STRING, \
-        .name = (name_), \
-        .description = (description_), \
-        .choices = DCC_COMMAND_CHOICES(__VA_ARGS__), \
-        .choices_count = DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__), \
-        .required = 0U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_option_choices( \
+        DCC_OPTIONAL_STRING((name_), (description_)), DCC_COMMAND_CHOICES(__VA_ARGS__), \
+        DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__) \
+    )
 #define DCC_REQUIRED_INT_CHOICES(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_INTEGER, \
-        .name = (name_), \
-        .description = (description_), \
-        .choices = DCC_COMMAND_CHOICES(__VA_ARGS__), \
-        .choices_count = DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__), \
-        .required = 1U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_option_choices( \
+        DCC_REQUIRED_INT((name_), (description_)), DCC_COMMAND_CHOICES(__VA_ARGS__), \
+        DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__) \
+    )
 #define DCC_OPTIONAL_INT_CHOICES(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_INTEGER, \
-        .name = (name_), \
-        .description = (description_), \
-        .choices = DCC_COMMAND_CHOICES(__VA_ARGS__), \
-        .choices_count = DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__), \
-        .required = 0U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_option_choices( \
+        DCC_OPTIONAL_INT((name_), (description_)), DCC_COMMAND_CHOICES(__VA_ARGS__), \
+        DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__) \
+    )
 #define DCC_REQUIRED_INTEGER_CHOICES(name_, description_, ...) \
     DCC_REQUIRED_INT_CHOICES((name_), (description_), __VA_ARGS__)
 #define DCC_OPTIONAL_INTEGER_CHOICES(name_, description_, ...) \
     DCC_OPTIONAL_INT_CHOICES((name_), (description_), __VA_ARGS__)
 #define DCC_REQUIRED_NUMBER_CHOICES(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_NUMBER, \
-        .name = (name_), \
-        .description = (description_), \
-        .choices = DCC_COMMAND_CHOICES(__VA_ARGS__), \
-        .choices_count = DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__), \
-        .required = 1U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_option_choices( \
+        DCC_REQUIRED_NUMBER((name_), (description_)), DCC_COMMAND_CHOICES(__VA_ARGS__), \
+        DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__) \
+    )
 #define DCC_OPTIONAL_NUMBER_CHOICES(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_NUMBER, \
-        .name = (name_), \
-        .description = (description_), \
-        .choices = DCC_COMMAND_CHOICES(__VA_ARGS__), \
-        .choices_count = DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__), \
-        .required = 0U, \
-        .has_required = 1U \
-    })
+    dcc_sugar_option_choices( \
+        DCC_OPTIONAL_NUMBER((name_), (description_)), DCC_COMMAND_CHOICES(__VA_ARGS__), \
+        DCC_COMMAND_CHOICES_COUNT(__VA_ARGS__) \
+    )
 
 #define DCC_REQUIRED_INT_RANGE(name_, description_, min_, max_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_INTEGER, \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 1U, \
-        .has_required = 1U, \
-        .min_integer_value = (min_), \
-        .max_integer_value = (max_), \
-        .has_min_integer_value = 1U, \
-        .has_max_integer_value = 1U \
-    })
+    dcc_sugar_option_integer_range( \
+        DCC_REQUIRED_INT((name_), (description_)), (min_), (max_) \
+    )
 #define DCC_OPTIONAL_INT_RANGE(name_, description_, min_, max_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_INTEGER, \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 0U, \
-        .has_required = 1U, \
-        .min_integer_value = (min_), \
-        .max_integer_value = (max_), \
-        .has_min_integer_value = 1U, \
-        .has_max_integer_value = 1U \
-    })
+    dcc_sugar_option_integer_range( \
+        DCC_OPTIONAL_INT((name_), (description_)), (min_), (max_) \
+    )
 #define DCC_REQUIRED_INTEGER_RANGE(name_, description_, min_, max_) \
     DCC_REQUIRED_INT_RANGE((name_), (description_), (min_), (max_))
 #define DCC_OPTIONAL_INTEGER_RANGE(name_, description_, min_, max_) \
     DCC_OPTIONAL_INT_RANGE((name_), (description_), (min_), (max_))
 #define DCC_REQUIRED_NUMBER_RANGE(name_, description_, min_, max_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_NUMBER, \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 1U, \
-        .has_required = 1U, \
-        .min_number_value = (min_), \
-        .max_number_value = (max_), \
-        .has_min_number_value = 1U, \
-        .has_max_number_value = 1U \
-    })
+    dcc_sugar_option_number_range( \
+        DCC_REQUIRED_NUMBER((name_), (description_)), (min_), (max_) \
+    )
 #define DCC_OPTIONAL_NUMBER_RANGE(name_, description_, min_, max_) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_NUMBER, \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 0U, \
-        .has_required = 1U, \
-        .min_number_value = (min_), \
-        .max_number_value = (max_), \
-        .has_min_number_value = 1U, \
-        .has_max_number_value = 1U \
-    })
+    dcc_sugar_option_number_range( \
+        DCC_OPTIONAL_NUMBER((name_), (description_)), (min_), (max_) \
+    )
 #define DCC_REQUIRED_CHANNEL_TYPES(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_CHANNEL, \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 1U, \
-        .has_required = 1U, \
-        .channel_types = (uint32_t[]){ __VA_ARGS__ }, \
-        .channel_types_count = sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t) \
-    })
+    dcc_sugar_option_channel_types( \
+        DCC_REQUIRED_CHANNEL((name_), (description_)), (uint32_t[]){ __VA_ARGS__ }, \
+        sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t) \
+    )
 #define DCC_OPTIONAL_CHANNEL_TYPES(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_CHANNEL, \
-        .name = (name_), \
-        .description = (description_), \
-        .required = 0U, \
-        .has_required = 1U, \
-        .channel_types = (uint32_t[]){ __VA_ARGS__ }, \
-        .channel_types_count = sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t) \
-    })
+    dcc_sugar_option_channel_types( \
+        DCC_OPTIONAL_CHANNEL((name_), (description_)), (uint32_t[]){ __VA_ARGS__ }, \
+        sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t) \
+    )
 
 #define DCC_SUB_CMD(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_SUB_COMMAND, \
-        .name = (name_), \
-        .description = (description_), \
-        .options = DCC_COMMAND_OPTIONS(__VA_ARGS__), \
-        .options_count = DCC_COMMAND_OPTIONS_COUNT(__VA_ARGS__) \
-    })
+    dcc_sugar_option_nested( \
+        dcc_sugar_command_option_make( \
+            DCC_APPLICATION_COMMAND_OPTION_SUB_COMMAND, (name_), (description_), 0U, 0U \
+        ), \
+        DCC_COMMAND_OPTIONS(__VA_ARGS__), DCC_COMMAND_OPTIONS_COUNT(__VA_ARGS__) \
+    )
 #define DCC_CMD_SUB(name_, description_, ...) \
     DCC_SUB_CMD((name_), (description_), __VA_ARGS__)
 #define DCC_COMMAND_SUB(name_, description_, ...) \
@@ -385,13 +379,12 @@
     DCC_SUB_CMD((name_), (description_), __VA_ARGS__)
 
 #define DCC_SUB_GROUP(name_, description_, ...) \
-    ((dcc_application_command_option_builder_t){ \
-        .type = DCC_APPLICATION_COMMAND_OPTION_SUB_COMMAND_GROUP, \
-        .name = (name_), \
-        .description = (description_), \
-        .options = DCC_COMMAND_OPTIONS(__VA_ARGS__), \
-        .options_count = DCC_COMMAND_OPTIONS_COUNT(__VA_ARGS__) \
-    })
+    dcc_sugar_option_nested( \
+        dcc_sugar_command_option_make( \
+            DCC_APPLICATION_COMMAND_OPTION_SUB_COMMAND_GROUP, (name_), (description_), 0U, 0U \
+        ), \
+        DCC_COMMAND_OPTIONS(__VA_ARGS__), DCC_COMMAND_OPTIONS_COUNT(__VA_ARGS__) \
+    )
 #define DCC_CMD_GROUP(name_, description_, ...) \
     DCC_SUB_GROUP((name_), (description_), __VA_ARGS__)
 #define DCC_COMMAND_GROUP(name_, description_, ...) \

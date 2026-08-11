@@ -2,6 +2,7 @@
 
 #include "internal/command_registry/dcc_command_registry_internal.h"
 #include "internal/dcc_core_internal.h"
+#include "internal/objects/dcc_builder_abi_internal.h"
 
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -1120,13 +1121,18 @@ static dcc_status_t dcc_app_listener_validate_command_schema(
     if (command == NULL) {
         return DCC_OK;
     }
+    dcc_builder_abi_view_t view;
     if (dcc_app_listener_is_component_kind(kind) ||
-        command->has_name != 1U || command->name == NULL || command->name[0] == '\0' ||
-        command->has_description > 1U || command->has_type > 1U ||
-        command->has_default_member_permissions > 1U ||
-        command->default_member_permissions_null > 1U ||
-        command->has_dm_permission > 1U || command->dm_permission > 1U ||
-        command->has_nsfw > 1U || command->nsfw > 1U) {
+        dcc_application_command_builder_abi_validate(command, &view) != DCC_OK ||
+        !dcc_builder_abi_view_has(&view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME) ||
+        command->name == NULL || command->name[0] == '\0' ||
+        (dcc_builder_abi_view_has(
+             &view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DEFAULT_MEMBER_PERMISSIONS
+         ) && command->default_member_permissions_null > 1U) ||
+        (dcc_builder_abi_view_has(&view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DM_PERMISSION) &&
+         command->dm_permission > 1U) ||
+        (dcc_builder_abi_view_has(&view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NSFW) &&
+         command->nsfw > 1U)) {
         return DCC_ERR_INVALID_ARG;
     }
     dcc_application_command_type_t expected_type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
@@ -1140,15 +1146,19 @@ static dcc_status_t dcc_app_listener_validate_command_schema(
         return DCC_ERR_INVALID_ARG;
     }
     if (expected_type == DCC_APPLICATION_COMMAND_CHAT_INPUT) {
-        return command->has_description == 1U && command->description != NULL &&
+        return dcc_builder_abi_view_has(
+                   &view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION
+               ) && command->description != NULL &&
                        command->description[0] != '\0'
             ? DCC_OK
             : DCC_ERR_INVALID_ARG;
     }
-    return command->has_description == 0U && command->description == NULL &&
-                   command->description_localizations_json == NULL &&
-                   command->options_json == NULL && command->options == NULL &&
-                   command->options_count == 0U
+    return !dcc_builder_abi_view_has(
+               &view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION |
+                          DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION_LOCALIZATIONS_JSON |
+                          DCC_APPLICATION_COMMAND_BUILDER_PRESENT_OPTIONS_JSON |
+                          DCC_APPLICATION_COMMAND_BUILDER_PRESENT_OPTIONS
+           )
         ? DCC_OK
         : DCC_ERR_INVALID_ARG;
 }

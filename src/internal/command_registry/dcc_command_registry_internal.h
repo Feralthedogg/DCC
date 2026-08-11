@@ -61,6 +61,7 @@ void dcc_command_registry_add_abort(
     dcc_command_registry_add_transaction_t *transaction
 );
 void dcc_command_registry_test_fail_next_growth(void);
+void dcc_command_registry_test_fail_copy_after(size_t successful_allocations);
 dcc_snowflake_t dcc_command_registry_options_guild_id(
     const dcc_command_registry_options_t *options
 );

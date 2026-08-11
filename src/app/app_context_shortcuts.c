@@ -72,8 +72,10 @@ dcc_status_t dcc_ctx_send_text(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
         .content = content,
-        .has_content = 1U,
     };
     return dcc_ctx_send(ctx, &message, cb, user_data);
 }
@@ -88,8 +90,10 @@ dcc_status_t dcc_ctx_send_text_with_id(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
         .content = content,
-        .has_content = 1U,
     };
     return dcc_ctx_send_with_id(ctx, &message, cb, user_data);
 }
@@ -105,8 +109,10 @@ dcc_status_t dcc_ctx_send_text_with_thread(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
         .content = content,
-        .has_content = 1U,
     };
     return dcc_ctx_send_with_thread_name(ctx, &message, thread_name, cb, user_data);
 }

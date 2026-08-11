@@ -1,4 +1,5 @@
 #include "internal/command_registry/dcc_command_registry_internal.h"
+#include "internal/objects/dcc_builder_abi_internal.h"
 
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -41,11 +42,10 @@ dcc_status_t dcc_command_registry_add_prepare(
         return DCC_ERR_INVALID_ARG;
     }
     memset(transaction, 0, sizeof(*transaction));
-    if (registry == NULL ||
-        command == NULL ||
-        command->has_name != 1U ||
-        command->name == NULL ||
-        command->name[0] == '\0') {
+    dcc_builder_abi_view_t view;
+    if (registry == NULL || command == NULL ||
+        dcc_application_command_builder_abi_validate(command, &view) != DCC_OK ||
+        dcc_application_command_builder_validate_create(command) != DCC_OK) {
         return DCC_ERR_INVALID_ARG;
     }
 

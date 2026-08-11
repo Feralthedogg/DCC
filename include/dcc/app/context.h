@@ -336,6 +336,11 @@ DCC_API const dcc_role_t *dcc_ctx_option_role(const dcc_ctx_t *ctx, const char *
 DCC_API const dcc_channel_t *dcc_ctx_option_channel(const dcc_ctx_t *ctx, const char *name);
 DCC_API const dcc_message_t *dcc_ctx_option_message(const dcc_ctx_t *ctx, const char *name);
 DCC_API const dcc_attachment_t *dcc_ctx_option_attachment(const dcc_ctx_t *ctx, const char *name);
+/*
+ * out_choices is a caller-owned array whose out_capacity slots have each been
+ * initialized with DCC_AUTOCOMPLETE_CHOICE_INIT or
+ * dcc_autocomplete_choice_init(). All slots must declare the same stride.
+ */
 DCC_API dcc_status_t dcc_ctx_autocomplete_filter_choices(
     const dcc_ctx_t *ctx,
     const dcc_autocomplete_choice_t *choices,

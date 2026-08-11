@@ -1,4 +1,6 @@
 /* Included by <dcc/sugar.h>. */
+#include <dcc/sugar/embeds.h>
+
 #define DCC_ARRAY_LEN(array_) (sizeof(array_) / sizeof((array_)[0]))
 #define DCC_SUGAR_ARRAY(type_, ...) ((type_[]){ __VA_ARGS__ })
 #define DCC_SUGAR_ARRAY_LEN(type_, ...) (sizeof((type_[]){ __VA_ARGS__ }) / sizeof(type_))
@@ -284,25 +286,17 @@
         .user_data = (user_data_) \
     })
 
-#define DCC_EMBED_EMPTY() ((dcc_embed_builder_t){0})
+#define DCC_EMBED_EMPTY() ((dcc_embed_builder_t)DCC_EMBED_BUILDER_INIT)
 #define DCC_EMBED(title_, description_) \
-    ((dcc_embed_builder_t){ \
-        .title = (title_), \
-        .description = (description_) \
-    })
+    dcc_sugar_embed_make( \
+        (title_), (description_), 0U, 0U, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0U \
+    )
 #define DCC_EMBED_COLOR(title_, description_, color_) \
-    ((dcc_embed_builder_t){ \
-        .title = (title_), \
-        .description = (description_), \
-        .color = (color_), \
-        .has_color = 1U \
-    })
+    dcc_sugar_embed_make( \
+        (title_), (description_), (color_), 1U, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0U \
+    )
 #define DCC_EMBED_URL(title_, description_, url_) \
-    ((dcc_embed_builder_t){ \
-        .title = (title_), \
-        .description = (description_), \
-        .url = (url_) \
-    })
+    dcc_sugar_embed_with_url_make((title_), (description_), (url_))
 #define DCC_EMBED_FIELD(name_, value_) \
     ((dcc_embed_field_t){ \
         .name = (name_), \
@@ -328,119 +322,159 @@
         .icon_url = (icon_url_) \
     })
 #define DCC_EMBED_WITH_FIELDS_ARRAY(title_, description_, fields_, field_count_) \
-    ((dcc_embed_builder_t){ \
-        .title = (title_), \
-        .description = (description_), \
-        .fields = (fields_), \
-        .field_count = (field_count_) \
-    })
+    dcc_sugar_embed_make( \
+        (title_), (description_), 0U, 0U, NULL, NULL, NULL, NULL, NULL, NULL, NULL, \
+        (fields_), (field_count_) \
+    )
 #define DCC_EMBED_WITH_FIELDS(title_, description_, ...) \
     ((dcc_embed_builder_t){ \
+        .size = sizeof(dcc_embed_builder_t), \
+        .version = DCC_EMBED_BUILDER_VERSION, \
+        .present = DCC_EMBED_BUILDER_PRESENT_TITLE | DCC_EMBED_BUILDER_PRESENT_DESCRIPTION | \
+            DCC_EMBED_BUILDER_PRESENT_FIELDS, \
         .title = (title_), \
         .description = (description_), \
         .fields = DCC_SUGAR_ARRAY(dcc_embed_field_t, __VA_ARGS__), \
         .field_count = DCC_SUGAR_ARRAY_LEN(dcc_embed_field_t, __VA_ARGS__) \
     })
 
-#define DCC_MESSAGE_EMPTY() ((dcc_message_builder_t){0})
+#define DCC_MESSAGE_EMPTY() ((dcc_message_builder_t)DCC_MESSAGE_BUILDER_INIT)
+#ifndef DCC_MESSAGE_TEXT
 #define DCC_MESSAGE_TEXT(content_) \
     ((dcc_message_builder_t){ \
-        .content = (content_), \
-        .has_content = 1U \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT, \
+        .content = (content_) \
     })
+#endif
 #define DCC_MESSAGE_TTS(content_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_TTS, \
         .content = (content_), \
-        .tts = 1U, \
-        .has_content = 1U, \
-        .has_tts = 1U \
+        .tts = 1U \
     })
 #define DCC_MESSAGE_EPHEMERAL(content_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .content = (content_), \
-        .flags = DCC_MESSAGE_FLAG_EPHEMERAL, \
-        .has_content = 1U, \
-        .has_flags = 1U \
+        .flags = DCC_MESSAGE_FLAG_EPHEMERAL \
     })
 #define DCC_MESSAGE_SUPPRESS_EMBEDS(content_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .content = (content_), \
-        .flags = DCC_MESSAGE_FLAG_SUPPRESS_EMBEDS, \
-        .has_content = 1U, \
-        .has_flags = 1U \
+        .flags = DCC_MESSAGE_FLAG_SUPPRESS_EMBEDS \
     })
 #define DCC_MESSAGE_EMBEDS_ARRAY(embeds_, embed_count_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS, \
         .embeds = (embeds_), \
         .embeds_count = (embed_count_) \
     })
 #define DCC_MESSAGE_EMBEDS(...) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS, \
         .embeds = DCC_SUGAR_ARRAY(dcc_embed_builder_t, __VA_ARGS__), \
         .embeds_count = DCC_SUGAR_ARRAY_LEN(dcc_embed_builder_t, __VA_ARGS__) \
     })
 #define DCC_MESSAGE_TEXT_EMBEDS_ARRAY(content_, embeds_, embed_count_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_EMBEDS, \
         .content = (content_), \
         .embeds = (embeds_), \
-        .embeds_count = (embed_count_), \
-        .has_content = 1U \
+        .embeds_count = (embed_count_) \
     })
 #define DCC_MESSAGE_TEXT_EMBEDS(content_, ...) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_EMBEDS, \
         .content = (content_), \
         .embeds = DCC_SUGAR_ARRAY(dcc_embed_builder_t, __VA_ARGS__), \
-        .embeds_count = DCC_SUGAR_ARRAY_LEN(dcc_embed_builder_t, __VA_ARGS__), \
-        .has_content = 1U \
+        .embeds_count = DCC_SUGAR_ARRAY_LEN(dcc_embed_builder_t, __VA_ARGS__) \
     })
 #define DCC_MESSAGE_COMPONENTS_ARRAY(components_, component_count_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS, \
         .components = (components_), \
         .components_count = (component_count_) \
     })
 #define DCC_MESSAGE_COMPONENTS(...) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS, \
         .components = DCC_SUGAR_ARRAY(dcc_component_builder_t, __VA_ARGS__), \
         .components_count = DCC_SUGAR_ARRAY_LEN(dcc_component_builder_t, __VA_ARGS__) \
     })
 #define DCC_MESSAGE_COMPONENTS_JSON(components_json_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_JSON, \
         .components_json = (components_json_) \
     })
 #define DCC_MESSAGE_COMPONENTS_V2_ARRAY(components_, component_count_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2 | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .components_v2 = (components_), \
         .components_v2_count = (component_count_), \
-        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2, \
-        .has_flags = 1U \
+        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 \
     })
 #define DCC_MESSAGE_COMPONENTS_V2(...) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2 | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .components_v2 = DCC_SUGAR_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
         .components_v2_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
-        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2, \
-        .has_flags = 1U \
+        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 \
     })
 #define DCC_MESSAGE_COMPONENTS_V2_FLAGS(flags_, ...) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2 | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .components_v2 = DCC_SUGAR_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
         .components_v2_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
-        .flags = ((flags_) | DCC_MESSAGE_FLAG_IS_COMPONENTS_V2), \
-        .has_flags = 1U \
+        .flags = ((flags_) | DCC_MESSAGE_FLAG_IS_COMPONENTS_V2) \
     })
 #define DCC_MESSAGE_EPHEMERAL_COMPONENTS_V2(...) \
     DCC_MESSAGE_COMPONENTS_V2_FLAGS(DCC_MESSAGE_FLAG_EPHEMERAL, __VA_ARGS__)
 #define DCC_MESSAGE_COMPONENTS_V2_JSON(components_json_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON | \
+            DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .components_v2_json = (components_json_), \
-        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2, \
-        .has_flags = 1U \
+        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 \
     })
 #define DCC_MESSAGE_COMPONENTS_V2_JSON_FLAGS(flags_, components_json_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON | \
+            DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .components_v2_json = (components_json_), \
-        .flags = ((flags_) | DCC_MESSAGE_FLAG_IS_COMPONENTS_V2), \
-        .has_flags = 1U \
+        .flags = ((flags_) | DCC_MESSAGE_FLAG_IS_COMPONENTS_V2) \
     })
 #define DCC_MESSAGE_EPHEMERAL_COMPONENTS_V2_JSON(components_json_) \
     DCC_MESSAGE_COMPONENTS_V2_JSON_FLAGS(DCC_MESSAGE_FLAG_EPHEMERAL, (components_json_))

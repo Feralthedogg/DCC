@@ -73,10 +73,12 @@
 
 #define DCC_SUGAR_PRESET_MESSAGE_COMPONENTS_V2(...) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2 | DCC_MESSAGE_BUILDER_PRESENT_FLAGS, \
         .components_v2 = DCC_SUGAR_PRESET_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
         .components_v2_count = DCC_SUGAR_PRESET_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
-        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2, \
-        .has_flags = 1U \
+        .flags = DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 \
     })
 
 #define DCC_CONFIRM_ROW_LABELS(confirm_label_, confirm_id_, cancel_label_, cancel_id_) \
@@ -95,13 +97,15 @@
 
 #define DCC_CONFIRM_MESSAGE_LABELS(content_, confirm_label_, confirm_id_, cancel_label_, cancel_id_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS, \
         .content = (content_), \
         .components = DCC_SUGAR_PRESET_ARRAY( \
             dcc_component_builder_t, \
             DCC_CONFIRM_ROW_LABELS((confirm_label_), (confirm_id_), (cancel_label_), (cancel_id_)) \
         ), \
-        .components_count = 1U, \
-        .has_content = 1U \
+        .components_count = 1U \
     })
 
 #define DCC_CONFIRM_MESSAGE(content_, confirm_id_, cancel_id_) \
@@ -109,6 +113,9 @@
 
 #define DCC_CONFIRM_EMBED_MESSAGE_LABELS(embed_, confirm_label_, confirm_id_, cancel_label_, cancel_id_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS | DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS, \
         .embeds = DCC_SUGAR_PRESET_ARRAY(dcc_embed_builder_t, (embed_)), \
         .embeds_count = 1U, \
         .components = DCC_SUGAR_PRESET_ARRAY( \
@@ -162,13 +169,15 @@
 
 #define DCC_PAGINATOR_MESSAGE_LABELS(content_, prev_label_, prev_id_, next_label_, next_id_, at_start_, at_end_) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS, \
         .content = (content_), \
         .components = DCC_SUGAR_PRESET_ARRAY( \
             dcc_component_builder_t, \
             DCC_PAGINATOR_ROW_LABELS((prev_label_), (prev_id_), (next_label_), (next_id_), (at_start_), (at_end_)) \
         ), \
-        .components_count = 1U, \
-        .has_content = 1U \
+        .components_count = 1U \
     })
 
 #define DCC_PAGINATOR_MESSAGE(content_, prev_id_, next_id_, at_start_, at_end_) \
@@ -184,6 +193,9 @@
     at_end_ \
 ) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS | DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS, \
         .embeds = DCC_SUGAR_PRESET_ARRAY(dcc_embed_builder_t, (embed_)), \
         .embeds_count = 1U, \
         .components = DCC_SUGAR_PRESET_ARRAY( \
@@ -273,6 +285,9 @@
     enabled_ \
 ) \
     ((dcc_message_builder_t){ \
+        .size = sizeof(dcc_message_builder_t), \
+        .version = DCC_MESSAGE_BUILDER_VERSION, \
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS, \
         .content = (content_), \
         .components = DCC_SUGAR_PRESET_ARRAY( \
             dcc_component_builder_t, \
@@ -288,8 +303,7 @@
                 (enabled_) \
             ) \
         ), \
-        .components_count = 1U, \
-        .has_content = 1U \
+        .components_count = 1U \
     })
 
 #define DCC_SETTINGS_PANEL_MESSAGE(content_, edit_id_, enable_id_, disable_id_, reset_id_, enabled_) \

@@ -226,26 +226,40 @@ static int command_registry_builder_lifetime_smoke(void) {
     uint32_t channel_types[] = { DCC_CHANNEL_TEXT };
     dcc_autocomplete_choice_t choices[] = {
         {
+            .size = sizeof(dcc_autocomplete_choice_t),
+            .version = DCC_AUTOCOMPLETE_CHOICE_VERSION,
+            .present = DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME |
+                DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE,
             .name = choice_name,
             .value_string = choice_value,
-            .value_type = DCC_AUTOCOMPLETE_CHOICE_STRING,
-            .has_name = 1U,
-            .has_value = 1U,
+            .value_type = DCC_AUTOCOMPLETE_CHOICE_STRING
         },
     };
     dcc_application_command_option_builder_t subcommand_options[] = {
         {
+            .size = sizeof(dcc_application_command_option_builder_t),
+            .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION,
+            .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHOICES |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED,
             .name = option_name,
             .description = option_description,
             .choices = choices,
             .choices_count = sizeof(choices) / sizeof(choices[0]),
             .type = DCC_APPLICATION_COMMAND_OPTION_STRING,
-            .required = 1U,
-            .has_required = 1U,
+            .required = 1U
         },
     };
     dcc_application_command_option_builder_t options[] = {
         {
+            .size = sizeof(dcc_application_command_option_builder_t),
+            .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION,
+            .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_OPTIONS |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE,
             .name = subcommand_name,
             .description = subcommand_description,
             .options = subcommand_options,
@@ -253,6 +267,12 @@ static int command_registry_builder_lifetime_smoke(void) {
             .type = DCC_APPLICATION_COMMAND_OPTION_SUB_COMMAND,
         },
         {
+            .size = sizeof(dcc_application_command_option_builder_t),
+            .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION,
+            .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHANNEL_TYPES |
+                DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE,
             .name = channel_option_name,
             .description = channel_option_description,
             .channel_types = channel_types,
@@ -261,14 +281,17 @@ static int command_registry_builder_lifetime_smoke(void) {
         },
     };
     dcc_application_command_builder_t command = {
+        .size = sizeof(dcc_application_command_builder_t),
+        .version = DCC_APPLICATION_COMMAND_BUILDER_VERSION,
+        .present = DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME |
+            DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION |
+            DCC_APPLICATION_COMMAND_BUILDER_PRESENT_OPTIONS |
+            DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE,
         .name = command_name,
         .description = command_description,
         .options = options,
         .options_count = sizeof(options) / sizeof(options[0]),
-        .type = DCC_APPLICATION_COMMAND_CHAT_INPUT,
-        .has_name = 1U,
-        .has_description = 1U,
-        .has_type = 1U,
+        .type = DCC_APPLICATION_COMMAND_CHAT_INPUT
     };
 
     dcc_command_registry_t registry;

@@ -1021,11 +1021,11 @@ static int run_sugar_message_smoke(void) {
     dcc_embed_builder_t embed =
         DCC_EMBED_WITH_FIELDS("Status", "Gateway online", DCC_EMBED_FIELD_INLINE("Shard", "0"));
     embed.footer = DCC_EMBED_FOOTER("DCC", NULL);
-    embed.has_footer = 1U;
+    embed.present |= DCC_EMBED_BUILDER_PRESENT_FOOTER;
     embed.image = DCC_EMBED_IMAGE("attachment://status.png");
-    embed.has_image = 1U;
+    embed.present |= DCC_EMBED_BUILDER_PRESENT_IMAGE;
     embed.author = DCC_EMBED_AUTHOR("runtime", NULL, NULL);
-    embed.has_author = 1U;
+    embed.present |= DCC_EMBED_BUILDER_PRESENT_AUTHOR;
     dcc_message_builder_t message = DCC_MESSAGE_TEXT_EMBEDS("ready", embed);
 
     char *json = NULL;

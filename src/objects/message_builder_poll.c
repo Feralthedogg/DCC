@@ -1,5 +1,6 @@
 #include "internal/objects/dcc_message_json_members_internal.h"
 #include "internal/objects/dcc_message_poll_internal.h"
+#include "internal/objects/dcc_builder_abi_internal.h"
 
 #include <stdlib.h>
 
@@ -12,6 +13,8 @@ dcc_status_t dcc_message_poll_builder_build_json(const dcc_poll_builder_t *poll,
     if (status != DCC_OK) {
         return status;
     }
+    dcc_builder_abi_view_t view;
+    status = dcc_poll_builder_abi_validate(poll, &view);
 
     dcc_message_json_buffer_t buffer = {0};
     status = dcc_message_json_append_cstr(&buffer, "{");
@@ -47,7 +50,9 @@ dcc_status_t dcc_message_poll_builder_build_json(const dcc_poll_builder_t *poll,
         status = dcc_message_json_append_cstr(&buffer, "]");
     }
     if (status == DCC_OK) {
-        uint32_t duration = poll->has_duration ? poll->duration_hours : 24U;
+        uint32_t duration = dcc_builder_abi_view_has(
+            &view, DCC_POLL_BUILDER_PRESENT_DURATION_HOURS
+        ) ? poll->duration_hours : 24U;
         status = dcc_message_json_append_u64_member(&buffer, &first, "duration", duration);
     }
     if (status == DCC_OK) {
@@ -55,11 +60,14 @@ dcc_status_t dcc_message_poll_builder_build_json(const dcc_poll_builder_t *poll,
             &buffer,
             &first,
             "allow_multiselect",
-            poll->has_allow_multiselect ? poll->allow_multiselect : 0U
+            dcc_builder_abi_view_has(&view, DCC_POLL_BUILDER_PRESENT_ALLOW_MULTISELECT)
+                ? poll->allow_multiselect : 0U
         );
     }
     if (status == DCC_OK) {
-        dcc_poll_layout_type_t layout = poll->has_layout_type ? poll->layout_type : DCC_POLL_LAYOUT_DEFAULT;
+        dcc_poll_layout_type_t layout = dcc_builder_abi_view_has(
+            &view, DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE
+        ) ? poll->layout_type : DCC_POLL_LAYOUT_DEFAULT;
         status = dcc_message_json_append_u64_member(&buffer, &first, "layout_type", (uint64_t)layout);
     }
     if (status == DCC_OK) {

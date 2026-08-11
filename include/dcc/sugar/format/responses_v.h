@@ -20,10 +20,11 @@ static inline dcc_status_t dcc_sugar_ctx_replyfv(
     }
 
     dcc_message_builder_t message = {
+        .size = sizeof(dcc_message_builder_t),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
         .content = content,
-        .flags = flags,
-        .has_content = 1U,
-        .has_flags = (uint8_t)(flags != 0U ? 1U : 0U)
+        .flags = flags
     };
     status = dcc_ctx_reply(ctx, &message, NULL, NULL);
     dcc_sugar_format_free(content);
@@ -47,10 +48,11 @@ static inline dcc_status_t dcc_sugar_ctx_followupfv(
     }
 
     dcc_message_builder_t message = {
+        .size = sizeof(dcc_message_builder_t),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
         .content = content,
-        .flags = flags,
-        .has_content = 1U,
-        .has_flags = (uint8_t)(flags != 0U ? 1U : 0U)
+        .flags = flags
     };
     status = dcc_ctx_followup(ctx, &message, NULL, NULL);
     dcc_sugar_format_free(content);
@@ -74,10 +76,11 @@ static inline dcc_status_t dcc_sugar_ctx_sendfv(
     }
 
     dcc_message_builder_t message = {
+        .size = sizeof(dcc_message_builder_t),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
         .content = content,
-        .flags = flags,
-        .has_content = 1U,
-        .has_flags = (uint8_t)(flags != 0U ? 1U : 0U)
+        .flags = flags
     };
     status = dcc_ctx_send(ctx, &message, NULL, NULL);
     dcc_sugar_format_free(content);
@@ -100,8 +103,10 @@ static inline dcc_status_t dcc_sugar_ctx_updatefv(
     }
 
     dcc_message_builder_t message = {
-        .content = content,
-        .has_content = 1U
+        .size = sizeof(dcc_message_builder_t),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
+        .content = content
     };
     status = dcc_ctx_update_message(ctx, &message, NULL, NULL);
     dcc_sugar_format_free(content);
@@ -124,8 +129,10 @@ static inline dcc_status_t dcc_sugar_ctx_editfv(
     }
 
     dcc_message_builder_t message = {
-        .content = content,
-        .has_content = 1U
+        .size = sizeof(dcc_message_builder_t),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
+        .content = content
     };
     status = dcc_ctx_edit_original(ctx, &message, NULL, NULL);
     dcc_sugar_format_free(content);
@@ -232,10 +239,11 @@ static inline dcc_status_t dcc_sugar_app_sendfv(
     }
 
     dcc_message_builder_t message = {
+        .size = sizeof(dcc_message_builder_t),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
         .content = content,
-        .flags = flags,
-        .has_content = 1U,
-        .has_flags = (uint8_t)(flags != 0U ? 1U : 0U)
+        .flags = flags
     };
     status = dcc_app_send(app, channel_id, &message, NULL, NULL);
     dcc_sugar_format_free(content);
@@ -260,8 +268,10 @@ static inline dcc_status_t dcc_sugar_app_editfv(
     }
 
     dcc_message_builder_t message = {
-        .content = content,
-        .has_content = 1U
+        .size = sizeof(dcc_message_builder_t),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
+        .content = content
     };
     status = dcc_app_edit_message(app, channel_id, message_id, &message, NULL, NULL);
     dcc_sugar_format_free(content);

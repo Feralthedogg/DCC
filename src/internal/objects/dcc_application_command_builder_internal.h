@@ -79,6 +79,9 @@ dcc_status_t dcc_application_command_builder_append_json(
     const dcc_application_command_builder_t *builder,
     dcc_application_command_json_buffer_t *buffer
 );
+dcc_status_t dcc_application_command_builder_validate_create(
+    const dcc_application_command_builder_t *builder
+);
 
 #ifdef __cplusplus
 }

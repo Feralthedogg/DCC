@@ -10,12 +10,10 @@
 #include <dcc/sugar/mentions.h>
 
 #define DCC_STATUS_EMBED(title_, description_, color_) \
-    ((dcc_embed_builder_t){ \
-        .title = (title_), \
-        .description = (description_), \
-        .color = (color_), \
-        .has_color = 1U \
-    })
+    dcc_sugar_embed_make( \
+        (title_), (description_), (color_), 1U, NULL, NULL, NULL, NULL, NULL, NULL, NULL, \
+        NULL, 0U \
+    )
 
 #define DCC_SUCCESS_EMBED(title_, description_) \
     DCC_STATUS_EMBED((title_), (description_), DCC_COLOR_SUCCESS)
@@ -29,14 +27,30 @@
 #define DCC_INFO_EMBED(title_, description_) \
     DCC_STATUS_EMBED((title_), (description_), DCC_COLOR_INFO)
 
+static inline dcc_message_builder_t dcc_sugar_status_message(
+    const dcc_embed_builder_t *embed,
+    const dcc_allowed_mentions_builder_t *allowed_mentions,
+    uint64_t flags
+) {
+    dcc_message_builder_t message = DCC_MESSAGE_BUILDER_INIT;
+    message.present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS |
+        DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS;
+    message.embeds = embed;
+    message.embeds_count = 1U;
+    message.allowed_mentions = allowed_mentions;
+    message.flags = flags;
+    if (flags != 0U) {
+        message.present |= DCC_MESSAGE_BUILDER_PRESENT_FLAGS;
+    }
+    return message;
+}
+
 #define DCC_MESSAGE_STATUS_FLAGS(title_, description_, color_, flags_) \
-    ((dcc_message_builder_t){ \
-        .embeds = (dcc_embed_builder_t[]){ DCC_STATUS_EMBED((title_), (description_), (color_)) }, \
-        .embeds_count = 1U, \
-        .allowed_mentions = &((dcc_allowed_mentions_builder_t[]){ DCC_ALLOWED_MENTIONS_NONE() })[0], \
-        .flags = (flags_), \
-        .has_flags = ((flags_) != 0U ? 1U : 0U) \
-    })
+    dcc_sugar_status_message( \
+        &((dcc_embed_builder_t[]){ DCC_STATUS_EMBED((title_), (description_), (color_)) })[0], \
+        &((dcc_allowed_mentions_builder_t[]){ DCC_ALLOWED_MENTIONS_NONE() })[0], \
+        (flags_) \
+    )
 
 #define DCC_MESSAGE_STATUS(title_, description_, color_) \
     DCC_MESSAGE_STATUS_FLAGS((title_), (description_), (color_), 0U)

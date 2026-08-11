@@ -1,4 +1,5 @@
 #include "internal/app/dcc_app_internal.h"
+#include "internal/objects/dcc_builder_abi_internal.h"
 
 #include <limits.h>
 #include <stdlib.h>
@@ -84,8 +85,10 @@ static uint8_t dcc_app_modal_flow_has_core(const dcc_app_modal_flow_t *flow) {
 }
 
 static dcc_status_t dcc_app_modal_flow_validate(const dcc_app_modal_flow_t *flow) {
+    dcc_builder_abi_view_t modal_view;
     if (!dcc_app_modal_flow_has_core(flow) ||
-        !flow->modal.has_custom_id ||
+        dcc_modal_builder_abi_validate(&flow->modal, &modal_view) != DCC_OK ||
+        !dcc_builder_abi_view_has(&modal_view, DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID) ||
         flow->modal.custom_id == NULL ||
         flow->modal.custom_id[0] == '\0' ||
         flow->route.custom_id == NULL ||
@@ -305,9 +308,16 @@ dcc_status_t dcc_app_slash_typed(
     dcc_app_t *app,
     const dcc_app_typed_slash_command_t *command
 ) {
+    dcc_builder_abi_view_t command_view;
     if (app == NULL || command == NULL ||
         !dcc_app_typed_slash_has_field(command, offsetof(dcc_app_typed_slash_command_t, handler), sizeof(command->handler)) ||
         command->command == NULL ||
+        dcc_application_command_builder_abi_validate(
+            command->command, &command_view
+        ) != DCC_OK ||
+        !dcc_builder_abi_view_has(
+            &command_view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME
+        ) ||
         command->command->name == NULL ||
         command->command->name[0] == '\0' ||
         command->args_size == 0U ||
@@ -397,20 +407,26 @@ dcc_status_t dcc_app_subcommand_typed(
     }
 
     const char *command_name = subcommand->command_name;
-    if ((command_name == NULL || command_name[0] == '\0') &&
-        subcommand->command != NULL) {
-        command_name = subcommand->command->name;
+    dcc_builder_abi_view_t command_view;
+    if (subcommand->command != NULL) {
+        if (dcc_application_command_builder_abi_validate(
+                subcommand->command, &command_view
+            ) != DCC_OK ||
+            !dcc_builder_abi_view_has(
+                &command_view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME
+            ) ||
+            subcommand->command->name == NULL ||
+            subcommand->command->name[0] == '\0') {
+            return DCC_ERR_INVALID_ARG;
+        }
+        if (command_name == NULL || command_name[0] == '\0') {
+            command_name = subcommand->command->name;
+        } else if (strcmp(subcommand->command->name, command_name) != 0) {
+            return DCC_ERR_INVALID_ARG;
+        }
     }
     if (command_name == NULL || command_name[0] == '\0') {
         return DCC_ERR_INVALID_ARG;
-    }
-    if (subcommand->command != NULL) {
-        if (!subcommand->command->has_name ||
-            subcommand->command->name == NULL ||
-            subcommand->command->name[0] == '\0' ||
-            strcmp(subcommand->command->name, command_name) != 0) {
-            return DCC_ERR_INVALID_ARG;
-        }
     }
 
     char route_key[256];
@@ -508,20 +524,26 @@ dcc_status_t dcc_app_autocomplete_typed(
     }
 
     const char *command_name = autocomplete->command_name;
-    if ((command_name == NULL || command_name[0] == '\0') &&
-        autocomplete->command != NULL) {
-        command_name = autocomplete->command->name;
+    dcc_builder_abi_view_t command_view;
+    if (autocomplete->command != NULL) {
+        if (dcc_application_command_builder_abi_validate(
+                autocomplete->command, &command_view
+            ) != DCC_OK ||
+            !dcc_builder_abi_view_has(
+                &command_view, DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME
+            ) ||
+            autocomplete->command->name == NULL ||
+            autocomplete->command->name[0] == '\0') {
+            return DCC_ERR_INVALID_ARG;
+        }
+        if (command_name == NULL || command_name[0] == '\0') {
+            command_name = autocomplete->command->name;
+        } else if (strcmp(autocomplete->command->name, command_name) != 0) {
+            return DCC_ERR_INVALID_ARG;
+        }
     }
     if (command_name == NULL || command_name[0] == '\0') {
         return DCC_ERR_INVALID_ARG;
-    }
-    if (autocomplete->command != NULL) {
-        if (!autocomplete->command->has_name ||
-            autocomplete->command->name == NULL ||
-            autocomplete->command->name[0] == '\0' ||
-            strcmp(autocomplete->command->name, command_name) != 0) {
-            return DCC_ERR_INVALID_ARG;
-        }
     }
 
     char route_key[256];

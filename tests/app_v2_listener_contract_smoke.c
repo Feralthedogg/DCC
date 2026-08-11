@@ -428,9 +428,9 @@ static int test_transactional_retry(dcc_app_t *app, contract_state_t *state) {
     dcc_application_command_builder_init(&invalid_command);
     invalid_command.name = "schema-rollback";
     invalid_command.type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
-    invalid_command.has_type = 1U;
+    invalid_command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE;
     invalid_command.description = "schema rollback";
-    invalid_command.has_description = 1U;
+    invalid_command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION;
     dcc_listener_t invalid_listener = slash_listener("ignored", state);
     invalid_listener.target.route.command = &invalid_command;
     invalid_listener.target.route.name = NULL;
@@ -452,7 +452,7 @@ static int test_transactional_retry(dcc_app_t *app, contract_state_t *state) {
         fprintf(stderr, "failed command-schema registration leaked App state\n");
         return 1;
     }
-    invalid_command.has_name = 1U;
+    invalid_command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME;
     dcc_listener_id_t schema_retry_id = 0U;
     if (dcc_app_listen(app, &invalid_listener, &schema_retry_id) != DCC_OK ||
         schema_retry_id == 0U ||
@@ -803,11 +803,11 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     dcc_application_command_builder_t direct_growth_command;
     dcc_application_command_builder_init(&direct_growth_command);
     direct_growth_command.name = "direct-registry-growth";
-    direct_growth_command.has_name = 1U;
+    direct_growth_command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME;
     direct_growth_command.description = "direct registry growth";
-    direct_growth_command.has_description = 1U;
+    direct_growth_command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION;
     direct_growth_command.type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
-    direct_growth_command.has_type = 1U;
+    direct_growth_command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE;
     exact_app_snapshot_t direct_before = exact_app_snapshot(app);
     dcc_command_registry_test_fail_next_growth();
     dcc_status_t direct_status = dcc_command_registry_add_builder(
@@ -845,11 +845,11 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     dcc_application_command_builder_t growth_command;
     dcc_application_command_builder_init(&growth_command);
     growth_command.name = "listener-registry-growth";
-    growth_command.has_name = 1U;
+    growth_command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME;
     growth_command.description = "registry growth oom";
-    growth_command.has_description = 1U;
+    growth_command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION;
     growth_command.type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
-    growth_command.has_type = 1U;
+    growth_command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE;
     dcc_listener_t growth_listener = slash_listener("ignored", state);
     growth_listener.target.route.name = NULL;
     growth_listener.target.route.description = NULL;
@@ -873,15 +873,17 @@ static int test_exact_failure_transactions(contract_state_t *state) {
         return 1;
     }
 
-    dcc_application_command_option_builder_t placeholder_option = {0};
+    dcc_application_command_option_builder_t placeholder_option;
+    dcc_application_command_option_builder_init(&placeholder_option);
     dcc_application_command_builder_t oversized;
     dcc_application_command_builder_init(&oversized);
     oversized.name = "schema-copy-overflow";
-    oversized.has_name = 1U;
+    oversized.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME;
     oversized.description = "registry growth oom";
-    oversized.has_description = 1U;
+    oversized.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION;
     oversized.type = DCC_APPLICATION_COMMAND_CHAT_INPUT;
-    oversized.has_type = 1U;
+    oversized.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE |
+        DCC_APPLICATION_COMMAND_BUILDER_PRESENT_OPTIONS;
     oversized.options = &placeholder_option;
     oversized.options_count = SIZE_MAX / sizeof(placeholder_option) + 1U;
     dcc_listener_t registry_listener = slash_listener("ignored", state);
@@ -1036,11 +1038,15 @@ static dcc_application_command_builder_t command_builder(
     dcc_application_command_builder_t command;
     dcc_application_command_builder_init(&command);
     command.name = name;
-    command.has_name = 1U;
+    command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_NAME;
     command.type = (uint32_t)type;
-    command.has_type = has_type;
+    if (has_type != 0U) {
+        command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE;
+    }
     command.description = description;
-    command.has_description = description != NULL;
+    if (description != NULL) {
+        command.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_DESCRIPTION;
+    }
     return command;
 }
 
@@ -1137,6 +1143,7 @@ static int test_command_type_matrix(contract_state_t *state) {
         NULL
     );
     menu_options.options_json = "[]";
+    menu_options.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_OPTIONS_JSON;
     dcc_application_command_builder_t missing_description = command_builder(
         "reject-missing-description",
         DCC_APPLICATION_COMMAND_CHAT_INPUT,
@@ -1150,11 +1157,12 @@ static int test_command_type_matrix(contract_state_t *state) {
         ""
     );
     dcc_application_command_builder_t non_boolean_type = slash;
-    non_boolean_type.name = "reject-has-type";
-    non_boolean_type.has_type = 2U;
+    non_boolean_type.name = "reject-unknown-bit";
+    non_boolean_type.present |= UINT64_C(1) << 63U;
     dcc_application_command_builder_t non_boolean_name = slash;
-    non_boolean_name.name = "reject-has-name";
-    non_boolean_name.has_name = 2U;
+    non_boolean_name.name = "reject-uncovered-bit";
+    non_boolean_name.size = offsetof(dcc_application_command_builder_t, type);
+    non_boolean_name.present |= DCC_APPLICATION_COMMAND_BUILDER_PRESENT_TYPE;
     dcc_application_command_builder_t component_schema = slash;
     component_schema.name = "reject-component-schema";
     if (expect_command_schema_case(app, DCC_LISTENER_SLASH, &slash_user, state, 0U, "slash/user") ||

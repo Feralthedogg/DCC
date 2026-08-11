@@ -14,11 +14,13 @@
     })
 #define DCC_SLASH_PARAM_OPTION_BOOL(type_, field_, name_, description_, required_, fallback_) \
     ((dcc_application_command_option_builder_t){ \
+        .size = sizeof(dcc_application_command_option_builder_t), \
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, \
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED, \
         .type = DCC_APPLICATION_COMMAND_OPTION_BOOLEAN, \
         .name = (name_), \
         .description = (description_), \
-        .required = (required_) ? 1U : 0U, \
-        .has_required = 1U \
+        .required = (required_) ? 1U : 0U \
     })
 #define DCC_SLASH_PARAM_BIND_BOOLEAN(type_, field_, name_, description_, required_, fallback_) \
     DCC_SLASH_PARAM_BIND_BOOL(type_, field_, (name_), (description_), (required_), (fallback_))
@@ -43,11 +45,13 @@
     })
 #define DCC_SLASH_PARAM_OPTION_OBJECT(option_type_, name_, description_, required_) \
     ((dcc_application_command_option_builder_t){ \
+        .size = sizeof(dcc_application_command_option_builder_t), \
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, \
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED, \
         .type = (option_type_), \
         .name = (name_), \
         .description = (description_), \
-        .required = (required_) ? 1U : 0U, \
-        .has_required = 1U \
+        .required = (required_) ? 1U : 0U \
     })
 #define DCC_SLASH_PARAM_BIND_USER(type_, field_, name_, description_, required_) \
     DCC_SLASH_PARAM_BIND_OBJECT(type_, field_, (name_), (description_), (required_), DCC_CTX_OPTION_BIND_USER)
@@ -85,11 +89,13 @@
     DCC_SLASH_PARAM_BIND_CHANNEL(type_, field_, (name_), (description_), (required_))
 #define DCC_SLASH_PARAM_OPTION_CHANNEL_TYPES(type_, field_, name_, description_, required_, ...) \
     ((dcc_application_command_option_builder_t){ \
+        .size = sizeof(dcc_application_command_option_builder_t), \
+        .version = DCC_APPLICATION_COMMAND_OPTION_BUILDER_VERSION, \
+        .present = DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_NAME | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_DESCRIPTION | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_TYPE | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_REQUIRED | DCC_APPLICATION_COMMAND_OPTION_BUILDER_PRESENT_CHANNEL_TYPES, \
         .type = DCC_APPLICATION_COMMAND_OPTION_CHANNEL, \
         .name = (name_), \
         .description = (description_), \
         .required = (required_) ? 1U : 0U, \
-        .has_required = 1U, \
         .channel_types = (uint32_t[]){ __VA_ARGS__ }, \
         .channel_types_count = sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t) \
     })

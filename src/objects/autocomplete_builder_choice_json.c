@@ -1,4 +1,5 @@
 #include "internal/objects/dcc_autocomplete_builder_internal.h"
+#include "internal/objects/dcc_builder_abi_internal.h"
 
 #include <math.h>
 
@@ -14,10 +15,11 @@ static int dcc_autocomplete_choice_type_valid(dcc_autocomplete_choice_value_type
 }
 
 static dcc_status_t dcc_autocomplete_choice_validate(const dcc_autocomplete_choice_t *choice) {
-    if (choice == NULL ||
-        !choice->has_name ||
+    dcc_builder_abi_view_t view;
+    if (dcc_autocomplete_choice_abi_validate(choice, &view) != DCC_OK ||
+        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME) ||
         choice->name == NULL ||
-        !choice->has_value ||
+        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE) ||
         !dcc_autocomplete_choice_type_valid(choice->value_type)) {
         return DCC_ERR_INVALID_ARG;
     }
@@ -38,6 +40,8 @@ dcc_status_t dcc_autocomplete_append_choice(
     if (status != DCC_OK) {
         return status;
     }
+    dcc_builder_abi_view_t view;
+    status = dcc_autocomplete_choice_abi_validate(choice, &view);
 
     status = dcc_autocomplete_json_append_cstr(buffer, "{");
     if (status != DCC_OK) {
@@ -46,7 +50,9 @@ dcc_status_t dcc_autocomplete_append_choice(
 
     int first = 1;
     status = dcc_autocomplete_json_append_string_member(buffer, &first, "name", choice->name);
-    if (status == DCC_OK && choice->name_localizations_json != NULL) {
+    if (status == DCC_OK && dcc_builder_abi_view_has(
+            &view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS_JSON
+        )) {
         status = dcc_autocomplete_json_append_raw_member(
             buffer,
             &first,

@@ -16,70 +16,76 @@
 #ifndef DCC_MODAL_BUILDER_ARRAY
 #define DCC_MODAL_BUILDER_ARRAY(custom_id_, title_, components_, component_count_) \
     ((dcc_modal_builder_t){ \
+        .size = sizeof(dcc_modal_builder_t), \
+        .version = DCC_MODAL_BUILDER_VERSION, \
+        .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS, \
         .custom_id = (custom_id_), \
         .title = (title_), \
         .components = (components_), \
-        .components_count = (component_count_), \
-        .has_custom_id = 1U, \
-        .has_title = 1U \
+        .components_count = (component_count_) \
     })
 #endif
 
 #ifndef DCC_MODAL_BUILDER
 #define DCC_MODAL_BUILDER(custom_id_, title_, ...) \
     ((dcc_modal_builder_t){ \
+        .size = sizeof(dcc_modal_builder_t), \
+        .version = DCC_MODAL_BUILDER_VERSION, \
+        .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS, \
         .custom_id = (custom_id_), \
         .title = (title_), \
         .components = DCC_SUGAR_ARRAY(dcc_component_builder_t, __VA_ARGS__), \
-        .components_count = DCC_SUGAR_ARRAY_LEN(dcc_component_builder_t, __VA_ARGS__), \
-        .has_custom_id = 1U, \
-        .has_title = 1U \
+        .components_count = DCC_SUGAR_ARRAY_LEN(dcc_component_builder_t, __VA_ARGS__) \
     })
 #endif
 
 #ifndef DCC_MODAL_V2_BUILDER_ARRAY
 #define DCC_MODAL_V2_BUILDER_ARRAY(custom_id_, title_, components_, component_count_) \
     ((dcc_modal_builder_t){ \
+        .size = sizeof(dcc_modal_builder_t), \
+        .version = DCC_MODAL_BUILDER_VERSION, \
+        .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2, \
         .custom_id = (custom_id_), \
         .title = (title_), \
         .components_v2 = (components_), \
-        .components_v2_count = (component_count_), \
-        .has_custom_id = 1U, \
-        .has_title = 1U \
+        .components_v2_count = (component_count_) \
     })
 #endif
 
 #ifndef DCC_MODAL_V2_BUILDER
 #define DCC_MODAL_V2_BUILDER(custom_id_, title_, ...) \
     ((dcc_modal_builder_t){ \
+        .size = sizeof(dcc_modal_builder_t), \
+        .version = DCC_MODAL_BUILDER_VERSION, \
+        .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2, \
         .custom_id = (custom_id_), \
         .title = (title_), \
         .components_v2 = DCC_SUGAR_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
-        .components_v2_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__), \
-        .has_custom_id = 1U, \
-        .has_title = 1U \
+        .components_v2_count = DCC_SUGAR_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__) \
     })
 #endif
 
 #ifndef DCC_MODAL_COMPONENTS_JSON
 #define DCC_MODAL_COMPONENTS_JSON(custom_id_, title_, components_json_) \
     ((dcc_modal_builder_t){ \
+        .size = sizeof(dcc_modal_builder_t), \
+        .version = DCC_MODAL_BUILDER_VERSION, \
+        .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS_JSON, \
         .custom_id = (custom_id_), \
         .title = (title_), \
-        .components_json = (components_json_), \
-        .has_custom_id = 1U, \
-        .has_title = 1U \
+        .components_json = (components_json_) \
     })
 #endif
 
 #ifndef DCC_MODAL_COMPONENTS_V2_JSON
 #define DCC_MODAL_COMPONENTS_V2_JSON(custom_id_, title_, components_json_) \
     ((dcc_modal_builder_t){ \
+        .size = sizeof(dcc_modal_builder_t), \
+        .version = DCC_MODAL_BUILDER_VERSION, \
+        .present = DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID | DCC_MODAL_BUILDER_PRESENT_TITLE | DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2_JSON, \
         .custom_id = (custom_id_), \
         .title = (title_), \
-        .components_v2_json = (components_json_), \
-        .has_custom_id = 1U, \
-        .has_title = 1U \
+        .components_v2_json = (components_json_) \
     })
 #endif
 

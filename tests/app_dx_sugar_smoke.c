@@ -1337,19 +1337,19 @@ static int check_message_action_sugar(void) {
             DCC_ACTION_ROW(DCC_BUTTON_SECONDARY_BUILDER("Dismiss", "dx.private.dismiss"))
         );
 
-    return text_actions.has_content == 1U &&
+    return (text_actions.present & DCC_MESSAGE_BUILDER_PRESENT_CONTENT) != 0U &&
         strcmp(text_actions.content, "Refresh status") == 0 &&
         text_actions.components_count == 1U &&
         text_actions.components[0].children_count == 1U &&
         text_actions.components[0].children[0].style == DCC_BUTTON_PRIMARY &&
-        text_actions.has_flags == 0U &&
-        embed_actions.has_content == 1U &&
+        (text_actions.present & DCC_MESSAGE_BUILDER_PRESENT_FLAGS) == 0U &&
+        (embed_actions.present & DCC_MESSAGE_BUILDER_PRESENT_CONTENT) != 0U &&
         embed_actions.embeds_count == 1U &&
-        embed_actions.embeds[0].has_color == 1U &&
+        (embed_actions.embeds[0].present & DCC_EMBED_BUILDER_PRESENT_COLOR) != 0U &&
         embed_actions.embeds[0].color == 0x57F287U &&
         embed_actions.components_count == 1U &&
         embed_actions.components[0].children_count == 2U &&
-        private_actions.has_flags == 1U &&
+        (private_actions.present & DCC_MESSAGE_BUILDER_PRESENT_FLAGS) != 0U &&
         (private_actions.flags & DCC_MESSAGE_FLAG_EPHEMERAL) != 0U &&
         private_actions.embeds_count == 1U &&
         private_actions.components_count == 1U;

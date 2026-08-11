@@ -56,6 +56,7 @@ should stay on the Sugar path until they have a concrete reason to move lower.
 | Control app lifecycle and registration explicitly | `<dcc/app.h>` | [App Runtime](guides/app-runtime.md) |
 | Embed DCC or implement custom runtime behavior | Focused Core, REST, and Gateway headers | [Choose An API Layer](concepts/api-layers.md) |
 | Keep event or REST data after a callback | Clone APIs or REST futures | [Ownership And Async](concepts/ownership-and-async.md) |
+| Construct builders directly | Initialize `size/version/present` records | [Versioned Public Builders](concepts/versioned-builders.md) |
 | Diagnose a build, command, intent, or connection problem | Error status plus the owning object's `*_last_error()` | [Troubleshooting](troubleshooting.md) |
 
 !!! tip "Recommended application path"

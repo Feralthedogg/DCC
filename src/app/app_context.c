@@ -1,5 +1,6 @@
 #include "internal/app/dcc_app_internal.h"
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"
+#include "internal/objects/dcc_builder_abi_internal.h"
 
 #include <dcc/cache.h>
 #include <dcc/rest/interactions/responses.h>
@@ -533,8 +534,10 @@ dcc_status_t dcc_ctx_reply_text(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
         .content = content,
-        .has_content = 1U,
     };
     return dcc_ctx_flow_reply_auto(ctx, &message, cb, user_data);
 }
@@ -549,10 +552,11 @@ dcc_status_t dcc_ctx_reply_ephemeral_text(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
         .content = content,
         .flags = DCC_MESSAGE_FLAG_EPHEMERAL,
-        .has_content = 1U,
-        .has_flags = 1U,
     };
     return dcc_ctx_flow_reply_auto(ctx, &message, cb, user_data);
 }
@@ -570,18 +574,25 @@ dcc_status_t dcc_ctx_reply_embed(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_embed_builder_t embed = {
+        .size = sizeof(embed),
+        .version = DCC_EMBED_BUILDER_VERSION,
+        .present = (title != NULL ? DCC_EMBED_BUILDER_PRESENT_TITLE : 0U) |
+            (description != NULL ? DCC_EMBED_BUILDER_PRESENT_DESCRIPTION : 0U) |
+            DCC_EMBED_BUILDER_PRESENT_COLOR,
         .title = title,
         .description = description,
         .color = color,
-        .has_color = 1U,
     };
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS,
         .embeds = &embed,
         .embeds_count = 1U,
     };
     if (ephemeral) {
         message.flags = DCC_MESSAGE_FLAG_EPHEMERAL;
-        message.has_flags = 1U;
+        message.present |= DCC_MESSAGE_BUILDER_PRESENT_FLAGS;
     }
     return dcc_ctx_flow_reply_auto(ctx, &message, cb, user_data);
 }
@@ -693,11 +704,13 @@ dcc_status_t dcc_ctx_show_modal_flow(
     dcc_rest_cb cb,
     void *user_data
 ) {
+    dcc_builder_abi_view_t modal_view;
     if (flow == NULL ||
         flow->size < offsetof(dcc_app_modal_flow_t, route) ||
         sizeof(flow->route) > flow->size - offsetof(dcc_app_modal_flow_t, route) ||
-        !flow->modal.has_custom_id ||
-        !flow->modal.has_title ||
+        dcc_modal_builder_abi_validate(&flow->modal, &modal_view) != DCC_OK ||
+        !dcc_builder_abi_view_has(&modal_view, DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID) ||
+        !dcc_builder_abi_view_has(&modal_view, DCC_MODAL_BUILDER_PRESENT_TITLE) ||
         flow->modal.custom_id == NULL ||
         flow->modal.custom_id[0] == '\0' ||
         flow->modal.title == NULL ||
@@ -760,6 +773,9 @@ dcc_status_t dcc_ctx_reply_autocomplete_matching(
     }
 
     dcc_autocomplete_choice_t filtered[DCC_AUTOCOMPLETE_MAX_CHOICES];
+    for (size_t i = 0U; i < max_choices; ++i) {
+        dcc_autocomplete_choice_init(&filtered[i], NULL);
+    }
     size_t filtered_count = 0U;
     dcc_status_t status = dcc_ctx_autocomplete_filter_choices(
         ctx,
@@ -773,10 +789,14 @@ dcc_status_t dcc_ctx_reply_autocomplete_matching(
         return status;
     }
 
-    dcc_autocomplete_builder_t autocomplete = {
-        .choices = filtered,
-        .choices_count = filtered_count,
-    };
+    dcc_autocomplete_builder_t autocomplete;
+    dcc_autocomplete_builder_init(&autocomplete);
+    status = dcc_autocomplete_builder_set_choices(
+        &autocomplete, filtered, filtered_count
+    );
+    if (status != DCC_OK) {
+        return status;
+    }
     return dcc_ctx_reply_autocomplete(ctx, &autocomplete, cb, user_data);
 }
 
@@ -849,8 +869,10 @@ dcc_status_t dcc_ctx_followup_text(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
         .content = content,
-        .has_content = 1U,
     };
     return dcc_ctx_followup(ctx, &message, cb, user_data);
 }
@@ -865,10 +887,11 @@ dcc_status_t dcc_ctx_followup_ephemeral_text(
         return DCC_ERR_INVALID_ARG;
     }
     dcc_message_builder_t message = {
+        .size = sizeof(message),
+        .version = DCC_MESSAGE_BUILDER_VERSION,
+        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
         .content = content,
         .flags = DCC_MESSAGE_FLAG_EPHEMERAL,
-        .has_content = 1U,
-        .has_flags = 1U,
     };
     return dcc_ctx_followup(ctx, &message, cb, user_data);
 }
@@ -1021,7 +1044,11 @@ static uint8_t dcc_ctx_autocomplete_choice_matches_query(
     const dcc_autocomplete_choice_t *choice,
     const char *query
 ) {
-    if (choice == NULL) {
+    dcc_builder_abi_view_t view;
+    if (dcc_autocomplete_choice_abi_validate(choice, &view) != DCC_OK ||
+        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME) ||
+        choice->name == NULL ||
+        !dcc_builder_abi_view_has(&view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE)) {
         return 0U;
     }
     if (query == NULL || query[0] == '\0') {
@@ -1033,6 +1060,40 @@ static uint8_t dcc_ctx_autocomplete_choice_matches_query(
     return choice->value_type == DCC_AUTOCOMPLETE_CHOICE_STRING
         ? dcc_ctx_autocomplete_starts_with_ignore_case(choice->value_string, query)
         : 0U;
+}
+
+static dcc_status_t dcc_ctx_autocomplete_choice_validate_filter_input(
+    const dcc_autocomplete_choice_t *choice,
+    dcc_builder_abi_view_t *view
+) {
+    if (dcc_autocomplete_choice_abi_validate(choice, view) != DCC_OK ||
+        !dcc_builder_abi_view_has(view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME) ||
+        choice->name == NULL ||
+        !dcc_builder_abi_view_has(view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE) ||
+        choice->value_type < DCC_AUTOCOMPLETE_CHOICE_STRING ||
+        choice->value_type > DCC_AUTOCOMPLETE_CHOICE_NUMBER ||
+        (choice->value_type == DCC_AUTOCOMPLETE_CHOICE_STRING &&
+         choice->value_string == NULL)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    return DCC_OK;
+}
+
+static int dcc_ctx_autocomplete_choice_output_covers(
+    const dcc_builder_abi_view_t *out_view,
+    const dcc_builder_abi_view_t *source_view
+) {
+    return out_view->present == 0U &&
+        DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, out_view, name) &&
+        DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, out_view, value_string) &&
+        DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, out_view, value_integer) &&
+        DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, out_view, value_number) &&
+        DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, out_view, value_type) &&
+        (!dcc_builder_abi_view_has(
+             source_view, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS_JSON
+         ) || DCC_BUILDER_ABI_FIELD(
+             dcc_autocomplete_choice_t, out_view, name_localizations_json
+         ));
 }
 
 dcc_status_t dcc_ctx_autocomplete_filter_choices(
@@ -1051,13 +1112,96 @@ dcc_status_t dcc_ctx_autocomplete_filter_choices(
     }
 
     *out_count = 0U;
+    if (out_capacity == 0U) {
+        return DCC_OK;
+    }
     const char *query = dcc_ctx_focused_option_string(ctx, "");
-    for (size_t i = 0U; i < choices_count && *out_count < out_capacity; ++i) {
-        if (dcc_ctx_autocomplete_choice_matches_query(&choices[i], query)) {
-            out_choices[*out_count] = choices[i];
-            (*out_count)++;
+    size_t stride = 0U;
+    dcc_status_t status = dcc_autocomplete_choice_array_begin(
+        choices, choices_count, &stride
+    );
+    if (status != DCC_OK) {
+        return status;
+    }
+    size_t out_stride = 0U;
+    status = dcc_autocomplete_choice_array_begin(
+        out_choices, out_capacity, &out_stride
+    );
+    if (status != DCC_OK) {
+        return status;
+    }
+    for (size_t i = 0U; i < out_capacity; ++i) {
+        dcc_autocomplete_choice_t *out = (dcc_autocomplete_choice_t *)
+            dcc_builder_abi_array_at(out_choices, out_stride, i);
+        dcc_builder_abi_view_t out_view;
+        if (dcc_autocomplete_choice_abi_validate(out, &out_view) != DCC_OK ||
+            out_view.size != out_stride || out_view.present != 0U ||
+            !DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, &out_view, name) ||
+            !DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, &out_view, value_string) ||
+            !DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, &out_view, value_integer) ||
+            !DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, &out_view, value_number) ||
+            !DCC_BUILDER_ABI_FIELD(dcc_autocomplete_choice_t, &out_view, value_type)) {
+            return DCC_ERR_INVALID_ARG;
         }
     }
+
+    size_t matched = 0U;
+    for (size_t i = 0U; i < choices_count; ++i) {
+        const dcc_autocomplete_choice_t *choice = (const dcc_autocomplete_choice_t *)
+            dcc_builder_abi_array_at(choices, stride, i);
+        dcc_builder_abi_view_t source_view;
+        if (dcc_ctx_autocomplete_choice_validate_filter_input(
+                choice, &source_view
+            ) != DCC_OK || source_view.size != stride) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        if (matched < out_capacity &&
+            dcc_ctx_autocomplete_choice_matches_query(choice, query)) {
+            dcc_autocomplete_choice_t *out = (dcc_autocomplete_choice_t *)
+                dcc_builder_abi_array_at(out_choices, out_stride, matched);
+            dcc_builder_abi_view_t out_view;
+            if (dcc_autocomplete_choice_abi_validate(out, &out_view) != DCC_OK ||
+                out_view.size != out_stride ||
+                !dcc_ctx_autocomplete_choice_output_covers(&out_view, &source_view)) {
+                return DCC_ERR_INVALID_ARG;
+            }
+            ++matched;
+        }
+    }
+
+    matched = 0U;
+    for (size_t i = 0U; i < choices_count && matched < out_capacity; ++i) {
+        const dcc_autocomplete_choice_t *choice = (const dcc_autocomplete_choice_t *)
+            dcc_builder_abi_array_at(choices, stride, i);
+        if (!dcc_ctx_autocomplete_choice_matches_query(choice, query)) {
+            continue;
+        }
+        dcc_builder_abi_view_t source_view;
+        (void)dcc_autocomplete_choice_abi_validate(choice, &source_view);
+        dcc_autocomplete_choice_t *out = (dcc_autocomplete_choice_t *)
+            dcc_builder_abi_array_at(out_choices, out_stride, matched);
+        out->present = source_view.present;
+        out->name = choice->name;
+        if (dcc_builder_abi_view_has(
+                &source_view,
+                DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS_JSON
+            )) {
+            out->name_localizations_json = choice->name_localizations_json;
+        }
+        out->value_string = NULL;
+        out->value_integer = 0;
+        out->value_number = 0.0;
+        out->value_type = choice->value_type;
+        if (choice->value_type == DCC_AUTOCOMPLETE_CHOICE_STRING) {
+            out->value_string = choice->value_string;
+        } else if (choice->value_type == DCC_AUTOCOMPLETE_CHOICE_INTEGER) {
+            out->value_integer = choice->value_integer;
+        } else {
+            out->value_number = choice->value_number;
+        }
+        ++matched;
+    }
+    *out_count = matched;
     return DCC_OK;
 }
 

@@ -68,6 +68,7 @@ static int check_raw_and_typed_mentions_are_rejected(void) {
     dcc_allowed_mentions_builder_t mentions = DCC_ALLOWED_MENTIONS_NONE();
     dcc_message_builder_t message = DCC_MESSAGE_ALLOWED_MENTIONS_JSON("mixed", "{\"parse\":[]}");
     message.allowed_mentions = &mentions;
+    message.present |= DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS;
 
     char *json = NULL;
     dcc_status_t status = dcc_message_builder_build_json(&message, &json);
@@ -78,6 +79,10 @@ static int check_raw_and_typed_mentions_are_rejected(void) {
 static int check_parse_and_explicit_users_are_rejected(void) {
     dcc_snowflake_t user = 444ULL;
     dcc_allowed_mentions_builder_t mentions = {
+        .size = sizeof(dcc_allowed_mentions_builder_t),
+        .version = DCC_ALLOWED_MENTIONS_BUILDER_VERSION,
+        .present = DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_USERS |
+            DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_PARSE_USERS,
         .users = &user,
         .user_count = 1U,
         .parse_users = 1U
