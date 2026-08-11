@@ -212,7 +212,27 @@ if(NOT COMMAND dcc_add_hot_reload_module)
         endif()
 
         add_library(${target} MODULE ${sources})
-        target_link_libraries(${target} PRIVATE dcc::dcc)
+        if(@DCC_BUILD_SHARED@)
+            target_link_libraries(${target} PRIVATE dcc::dcc)
+        elseif(WIN32)
+            if(NOT TARGET dcc::hot_reload_worker)
+                message(FATAL_ERROR
+                    "static Windows hot-reload modules require the installed "
+                    "dcc_hot_reload_worker export; rebuild DCC with DCC_BUILD_TOOLS=ON "
+                    "or DCC_BUILD_SHARED=ON"
+                )
+            endif()
+            target_link_libraries(${target} PRIVATE dcc::hot_reload_worker)
+        else()
+            target_include_directories(${target} PRIVATE
+                "$<TARGET_PROPERTY:dcc::dcc,INTERFACE_INCLUDE_DIRECTORIES>"
+            )
+            if(APPLE)
+                target_link_options(${target} PRIVATE
+                    "LINKER:-undefined,dynamic_lookup"
+                )
+            endif()
+        endif()
         target_compile_features(${target} PRIVATE c_std_11)
         set_target_properties(${target} PROPERTIES PREFIX "")
         if(DCC_HOT_RELOAD_MODULE_OUTPUT_NAME)

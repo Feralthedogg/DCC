@@ -16,8 +16,12 @@ int run_public_rest_message_builder_smoke(void) {
         .intents = DCC_INTENT_GUILDS,
     };
     dcc_status_t st = dcc_client_create(&opts, &client);
+    if (st == DCC_OK) {
+        st = rest_activate_client(client);
+    }
     if (st != DCC_OK) {
-        fprintf(stderr, "dcc_client_create failed: %s\n", dcc_status_string(st));
+        fprintf(stderr, "message builder client setup failed: %s\n", dcc_status_string(st));
+        dcc_client_destroy(client);
         return 1;
     }
 
@@ -224,7 +228,11 @@ int run_public_rest_message_builder_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_create_message_builder(client, 222, &message, rest_cb, &seen);
+    dcc_rest_call_options_t call_options = rest_call_options(&seen);
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    payload.message = &message;
+    st = dcc_rest_create_message(client, 222, &payload, &call_options, NULL);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -253,7 +261,9 @@ int run_public_rest_message_builder_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_edit_message_builder(client, 222, 333, &message, rest_cb, &seen);
+    call_options = rest_call_options(&seen);
+    st = dcc_rest_edit_message(client, 222, 333, &payload, &call_options, NULL);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -291,7 +301,11 @@ int run_public_rest_message_builder_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_create_message_builder_multipart(client, 222, &message, &file, 1, rest_cb, &seen);
+    call_options = rest_call_options(&seen);
+    payload.files = &file;
+    payload.file_count = 1U;
+    st = dcc_rest_create_message(client, 222, &payload, &call_options, NULL);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -316,7 +330,9 @@ int run_public_rest_message_builder_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_edit_message_builder_multipart(client, 222, 333, &message, &file, 1, rest_cb, &seen);
+    call_options = rest_call_options(&seen);
+    st = dcc_rest_edit_message(client, 222, 333, &payload, &call_options, NULL);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||

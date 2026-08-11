@@ -4,6 +4,9 @@
 #include <dcc/rest/messages/create.h>
 #include <dcc/rest/response_helpers.h>
 
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_paths_internal.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -251,12 +254,11 @@ dcc_status_t dcc_app_send(
     if (app == NULL || channel_id == 0U || message == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_message_builder(
-        dcc_app_client(app),
-        channel_id,
-        message,
-        cb,
-        user_data
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_init(&payload, message);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_message,
+        dcc_app_client(app), channel_id, &payload
     );
 }
 
@@ -405,13 +407,16 @@ dcc_status_t dcc_app_send_json(
     if (app == NULL || channel_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_message(
-        dcc_app_client(app),
-        channel_id,
-        json_body,
-        cb,
-        user_data
+    char path[80];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/channels/%llu/messages",
+        (unsigned long long)channel_id
     );
+    return status == DCC_OK
+        ? dcc_rest_request_method(
+            dcc_app_client(app), DCC_REST_POST, path, json_body, cb, user_data
+        )
+        : status;
 }
 
 dcc_status_t dcc_app_managed_message_publish_latest(

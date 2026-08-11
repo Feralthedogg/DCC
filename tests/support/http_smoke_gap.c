@@ -16,19 +16,54 @@ int run_public_rest_gap_smoke(void) {
         .intents = DCC_INTENT_GUILDS,
     };
     dcc_status_t st = dcc_client_create(&opts, &client);
-    if (st != DCC_OK) {
-        fprintf(stderr, "dcc_client_create failed: %s\n", dcc_status_string(st));
-        return 1;
+    if (st == DCC_OK) {
+        st = rest_activate_client(client);
     }
-
-    dcc_message_builder_t message_builder;
-    dcc_message_builder_init(&message_builder);
-    st = dcc_message_builder_set_content(&message_builder, "builder");
     if (st != DCC_OK) {
-        fprintf(stderr, "dcc_message_builder_set_content failed: %s\n", dcc_status_string(st));
+        fprintf(stderr, "REST gap client setup failed: %s\n", dcc_status_string(st));
         dcc_client_destroy(client);
         return 1;
     }
+    dcc_message_builder_t message_builder;
+    dcc_message_builder_t edited_message;
+    dcc_message_builder_t follow_message;
+    dcc_message_builder_t follow_edit_message;
+    dcc_message_builder_init(&message_builder);
+    dcc_message_builder_init(&edited_message);
+    dcc_message_builder_init(&follow_message);
+    dcc_message_builder_init(&follow_edit_message);
+    if (dcc_message_builder_set_content(&message_builder, "builder") != DCC_OK ||
+        dcc_message_builder_set_content(&edited_message, "edited") != DCC_OK ||
+        dcc_message_builder_set_content(&follow_message, "follow") != DCC_OK ||
+        dcc_message_builder_set_content(&follow_edit_message, "follow-edit") != DCC_OK) {
+        fprintf(stderr, "failed to initialize endpoint message payloads\n");
+        dcc_client_destroy(client);
+        return 1;
+    }
+    dcc_rest_message_payload_t builder_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_t edited_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_t follow_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_t follow_edit_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    builder_payload.message = &message_builder;
+    edited_payload.message = &edited_message;
+    follow_payload.message = &follow_message;
+    follow_edit_payload.message = &follow_edit_message;
+    dcc_rest_message_list_query_t messages_before = DCC_REST_MESSAGE_LIST_QUERY_INIT;
+    messages_before.present = DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE |
+        DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT;
+    messages_before.before = 777;
+    messages_before.limit = 2;
+    dcc_rest_message_list_query_t messages_around = DCC_REST_MESSAGE_LIST_QUERY_INIT;
+    messages_around.present = DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND |
+        DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT;
+    messages_around.around = 888;
+    messages_around.limit = 100;
+    dcc_rest_message_list_query_t messages_after = DCC_REST_MESSAGE_LIST_QUERY_INIT;
+    messages_after.present = DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER |
+        DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT;
+    messages_after.after = 666;
+    messages_after.limit = 25;
+
     const dcc_application_command_permission_t command_permissions[] = {
         {
             .id = 555,
@@ -62,6 +97,7 @@ int run_public_rest_gap_smoke(void) {
     http_server_t server;
     pthread_t thread;
     rest_seen_t seen;
+    dcc_rest_call_options_t call_options = rest_call_options(&seen);
 
 #define EXPECT_REST_GAP(label, expected_method, expected_path, expected_body, call_expr) \
     do { \
@@ -74,6 +110,7 @@ int run_public_rest_gap_smoke(void) {
         set_api_base_for_server(&server); \
         memset(&seen, 0, sizeof(seen)); \
         st = (call_expr); \
+        st = rest_await_submission(client, st); \
         (void)pthread_join(thread, NULL); \
         close(server.fd); \
         int body_ok__ = (expected_body) != NULL ? strcmp(server.body, (expected_body)) == 0 : server.body_len == 0; \
@@ -115,30 +152,37 @@ int run_public_rest_gap_smoke(void) {
     EXPECT_REST_GAP(
         "get_channel_messages",
         "GET",
-        "/channels/222/messages?limit=2&before=777",
+        "/channels/222/messages?before=777&limit=2",
         NULL,
-        dcc_rest_get_channel_messages(client, 222, "limit=2&before=777", rest_cb, &seen)
+        dcc_rest_get_channel_messages(client, 222, &messages_before, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "get_channel_messages_page",
         "GET",
-        "/channels/222/messages?after=666&around=888&before=777&limit=100",
+        "/channels/222/messages?around=888&limit=100",
         NULL,
-        dcc_rest_get_channel_messages_page(client, 222, 888, 777, 666, 500, rest_cb, &seen)
+        dcc_rest_get_channel_messages(client, 222, &messages_around, &call_options, NULL)
+    );
+    EXPECT_REST_GAP(
+        "get_channel_messages_after",
+        "GET",
+        "/channels/222/messages?after=666&limit=25",
+        NULL,
+        dcc_rest_get_channel_messages(client, 222, &messages_after, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "edit_message",
         "PATCH",
         "/channels/222/messages/777",
         "{\"content\":\"edited\"}",
-        dcc_rest_edit_message(client, 222, 777, "{\"content\":\"edited\"}", rest_cb, &seen)
+        dcc_rest_edit_message(client, 222, 777, &edited_payload, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "delete_message",
         "DELETE",
         "/channels/222/messages/777",
         NULL,
-        dcc_rest_delete_message(client, 222, 777, rest_cb, &seen)
+        dcc_rest_delete_message(client, 222, 777, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "get_guild",
@@ -363,70 +407,70 @@ int run_public_rest_gap_smoke(void) {
         "GET",
         "/webhooks/123/tok/messages/@original",
         NULL,
-        dcc_rest_interaction_original_response_get(client, 123, "tok", rest_cb, &seen)
+        dcc_rest_interaction_original_response_get(client, 123, "tok", &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "interaction_original_response_edit",
         "PATCH",
         "/webhooks/123/tok/messages/@original",
         "{\"content\":\"edited\"}",
-        dcc_rest_interaction_original_response_edit(client, 123, "tok", "{\"content\":\"edited\"}", rest_cb, &seen)
+        dcc_rest_interaction_original_response_edit(client, 123, "tok", &edited_payload, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "interaction_original_response_edit_builder",
         "PATCH",
         "/webhooks/123/tok/messages/@original",
         "{\"content\":\"builder\"}",
-        dcc_rest_interaction_original_response_edit_builder(client, 123, "tok", &message_builder, rest_cb, &seen)
+        dcc_rest_interaction_original_response_edit(client, 123, "tok", &builder_payload, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "interaction_original_response_delete",
         "DELETE",
         "/webhooks/123/tok/messages/@original",
         NULL,
-        dcc_rest_interaction_original_response_delete(client, 123, "tok", rest_cb, &seen)
+        dcc_rest_interaction_original_response_delete(client, 123, "tok", &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "interaction_followup_create",
         "POST",
         "/webhooks/123/tok",
         "{\"content\":\"follow\"}",
-        dcc_rest_interaction_followup_create(client, 123, "tok", "{\"content\":\"follow\"}", rest_cb, &seen)
+        dcc_rest_interaction_followup_create(client, 123, "tok", &follow_payload, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "interaction_followup_create_builder",
         "POST",
         "/webhooks/123/tok",
         "{\"content\":\"builder\"}",
-        dcc_rest_interaction_followup_create_builder(client, 123, "tok", &message_builder, rest_cb, &seen)
+        dcc_rest_interaction_followup_create(client, 123, "tok", &builder_payload, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "interaction_followup_get",
         "GET",
         "/webhooks/123/tok/messages/777",
         NULL,
-        dcc_rest_interaction_followup_get(client, 123, "tok", 777, rest_cb, &seen)
+        dcc_rest_interaction_followup_get(client, 123, "tok", 777, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "interaction_followup_edit",
         "PATCH",
         "/webhooks/123/tok/messages/777",
         "{\"content\":\"follow-edit\"}",
-        dcc_rest_interaction_followup_edit(client, 123, "tok", 777, "{\"content\":\"follow-edit\"}", rest_cb, &seen)
+        dcc_rest_interaction_followup_edit(client, 123, "tok", 777, &follow_edit_payload, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "interaction_followup_edit_builder",
         "PATCH",
         "/webhooks/123/tok/messages/777",
         "{\"content\":\"builder\"}",
-        dcc_rest_interaction_followup_edit_builder(client, 123, "tok", 777, &message_builder, rest_cb, &seen)
+        dcc_rest_interaction_followup_edit(client, 123, "tok", 777, &builder_payload, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "interaction_followup_delete",
         "DELETE",
         "/webhooks/123/tok/messages/777",
         NULL,
-        dcc_rest_interaction_followup_delete(client, 123, "tok", 777, rest_cb, &seen)
+        dcc_rest_interaction_followup_delete(client, 123, "tok", 777, &call_options, NULL)
     );
 
 #undef EXPECT_REST_GAP

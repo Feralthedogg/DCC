@@ -494,6 +494,21 @@ static int stop_runner_and_client(
         : 1;
 }
 
+static int stop_app_runner_and_destroy(
+    dcc_app_t *app,
+    client_runner_t *runner,
+    pthread_t thread
+) {
+    dcc_client_t *client = dcc_app_client(app);
+    dcc_status_t stop_status = dcc_client_stop(client);
+    int join_status = pthread_join(thread, NULL);
+    dcc_status_t destroy_status = dcc_app_destroy(app);
+    return stop_status == DCC_OK && join_status == 0 &&
+        runner->status == DCC_OK && destroy_status == DCC_OK
+        ? 0
+        : 1;
+}
+
 static int wait_for_atomic_nonzero(atomic_uint *value, uint64_t timeout_ms) {
     uint64_t start = test_now_ms();
     while (atomic_load_explicit(value, memory_order_acquire) == 0U &&
@@ -1503,6 +1518,17 @@ static dcc_status_t dispatch_slash(dcc_app_t *app, const char *name, const char 
     return dcc_event_bus_dispatch(&dcc_app_client(app)->events, dcc_app_client(app), &event);
 }
 
+static dcc_status_t dispatch_slash_and_drain(
+    dcc_app_t *app,
+    const char *name,
+    const char *token
+) {
+    dcc_status_t status = dispatch_slash(app, name, token);
+    return status == DCC_OK
+        ? dcc_rest_async_wait(dcc_app_client(app), 5000U)
+        : status;
+}
+
 static dcc_status_t dispatch_log(dcc_app_t *app) {
     dcc_event_t event;
     memset(&event, 0, sizeof(event));
@@ -1671,6 +1697,11 @@ static int check_app_sink_destroy_wait(void) {
 }
 #endif
 
+#if defined(_WIN32)
+static int check_app_error_policy(void) {
+    return 0;
+}
+#else
 static int check_app_error_policy(void) {
     dcc_app_options_t options;
     dcc_app_options_init(&options);
@@ -1679,6 +1710,15 @@ static int check_app_error_policy(void) {
     dcc_app_t *app = NULL;
     if (dcc_app_create(&options, &app) != DCC_OK) {
         fprintf(stderr, "App error-policy creation failed\n");
+        return 1;
+    }
+    dcc_client_t *client = dcc_app_client(app);
+    client_runner_t runner;
+    pthread_t runner_thread;
+    if (dcc_client_start(client) != DCC_OK ||
+        start_client_runner(client, &runner, &runner_thread) != 0) {
+        (void)dcc_app_destroy(app);
+        fprintf(stderr, "App error-policy runtime start failed\n");
         return 1;
     }
 
@@ -1701,7 +1741,7 @@ static int check_app_error_policy(void) {
         dcc_client_on_error(dcc_app_client(app), app_client_observer, &state) != DCC_OK ||
         dcc_app_use_default_error_responses(app) != DCC_OK) {
         fprintf(stderr, "App observer/default policy registration failed\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
@@ -1739,7 +1779,7 @@ static int check_app_error_policy(void) {
         dcc_app_listen(app, &admitted_local, NULL) != DCC_OK ||
         dcc_app_listen(app, &deferred_local, NULL) != DCC_OK ||
         dcc_app_listen(app, &generic_failure, NULL) != DCC_OK ||
-        dispatch_slash(app, "fails", "secret-token") != DCC_OK ||
+        dispatch_slash_and_drain(app, "fails", "secret-token") != DCC_OK ||
         state.route_calls != 1U || state.seen.count != 1U ||
         state.seen.origin != DCC_ERROR_HANDLER || state.seen.status != DCC_ERR_STATE ||
         strcmp(state.seen.operation, "fails") != 0 ||
@@ -1749,28 +1789,28 @@ static int check_app_error_policy(void) {
         strstr(script.last_body, "invalid state") != NULL ||
         strstr(script.last_body, "\"flags\":64") == NULL) {
         fprintf(stderr, "safe generic App failure policy failed\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
     unsigned previous_errors = state.seen.count;
-    if (dispatch_slash(app, "responded", "second-secret") != DCC_OK ||
+    if (dispatch_slash_and_drain(app, "responded", "second-secret") != DCC_OK ||
         state.route_calls != 2U || state.seen.count != previous_errors + 1U ||
         script.request_count != 2U ||
         strstr(script.last_body, "explicit response") == NULL) {
         fprintf(stderr, "response-started failure emitted a second response\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
     size_t previous_requests = script.request_count;
     script.step_count = script.next_step + 1U;
-    if (dispatch_slash(app, "invalid-initial", "invalid-secret") != DCC_OK ||
+    if (dispatch_slash_and_drain(app, "invalid-initial", "invalid-secret") != DCC_OK ||
         script.request_count != previous_requests + 1U ||
         strstr(script.last_body, "Something went wrong. Please try again.") == NULL ||
         strstr(script.last_body, "invalid-secret") != NULL) {
         fprintf(stderr, "invalid initial reply did not emit one safe fallback\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
@@ -1780,20 +1820,15 @@ static int check_app_error_policy(void) {
     script.steps[script.next_step] = (intercept_step_t){
         .transport_status = DCC_ERR_NETWORK,
     };
-    script.steps[script.next_step + 1U] = (intercept_step_t){
-        .transport_status = DCC_OK,
-        .http_status = 204U,
-        .legacy_error = DCC_OK,
-    };
-    script.step_count = script.next_step + 2U;
-    if (dispatch_slash(app, "failed-admission", "admission-secret") != DCC_OK ||
-        script.request_count != previous_requests + 2U ||
-        state.seen.count != previous_app_errors + 2U ||
+    script.step_count = script.next_step + 1U;
+    if (dispatch_slash_and_drain(app, "failed-admission", "admission-secret") != DCC_OK ||
+        script.request_count != previous_requests + 1U ||
+        state.seen.count != previous_app_errors + 1U ||
         state.client_seen != previous_client_errors + 1U ||
-        strstr(script.last_body, "Something went wrong. Please try again.") == NULL ||
-        strstr(script.last_body, "admission-secret") != NULL) {
-        fprintf(stderr, "failed initial admission did not emit one safe fallback\n");
-        (void)dcc_app_destroy(app);
+        strstr(script.last_body, "initial admission") == NULL ||
+        strstr(script.last_body, "Something went wrong. Please try again.") != NULL) {
+        fprintf(stderr, "terminal initial-response failure violated admission semantics\n");
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
@@ -1804,11 +1839,11 @@ static int check_app_error_policy(void) {
         .legacy_error = DCC_OK,
     };
     script.step_count = script.next_step + 1U;
-    if (dispatch_slash(app, "admitted-local", "admitted-secret") != DCC_OK ||
+    if (dispatch_slash_and_drain(app, "admitted-local", "admitted-secret") != DCC_OK ||
         script.request_count != previous_requests + 1U ||
         strstr(script.last_body, "admitted initial") == NULL) {
         fprintf(stderr, "admitted initial local failure emitted fallback\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
@@ -1819,11 +1854,11 @@ static int check_app_error_policy(void) {
         .legacy_error = DCC_OK,
     };
     script.step_count = script.next_step + 1U;
-    if (dispatch_slash(app, "deferred-local", "deferred-secret") != DCC_OK ||
+    if (dispatch_slash_and_drain(app, "deferred-local", "deferred-secret") != DCC_OK ||
         script.request_count != previous_requests + 1U ||
         strstr(script.last_body, "\"type\":5") == NULL) {
         fprintf(stderr, "admitted defer local failure emitted fallback\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
@@ -1834,7 +1869,7 @@ static int check_app_error_policy(void) {
         .transport_status = DCC_ERR_NETWORK,
     };
     script.step_count = script.next_step + 1U;
-    if (dispatch_slash(app, "generic-failure", "generic-secret") != DCC_OK ||
+    if (dispatch_slash_and_drain(app, "generic-failure", "generic-secret") != DCC_OK ||
         script.request_count != previous_requests + 1U ||
         state.seen.count != previous_app_errors + 2U ||
         state.client_seen != previous_client_errors + 1U ||
@@ -1842,7 +1877,7 @@ static int check_app_error_policy(void) {
         strstr(script.last_body, "generic-secret") != NULL ||
         strstr(script.last_body, "invalid argument") != NULL) {
         fprintf(stderr, "failing generic fallback recursed, duplicated, or leaked data\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
@@ -1862,7 +1897,7 @@ static int check_app_error_policy(void) {
         state.seen.count != previous_errors + 1U ||
         state.seen.origin != DCC_ERROR_REST) {
         fprintf(stderr, "public client observer and private App sink did not coexist\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
@@ -1880,7 +1915,7 @@ static int check_app_error_policy(void) {
         strcmp(state.seen.operation, dcc_event_type_name(DCC_EVENT_LOG)) != 0 ||
         dcc_app_unlisten(app, event_id) != DCC_OK) {
         fprintf(stderr, "real event failure observation failed\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
 
@@ -1895,7 +1930,7 @@ static int check_app_error_policy(void) {
     if (dcc_app_listen(app, &task_listener, &task_id) != DCC_OK ||
         task_id == 0U || app->listener_count == 0U || app->schedule_count == 0U) {
         fprintf(stderr, "real task listener registration failed\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
     dcc_app_listener_entry_t *task_entry = app->listeners[app->listener_count - 1U];
@@ -1908,17 +1943,18 @@ static int check_app_error_policy(void) {
         strcmp(state.seen.operation, "scheduled task") != 0 ||
         dcc_app_unlisten(app, task_id) != DCC_OK) {
         fprintf(stderr, "real task failure observation failed\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
     if (dcc_app_on_error(app, NULL, NULL) != DCC_OK ||
         dcc_client_on_error(dcc_app_client(app), NULL, NULL) != DCC_OK) {
         fprintf(stderr, "observer clear contract failed\n");
-        (void)dcc_app_destroy(app);
+        (void)stop_app_runner_and_destroy(app, &runner, runner_thread);
         return 1;
     }
-    return dcc_app_destroy(app) == DCC_OK ? 0 : 1;
+    return stop_app_runner_and_destroy(app, &runner, runner_thread);
 }
+#endif
 
 int main(void) {
 #if !defined(_WIN32)

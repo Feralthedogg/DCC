@@ -87,9 +87,10 @@ typedef dcc_status_t (*dcc_package_invite_create_fn)(
     );
 typedef dcc_status_t (*dcc_package_webhook_create_fn)(
         dcc_client_t *,
-        const dcc_webhook_params_t *,
-        dcc_rest_cb,
-        void *
+        dcc_snowflake_t,
+        const dcc_rest_webhook_builder_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_channel_positions_fn)(
         dcc_client_t *,

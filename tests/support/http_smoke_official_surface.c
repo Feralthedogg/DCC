@@ -213,11 +213,23 @@ static dcc_status_t call_official_delete_current_user_application_role_connectio
 }
 
 static dcc_status_t call_official_execute_webhook_slack(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_execute_webhook_slack(client, 666, "tok/en", "{\"text\":\"hi\"}", cb, user_data);
+    static const char body[] = "{\"text\":\"hi\"}";
+    dcc_rest_webhook_compat_payload_t payload = DCC_REST_WEBHOOK_COMPAT_PAYLOAD_INIT;
+    dcc_rest_call_options_t options = rest_call_options(user_data);
+    (void)cb;
+    payload.body = body;
+    payload.body_len = sizeof(body) - 1U;
+    return dcc_rest_execute_webhook_slack(client, 666, "tok/en", &payload, &options, NULL);
 }
 
 static dcc_status_t call_official_execute_webhook_github(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_execute_webhook_github(client, 666, "tok/en", "{\"zen\":\"hi\"}", cb, user_data);
+    static const char body[] = "{\"zen\":\"hi\"}";
+    dcc_rest_webhook_compat_payload_t payload = DCC_REST_WEBHOOK_COMPAT_PAYLOAD_INIT;
+    dcc_rest_call_options_t options = rest_call_options(user_data);
+    (void)cb;
+    payload.body = body;
+    payload.body_len = sizeof(body) - 1U;
+    return dcc_rest_execute_webhook_github(client, 666, "tok/en", &payload, &options, NULL);
 }
 
 static dcc_status_t call_official_create_lobby(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
@@ -450,6 +462,7 @@ static int run_official_rest_wrapper_expect(
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
     dcc_status_t st = call(client, rest_cb, &seen);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
 
@@ -994,8 +1007,12 @@ int run_public_rest_official_surface_smoke(void) {
         .intents = DCC_INTENT_GUILDS,
     };
     dcc_status_t st = dcc_client_create(&opts, &client);
+    if (st == DCC_OK) {
+        st = rest_activate_client(client);
+    }
     if (st != DCC_OK) {
-        fprintf(stderr, "official surface client create failed: %s\n", dcc_status_string(st));
+        fprintf(stderr, "official surface client setup failed: %s\n", dcc_status_string(st));
+        dcc_client_destroy(client);
         return 1;
     }
 

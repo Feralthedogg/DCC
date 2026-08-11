@@ -86,18 +86,19 @@ static dcc_status_t build_game_message(
     return DCC_OK;
 }
 
-void rest_response_log_cb(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data) {
+void rest_response_log_cb(dcc_client_t *client, const dcc_rest_result_t *response, void *user_data) {
     (void)client;
     const char *label = user_data != NULL ? (const char *)user_data : "request";
     if (response == NULL) {
         fprintf(stderr, "%s failed: no response\n", label);
         return;
     }
-    if (response->error == DCC_OK && response->status >= 200 && response->status < 300) {
+    dcc_status_t status = dcc_rest_result_status(response);
+    if (status == DCC_OK) {
         return;
     }
 
-    fprintf(stderr, "%s failed: HTTP %u, %s", label, (unsigned)response->status, dcc_status_string(response->error));
+    fprintf(stderr, "%s failed: HTTP %u, %s", label, (unsigned)response->http_status, dcc_status_string(status));
     if (response->body != NULL && response->body_len > 0) {
         size_t body_len = response->body_len > 512 ? 512 : response->body_len;
         fprintf(stderr, ": %.*s%s", (int)body_len, response->body, response->body_len > body_len ? "..." : "");
@@ -112,13 +113,25 @@ dcc_status_t respond_text(
     const char *content
 ) {
     dcc_message_builder_t message = DCC_MESSAGE_TEXT(content);
-    return dcc_rest_interaction_response_create_from_interaction_message_builder(
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_status_t status = type == DCC_INTERACTION_RESPONSE_UPDATE_MESSAGE
+        ? dcc_rest_interaction_response_set_update_message(&response, &message)
+        : type == DCC_INTERACTION_RESPONSE_CHANNEL_MESSAGE_WITH_SOURCE
+            ? dcc_rest_interaction_response_set_message(&response, &message)
+            : DCC_ERR_INVALID_ARG;
+    if (status != DCC_OK) {
+        return status;
+    }
+    dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+    options.callback = rest_response_log_cb;
+    options.user_data = "interaction response";
+    return dcc_rest_interaction_response_create(
         client,
-        interaction,
-        type,
-        &message,
-        rest_response_log_cb,
-        "interaction response"
+        interaction->id,
+        interaction->token,
+        &response,
+        &options,
+        NULL
     );
 }
 
@@ -151,13 +164,25 @@ dcc_status_t respond_game(
         return respond_text(client, interaction, type, "Could not build the game board.");
     }
 
-    return dcc_rest_interaction_response_create_from_interaction_message_builder(
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    st = type == DCC_INTERACTION_RESPONSE_UPDATE_MESSAGE
+        ? dcc_rest_interaction_response_set_update_message(&response, &message)
+        : type == DCC_INTERACTION_RESPONSE_CHANNEL_MESSAGE_WITH_SOURCE
+            ? dcc_rest_interaction_response_set_message(&response, &message)
+            : DCC_ERR_INVALID_ARG;
+    if (st != DCC_OK) {
+        return st;
+    }
+    dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+    options.callback = rest_response_log_cb;
+    options.user_data = "interaction response";
+    return dcc_rest_interaction_response_create(
         client,
-        interaction,
-        type,
-        &message,
-        rest_response_log_cb,
-        "interaction response"
+        interaction->id,
+        interaction->token,
+        &response,
+        &options,
+        NULL
     );
 }
 

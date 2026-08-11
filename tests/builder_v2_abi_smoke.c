@@ -7,6 +7,7 @@
 #include <dcc/interaction_flow.h>
 #include <dcc/message.h>
 #include <dcc/modal.h>
+#include <dcc/rest.h>
 
 #include "internal/app/dcc_app_internal.h"
 #include "internal/command_registry/dcc_command_registry_internal.h"
@@ -21,6 +22,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
 #define CHECK(condition, message) \
     do { \
         if (!(condition)) { \
@@ -34,6 +41,62 @@ typedef struct builder_v2_prefix {
     uint32_t version;
     uint64_t present;
 } builder_v2_prefix_t;
+
+typedef struct builder_v2_runner {
+    dcc_client_t *client;
+    dcc_status_t status;
+#if defined(_WIN32)
+    HANDLE thread;
+#else
+    pthread_t thread;
+#endif
+} builder_v2_runner_t;
+
+#if defined(_WIN32)
+static DWORD WINAPI builder_v2_runner_main(LPVOID user_data) {
+#else
+static void *builder_v2_runner_main(void *user_data) {
+#endif
+    builder_v2_runner_t *runner = (builder_v2_runner_t *)user_data;
+    runner->status = dcc_client_wait(runner->client);
+#if defined(_WIN32)
+    return 0U;
+#else
+    return NULL;
+#endif
+}
+
+static int builder_v2_runner_start(
+    dcc_client_t *client,
+    builder_v2_runner_t *runner
+) {
+    memset(runner, 0, sizeof(*runner));
+    runner->client = client;
+    runner->status = DCC_ERR_STATE;
+    if (dcc_client_start(client) != DCC_OK) {
+        return 0;
+    }
+#if defined(_WIN32)
+    runner->thread = CreateThread(
+        NULL, 0U, builder_v2_runner_main, runner, 0U, NULL
+    );
+    return runner->thread != NULL;
+#else
+    return pthread_create(
+        &runner->thread, NULL, builder_v2_runner_main, runner
+    ) == 0;
+#endif
+}
+
+static void builder_v2_runner_stop(builder_v2_runner_t *runner) {
+    (void)dcc_client_stop(runner->client);
+#if defined(_WIN32)
+    (void)WaitForSingleObject(runner->thread, INFINITE);
+    (void)CloseHandle(runner->thread);
+#else
+    (void)pthread_join(runner->thread, NULL);
+#endif
+}
 
 #define CHECK_PREFIX(type_, first_field_) \
     _Static_assert(offsetof(type_, size) == offsetof(builder_v2_prefix_t, size), \
@@ -1481,6 +1544,9 @@ static int check_autocomplete_filter_stride_and_atomicity(void) {
     dcc_client_t *client = NULL;
     CHECK(dcc_client_create(&options, &client) == DCC_OK,
           "create client for autocomplete matching regression");
+    builder_v2_runner_t runner;
+    CHECK(builder_v2_runner_start(client, &runner),
+          "start client for autocomplete matching regression");
     matching_intercept_state_t intercepted;
     memset(&intercepted, 0, sizeof(intercepted));
     dcc_rest_set_interceptor(client, matching_intercept, &intercepted);
@@ -1495,9 +1561,14 @@ static int check_autocomplete_filter_stride_and_atomicity(void) {
     response_ctx.client = client;
     response_ctx.interaction = &response_interaction;
     dcc_flow_init(&response_ctx.flow, client, &response_interaction);
-    CHECK(dcc_ctx_reply_autocomplete_matching(
-              &response_ctx, input0, 2U, DCC_AUTOCOMPLETE_MAX_CHOICES, NULL, NULL
-          ) == DCC_OK &&
+    dcc_status_t reply_status = dcc_ctx_reply_autocomplete_matching(
+        &response_ctx, input0, 2U, DCC_AUTOCOMPLETE_MAX_CHOICES, NULL, NULL
+    );
+    dcc_status_t drain_status = reply_status == DCC_OK
+        ? dcc_rest_async_wait(client, 5000U)
+        : DCC_ERR_STATE;
+    builder_v2_runner_stop(&runner);
+    CHECK(reply_status == DCC_OK && drain_status == DCC_OK &&
               intercepted.calls == 1U &&
               json_has(intercepted.body, "\"name\":\"Alpha\"") &&
               json_has(intercepted.body, "\"name\":\"Alpine\""),

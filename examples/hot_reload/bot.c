@@ -177,15 +177,21 @@ static void on_test_command(dcc_client_t *client, const dcc_event_t *event, void
     );
 
     dcc_message_builder_t message = DCC_MESSAGE_EMBEDS(embed);
-
-    dcc_status_t status = dcc_rest_interaction_response_create_from_interaction_message_builder(
-        client,
-        interaction,
-        DCC_INTERACTION_RESPONSE_CHANNEL_MESSAGE_WITH_SOURCE,
-        &message,
-        NULL,
-        NULL
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_status_t status = dcc_rest_interaction_response_set_message(
+        &response,
+        &message
     );
+    if (status == DCC_OK) {
+        status = dcc_rest_interaction_response_create(
+            client,
+            interaction->id,
+            interaction->token,
+            &response,
+            NULL,
+            NULL
+        );
+    }
     if (status != DCC_OK) {
         fprintf(stderr, "Failed to respond to /%s: %s\n", HOT_RELOAD_TEST_COMMAND_NAME, dcc_status_string(status));
     }

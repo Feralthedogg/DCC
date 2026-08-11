@@ -30,11 +30,9 @@ SUPPLEMENTAL_OFFICIAL_FLOW_ROUTES = [
 OFFICIAL_ROUTE_OVERRIDES = {
     ("GET", "/channels/{}/messages/{}/reactions/{}"): {
         "dcc_rest_get_message_reactions",
-        "dcc_rest_get_message_reactions_page",
     },
     ("PUT", "/channels/{}/messages/{}/reactions/{}/@me"): {
         "dcc_rest_add_message_reaction",
-        "dcc_rest_add_message_reaction_params",
     },
     ("DELETE", "/channels/{}/messages/{}/reactions/{}/@me"): {
         "dcc_rest_delete_own_message_reaction",
@@ -60,20 +58,16 @@ OFFICIAL_ROUTE_OVERRIDES = {
     },
     ("POST", "/webhooks/{}/{}"): {
         "dcc_rest_execute_webhook",
-        "dcc_rest_execute_webhook_options",
         "dcc_rest_interaction_followup_create",
-        "dcc_rest_interaction_followup_create_builder",
-        "dcc_rest_interaction_followup_create_multipart",
     },
     ("GET", "/webhooks/{}/{}"): {
-        "dcc_rest_get_webhook_with_token",
+        "dcc_rest_get_webhook",
     },
     ("PATCH", "/webhooks/{}/{}"): {
-        "dcc_rest_modify_webhook_with_token",
-        "dcc_rest_modify_webhook_with_token_params",
+        "dcc_rest_modify_webhook",
     },
     ("DELETE", "/webhooks/{}/{}"): {
-        "dcc_rest_delete_webhook_with_token",
+        "dcc_rest_delete_webhook",
     },
     ("POST", "/webhooks/{}/{}/slack"): {
         "dcc_rest_execute_webhook_slack",
@@ -86,8 +80,6 @@ OFFICIAL_ROUTE_OVERRIDES = {
     },
     ("PATCH", "/webhooks/{}/{}/messages/@original"): {
         "dcc_rest_interaction_original_response_edit",
-        "dcc_rest_interaction_original_response_edit_builder",
-        "dcc_rest_interaction_original_response_edit_multipart",
     },
     ("DELETE", "/webhooks/{}/{}/messages/@original"): {
         "dcc_rest_interaction_original_response_delete",
@@ -98,11 +90,7 @@ OFFICIAL_ROUTE_OVERRIDES = {
     },
     ("PATCH", "/webhooks/{}/{}/messages/{}"): {
         "dcc_rest_modify_webhook_message",
-        "dcc_rest_modify_webhook_message_builder",
-        "dcc_rest_modify_webhook_message_multipart",
         "dcc_rest_interaction_followup_edit",
-        "dcc_rest_interaction_followup_edit_builder",
-        "dcc_rest_interaction_followup_edit_multipart",
     },
     ("DELETE", "/webhooks/{}/{}/messages/{}"): {
         "dcc_rest_delete_webhook_message",

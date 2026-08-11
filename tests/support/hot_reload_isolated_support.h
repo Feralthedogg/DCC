@@ -24,6 +24,16 @@ typedef struct dcc_hot_reload_test_wait_state {
 } dcc_hot_reload_test_wait_state_t;
 
 void *dcc_hot_reload_test_wait_main(void *arg);
+int dcc_hot_reload_test_client_runtime_start(
+    dcc_client_t *client,
+    dcc_hot_reload_test_wait_state_t *state,
+    pthread_t *thread
+);
+dcc_status_t dcc_hot_reload_test_client_runtime_stop(
+    dcc_client_t *client,
+    dcc_hot_reload_test_wait_state_t *state,
+    pthread_t thread
+);
 void *dcc_hot_reload_test_server_main(void *arg);
 int dcc_hot_reload_test_server_start(dcc_hot_reload_test_server_t *server);
 int dcc_hot_reload_test_copy_file(const char *source, const char *target);

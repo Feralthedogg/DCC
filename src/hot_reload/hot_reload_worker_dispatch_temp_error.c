@@ -30,12 +30,25 @@ dcc_status_t dcc_hot_reload_worker_dispatch_send_temp_interaction_error(
         return DCC_ERR_STATE;
     }
 
-    static const char body[] =
-        "{\"type\":4,\"data\":{\"content\":\"Bot worker is reloading. Please try again.\",\"flags\":64}}";
-    return dcc_rest_interaction_response_create_from_interaction(
+    dcc_message_builder_t message = DCC_MESSAGE_BUILDER_INIT;
+    dcc_status_t status = dcc_message_builder_set_content(
+        &message, "Bot worker is reloading. Please try again."
+    );
+    if (status == DCC_OK) {
+        status = dcc_message_builder_set_flags(&message, DCC_MESSAGE_FLAG_EPHEMERAL);
+    }
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    if (status == DCC_OK) {
+        status = dcc_rest_interaction_response_set_message(&response, &message);
+    }
+    if (status != DCC_OK) {
+        return status;
+    }
+    return dcc_rest_interaction_response_create(
         hot_reload->client,
-        interaction,
-        body,
+        interaction->id,
+        interaction->token,
+        &response,
         NULL,
         NULL
     );

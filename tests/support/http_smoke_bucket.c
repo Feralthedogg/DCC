@@ -16,8 +16,12 @@ int run_public_rest_bucket_smoke(void) {
         .intents = DCC_INTENT_GUILDS,
     };
     dcc_status_t st = dcc_client_create(&opts, &client);
+    if (st == DCC_OK) {
+        st = rest_activate_client(client);
+    }
     if (st != DCC_OK) {
-        fprintf(stderr, "dcc_client_create failed: %s\n", dcc_status_string(st));
+        fprintf(stderr, "REST bucket client setup failed: %s\n", dcc_status_string(st));
+        dcc_client_destroy(client);
         return 1;
     }
 
@@ -32,7 +36,9 @@ int run_public_rest_bucket_smoke(void) {
         return 1;
     }
     set_api_base_for_server(&server);
-    st = dcc_rest_get_message(client, 777, 100, rest_cb, &seen);
+    dcc_rest_call_options_t call_options = rest_call_options(&seen);
+    st = dcc_rest_get_message(client, 777, 100, &call_options, NULL);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -81,7 +87,9 @@ int run_public_rest_bucket_smoke(void) {
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
     uint64_t started_ms = test_now_ms();
-    st = dcc_rest_get_message(client, 777, 101, rest_cb, &seen);
+    call_options = rest_call_options(&seen);
+    st = dcc_rest_get_message(client, 777, 101, &call_options, NULL);
+    st = rest_await_submission(client, st);
     uint64_t elapsed_ms = test_now_ms() - started_ms;
     (void)pthread_join(thread, NULL);
     close(server.fd);

@@ -54,6 +54,14 @@ static int build_convenience_autocomplete(
     return dcc_autocomplete_builder_set_choices(autocomplete, choices, 3) == DCC_OK;
 }
 
+static int build_convenience_message(
+    dcc_message_builder_t *message,
+    const char *content
+) {
+    dcc_message_builder_init(message);
+    return dcc_message_builder_set_content(message, content) == DCC_OK;
+}
+
 int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) {
     http_server_t server;
     pthread_t thread;
@@ -84,6 +92,58 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         fprintf(stderr, "failed to build interaction convenience state\n");
         return 1;
     }
+    dcc_message_builder_t edited_message;
+    dcc_message_builder_t original_file_message;
+    dcc_message_builder_t new_followup_message;
+    dcc_message_builder_t new_followup_file_message;
+    dcc_message_builder_t followup_edited_message;
+    dcc_message_builder_t followup_file_edited_message;
+    if (!build_convenience_message(&edited_message, "edited") ||
+        !build_convenience_message(&original_file_message, "original file") ||
+        !build_convenience_message(&new_followup_message, "new followup") ||
+        !build_convenience_message(&new_followup_file_message, "new followup file") ||
+        !build_convenience_message(&followup_edited_message, "followup edited") ||
+        !build_convenience_message(&followup_file_edited_message, "followup file edited")) {
+        fprintf(stderr, "failed to build interaction convenience messages\n");
+        return 1;
+    }
+    dcc_rest_message_payload_t edited_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_t original_file_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_t new_followup_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_t new_followup_file_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_t followup_edited_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_t followup_file_edited_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    edited_payload.message = &edited_message;
+    original_file_payload.message = &original_file_message;
+    original_file_payload.files = &interaction_file;
+    original_file_payload.file_count = 1U;
+    new_followup_payload.message = &new_followup_message;
+    new_followup_file_payload.message = &new_followup_file_message;
+    new_followup_file_payload.files = &interaction_file;
+    new_followup_file_payload.file_count = 1U;
+    followup_edited_payload.message = &followup_edited_message;
+    followup_file_edited_payload.message = &followup_file_edited_message;
+    followup_file_edited_payload.files = &interaction_file;
+    followup_file_edited_payload.file_count = 1U;
+
+    dcc_rest_interaction_response_t deferred_message =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_rest_interaction_response_t deferred_update =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_rest_interaction_response_t modal_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_rest_interaction_response_t autocomplete_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    if (dcc_rest_interaction_response_set_deferred_message(
+            &deferred_message, NULL) != DCC_OK ||
+        dcc_rest_interaction_response_set_deferred_update(&deferred_update) != DCC_OK ||
+        dcc_rest_interaction_response_set_modal(&modal_response, &modal) != DCC_OK ||
+        dcc_rest_interaction_response_set_autocomplete(
+            &autocomplete_response, &autocomplete) != DCC_OK) {
+        fprintf(stderr, "failed to build interaction convenience responses\n");
+        return 1;
+    }
+    dcc_rest_call_options_t call_options = rest_call_options(&seen);
 
 #define EXPECT_INTERACTION_CONVENIENCE(label, expected_method, expected_path, expected_body, call_expr) \
     do { \
@@ -94,6 +154,7 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         set_api_base_for_server(&server); \
         memset(&seen, 0, sizeof(seen)); \
         st = (call_expr); \
+        st = rest_await_submission(client, st); \
         (void)pthread_join(thread, NULL); \
         close(server.fd); \
         if (st != DCC_OK || \
@@ -120,6 +181,7 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         set_api_base_for_server(&server); \
         memset(&seen, 0, sizeof(seen)); \
         st = (call_expr); \
+        st = rest_await_submission(client, st); \
         (void)pthread_join(thread, NULL); \
         close(server.fd); \
         if (st != DCC_OK || \
@@ -141,13 +203,15 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_response_create_from_interaction(
+    st = dcc_rest_interaction_response_create(
         client,
-        &interaction,
-        "{\"type\":5}",
-        rest_cb,
-        &seen
+        interaction.id,
+        interaction.token,
+        &deferred_message,
+        &call_options,
+        NULL
     );
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -168,12 +232,13 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "POST",
         "/interactions/558/tok%2Fen/callback",
         "{\"type\":6}",
-        dcc_rest_interaction_response_create_type_from_interaction(
+        dcc_rest_interaction_response_create(
             client,
-            &interaction,
-            DCC_INTERACTION_RESPONSE_DEFERRED_UPDATE_MESSAGE,
-            rest_cb,
-            &seen
+            interaction.id,
+            interaction.token,
+            &deferred_update,
+            &call_options,
+            NULL
         )
     );
 
@@ -182,11 +247,13 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "POST",
         "/interactions/558/tok%2Fen/callback",
         "{\"type\":5}",
-        dcc_rest_interaction_response_create_deferred_message_from_interaction(
+        dcc_rest_interaction_response_create(
             client,
-            &interaction,
-            rest_cb,
-            &seen
+            interaction.id,
+            interaction.token,
+            &deferred_message,
+            &call_options,
+            NULL
         )
     );
 
@@ -228,12 +295,13 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "\"components\":[{\"type\":1,\"components\":[{\"type\":4,\"custom_id\":\"feedback\","
         "\"style\":2,\"label\":\"Feedback\",\"min_length\":3,\"max_length\":1000,"
         "\"required\":true,\"value\":\"seed\",\"placeholder\":\"Tell us\"}]}]}}",
-        dcc_rest_interaction_response_create_modal_from_interaction(
+        dcc_rest_interaction_response_create(
             client,
-            &interaction,
-            &modal,
-            rest_cb,
-            &seen
+            interaction.id,
+            interaction.token,
+            &modal_response,
+            &call_options,
+            NULL
         )
     );
 
@@ -246,12 +314,13 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "{\"name\":\"Limit\",\"value\":42},"
         "{\"name\":\"Ratio\",\"value\":3.5}"
         "]}}",
-        dcc_rest_interaction_response_create_autocomplete_from_interaction(
+        dcc_rest_interaction_response_create(
             client,
-            &interaction,
-            &autocomplete,
-            rest_cb,
-            &seen
+            interaction.id,
+            interaction.token,
+            &autocomplete_response,
+            &call_options,
+            NULL
         )
     );
 
@@ -260,11 +329,12 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "GET",
         "/webhooks/123/tok%2Fen/messages/@original",
         NULL,
-        dcc_rest_interaction_original_response_get_from_interaction(
+        dcc_rest_interaction_original_response_get(
             client,
-            &interaction,
-            rest_cb,
-            &seen
+            interaction.application_id,
+            interaction.token,
+            &call_options,
+            NULL
         )
     );
 
@@ -274,13 +344,15 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_original_response_edit_from_interaction(
+    st = dcc_rest_interaction_original_response_edit(
         client,
-        &interaction,
-        "{\"content\":\"edited\"}",
-        rest_cb,
-        &seen
+        interaction.application_id,
+        interaction.token,
+        &edited_payload,
+        &call_options,
+        NULL
     );
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -301,14 +373,13 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "PATCH",
         "/webhooks/123/tok%2Fen/messages/@original",
         "{\"content\":\"original file\"}",
-        dcc_rest_interaction_original_response_edit_multipart_from_interaction(
+        dcc_rest_interaction_original_response_edit(
             client,
-            &interaction,
-            "{\"content\":\"original file\"}",
-            &interaction_file,
-            1,
-            rest_cb,
-            &seen
+            interaction.application_id,
+            interaction.token,
+            &original_file_payload,
+            &call_options,
+            NULL
         )
     );
 
@@ -317,11 +388,12 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "DELETE",
         "/webhooks/123/tok%2Fen/messages/@original",
         NULL,
-        dcc_rest_interaction_original_response_delete_from_interaction(
+        dcc_rest_interaction_original_response_delete(
             client,
-            &interaction,
-            rest_cb,
-            &seen
+            interaction.application_id,
+            interaction.token,
+            &call_options,
+            NULL
         )
     );
 
@@ -330,12 +402,13 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "POST",
         "/webhooks/123/tok%2Fen",
         "{\"content\":\"new followup\"}",
-        dcc_rest_interaction_followup_create_from_interaction(
+        dcc_rest_interaction_followup_create(
             client,
-            &interaction,
-            "{\"content\":\"new followup\"}",
-            rest_cb,
-            &seen
+            interaction.application_id,
+            interaction.token,
+            &new_followup_payload,
+            &call_options,
+            NULL
         )
     );
 
@@ -344,14 +417,13 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "POST",
         "/webhooks/123/tok%2Fen",
         "{\"content\":\"new followup file\"}",
-        dcc_rest_interaction_followup_create_multipart_from_interaction(
+        dcc_rest_interaction_followup_create(
             client,
-            &interaction,
-            "{\"content\":\"new followup file\"}",
-            &interaction_file,
-            1,
-            rest_cb,
-            &seen
+            interaction.application_id,
+            interaction.token,
+            &new_followup_file_payload,
+            &call_options,
+            NULL
         )
     );
 
@@ -360,12 +432,13 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "GET",
         "/webhooks/123/tok%2Fen/messages/999",
         NULL,
-        dcc_rest_interaction_followup_get_from_interaction(
+        dcc_rest_interaction_followup_get(
             client,
-            &interaction,
+            interaction.application_id,
+            interaction.token,
             999,
-            rest_cb,
-            &seen
+            &call_options,
+            NULL
         )
     );
 
@@ -374,13 +447,14 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "PATCH",
         "/webhooks/123/tok%2Fen/messages/999",
         "{\"content\":\"followup edited\"}",
-        dcc_rest_interaction_followup_edit_from_interaction(
+        dcc_rest_interaction_followup_edit(
             client,
-            &interaction,
+            interaction.application_id,
+            interaction.token,
             999,
-            "{\"content\":\"followup edited\"}",
-            rest_cb,
-            &seen
+            &followup_edited_payload,
+            &call_options,
+            NULL
         )
     );
 
@@ -389,15 +463,14 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
         "PATCH",
         "/webhooks/123/tok%2Fen/messages/999",
         "{\"content\":\"followup file edited\"}",
-        dcc_rest_interaction_followup_edit_multipart_from_interaction(
+        dcc_rest_interaction_followup_edit(
             client,
-            &interaction,
+            interaction.application_id,
+            interaction.token,
             999,
-            "{\"content\":\"followup file edited\"}",
-            &interaction_file,
-            1,
-            rest_cb,
-            &seen
+            &followup_file_edited_payload,
+            &call_options,
+            NULL
         )
     );
 
@@ -407,7 +480,15 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_followup_delete_from_interaction(client, &interaction, 999, rest_cb, &seen);
+    st = dcc_rest_interaction_followup_delete(
+        client,
+        interaction.application_id,
+        interaction.token,
+        999,
+        &call_options,
+        NULL
+    );
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||

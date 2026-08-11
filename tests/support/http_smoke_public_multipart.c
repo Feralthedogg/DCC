@@ -47,8 +47,12 @@ int run_public_rest_multipart_smoke(void) {
         .intents = DCC_INTENT_GUILDS,
     };
     dcc_status_t st = dcc_client_create(&opts, &client);
+    if (st == DCC_OK) {
+        st = rest_activate_client(client);
+    }
     if (st != DCC_OK) {
-        fprintf(stderr, "dcc_client_create failed: %s\n", dcc_status_string(st));
+        fprintf(stderr, "multipart client setup failed: %s\n", dcc_status_string(st));
+        dcc_client_destroy(client);
         return 1;
     }
 
@@ -64,6 +68,13 @@ int run_public_rest_multipart_smoke(void) {
     http_server_t server;
     pthread_t thread;
     rest_seen_t seen;
+    dcc_message_builder_t message;
+    dcc_message_builder_init(&message);
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    payload.message = &message;
+    payload.files = &message_file;
+    payload.file_count = 1U;
+    dcc_rest_call_options_t call_options;
 
     if (start_server(&server, &thread) != 0) {
         fprintf(stderr, "failed to start message multipart server: %s\n", strerror(errno));
@@ -72,15 +83,12 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_create_message_multipart(
-        client,
-        222,
-        "{\"content\":\"hi\"}",
-        &message_file,
-        1,
-        rest_cb,
-        &seen
-    );
+    st = dcc_message_builder_set_content(&message, "hi");
+    call_options = rest_call_options(&seen);
+    if (st == DCC_OK) {
+        st = dcc_rest_create_message(client, 222, &payload, &call_options, NULL);
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -105,16 +113,12 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_edit_message_multipart(
-        client,
-        222,
-        333,
-        "{\"content\":\"edited\"}",
-        &message_file,
-        1,
-        rest_cb,
-        &seen
-    );
+    st = dcc_message_builder_set_content(&message, "edited");
+    call_options = rest_call_options(&seen);
+    if (st == DCC_OK) {
+        st = dcc_rest_edit_message(client, 222, 333, &payload, &call_options, NULL);
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -139,17 +143,18 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_execute_webhook_multipart(
-        client,
-        666,
-        "tok/en",
-        "wait=true",
-        "{\"content\":\"hook\"}",
-        &message_file,
-        1,
-        rest_cb,
-        &seen
-    );
+    st = dcc_message_builder_set_content(&message, "hook");
+    dcc_rest_webhook_execute_t execute = DCC_REST_WEBHOOK_EXECUTE_INIT;
+    execute.message = &message;
+    execute.files = &message_file;
+    execute.file_count = 1U;
+    execute.present = DCC_REST_WEBHOOK_EXECUTE_PRESENT_WAIT;
+    execute.wait = 1U;
+    call_options = rest_call_options(&seen);
+    if (st == DCC_OK) {
+        st = dcc_rest_execute_webhook(client, 666, "tok/en", &execute, &call_options, NULL);
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -174,19 +179,15 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_execute_webhook_multipart_options(
-        client,
-        666,
-        "tok/en",
-        1,
-        888,
-        1,
-        "{\"content\":\"hook\"}",
-        &message_file,
-        1,
-        rest_cb,
-        &seen
-    );
+    execute.present = DCC_REST_WEBHOOK_EXECUTE_PRESENT_WAIT |
+        DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_ID |
+        DCC_REST_WEBHOOK_EXECUTE_PRESENT_WITH_COMPONENTS;
+    execute.wait = 1U;
+    execute.thread_id = 888;
+    execute.with_components = 1U;
+    call_options = rest_call_options(&seen);
+    st = dcc_rest_execute_webhook(client, 666, "tok/en", &execute, &call_options, NULL);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -211,18 +212,16 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_modify_webhook_message_multipart(
-        client,
-        666,
-        "tok/en",
-        777,
-        "thread_id=888",
-        "{\"content\":\"hook-edited\"}",
-        &message_file,
-        1,
-        rest_cb,
-        &seen
-    );
+    st = dcc_message_builder_set_content(&message, "hook-edited");
+    dcc_rest_webhook_message_edit_t edit = DCC_REST_WEBHOOK_MESSAGE_EDIT_INIT;
+    edit.payload = &payload;
+    edit.present = DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID;
+    edit.thread_id = 888;
+    call_options = rest_call_options(&seen);
+    if (st == DCC_OK) {
+        st = dcc_rest_modify_webhook_message(client, 666, "tok/en", 777, &edit, &call_options, NULL);
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -247,18 +246,9 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_modify_webhook_message_multipart_thread(
-        client,
-        666,
-        "tok/en",
-        777,
-        888,
-        "{\"content\":\"hook-edited\"}",
-        &message_file,
-        1,
-        rest_cb,
-        &seen
-    );
+    call_options = rest_call_options(&seen);
+    st = dcc_rest_modify_webhook_message(client, 666, "tok/en", 777, &edit, &call_options, NULL);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -283,16 +273,12 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_followup_create_multipart(
-        client,
-        123,
-        "tok/en",
-        "{\"content\":\"follow\"}",
-        &message_file,
-        1,
-        rest_cb,
-        &seen
-    );
+    st = dcc_message_builder_set_content(&message, "follow");
+    call_options = rest_call_options(&seen);
+    if (st == DCC_OK) {
+        st = dcc_rest_interaction_followup_create(client, 123, "tok/en", &payload, &call_options, NULL);
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -317,16 +303,12 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_original_response_edit_multipart(
-        client,
-        123,
-        "tok/en",
-        "{\"content\":\"original\"}",
-        &message_file,
-        1,
-        rest_cb,
-        &seen
-    );
+    st = dcc_message_builder_set_content(&message, "original");
+    call_options = rest_call_options(&seen);
+    if (st == DCC_OK) {
+        st = dcc_rest_interaction_original_response_edit(client, 123, "tok/en", &payload, &call_options, NULL);
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -351,17 +333,12 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_followup_edit_multipart(
-        client,
-        123,
-        "tok/en",
-        999,
-        "{\"content\":\"follow-edited\"}",
-        &message_file,
-        1,
-        rest_cb,
-        &seen
-    );
+    st = dcc_message_builder_set_content(&message, "follow-edited");
+    call_options = rest_call_options(&seen);
+    if (st == DCC_OK) {
+        st = dcc_rest_interaction_followup_edit(client, 123, "tok/en", 999, &payload, &call_options, NULL);
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||

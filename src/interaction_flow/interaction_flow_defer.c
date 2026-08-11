@@ -14,12 +14,16 @@ dcc_status_t dcc_flow_defer(
     if (status != DCC_OK) {
         return status;
     }
-    status = dcc_rest_interaction_response_create_deferred_message_from_interaction(
-        flow->client,
-        flow->interaction,
-        cb,
-        user_data
-    );
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    status = dcc_rest_interaction_response_set_deferred_message(&response, NULL);
+    dcc_rest_call_options_t options;
+    void *bridge = NULL;
+    if (status == DCC_OK) status = dcc_endpoint_legacy_options(
+        cb, user_data, &options, &bridge);
+    if (status == DCC_OK) status = dcc_rest_interaction_response_create(
+        flow->client, flow->interaction->id, flow->interaction->token,
+        &response, &options, NULL);
+    if (status != DCC_OK) dcc_endpoint_legacy_bridge_release(bridge);
     return dcc_flow_mark_initial(flow, DCC_INTERACTION_FLOW_DEFERRED, status);
 }
 
@@ -43,14 +47,16 @@ dcc_status_t dcc_flow_defer_ephemeral(
         status = dcc_message_builder_set_flags(&message, DCC_INTERACTION_FLOW_FLAG_EPHEMERAL);
     }
     if (status == DCC_OK) {
-        status = dcc_rest_interaction_response_create_from_interaction_message_builder(
-            flow->client,
-            flow->interaction,
-            DCC_INTERACTION_RESPONSE_DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
-            &message,
-            cb,
-            user_data
-        );
+        dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+        status = dcc_rest_interaction_response_set_deferred_message(&response, &message);
+        dcc_rest_call_options_t options;
+        void *bridge = NULL;
+        if (status == DCC_OK) status = dcc_endpoint_legacy_options(
+            cb, user_data, &options, &bridge);
+        if (status == DCC_OK) status = dcc_rest_interaction_response_create(
+            flow->client, flow->interaction->id, flow->interaction->token,
+            &response, &options, NULL);
+        if (status != DCC_OK) dcc_endpoint_legacy_bridge_release(bridge);
     }
     return dcc_flow_mark_initial(
         flow,
@@ -73,12 +79,16 @@ dcc_status_t dcc_flow_defer_update(
     if (status != DCC_OK) {
         return status;
     }
-    status = dcc_rest_interaction_response_create_deferred_update_from_interaction(
-        flow->client,
-        flow->interaction,
-        cb,
-        user_data
-    );
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    status = dcc_rest_interaction_response_set_deferred_update(&response);
+    dcc_rest_call_options_t options;
+    void *bridge = NULL;
+    if (status == DCC_OK) status = dcc_endpoint_legacy_options(
+        cb, user_data, &options, &bridge);
+    if (status == DCC_OK) status = dcc_rest_interaction_response_create(
+        flow->client, flow->interaction->id, flow->interaction->token,
+        &response, &options, NULL);
+    if (status != DCC_OK) dcc_endpoint_legacy_bridge_release(bridge);
     return dcc_flow_mark_initial(
         flow,
         DCC_INTERACTION_FLOW_DEFERRED_UPDATE,

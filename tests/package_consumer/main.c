@@ -107,10 +107,11 @@ int main(void) {
         .channel_id = 123,
         .target_type = DCC_INVITE_TARGET_STREAM
     };
-    const dcc_webhook_params_t webhook = {
-        .size = sizeof(dcc_webhook_params_t),
-        .channel_id = 123,
-        .name = "relay"
+    const dcc_rest_webhook_builder_t webhook = {
+        .size = sizeof(dcc_rest_webhook_builder_t),
+        .version = DCC_REST_WEBHOOK_BUILDER_VERSION,
+        .present = DCC_REST_WEBHOOK_BUILDER_PRESENT_NAME,
+        .name = "relay",
     };
     const dcc_channel_position_t channel_position = {
         .channel_id = 123,
@@ -131,18 +132,6 @@ int main(void) {
         .size = sizeof(dcc_voice_state_params_t),
         .guild_id = 123,
         .channel_id = 789
-    };
-    const dcc_message_reaction_params_t reaction = {
-        .size = sizeof(dcc_message_reaction_params_t),
-        .channel_id = 123,
-        .message_id = 456,
-        .reaction = "wave:789"
-    };
-    const dcc_message_flags_params_t message_flags = {
-        .size = sizeof(dcc_message_flags_params_t),
-        .channel_id = 123,
-        .message_id = 456,
-        .flags = 4
     };
     dcc_message_builder_t direct_message_builder;
     dcc_message_builder_init(&direct_message_builder);
@@ -249,11 +238,11 @@ int main(void) {
     dcc_package_current_member_modify_fn current_member_modify = dcc_rest_modify_current_guild_member_params;
     dcc_package_current_user_modify_fn current_user_modify = dcc_rest_modify_current_user_params;
     dcc_package_invite_create_fn invite_create = dcc_rest_create_channel_invite_params;
-    dcc_package_webhook_create_fn webhook_create = dcc_rest_create_webhook_params;
+    dcc_package_webhook_create_fn webhook_create = dcc_rest_create_webhook;
     dcc_package_channel_positions_fn channel_positions_modify = dcc_rest_modify_guild_channel_positions_params;
     dcc_package_dm_create_fn dm_create = dcc_rest_create_dm_channel_params;
-    dcc_package_message_reaction_fn reaction_add = dcc_rest_add_message_reaction_params;
-    dcc_package_message_flags_fn message_flags_edit = dcc_rest_edit_message_flags_params;
+    dcc_package_message_reaction_fn reaction_add = dcc_rest_add_message_reaction;
+    dcc_package_message_flags_fn message_flags_edit = dcc_rest_edit_message;
     dcc_package_message_pin_fn legacy_pin_message = dcc_rest_legacy_pin_message;
     dcc_package_message_pin_fn legacy_unpin_message = dcc_rest_legacy_unpin_message;
     dcc_package_channel_pins_fn legacy_channel_pins = dcc_rest_get_legacy_channel_pins;
@@ -310,31 +299,17 @@ int main(void) {
         dcc_message_poll_builder_build_json;
     dcc_package_message_poll_builder_json_free_fn message_poll_json_free =
         dcc_message_poll_builder_json_free;
-    dcc_package_webhook_message_builder_fn webhook_message_modify = dcc_rest_modify_webhook_message_builder;
+    dcc_package_webhook_message_builder_fn webhook_message_modify = dcc_rest_modify_webhook_message;
     dcc_package_interaction_message_builder_fn original_response_edit =
-        dcc_rest_interaction_original_response_edit_builder;
-    dcc_package_interaction_message_builder_fn followup_create = dcc_rest_interaction_followup_create_builder;
-    dcc_package_interaction_followup_edit_builder_fn followup_edit = dcc_rest_interaction_followup_edit_builder;
+        dcc_rest_interaction_original_response_edit;
+    dcc_package_interaction_message_builder_fn followup_create = dcc_rest_interaction_followup_create;
+    dcc_package_interaction_followup_edit_builder_fn followup_edit = dcc_rest_interaction_followup_edit;
     dcc_package_interaction_response_message_builder_fn interaction_response_create =
-        dcc_rest_interaction_response_create_message_builder;
-    dcc_package_interaction_response_type_fn interaction_response_type =
-        dcc_rest_interaction_response_create_type;
-    dcc_package_interaction_response_named_fn interaction_response_pong =
-        dcc_rest_interaction_response_create_pong;
-    dcc_package_interaction_response_named_fn interaction_response_defer =
-        dcc_rest_interaction_response_create_deferred_message;
-    dcc_package_interaction_response_named_fn interaction_response_defer_update =
-        dcc_rest_interaction_response_create_deferred_update;
-    dcc_package_interaction_response_named_fn interaction_response_premium =
-        dcc_rest_interaction_response_create_premium_required;
-    dcc_package_interaction_response_named_from_interaction_fn interaction_response_pong_interaction =
-        dcc_rest_interaction_response_create_pong_from_interaction;
-    dcc_package_interaction_response_named_from_interaction_fn interaction_response_defer_interaction =
-        dcc_rest_interaction_response_create_deferred_message_from_interaction;
-    dcc_package_interaction_response_named_from_interaction_fn interaction_response_defer_update_interaction =
-        dcc_rest_interaction_response_create_deferred_update_from_interaction;
-    dcc_package_interaction_response_named_from_interaction_fn interaction_response_premium_interaction =
-        dcc_rest_interaction_response_create_premium_required_from_interaction;
+        dcc_rest_interaction_response_create;
+    dcc_rest_interaction_response_t package_interaction_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    int package_interaction_response_ok =
+        dcc_rest_interaction_response_set_pong(&package_interaction_response) == DCC_OK;
     dcc_package_sticker_create_fn sticker_create = dcc_rest_create_guild_sticker_params;
     dcc_package_command_permissions_fn command_permissions_edit =
         dcc_rest_edit_guild_command_permissions_params;
@@ -527,8 +502,6 @@ int main(void) {
                    channel_positions.position_count == 1U &&
                    dm.user_id == 456U &&
                    voice_state.channel_id == 789U &&
-                   reaction.message_id == 456U &&
-                   message_flags.flags == 4U &&
                    (direct_message_builder.present & DCC_MESSAGE_BUILDER_PRESENT_CONTENT) != 0U &&
                    direct_message_builder.poll == &poll_builder &&
                    poll_json_ok != 0 &&
@@ -599,20 +572,12 @@ int main(void) {
                    followup_create != NULL &&
                    followup_edit != NULL &&
                    interaction_response_create != NULL &&
-                   interaction_response_type != NULL &&
-                   interaction_response_pong != NULL &&
-                   interaction_response_defer != NULL &&
-                   interaction_response_defer_update != NULL &&
-                   interaction_response_premium != NULL &&
-                   interaction_response_pong_interaction != NULL &&
-                   interaction_response_defer_interaction != NULL &&
-                   interaction_response_defer_update_interaction != NULL &&
-                   interaction_response_premium_interaction != NULL &&
-                   interaction_response_type(
+                   package_interaction_response_ok != 0 &&
+                   interaction_response_create(
                        NULL,
                        123,
                        "token",
-                       (dcc_interaction_response_type_t)0,
+                       &package_interaction_response,
                        NULL,
                        NULL
                    ) == DCC_ERR_INVALID_ARG &&

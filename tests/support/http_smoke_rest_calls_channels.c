@@ -176,86 +176,125 @@ dcc_status_t call_rest_create_channel_invite_params(dcc_client_t *client, dcc_re
     return dcc_rest_create_channel_invite_params(client, &params, cb, user_data);
 }
 dcc_status_t call_rest_edit_message_flags(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_edit_message_flags(client, 222, 777, "{\"flags\":4}", cb, user_data);
+    dcc_message_builder_t message;
+    dcc_message_builder_init(&message);
+    dcc_status_t status = dcc_message_builder_set_flags(&message, 4U);
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    payload.message = &message;
+    return status == DCC_OK
+        ? dcc_rest_edit_message(client, 222, 777, &payload, &options, NULL)
+        : status;
 }
 dcc_status_t call_rest_edit_message_flags_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_message_flags_params_t params = {
-        .size = sizeof(params),
-        .channel_id = 222,
-        .message_id = 777,
-        .flags = 4
-    };
-    return dcc_rest_edit_message_flags_params(client, &params, cb, user_data);
+    return call_rest_edit_message_flags(client, cb, user_data);
 }
 dcc_status_t call_rest_crosspost_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_crosspost_message(client, 222, 777, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_crosspost_message(client, 222, 777, &options, NULL);
 }
 dcc_status_t call_rest_bulk_delete_messages(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_bulk_delete_messages(client, 222, "{\"messages\":[\"777\",\"778\"]}", cb, user_data);
+    const dcc_snowflake_t message_ids[] = {777, 778};
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_bulk_delete_messages(client, 222, message_ids, 2U, &options, NULL);
 }
 dcc_status_t call_rest_add_message_reaction(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_add_message_reaction(client, 222, 777, "wave:888", cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_add_message_reaction(client, 222, 777, "wave:888", &options, NULL);
 }
 dcc_status_t call_rest_add_message_reaction_params(
     dcc_client_t *client,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    const dcc_message_reaction_params_t params = {
-        .size = sizeof(params),
-        .channel_id = 222,
-        .message_id = 777,
-        .reaction = "wave:888"
-    };
-    return dcc_rest_add_message_reaction_params(client, &params, cb, user_data);
+    return call_rest_add_message_reaction(client, cb, user_data);
 }
 dcc_status_t call_rest_delete_own_message_reaction(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_own_message_reaction(client, 222, 777, "wave:888", cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_delete_own_message_reaction(client, 222, 777, "wave:888", &options, NULL);
 }
 dcc_status_t call_rest_delete_user_message_reaction(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_user_message_reaction(client, 222, 777, "wave:888", 444, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_delete_user_message_reaction(client, 222, 777, "wave:888", 444, &options, NULL);
 }
 dcc_status_t call_rest_get_message_reactions(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_message_reactions(client, 222, 777, "wave:888", "limit=2&after=444", cb, user_data);
+    dcc_rest_reaction_query_t query = DCC_REST_REACTION_QUERY_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_REACTION_QUERY_PRESENT_AFTER |
+        DCC_REST_REACTION_QUERY_PRESENT_LIMIT;
+    query.after = 444;
+    query.limit = 2;
+    return dcc_rest_get_message_reactions(client, 222, 777, "wave:888", &query, &options, NULL);
 }
 dcc_status_t call_rest_get_message_reactions_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_message_reactions_page(client, 222, 777, "wave:888", 333, 444, 2, cb, user_data);
+    dcc_rest_reaction_query_t query = DCC_REST_REACTION_QUERY_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_REACTION_QUERY_PRESENT_TYPE |
+        DCC_REST_REACTION_QUERY_PRESENT_AFTER |
+        DCC_REST_REACTION_QUERY_PRESENT_LIMIT;
+    query.type = DCC_REST_REACTION_BURST;
+    query.after = 444;
+    query.limit = 2;
+    return dcc_rest_get_message_reactions(client, 222, 777, "wave:888", &query, &options, NULL);
 }
 dcc_status_t call_rest_delete_all_message_reactions(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_all_message_reactions(client, 222, 777, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_delete_all_message_reactions(client, 222, 777, &options, NULL);
 }
 dcc_status_t call_rest_delete_all_message_reactions_for_emoji(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_all_message_reactions_for_emoji(client, 222, 777, "wave:888", cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_delete_all_message_reactions_for_emoji(client, 222, 777, "wave:888", &options, NULL);
 }
 dcc_status_t call_rest_pin_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_pin_message(client, 222, 777, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_pin_message(client, 222, 777, &options, NULL);
 }
 dcc_status_t call_rest_unpin_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_unpin_message(client, 222, 777, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_unpin_message(client, 222, 777, &options, NULL);
 }
 dcc_status_t call_rest_get_channel_pins(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_channel_pins(client, 222, "limit=50&before=2024-01-01T00:00:00.000000%2B00:00", cb, user_data);
+    dcc_rest_pin_page_t query = DCC_REST_PIN_PAGE_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_PIN_PAGE_PRESENT_BEFORE |
+        DCC_REST_PIN_PAGE_PRESENT_LIMIT;
+    query.before = "2024-01-01T00:00:00.000000+00:00";
+    query.limit = 50;
+    return dcc_rest_get_channel_pins(client, 222, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_channel_pins_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_channel_pins_page(client, 222, "2024-01-01T00:00:00.000000+00:00", 0, cb, user_data);
+    dcc_rest_pin_page_t query = DCC_REST_PIN_PAGE_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    query.present = DCC_REST_PIN_PAGE_PRESENT_BEFORE;
+    query.before = "2024-01-01T00:00:00.000000+00:00";
+    return dcc_rest_get_channel_pins(client, 222, &query, &options, NULL);
 }
 dcc_status_t call_rest_legacy_pin_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_legacy_pin_message(client, 222, 777, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_legacy_pin_message(client, 222, 777, &options, NULL);
 }
 dcc_status_t call_rest_legacy_unpin_message(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_legacy_unpin_message(client, 222, 777, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_legacy_unpin_message(client, 222, 777, &options, NULL);
 }
 dcc_status_t call_rest_get_legacy_channel_pins(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_legacy_channel_pins(client, 222, "limit=50", cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_legacy_channel_pins(client, 222, &options, NULL);
 }
 dcc_status_t call_rest_get_poll_answer_voters(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_poll_answer_voters(client, 222, 777, 3, "limit=2&after=444", cb, user_data);
+    dcc_rest_id_page_t page = DCC_REST_ID_PAGE_INIT;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    page.present = DCC_REST_ID_PAGE_PRESENT_AFTER | DCC_REST_ID_PAGE_PRESENT_LIMIT;
+    page.after = 444;
+    page.limit = 2;
+    return dcc_rest_get_poll_answer_voters(client, 222, 777, 3, &page, &options, NULL);
 }
 dcc_status_t call_rest_get_poll_answer_voters_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_poll_answer_voters_page(client, 222, 777, 3, 444, 2, cb, user_data);
+    return call_rest_get_poll_answer_voters(client, cb, user_data);
 }
 dcc_status_t call_rest_end_poll(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_end_poll(client, 222, 777, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_end_poll(client, 222, 777, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_invites(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_guild_invites(client, 333, cb, user_data);

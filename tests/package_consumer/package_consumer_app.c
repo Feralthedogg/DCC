@@ -1233,18 +1233,11 @@ int dcc_package_consumer_check_app_api(void) {
         .privacy_level = DCC_SCHEDULED_EVENT_PRIVACY_GUILD_ONLY,
         .entity_type = DCC_SCHEDULED_EVENT_ENTITY_VOICE,
     };
-    dcc_webhook_params_t webhook_params = {
-        .size = sizeof(webhook_params),
-        .webhook_id = 4U,
-        .channel_id = 1U,
+    dcc_rest_webhook_builder_t webhook_builder = {
+        .size = sizeof(webhook_builder),
+        .version = DCC_REST_WEBHOOK_BUILDER_VERSION,
+        .present = DCC_REST_WEBHOOK_BUILDER_PRESENT_NAME,
         .name = "package-webhook",
-    };
-    dcc_webhook_params_t webhook_token_params = {
-        .size = sizeof(webhook_token_params),
-        .webhook_id = 4U,
-        .channel_id = 1U,
-        .name = "package-webhook",
-        .token = "token",
     };
     dcc_current_user_params_t user_params = {
         .size = sizeof(user_params),
@@ -2070,12 +2063,13 @@ int dcc_package_consumer_check_app_api(void) {
         dcc_app_get_webhook(NULL, 4U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_get_webhook_with_token(NULL, 4U, "token", NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_create_webhook(NULL, 1U, "{\"name\":\"package\"}", NULL, NULL) == DCC_ERR_INVALID_ARG &&
-        dcc_app_create_webhook_params(NULL, &webhook_params, NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_app_create_webhook_params(NULL, 1U, &webhook_builder, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_modify_webhook(NULL, 4U, "{\"name\":\"package\"}", NULL, NULL) == DCC_ERR_INVALID_ARG &&
-        dcc_app_modify_webhook_params(NULL, &webhook_params, NULL, NULL) == DCC_ERR_INVALID_ARG &&
+        dcc_app_modify_webhook_params(NULL, 4U, &webhook_builder, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_modify_webhook_with_token(NULL, 4U, "token", "{\"name\":\"package\"}", NULL, NULL) ==
             DCC_ERR_INVALID_ARG &&
-        dcc_app_modify_webhook_with_token_params(NULL, &webhook_token_params, NULL, NULL) ==
+        dcc_app_modify_webhook_with_token_params(
+            NULL, 4U, "token", &webhook_builder, NULL, NULL) ==
             DCC_ERR_INVALID_ARG &&
         dcc_app_delete_webhook(NULL, 4U, NULL, NULL) == DCC_ERR_INVALID_ARG &&
         dcc_app_delete_webhook_with_token(NULL, 4U, "token", NULL, NULL) == DCC_ERR_INVALID_ARG &&
@@ -2091,9 +2085,10 @@ int dcc_package_consumer_check_app_api(void) {
         DCC_GUILD_WEBHOOKS_FETCH(NULL, 1U) == DCC_ERR_INVALID_ARG &&
         DCC_WEBHOOK_FETCH(NULL, 4U) == DCC_ERR_INVALID_ARG &&
         DCC_WEBHOOK_FETCH_TOKEN(NULL, 4U, "token") == DCC_ERR_INVALID_ARG &&
-        DCC_WEBHOOK_CREATE_PARAMS(NULL, &webhook_params) == DCC_ERR_INVALID_ARG &&
-        DCC_WEBHOOK_EDIT_PARAMS(NULL, &webhook_params) == DCC_ERR_INVALID_ARG &&
-        DCC_WEBHOOK_EDIT_TOKEN_PARAMS(NULL, &webhook_token_params) == DCC_ERR_INVALID_ARG &&
+        DCC_WEBHOOK_CREATE_PARAMS(NULL, 1U, &webhook_builder) == DCC_ERR_INVALID_ARG &&
+        DCC_WEBHOOK_EDIT_PARAMS(NULL, 4U, &webhook_builder) == DCC_ERR_INVALID_ARG &&
+        DCC_WEBHOOK_EDIT_TOKEN_PARAMS(NULL, 4U, "token", &webhook_builder) ==
+            DCC_ERR_INVALID_ARG &&
         DCC_WEBHOOK_DELETE(NULL, 4U) == DCC_ERR_INVALID_ARG &&
         DCC_WEBHOOK_DELETE_TOKEN(NULL, 4U, "token") == DCC_ERR_INVALID_ARG &&
         DCC_WEBHOOK_SEND_TEXT(NULL, 4U, "token", "hello") == DCC_ERR_INVALID_ARG &&

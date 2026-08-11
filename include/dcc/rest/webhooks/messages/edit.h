@@ -1,6 +1,7 @@
 #ifndef DCC_REST_WEBHOOKS_MESSAGES_EDIT_H
 #define DCC_REST_WEBHOOKS_MESSAGES_EDIT_H
 
+#include <dcc/rest/request.h>
 #include <dcc/rest/types.h>
 
 #ifdef __cplusplus
@@ -12,69 +13,9 @@ DCC_API dcc_status_t dcc_rest_modify_webhook_message(
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
     dcc_snowflake_t message_id,
-    const char *query,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_modify_webhook_message_thread(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    dcc_snowflake_t message_id,
-    dcc_snowflake_t thread_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_modify_webhook_message_builder(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    dcc_snowflake_t message_id,
-    const char *query,
-    const dcc_message_builder_t *message,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_modify_webhook_message_builder_thread(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    dcc_snowflake_t message_id,
-    dcc_snowflake_t thread_id,
-    const dcc_message_builder_t *message,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_modify_webhook_message_multipart(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    dcc_snowflake_t message_id,
-    const char *query,
-    const char *payload_json,
-    const dcc_rest_multipart_file_t *files,
-    size_t file_count,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_modify_webhook_message_multipart_thread(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    dcc_snowflake_t message_id,
-    dcc_snowflake_t thread_id,
-    const char *payload_json,
-    const dcc_rest_multipart_file_t *files,
-    size_t file_count,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_webhook_message_edit_t *edit,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 #ifdef __cplusplus

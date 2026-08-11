@@ -1,6 +1,7 @@
 #ifndef DCC_REST_WEBHOOKS_EXECUTE_H
 #define DCC_REST_WEBHOOKS_EXECUTE_H
 
+#include <dcc/rest/request.h>
 #include <dcc/rest/types.h>
 
 #ifdef __cplusplus
@@ -11,48 +12,9 @@ DCC_API dcc_status_t dcc_rest_execute_webhook(
     dcc_client_t *client,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
-    const char *query,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_execute_webhook_options(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    uint8_t wait,
-    dcc_snowflake_t thread_id,
-    uint8_t with_components,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_execute_webhook_multipart(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    const char *query,
-    const char *payload_json,
-    const dcc_rest_multipart_file_t *files,
-    size_t file_count,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_execute_webhook_multipart_options(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    uint8_t wait,
-    dcc_snowflake_t thread_id,
-    uint8_t with_components,
-    const char *payload_json,
-    const dcc_rest_multipart_file_t *files,
-    size_t file_count,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_webhook_execute_t *execute,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 #ifdef __cplusplus

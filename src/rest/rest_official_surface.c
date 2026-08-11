@@ -1,4 +1,6 @@
 #include "internal/rest/dcc_rest_buffer_internal.h"
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_json_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
 #include "internal/rest/dcc_rest_request_core_internal.h"
@@ -1085,53 +1087,68 @@ dcc_status_t dcc_rest_delete_current_user_application_role_connection(
     return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_DELETE, path, NULL, cb, user_data) : status;
 }
 
-static dcc_status_t dcc_rest_webhook_compat_path(
-    char *path,
-    size_t path_size,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    const char *suffix
-) {
-    char *token = NULL;
-    dcc_status_t status = webhook_id != 0 ? dcc_rest_escape_required(webhook_token, &token) : DCC_ERR_INVALID_ARG;
-    if (status == DCC_OK) {
-        status = dcc_rest_format_path(
-            path,
-            path_size,
-            "/webhooks/%llu/%s/%s",
-            (unsigned long long)webhook_id,
-            token,
-            suffix
-        );
-    }
-    free(token);
-    return status;
-}
-
 dcc_status_t dcc_rest_execute_webhook_slack(
     dcc_client_t *client,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_webhook_compat_payload_t *payload,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[192];
-    dcc_status_t status = dcc_rest_webhook_compat_path(path, sizeof(path), webhook_id, webhook_token, "slack");
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_POST, path, json_body, cb, user_data) : status;
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || webhook_id == 0U ||
+        webhook_token == NULL || webhook_token[0] == '\0' || payload == NULL ||
+        payload->size < sizeof(*payload) ||
+        payload->version != DCC_REST_WEBHOOK_COMPAT_PAYLOAD_VERSION ||
+        (payload->body_len != 0U && payload->body == NULL))
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    char *token = NULL;
+    char *path = NULL;
+    status = dcc_rest_escape_path_segment(webhook_token, &token);
+    if (status == DCC_OK) status = dcc_rest_alloc_formatted_path(
+        &path, DCC_REST_ROUTE_WEBHOOK_EXECUTE_SLACK,
+        (unsigned long long)webhook_id, token);
+    dcc_endpoint_body_t body = {
+        (char *)payload->body, payload->body_len, "application/json"
+    };
+    if (status == DCC_OK) status = dcc_endpoint_submit(
+        client, DCC_REST_POST, path, &body, &resolved, out_request);
+    free(token);
+    free(path);
+    return status;
 }
 
 dcc_status_t dcc_rest_execute_webhook_github(
     dcc_client_t *client,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_webhook_compat_payload_t *payload,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[192];
-    dcc_status_t status = dcc_rest_webhook_compat_path(path, sizeof(path), webhook_id, webhook_token, "github");
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_POST, path, json_body, cb, user_data) : status;
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || webhook_id == 0U ||
+        webhook_token == NULL || webhook_token[0] == '\0' || payload == NULL ||
+        payload->size < sizeof(*payload) ||
+        payload->version != DCC_REST_WEBHOOK_COMPAT_PAYLOAD_VERSION ||
+        (payload->body_len != 0U && payload->body == NULL))
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    char *token = NULL;
+    char *path = NULL;
+    status = dcc_rest_escape_path_segment(webhook_token, &token);
+    if (status == DCC_OK) status = dcc_rest_alloc_formatted_path(
+        &path, DCC_REST_ROUTE_WEBHOOK_EXECUTE_GITHUB,
+        (unsigned long long)webhook_id, token);
+    dcc_endpoint_body_t body = {
+        (char *)payload->body, payload->body_len, "application/json"
+    };
+    if (status == DCC_OK) status = dcc_endpoint_submit(
+        client, DCC_REST_POST, path, &body, &resolved, out_request);
+    free(token);
+    free(path);
+    return status;
 }
 
 dcc_status_t dcc_rest_create_lobby(dcc_client_t *client, const char *json_body, dcc_rest_cb cb, void *user_data) {

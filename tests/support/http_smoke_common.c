@@ -103,6 +103,62 @@ void rest_cb(dcc_client_t *client, const dcc_rest_response_t *response, void *us
     }
 }
 
+void rest_result_cb(dcc_client_t *client, const dcc_rest_result_t *result, void *user_data) {
+    dcc_rest_response_t response = {
+        .size = sizeof(response),
+        .status = result != NULL ? result->http_status : 0U,
+        .error = result != NULL ? dcc_rest_result_status(result) : DCC_ERR_INVALID_ARG,
+        .body = result != NULL ? result->body : NULL,
+        .body_len = result != NULL ? result->body_len : 0U,
+    };
+    rest_cb(client, &response, user_data);
+}
+
+dcc_rest_call_options_t rest_call_options(void *user_data) {
+    dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+    options.callback = rest_result_cb;
+    options.user_data = user_data;
+    return options;
+}
+
+dcc_rest_call_options_t rest_call_options_from_legacy(dcc_rest_cb cb, void *user_data) {
+    (void)cb;
+    return rest_call_options(user_data);
+}
+
+static void *rest_client_runtime_main(void *arg) {
+    (void)dcc_client_wait((dcc_client_t *)arg);
+    return NULL;
+}
+
+dcc_status_t rest_activate_client(dcc_client_t *client) {
+    dcc_status_t status = dcc_client_start(client);
+    if (status != DCC_OK) {
+        return status;
+    }
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, rest_client_runtime_main, client) != 0) {
+        (void)dcc_client_stop(client);
+        return DCC_ERR_RUNTIME;
+    }
+    if (pthread_detach(thread) != 0) {
+        (void)dcc_client_stop(client);
+        (void)pthread_join(thread, NULL);
+        return DCC_ERR_RUNTIME;
+    }
+    return DCC_OK;
+}
+
+dcc_status_t rest_await_submission(
+    dcc_client_t *client,
+    dcc_status_t admission_status
+) {
+    if (admission_status != DCC_OK) {
+        return admission_status;
+    }
+    return dcc_rest_async_wait(client, 5000U);
+}
+
 void rate_limited_cb(dcc_client_t *client, const dcc_event_t *event, void *user_data) {
     (void)client;
     rest_seen_t *seen = (rest_seen_t *)user_data;

@@ -45,6 +45,9 @@ static dcc_status_t dispatch_failure_smoke(const char *marker, const char *label
 
     dcc_client_options_t client_options = { .size = sizeof(client_options), .token = "" };
     dcc_client_t *client = NULL;
+    dcc_hot_reload_test_wait_state_t wait_state;
+    pthread_t wait_thread;
+    int runtime_started = 0;
     dcc_hot_reload_t *hot_reload = NULL;
     dcc_hot_reload_options_t options = {
         .size = sizeof(options),
@@ -61,6 +64,14 @@ static dcc_status_t dispatch_failure_smoke(const char *marker, const char *label
         status = dcc_client_create(&client_options, &client);
     }
     if (status == DCC_OK) {
+        if (dcc_hot_reload_test_client_runtime_start(
+                client, &wait_state, &wait_thread) != 0) {
+            status = DCC_ERR_RUNTIME;
+        } else {
+            runtime_started = 1;
+        }
+    }
+    if (status == DCC_OK) {
         status = dcc_hot_reload_create(client, module_path, &options, &hot_reload);
     }
     if (status == DCC_OK) {
@@ -68,6 +79,9 @@ static dcc_status_t dispatch_failure_smoke(const char *marker, const char *label
     }
     if (status == DCC_OK && dcc_hot_reload_test_dispatch_raw_slash(client, sequence) != 0) {
         status = DCC_ERR_RUNTIME;
+    }
+    if (status == DCC_OK) {
+        status = dcc_rest_async_wait(client, 3000U);
     }
     if (status == DCC_OK &&
         strstr(dcc_hot_reload_last_error(hot_reload), "temporary interaction error") == NULL) {
@@ -87,6 +101,14 @@ static dcc_status_t dispatch_failure_smoke(const char *marker, const char *label
     }
 
     dcc_hot_reload_destroy(hot_reload);
+    if (runtime_started) {
+        dcc_status_t stop_status = dcc_hot_reload_test_client_runtime_stop(
+            client, &wait_state, wait_thread
+        );
+        if (status == DCC_OK) {
+            status = stop_status;
+        }
+    }
     dcc_client_destroy(client);
     close(server.fd);
     if (thread_started) {
@@ -150,6 +172,9 @@ static dcc_status_t dispatch_last_good_failure_smoke(void) {
 
     dcc_client_options_t client_options = { .size = sizeof(client_options), .token = "" };
     dcc_client_t *client = NULL;
+    dcc_hot_reload_test_wait_state_t wait_state;
+    pthread_t wait_thread;
+    int runtime_started = 0;
     dcc_hot_reload_t *hot_reload = NULL;
     dcc_hot_reload_options_t options = {
         .size = sizeof(options),
@@ -166,6 +191,14 @@ static dcc_status_t dispatch_last_good_failure_smoke(void) {
         status = dcc_client_create(&client_options, &client);
     }
     if (status == DCC_OK) {
+        if (dcc_hot_reload_test_client_runtime_start(
+                client, &wait_state, &wait_thread) != 0) {
+            status = DCC_ERR_RUNTIME;
+        } else {
+            runtime_started = 1;
+        }
+    }
+    if (status == DCC_OK) {
         status = dcc_hot_reload_create(client, module_path, &options, &hot_reload);
     }
     if (status == DCC_OK) {
@@ -179,6 +212,9 @@ static dcc_status_t dispatch_last_good_failure_smoke(void) {
     }
     if (status == DCC_OK && dcc_hot_reload_test_dispatch_raw_slash(client, 103U) != 0) {
         status = DCC_ERR_RUNTIME;
+    }
+    if (status == DCC_OK) {
+        status = dcc_rest_async_wait(client, 3000U);
     }
     if (status == DCC_OK &&
         strstr(dcc_hot_reload_last_error(hot_reload), "temporary interaction error") == NULL) {
@@ -198,6 +234,14 @@ static dcc_status_t dispatch_last_good_failure_smoke(void) {
     }
 
     dcc_hot_reload_destroy(hot_reload);
+    if (runtime_started) {
+        dcc_status_t stop_status = dcc_hot_reload_test_client_runtime_stop(
+            client, &wait_state, wait_thread
+        );
+        if (status == DCC_OK) {
+            status = stop_status;
+        }
+    }
     dcc_client_destroy(client);
     close(server.fd);
     if (thread_started) {

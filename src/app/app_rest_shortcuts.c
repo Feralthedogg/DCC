@@ -33,6 +33,8 @@
 #include <dcc/rest/resources/invites.h>
 #include <dcc/rest/resources/stage_instances.h>
 #include <dcc/rest/resources/templates.h>
+
+#include "internal/rest/dcc_rest_endpoint_internal.h"
 #include <dcc/rest/resources/users.h>
 #include <dcc/rest/resources/voice_states.h>
 #include <dcc/rest/roles.h>
@@ -577,13 +579,11 @@ dcc_status_t dcc_app_edit_message(
     if (app == NULL || channel_id == 0U || message_id == 0U || message == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_edit_message_builder(
-        dcc_app_client(app),
-        channel_id,
-        message_id,
-        message,
-        cb,
-        user_data
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_init(&payload, message);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_edit_message,
+        dcc_app_client(app), channel_id, message_id, &payload
     );
 }
 
@@ -617,7 +617,10 @@ dcc_status_t dcc_app_delete_message(
     if (app == NULL || channel_id == 0U || message_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_message(dcc_app_client(app), channel_id, message_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_message,
+        dcc_app_client(app), channel_id, message_id
+    );
 }
 
 dcc_status_t dcc_app_crosspost_message(
@@ -630,7 +633,10 @@ dcc_status_t dcc_app_crosspost_message(
     if (app == NULL || channel_id == 0U || message_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_crosspost_message(dcc_app_client(app), channel_id, message_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_crosspost_message,
+        dcc_app_client(app), channel_id, message_id
+    );
 }
 
 dcc_status_t dcc_app_pin_message(
@@ -643,7 +649,10 @@ dcc_status_t dcc_app_pin_message(
     if (app == NULL || channel_id == 0U || message_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_pin_message(dcc_app_client(app), channel_id, message_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_pin_message,
+        dcc_app_client(app), channel_id, message_id
+    );
 }
 
 dcc_status_t dcc_app_unpin_message(
@@ -656,7 +665,10 @@ dcc_status_t dcc_app_unpin_message(
     if (app == NULL || channel_id == 0U || message_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_unpin_message(dcc_app_client(app), channel_id, message_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_unpin_message,
+        dcc_app_client(app), channel_id, message_id
+    );
 }
 
 dcc_status_t dcc_app_add_message_reaction(
@@ -670,7 +682,10 @@ dcc_status_t dcc_app_add_message_reaction(
     if (app == NULL || channel_id == 0U || message_id == 0U || reaction == NULL || reaction[0] == '\0') {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_add_message_reaction(dcc_app_client(app), channel_id, message_id, reaction, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_add_message_reaction,
+        dcc_app_client(app), channel_id, message_id, reaction
+    );
 }
 
 dcc_status_t dcc_app_delete_own_message_reaction(
@@ -684,13 +699,9 @@ dcc_status_t dcc_app_delete_own_message_reaction(
     if (app == NULL || channel_id == 0U || message_id == 0U || reaction == NULL || reaction[0] == '\0') {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_own_message_reaction(
-        dcc_app_client(app),
-        channel_id,
-        message_id,
-        reaction,
-        cb,
-        user_data
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_own_message_reaction,
+        dcc_app_client(app), channel_id, message_id, reaction
     );
 }
 
@@ -711,14 +722,9 @@ dcc_status_t dcc_app_delete_user_message_reaction(
         user_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_user_message_reaction(
-        dcc_app_client(app),
-        channel_id,
-        message_id,
-        reaction,
-        user_id,
-        cb,
-        user_data
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_user_message_reaction,
+        dcc_app_client(app), channel_id, message_id, reaction, user_id
     );
 }
 
@@ -732,7 +738,10 @@ dcc_status_t dcc_app_delete_all_message_reactions(
     if (app == NULL || channel_id == 0U || message_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_all_message_reactions(dcc_app_client(app), channel_id, message_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_all_message_reactions,
+        dcc_app_client(app), channel_id, message_id
+    );
 }
 
 dcc_status_t dcc_app_delete_all_message_reactions_for_emoji(
@@ -746,13 +755,9 @@ dcc_status_t dcc_app_delete_all_message_reactions_for_emoji(
     if (app == NULL || channel_id == 0U || message_id == 0U || reaction == NULL || reaction[0] == '\0') {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_all_message_reactions_for_emoji(
-        dcc_app_client(app),
-        channel_id,
-        message_id,
-        reaction,
-        cb,
-        user_data
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_all_message_reactions_for_emoji,
+        dcc_app_client(app), channel_id, message_id, reaction
     );
 }
 

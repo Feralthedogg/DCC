@@ -11,14 +11,83 @@
 #include <stdio.h>
 #include <string.h>
 
-#if !defined(_WIN32)
+#if defined(_WIN32)
+#include <windows.h>
+#else
 #include <pthread.h>
 #include <unistd.h>
 #endif
 
 typedef struct response_state_intercept_seen {
-    unsigned requests;
+    atomic_uint requests;
 } response_state_intercept_seen_t;
+
+typedef struct response_state_runner {
+    dcc_client_t *client;
+    dcc_status_t status;
+#if defined(_WIN32)
+    HANDLE thread;
+#else
+    pthread_t thread;
+#endif
+} response_state_runner_t;
+
+#if defined(_WIN32)
+static DWORD WINAPI response_state_runner_main(LPVOID user_data) {
+#else
+static void *response_state_runner_main(void *user_data) {
+#endif
+    response_state_runner_t *runner = (response_state_runner_t *)user_data;
+    runner->status = dcc_client_wait(runner->client);
+#if defined(_WIN32)
+    return 0U;
+#else
+    return NULL;
+#endif
+}
+
+static int response_state_runner_start(
+    dcc_client_t *client,
+    response_state_runner_t *runner
+) {
+    memset(runner, 0, sizeof(*runner));
+    runner->client = client;
+    runner->status = DCC_ERR_STATE;
+    if (dcc_client_start(client) != DCC_OK) {
+        return 0;
+    }
+#if defined(_WIN32)
+    runner->thread = CreateThread(
+        NULL,
+        0U,
+        response_state_runner_main,
+        runner,
+        0U,
+        NULL
+    );
+    return runner->thread != NULL;
+#else
+    return pthread_create(
+        &runner->thread,
+        NULL,
+        response_state_runner_main,
+        runner
+    ) == 0;
+#endif
+}
+
+static void response_state_runner_stop(response_state_runner_t *runner) {
+    if (runner == NULL || runner->client == NULL) {
+        return;
+    }
+    (void)dcc_client_stop(runner->client);
+#if defined(_WIN32)
+    (void)WaitForSingleObject(runner->thread, INFINITE);
+    (void)CloseHandle(runner->thread);
+#else
+    (void)pthread_join(runner->thread, NULL);
+#endif
+}
 
 #if !defined(_WIN32)
 typedef struct response_state_reentrant_seen {
@@ -26,8 +95,8 @@ typedef struct response_state_reentrant_seen {
     dcc_app_auto_defer_t *auto_defer;
     atomic_uint nested_done;
     atomic_uint watchdog_timed_out;
-    unsigned outer_callbacks;
-    dcc_status_t nested_status;
+    atomic_uint outer_callbacks;
+    atomic_int nested_status;
 } response_state_reentrant_seen_t;
 #endif
 
@@ -50,7 +119,11 @@ static dcc_status_t response_state_intercept(
     response_state_intercept_seen_t *seen =
         (response_state_intercept_seen_t *)intercept_user_data;
     if (seen != NULL) {
-        seen->requests++;
+        (void)atomic_fetch_add_explicit(
+            &seen->requests,
+            1U,
+            memory_order_relaxed
+        );
     }
     if (cb != NULL) {
         dcc_rest_response_t response = {
@@ -75,12 +148,15 @@ static void response_state_reentrant_cb(
     if (seen == NULL || response == NULL || response->status != 204U) {
         return;
     }
-    seen->outer_callbacks++;
-    seen->nested_status = dcc_ctx_reply_text(
-        seen->ctx,
-        "nested reply",
-        NULL,
-        NULL
+    (void)atomic_fetch_add_explicit(
+        &seen->outer_callbacks,
+        1U,
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &seen->nested_status,
+        dcc_ctx_reply_text(seen->ctx, "nested reply", NULL, NULL),
+        memory_order_release
     );
     atomic_store_explicit(&seen->nested_done, 1U, memory_order_release);
 }
@@ -113,7 +189,13 @@ static int app_smoke_check_same_context_reentry(void) {
     if (dcc_client_create(&options, &client) != DCC_OK) {
         return 0;
     }
-    response_state_intercept_seen_t intercept_seen = {0};
+    response_state_runner_t runner;
+    if (!response_state_runner_start(client, &runner)) {
+        dcc_client_destroy(client);
+        return 0;
+    }
+    response_state_intercept_seen_t intercept_seen;
+    atomic_init(&intercept_seen.requests, 0U);
     dcc_rest_set_interceptor(client, response_state_intercept, &intercept_seen);
     dcc_interaction_t interaction = {
         .id = 11U,
@@ -134,10 +216,11 @@ static int app_smoke_check_same_context_reentry(void) {
     response_state_reentrant_seen_t seen = {
         .ctx = &ctx,
         .auto_defer = &auto_defer,
-        .nested_status = DCC_OK,
     };
     atomic_init(&seen.nested_done, 0U);
     atomic_init(&seen.watchdog_timed_out, 0U);
+    atomic_init(&seen.outer_callbacks, 0U);
+    atomic_init(&seen.nested_status, DCC_ERR_RUNTIME);
     pthread_t watchdog;
     if (pthread_create(
             &watchdog,
@@ -146,6 +229,7 @@ static int app_smoke_check_same_context_reentry(void) {
             &seen
         ) != 0) {
         ctx.auto_defer = NULL;
+        response_state_runner_stop(&runner);
         dcc_client_destroy(client);
         return 0;
     }
@@ -155,15 +239,21 @@ static int app_smoke_check_same_context_reentry(void) {
         response_state_reentrant_cb,
         &seen
     );
+    dcc_status_t drain_status = status == DCC_OK
+        ? dcc_rest_async_wait(client, 5000U)
+        : DCC_ERR_STATE;
     int join_status = pthread_join(watchdog, NULL);
-    int passed = status == DCC_OK && join_status == 0 &&
+    int passed = status == DCC_OK && drain_status == DCC_OK && join_status == 0 &&
         atomic_load_explicit(&seen.watchdog_timed_out, memory_order_acquire) == 0U &&
-        seen.nested_status == DCC_ERR_STATE && seen.outer_callbacks == 1U &&
-        intercept_seen.requests == 1U && dcc_ctx_response_sent(&ctx);
+        atomic_load_explicit(&seen.nested_status, memory_order_acquire) == DCC_OK &&
+        atomic_load_explicit(&seen.outer_callbacks, memory_order_acquire) == 1U &&
+        atomic_load_explicit(&intercept_seen.requests, memory_order_acquire) == 2U &&
+        dcc_ctx_response_sent(&ctx) && dcc_ctx_followed_up(&ctx);
     ctx.auto_defer = NULL;
+    response_state_runner_stop(&runner);
     dcc_client_destroy(client);
     if (!passed) {
-        fprintf(stderr, "same-context synchronous reply reentry did not fail fast\n");
+        fprintf(stderr, "same-context asynchronous reply continuation mismatch\n");
     }
     return passed;
 }
@@ -183,7 +273,13 @@ static int app_smoke_check_auto_defer_local_retry(void) {
     if (dcc_client_create(&options, &client) != DCC_OK) {
         return 0;
     }
-    response_state_intercept_seen_t seen = {0};
+    response_state_runner_t runner;
+    if (!response_state_runner_start(client, &runner)) {
+        dcc_client_destroy(client);
+        return 0;
+    }
+    response_state_intercept_seen_t seen;
+    atomic_init(&seen.requests, 0U);
     dcc_rest_set_interceptor(client, response_state_intercept, &seen);
 
     dcc_interaction_t interaction = {
@@ -209,7 +305,8 @@ static int app_smoke_check_auto_defer_local_retry(void) {
     dcc_status_t status = dcc_ctx_reply(&ctx, &invalid, NULL, NULL);
     int local_failure_ok = status == DCC_ERR_INVALID_ARG &&
         dcc_ctx_response_state(&ctx) == DCC_INTERACTION_FLOW_FAILED &&
-        !dcc_ctx_response_sent(&ctx) && seen.requests == 0U;
+        !dcc_ctx_response_sent(&ctx) &&
+        atomic_load_explicit(&seen.requests, memory_order_acquire) == 0U;
 
     dcc_message_builder_t valid;
     dcc_message_builder_init(&valid);
@@ -217,7 +314,11 @@ static int app_smoke_check_auto_defer_local_retry(void) {
     if (status == DCC_OK) {
         status = dcc_ctx_reply(&ctx, &valid, NULL, NULL);
     }
-    int retry_ok = status == DCC_OK && seen.requests == 1U &&
+    dcc_status_t drain_status = status == DCC_OK
+        ? dcc_rest_async_wait(client, 5000U)
+        : DCC_ERR_STATE;
+    int retry_ok = status == DCC_OK && drain_status == DCC_OK &&
+        atomic_load_explicit(&seen.requests, memory_order_acquire) == 1U &&
         dcc_ctx_response_state(&ctx) == DCC_INTERACTION_FLOW_REPLIED &&
         dcc_ctx_response_sent(&ctx) && dcc_ctx_replied(&ctx);
 
@@ -247,7 +348,11 @@ static int app_smoke_check_auto_defer_local_retry(void) {
     if (status == DCC_OK) {
         status = dcc_ctx_reply_autocomplete(&ctx, &autocomplete, NULL, NULL);
     }
-    int autocomplete_ok = status == DCC_OK && seen.requests == 2U &&
+    drain_status = status == DCC_OK
+        ? dcc_rest_async_wait(client, 5000U)
+        : DCC_ERR_STATE;
+    int autocomplete_ok = status == DCC_OK && drain_status == DCC_OK &&
+        atomic_load_explicit(&seen.requests, memory_order_acquire) == 2U &&
         atomic_load_explicit(
             &auto_defer.initial_response_admitted,
             memory_order_acquire
@@ -258,6 +363,7 @@ static int app_smoke_check_auto_defer_local_retry(void) {
         dcc_ctx_response_sent(&ctx) && dcc_ctx_replied(&ctx);
 
     ctx.auto_defer = NULL;
+    response_state_runner_stop(&runner);
     dcc_client_destroy(client);
     if (!local_failure_ok || !retry_ok || !autocomplete_ok) {
         fprintf(stderr, "ctx auto-defer local admission retry mismatch\n");

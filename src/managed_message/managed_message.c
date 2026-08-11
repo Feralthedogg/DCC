@@ -3,6 +3,8 @@
 #include <dcc/rest/messages/edit.h>
 #include <dcc/rest/response_helpers.h>
 
+#include "internal/rest/dcc_rest_paths_internal.h"
+
 #include <stdlib.h>
 
 typedef struct dcc_managed_message_publish_state {
@@ -78,13 +80,17 @@ static dcc_status_t dcc_managed_message_create(
     dcc_managed_message_publish_state_t *state,
     int emit_callback_on_error
 ) {
-    dcc_status_t status = dcc_rest_create_message(
-        client,
-        state->channel_id,
-        state->payload_json,
-        dcc_managed_message_create_cb,
-        state
+    char path[80];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/channels/%llu/messages",
+        (unsigned long long)state->channel_id
     );
+    if (status == DCC_OK) {
+        status = dcc_rest_request_method(
+            client, DCC_REST_POST, path, state->payload_json,
+            dcc_managed_message_create_cb, state
+        );
+    }
     if (status != DCC_OK && emit_callback_on_error) {
         dcc_managed_message_emit_error(client, state, status);
     }
@@ -156,13 +162,18 @@ dcc_status_t dcc_managed_message_publish_latest(
     }
 
     if (!options->keep_previous && old_ref.message_id != 0) {
-        status = dcc_rest_delete_message(
-            client,
-            old_ref.channel_id,
-            old_ref.message_id,
-            dcc_managed_message_delete_cb,
-            state
+        char path[112];
+        status = dcc_rest_format_path(
+            path, sizeof(path), "/channels/%llu/messages/%llu",
+            (unsigned long long)old_ref.channel_id,
+            (unsigned long long)old_ref.message_id
         );
+        if (status == DCC_OK) {
+            status = dcc_rest_request_method(
+                client, DCC_REST_DELETE, path, NULL,
+                dcc_managed_message_delete_cb, state
+            );
+        }
         if (status != DCC_OK) {
             dcc_managed_message_publish_state_free(state);
         }

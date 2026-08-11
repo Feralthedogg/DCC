@@ -1,46 +1,74 @@
-#include "internal/rest/dcc_rest_buffer_internal.h"
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
 #include "internal/rest/dcc_rest_query_append_internal.h"
-#include "internal/rest/dcc_rest_request_internal.h"
+
+#include <stdlib.h>
+
+static dcc_status_t dcc_message_list_query_build(
+    const dcc_rest_message_list_query_t *query,
+    dcc_rest_buffer_t *out
+) {
+    const uint64_t known = DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND |
+        DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE |
+        DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER |
+        DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT;
+    if (query == NULL) return DCC_OK;
+    if (query->size < sizeof(*query) ||
+        query->version != DCC_REST_MESSAGE_LIST_QUERY_VERSION ||
+        (query->present & ~known) != 0U) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    uint64_t cursors = query->present &
+        (DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND |
+         DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE |
+         DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER);
+    if ((cursors & (cursors - 1U)) != 0U ||
+        ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND) != 0U && query->around == 0U) ||
+        ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE) != 0U && query->before == 0U) ||
+        ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER) != 0U && query->after == 0U) ||
+        ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT) != 0U &&
+            (query->limit == 0U || query->limit > 100U))) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_status_t status = DCC_OK;
+    if ((query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND) != 0U)
+        status = dcc_rest_query_append_u64_value(out, "around", query->around);
+    if (status == DCC_OK && (query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE) != 0U)
+        status = dcc_rest_query_append_u64_value(out, "before", query->before);
+    if (status == DCC_OK && (query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER) != 0U)
+        status = dcc_rest_query_append_u64_value(out, "after", query->after);
+    if (status == DCC_OK && (query->present & DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT) != 0U)
+        status = dcc_rest_query_append_u64_value(out, "limit", query->limit);
+    return status;
+}
 
 dcc_status_t dcc_rest_get_channel_messages(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
-    const char *query,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_message_list_query_t *query,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[80];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/channels/%llu/messages", (unsigned long long)channel_id);
-    return status == DCC_OK ? dcc_rest_request_with_query(client, DCC_REST_GET, path, query, NULL, cb, user_data) : status;
-}
-
-dcc_status_t dcc_rest_get_channel_messages_page(
-    dcc_client_t *client,
-    dcc_snowflake_t channel_id,
-    dcc_snowflake_t around,
-    dcc_snowflake_t before,
-    dcc_snowflake_t after,
-    uint64_t limit,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_rest_buffer_t query = {0};
-    uint64_t capped_limit = limit > 100ULL ? 100ULL : limit;
-    dcc_status_t status = dcc_rest_query_append_u64(&query, "after", after);
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_u64(&query, "around", around);
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U) {
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
     }
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_u64(&query, "before", before);
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_u64(&query, "limit", capped_limit);
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_get_channel_messages(client, channel_id, query.data, cb, user_data);
-    }
-    dcc_rest_buffer_deinit(&query);
+    dcc_rest_buffer_t query_text = {0};
+    status = dcc_message_list_query_build(query, &query_text);
+    char *base = NULL;
+    char *path = NULL;
+    if (status == DCC_OK) status = dcc_rest_alloc_formatted_path(
+        &base, DCC_REST_ROUTE_CHANNEL_MESSAGES, (unsigned long long)channel_id
+    );
+    if (status == DCC_OK) status = dcc_endpoint_path_with_query(base, &query_text, &path);
+    if (status == DCC_OK) status = dcc_endpoint_submit(
+        client, DCC_REST_GET, path, NULL, &resolved, out_request
+    );
+    free(base);
+    free(path);
+    dcc_rest_buffer_deinit(&query_text);
     return status;
 }
 
@@ -48,16 +76,22 @@ dcc_status_t dcc_rest_get_message(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[112];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/channels/%llu/messages/%llu",
-        (unsigned long long)channel_id,
-        (unsigned long long)message_id
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U) {
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    }
+    char *path = NULL;
+    status = dcc_rest_alloc_formatted_path(
+        &path, DCC_REST_ROUTE_CHANNEL_MESSAGE,
+        (unsigned long long)channel_id, (unsigned long long)message_id
     );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_GET, path, NULL, cb, user_data) : status;
+    if (status == DCC_OK) status = dcc_endpoint_submit(
+        client, DCC_REST_GET, path, NULL, &resolved, out_request
+    );
+    free(path);
+    return status;
 }

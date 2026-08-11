@@ -1,6 +1,35 @@
 #include <dcc/interaction_helpers.h>
 #include <dcc/rest/interactions/responses.h>
 
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+
+static dcc_status_t dcc_interaction_submit_response(
+    dcc_client_t *client,
+    const dcc_interaction_t *interaction,
+    const dcc_rest_interaction_response_t *response,
+    dcc_rest_cb cb,
+    void *user_data
+) {
+    if (client == NULL || interaction == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_rest_call_options_t options;
+    void *bridge = NULL;
+    dcc_status_t status = dcc_endpoint_legacy_options(
+        cb, user_data, &options, &bridge
+    );
+    if (status == DCC_OK) {
+        status = dcc_rest_interaction_response_create(
+            client, interaction->id, interaction->token, response,
+            &options, NULL
+        );
+    }
+    if (status != DCC_OK) {
+        dcc_endpoint_legacy_bridge_release(bridge);
+    }
+    return status;
+}
+
 dcc_status_t dcc_interaction_reply_message(
     dcc_client_t *client,
     const dcc_interaction_t *interaction,
@@ -8,14 +37,13 @@ dcc_status_t dcc_interaction_reply_message(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    return dcc_rest_interaction_response_create_from_interaction_message_builder(
-        client,
-        interaction,
-        DCC_INTERACTION_RESPONSE_CHANNEL_MESSAGE_WITH_SOURCE,
-        message,
-        cb,
-        user_data
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_status_t status = dcc_rest_interaction_response_set_message(
+        &response, message
     );
+    return status == DCC_OK
+        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
+        : status;
 }
 
 dcc_status_t dcc_interaction_reply_text(
@@ -135,12 +163,13 @@ dcc_status_t dcc_interaction_defer(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    return dcc_rest_interaction_response_create_deferred_message_from_interaction(
-        client,
-        interaction,
-        cb,
-        user_data
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_status_t status = dcc_rest_interaction_response_set_deferred_message(
+        &response, NULL
     );
+    return status == DCC_OK
+        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
+        : status;
 }
 
 dcc_status_t dcc_interaction_defer_ephemeral(
@@ -155,14 +184,13 @@ dcc_status_t dcc_interaction_defer_ephemeral(
         .present = DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
         .flags = DCC_MESSAGE_FLAG_EPHEMERAL,
     };
-    return dcc_rest_interaction_response_create_from_interaction_message_builder(
-        client,
-        interaction,
-        DCC_INTERACTION_RESPONSE_DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
-        &message,
-        cb,
-        user_data
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_status_t status = dcc_rest_interaction_response_set_deferred_message(
+        &response, &message
     );
+    return status == DCC_OK
+        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
+        : status;
 }
 
 dcc_status_t dcc_interaction_update_message(
@@ -172,14 +200,13 @@ dcc_status_t dcc_interaction_update_message(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    return dcc_rest_interaction_response_create_from_interaction_message_builder(
-        client,
-        interaction,
-        DCC_INTERACTION_RESPONSE_UPDATE_MESSAGE,
-        message,
-        cb,
-        user_data
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_status_t status = dcc_rest_interaction_response_set_update_message(
+        &response, message
     );
+    return status == DCC_OK
+        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
+        : status;
 }
 
 dcc_status_t dcc_interaction_show_modal(
@@ -189,11 +216,9 @@ dcc_status_t dcc_interaction_show_modal(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    return dcc_rest_interaction_response_create_modal_from_interaction(
-        client,
-        interaction,
-        modal,
-        cb,
-        user_data
-    );
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_status_t status = dcc_rest_interaction_response_set_modal(&response, modal);
+    return status == DCC_OK
+        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
+        : status;
 }

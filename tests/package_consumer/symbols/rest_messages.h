@@ -10,29 +10,32 @@
 
 typedef dcc_status_t (*dcc_package_message_reaction_fn)(
         dcc_client_t *,
-        const dcc_message_reaction_params_t *,
-        dcc_rest_cb,
-        void *
+        dcc_snowflake_t,
+        dcc_snowflake_t,
+        const char *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_message_flags_fn)(
         dcc_client_t *,
-        const dcc_message_flags_params_t *,
-        dcc_rest_cb,
-        void *
+        dcc_snowflake_t,
+        dcc_snowflake_t,
+        const dcc_rest_message_payload_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_message_pin_fn)(
         dcc_client_t *,
         dcc_snowflake_t,
         dcc_snowflake_t,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_channel_pins_fn)(
         dcc_client_t *,
         dcc_snowflake_t,
-        const char *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_direct_message_builder_fn)(
         dcc_client_t *,
@@ -174,57 +177,34 @@ typedef dcc_status_t (*dcc_package_webhook_message_builder_fn)(
         dcc_snowflake_t,
         const char *,
         dcc_snowflake_t,
-        const char *,
-        const dcc_message_builder_t *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_webhook_message_edit_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_interaction_message_builder_fn)(
         dcc_client_t *,
         dcc_snowflake_t,
         const char *,
-        const dcc_message_builder_t *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_message_payload_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_interaction_followup_edit_builder_fn)(
         dcc_client_t *,
         dcc_snowflake_t,
         const char *,
         dcc_snowflake_t,
-        const dcc_message_builder_t *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_message_payload_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_interaction_response_message_builder_fn)(
         dcc_client_t *,
         dcc_snowflake_t,
         const char *,
-        dcc_interaction_response_type_t,
-        const dcc_message_builder_t *,
-        dcc_rest_cb,
-        void *
-    );
-typedef dcc_status_t (*dcc_package_interaction_response_type_fn)(
-        dcc_client_t *,
-        dcc_snowflake_t,
-        const char *,
-        dcc_interaction_response_type_t,
-        dcc_rest_cb,
-        void *
-    );
-typedef dcc_status_t (*dcc_package_interaction_response_named_fn)(
-        dcc_client_t *,
-        dcc_snowflake_t,
-        const char *,
-        dcc_rest_cb,
-        void *
-    );
-typedef dcc_status_t (*dcc_package_interaction_response_named_from_interaction_fn)(
-        dcc_client_t *,
-        const dcc_interaction_t *,
-        dcc_rest_cb,
-        void *
+        const dcc_rest_interaction_response_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_sticker_create_fn)(
         dcc_client_t *,

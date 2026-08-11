@@ -45,6 +45,22 @@ static dcc_status_t package_official_webhook_cb(
     } while (0)
 
 int dcc_package_consumer_check_official_surface_api(void) {
+    static const char slack_json[] = "{\"text\":\"hi\"}";
+    static const char github_json[] = "{\"zen\":\"hi\"}";
+    dcc_rest_webhook_compat_payload_t slack_payload =
+        DCC_REST_WEBHOOK_COMPAT_PAYLOAD_INIT;
+    dcc_rest_webhook_compat_payload_init(
+        &slack_payload,
+        slack_json,
+        sizeof(slack_json) - 1U
+    );
+    dcc_rest_webhook_compat_payload_t github_payload =
+        DCC_REST_WEBHOOK_COMPAT_PAYLOAD_INIT;
+    dcc_rest_webhook_compat_payload_init(
+        &github_payload,
+        github_json,
+        sizeof(github_json) - 1U
+    );
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_gateway);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_current_application);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_modify_current_application);
@@ -620,8 +636,8 @@ int dcc_package_consumer_check_official_surface_api(void) {
         DCC_REST_STICKER_PACK(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_CURRENT_USER_GUILD_MEMBER(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_DELETE_USER_ROLE_CONNECTION(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_WEBHOOK_SLACK(NULL, 123, "token", "{\"text\":\"hi\"}", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_WEBHOOK_GITHUB(NULL, 123, "token", "{\"zen\":\"hi\"}", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_REST_WEBHOOK_SLACK(NULL, 123, "token", &slack_payload, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_REST_WEBHOOK_GITHUB(NULL, 123, "token", &github_payload, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_CREATE_LOBBY_PARAMS(NULL, &lobby_create, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_CREATE_OR_JOIN_LOBBY_PARAMS(NULL, &lobby_join, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_LOBBY(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
@@ -638,9 +654,9 @@ int dcc_package_consumer_check_official_surface_api(void) {
         DCC_REST_UPDATE_LOBBY_MESSAGE_MODERATION_PARAMS(NULL, 123, 456, &moderation, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_CREATE_LOBBY_INVITE_SELF(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_CREATE_LOBBY_INVITE_USER(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_LEGACY_PIN_MESSAGE(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_LEGACY_UNPIN_MESSAGE(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_LEGACY_CHANNEL_PINS(NULL, 123, "limit=50", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_REST_LEGACY_PIN_MESSAGE(NULL, 123, 456, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_REST_LEGACY_UNPIN_MESSAGE(NULL, 123, 456, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        DCC_REST_LEGACY_CHANNEL_PINS(NULL, 123, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_OAUTH2_EXCHANGE_CODE(NULL, package_official_oauth_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_OAUTH2_REFRESH_TOKEN(NULL, package_official_oauth_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_OAUTH2_REVOKE_TOKEN(NULL, package_official_oauth_cb, NULL) != DCC_ERR_INVALID_ARG ||

@@ -7,6 +7,8 @@
 #define DCC_REST_OFFICIAL_SURFACE_H
 
 #include <dcc/rest/base.h>
+#include <dcc/rest/request.h>
+#include <dcc/rest/types/webhooks.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -485,9 +487,9 @@ DCC_API dcc_status_t dcc_rest_execute_webhook_slack(
     dcc_client_t *client,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_webhook_compat_payload_t *payload,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 /**
@@ -497,9 +499,9 @@ DCC_API dcc_status_t dcc_rest_execute_webhook_github(
     dcc_client_t *client,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_webhook_compat_payload_t *payload,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 typedef struct dcc_lobby_create_or_join_params {

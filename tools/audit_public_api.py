@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import pathlib
 import re
@@ -66,6 +67,29 @@ def previous_api_names(source: pathlib.Path) -> set[str] | None:
             continue
         names.update(api_names_from_text(text))
     return names
+
+
+def intentional_api_removals(source: pathlib.Path) -> set[str]:
+    manifest_path = source / "tools/rest_v2_endpoints.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    endpoints = manifest.get("endpoints")
+    if not isinstance(endpoints, list):
+        raise ValueError("rest_v2_endpoints.json endpoints must be a list")
+
+    symbols: set[str] = set()
+    for index, endpoint in enumerate(endpoints):
+        if not isinstance(endpoint, dict):
+            raise ValueError(f"endpoint {index} must be an object")
+        legacy_symbols = endpoint.get("legacy_symbols")
+        if not isinstance(legacy_symbols, list) or not all(
+            isinstance(symbol, str) and symbol.startswith("dcc_")
+            for symbol in legacy_symbols
+        ):
+            raise ValueError(
+                f"endpoint {index} legacy_symbols must contain dcc_ names"
+            )
+        symbols.update(legacy_symbols)
+    return symbols
 
 
 def exported_symbols(library: pathlib.Path) -> set[str] | None:
@@ -135,7 +159,12 @@ def main() -> int:
 
     previous = previous_api_names(source)
     if previous is not None:
-        removed = sorted(previous - current)
+        try:
+            allowed_removals = intentional_api_removals(source)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            errors.append(f"could not load intentional API removals: {exc}")
+            allowed_removals = set()
+        removed = sorted(previous - current - allowed_removals)
         if removed:
             errors.append("public API removals relative to origin/main: " + ", ".join(removed))
 

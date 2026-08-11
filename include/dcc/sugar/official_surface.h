@@ -203,17 +203,17 @@
     dcc_rest_get_current_user_guild_member((client_), (guild_id_), (cb_), (user_data_))
 #define DCC_REST_DELETE_USER_ROLE_CONNECTION(client_, application_id_, cb_, user_data_) \
     dcc_rest_delete_current_user_application_role_connection((client_), (application_id_), (cb_), (user_data_))
-#define DCC_REST_WEBHOOK_SLACK(client_, webhook_id_, token_, json_, cb_, user_data_) \
-    dcc_rest_execute_webhook_slack((client_), (webhook_id_), (token_), (json_), (cb_), (user_data_))
-#define DCC_REST_WEBHOOK_GITHUB(client_, webhook_id_, token_, json_, cb_, user_data_) \
-    dcc_rest_execute_webhook_github((client_), (webhook_id_), (token_), (json_), (cb_), (user_data_))
+#define DCC_REST_WEBHOOK_SLACK(client_, webhook_id_, token_, payload_, options_, out_request_) \
+    dcc_rest_execute_webhook_slack((client_), (webhook_id_), (token_), (payload_), (options_), (out_request_))
+#define DCC_REST_WEBHOOK_GITHUB(client_, webhook_id_, token_, payload_, options_, out_request_) \
+    dcc_rest_execute_webhook_github((client_), (webhook_id_), (token_), (payload_), (options_), (out_request_))
 
-#define DCC_REST_LEGACY_PIN_MESSAGE(client_, channel_id_, message_id_, cb_, user_data_) \
-    dcc_rest_legacy_pin_message((client_), (channel_id_), (message_id_), (cb_), (user_data_))
-#define DCC_REST_LEGACY_UNPIN_MESSAGE(client_, channel_id_, message_id_, cb_, user_data_) \
-    dcc_rest_legacy_unpin_message((client_), (channel_id_), (message_id_), (cb_), (user_data_))
-#define DCC_REST_LEGACY_CHANNEL_PINS(client_, channel_id_, query_, cb_, user_data_) \
-    dcc_rest_get_legacy_channel_pins((client_), (channel_id_), (query_), (cb_), (user_data_))
+#define DCC_REST_LEGACY_PIN_MESSAGE(client_, channel_id_, message_id_, options_, out_request_) \
+    dcc_rest_legacy_pin_message((client_), (channel_id_), (message_id_), (options_), (out_request_))
+#define DCC_REST_LEGACY_UNPIN_MESSAGE(client_, channel_id_, message_id_, options_, out_request_) \
+    dcc_rest_legacy_unpin_message((client_), (channel_id_), (message_id_), (options_), (out_request_))
+#define DCC_REST_LEGACY_CHANNEL_PINS(client_, channel_id_, options_, out_request_) \
+    dcc_rest_get_legacy_channel_pins((client_), (channel_id_), (options_), (out_request_))
 
 #define DCC_REST_CREATE_LOBBY(client_, json_, cb_, user_data_) \
     dcc_rest_create_lobby((client_), (json_), (cb_), (user_data_))

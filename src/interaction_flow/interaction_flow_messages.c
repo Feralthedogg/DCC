@@ -27,13 +27,15 @@ dcc_status_t dcc_flow_edit_original(
         status = DCC_ERR_STATE;
     }
     if (status == DCC_OK) {
-        status = dcc_rest_interaction_original_response_edit_from_interaction_builder(
-            flow->client,
-            flow->interaction,
-            message,
-            cb,
-            user_data
-        );
+        dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+        dcc_rest_message_payload_init(&payload, message);
+        dcc_rest_call_options_t options;
+        void *bridge = NULL;
+        status = dcc_endpoint_legacy_options(cb, user_data, &options, &bridge);
+        if (status == DCC_OK) status = dcc_rest_interaction_original_response_edit(
+            flow->client, flow->interaction->application_id,
+            flow->interaction->token, &payload, &options, NULL);
+        if (status != DCC_OK) dcc_endpoint_legacy_bridge_release(bridge);
     }
     dcc_flow_mark(flow, DCC_INTERACTION_FLOW_ORIGINAL_EDITED, status);
     return status;
@@ -50,13 +52,15 @@ dcc_status_t dcc_flow_followup(
         status = DCC_ERR_STATE;
     }
     if (status == DCC_OK) {
-        status = dcc_rest_interaction_followup_create_from_interaction_builder(
-            flow->client,
-            flow->interaction,
-            message,
-            cb,
-            user_data
-        );
+        dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+        dcc_rest_message_payload_init(&payload, message);
+        dcc_rest_call_options_t options;
+        void *bridge = NULL;
+        status = dcc_endpoint_legacy_options(cb, user_data, &options, &bridge);
+        if (status == DCC_OK) status = dcc_rest_interaction_followup_create(
+            flow->client, flow->interaction->application_id,
+            flow->interaction->token, &payload, &options, NULL);
+        if (status != DCC_OK) dcc_endpoint_legacy_bridge_release(bridge);
     }
     dcc_flow_mark(flow, DCC_INTERACTION_FLOW_FOLLOWED_UP, status);
     return status;
@@ -82,14 +86,16 @@ dcc_status_t dcc_flow_reply(
         if (status != DCC_OK) {
             return status;
         }
-        status = dcc_rest_interaction_response_create_from_interaction_message_builder(
-            flow->client,
-            flow->interaction,
-            DCC_INTERACTION_RESPONSE_CHANNEL_MESSAGE_WITH_SOURCE,
-            message,
-            cb,
-            user_data
-        );
+        dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+        status = dcc_rest_interaction_response_set_message(&response, message);
+        dcc_rest_call_options_t options;
+        void *bridge = NULL;
+        if (status == DCC_OK) status = dcc_endpoint_legacy_options(
+            cb, user_data, &options, &bridge);
+        if (status == DCC_OK) status = dcc_rest_interaction_response_create(
+            flow->client, flow->interaction->id, flow->interaction->token,
+            &response, &options, NULL);
+        if (status != DCC_OK) dcc_endpoint_legacy_bridge_release(bridge);
         return dcc_flow_mark_initial(
             flow,
             DCC_INTERACTION_FLOW_REPLIED,

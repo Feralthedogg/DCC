@@ -68,6 +68,12 @@ static int dcc_worker_dispatch_event(
     memset(&capture, 0, sizeof(capture));
     dcc_hot_reload_worker_capture_start(client, &capture);
     dcc_status_t status = dcc_worker_dispatch_json(client, json, (size_t)event->json_len);
+    if (status == DCC_OK) {
+        status = dcc_rest_async_wait(
+            client,
+            DCC_HOT_RELOAD_WORKER_CHILD_WRITE_TIMEOUT_MS
+        );
+    }
     dcc_hot_reload_worker_capture_stop(client);
     free(json);
 

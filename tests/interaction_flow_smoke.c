@@ -15,6 +15,7 @@ int main(void) {
 
 #include <pthread.h>
 #include <signal.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,6 +41,26 @@ typedef struct flow_seen {
     dcc_status_t error;
 } flow_seen_t;
 
+typedef struct flow_runner {
+    dcc_client_t *client;
+    dcc_status_t status;
+} flow_runner_t;
+
+static void *flow_runner_main(void *user_data) {
+    flow_runner_t *runner = (flow_runner_t *)user_data;
+    runner->status = dcc_client_wait(runner->client);
+    return NULL;
+}
+
+static void flow_client_shutdown(
+    dcc_client_t *client,
+    pthread_t runner_thread
+) {
+    (void)dcc_client_stop(client);
+    (void)pthread_join(runner_thread, NULL);
+    dcc_client_destroy(client);
+}
+
 static void flow_rest_cb(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data) {
     (void)client;
     flow_seen_t *seen = (flow_seen_t *)user_data;
@@ -51,6 +72,7 @@ static void flow_rest_cb(dcc_client_t *client, const dcc_rest_response_t *respon
 }
 
 static int expect_request(
+    dcc_client_t *client,
     http_server_t *server,
     pthread_t thread,
     dcc_status_t status,
@@ -59,9 +81,12 @@ static int expect_request(
     const char *path,
     const char *body
 ) {
+    dcc_status_t drain_status = status == DCC_OK
+        ? dcc_rest_async_wait(client, 5000U)
+        : DCC_ERR_STATE;
     (void)pthread_join(thread, NULL);
     close(server->fd);
-    if (status != DCC_OK ||
+    if (status != DCC_OK || drain_status != DCC_OK ||
         seen == NULL ||
         !seen->called ||
         seen->status != 200 ||
@@ -114,23 +139,27 @@ typedef struct flow_reentry_case {
     dcc_modal_builder_t modal;
     dcc_autocomplete_builder_t autocomplete;
     flow_reentry_variant_t nested_variant;
-    dcc_status_t nested_status;
-    unsigned request_count;
-    unsigned callback_count;
+    atomic_int nested_status;
+    atomic_uint request_count;
+    atomic_uint callback_count;
+    atomic_bool allow_callback;
 } flow_reentry_case_t;
 
 typedef struct flow_reentry_expectation {
     flow_reentry_variant_t outer_variant;
     flow_reentry_variant_t nested_variant;
-    dcc_interaction_flow_state_t outer_state;
+    dcc_status_t nested_status;
+    unsigned request_count;
+    dcc_interaction_flow_state_t final_state;
     const char *name;
 } flow_reentry_expectation_t;
 
 typedef struct historical_flow_reentry {
     dcc_interaction_flow_t *flow;
-    unsigned request_count;
-    unsigned callback_count;
-    dcc_status_t nested_status;
+    atomic_uint request_count;
+    atomic_uint callback_count;
+    atomic_int nested_status;
+    atomic_bool allow_callback;
 } historical_flow_reentry_t;
 
 static dcc_status_t flow_reentry_invoke(
@@ -185,12 +214,15 @@ static void flow_reentry_outer_cb(
     if (state == NULL || response == NULL || response->status != 204U) {
         return;
     }
-    state->callback_count++;
-    state->nested_status = flow_reentry_invoke(
-        state,
-        state->nested_variant,
-        NULL,
-        NULL
+    (void)atomic_fetch_add_explicit(
+        &state->callback_count,
+        1U,
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &state->nested_status,
+        flow_reentry_invoke(state, state->nested_variant, NULL, NULL),
+        memory_order_release
     );
 }
 
@@ -215,8 +247,18 @@ static dcc_status_t flow_reentry_intercept(
     if (state == NULL) {
         return DCC_ERR_STATE;
     }
-    state->request_count++;
+    (void)atomic_fetch_add_explicit(
+        &state->request_count,
+        1U,
+        memory_order_relaxed
+    );
     if (cb != NULL) {
+        while (!atomic_load_explicit(
+                &state->allow_callback,
+                memory_order_acquire
+            )) {
+            usleep(100U);
+        }
         dcc_rest_response_t response = {
             .size = sizeof(response),
             .status = 204U,
@@ -238,8 +280,16 @@ static void historical_flow_outer_cb(
     if (state == NULL || response == NULL || response->status != 204U) {
         return;
     }
-    state->callback_count++;
-    state->nested_status = dcc_flow_defer(state->flow, NULL, NULL);
+    (void)atomic_fetch_add_explicit(
+        &state->callback_count,
+        1U,
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &state->nested_status,
+        dcc_flow_defer(state->flow, NULL, NULL),
+        memory_order_release
+    );
 }
 
 static dcc_status_t historical_flow_intercept(
@@ -263,8 +313,18 @@ static dcc_status_t historical_flow_intercept(
     if (state == NULL) {
         return DCC_ERR_STATE;
     }
-    state->request_count++;
+    (void)atomic_fetch_add_explicit(
+        &state->request_count,
+        1U,
+        memory_order_relaxed
+    );
     if (cb != NULL) {
+        while (!atomic_load_explicit(
+                &state->allow_callback,
+                memory_order_acquire
+            )) {
+            usleep(100U);
+        }
         dcc_rest_response_t response = {
             .size = sizeof(response),
             .status = 204U,
@@ -278,22 +338,29 @@ static dcc_status_t historical_flow_intercept(
 static int check_initial_reentry_claims(dcc_client_t *client) {
     static const flow_reentry_expectation_t cases[] = {
         { FLOW_REENTRY_REPLY, FLOW_REENTRY_DEFER,
-            DCC_INTERACTION_FLOW_REPLIED, "reply -> defer" },
+            DCC_ERR_STATE, 1U, DCC_INTERACTION_FLOW_REPLIED,
+            "reply -> defer" },
         { FLOW_REENTRY_DEFER, FLOW_REENTRY_REPLY,
-            DCC_INTERACTION_FLOW_DEFERRED, "defer -> reply" },
+            DCC_OK, 2U, DCC_INTERACTION_FLOW_ORIGINAL_EDITED,
+            "defer -> reply" },
         { FLOW_REENTRY_DEFER_EPHEMERAL, FLOW_REENTRY_MODAL,
-            DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL,
+            DCC_ERR_STATE, 1U, DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL,
             "ephemeral defer -> modal" },
         { FLOW_REENTRY_DEFER_UPDATE, FLOW_REENTRY_REPLY,
-            DCC_INTERACTION_FLOW_DEFERRED_UPDATE, "defer update -> reply" },
+            DCC_OK, 2U, DCC_INTERACTION_FLOW_ORIGINAL_EDITED,
+            "defer update -> reply" },
         { FLOW_REENTRY_MODAL, FLOW_REENTRY_AUTOCOMPLETE,
-            DCC_INTERACTION_FLOW_MODAL, "modal -> autocomplete" },
+            DCC_ERR_STATE, 1U, DCC_INTERACTION_FLOW_MODAL,
+            "modal -> autocomplete" },
         { FLOW_REENTRY_AUTOCOMPLETE, FLOW_REENTRY_UPDATE,
-            DCC_INTERACTION_FLOW_REPLIED, "autocomplete -> update" },
+            DCC_ERR_STATE, 1U, DCC_INTERACTION_FLOW_REPLIED,
+            "autocomplete -> update" },
         { FLOW_REENTRY_UPDATE, FLOW_REENTRY_MODAL,
-            DCC_INTERACTION_FLOW_REPLIED, "update -> modal" },
+            DCC_ERR_STATE, 1U, DCC_INTERACTION_FLOW_REPLIED,
+            "update -> modal" },
         { FLOW_REENTRY_MAYBE_AUTO_DEFER, FLOW_REENTRY_REPLY,
-            DCC_INTERACTION_FLOW_DEFERRED, "auto defer -> reply" },
+            DCC_OK, 2U, DCC_INTERACTION_FLOW_ORIGINAL_EDITED,
+            "auto defer -> reply" },
     };
     dcc_interaction_t interaction = {
         .id = 777U,
@@ -303,11 +370,14 @@ static int check_initial_reentry_claims(dcc_client_t *client) {
     for (size_t i = 0U; i < sizeof(cases) / sizeof(cases[0]); ++i) {
         flow_reentry_case_t state;
         memset(&state, 0, sizeof(state));
+        atomic_init(&state.nested_status, DCC_ERR_RUNTIME);
+        atomic_init(&state.request_count, 0U);
+        atomic_init(&state.callback_count, 0U);
+        atomic_init(&state.allow_callback, false);
         state.ctx.client = client;
         state.ctx.interaction = &interaction;
         dcc_flow_init(&state.ctx.flow, client, &interaction);
         state.nested_variant = cases[i].nested_variant;
-        state.nested_status = DCC_OK;
         state.message = (dcc_message_builder_t){
             .size = sizeof(dcc_message_builder_t),
             .version = DCC_MESSAGE_BUILDER_VERSION,
@@ -339,18 +409,39 @@ static int check_initial_reentry_claims(dcc_client_t *client) {
             &state
         );
         uint64_t elapsed_ms = test_now_ms() - started_at;
-        if (outer_status != DCC_OK || state.nested_status != DCC_ERR_STATE ||
-            state.request_count != 1U || state.callback_count != 1U ||
+        atomic_store_explicit(
+            &state.allow_callback,
+            true,
+            memory_order_release
+        );
+        dcc_status_t drain_status = outer_status == DCC_OK
+            ? dcc_rest_async_wait(client, 5000U)
+            : DCC_ERR_STATE;
+        dcc_status_t nested_status = (dcc_status_t)atomic_load_explicit(
+            &state.nested_status,
+            memory_order_acquire
+        );
+        unsigned request_count = atomic_load_explicit(
+            &state.request_count,
+            memory_order_acquire
+        );
+        unsigned callback_count = atomic_load_explicit(
+            &state.callback_count,
+            memory_order_acquire
+        );
+        if (outer_status != DCC_OK || drain_status != DCC_OK ||
+            nested_status != cases[i].nested_status ||
+            request_count != cases[i].request_count || callback_count != 1U ||
             elapsed_ms >= 100U || dcc_flow_state(&state.ctx.flow) !=
-                cases[i].outer_state || !dcc_ctx_response_sent(&state.ctx)) {
+                cases[i].final_state || !dcc_ctx_response_sent(&state.ctx)) {
             fprintf(
                 stderr,
                 "initial reentry claim failed (%s): outer=%d nested=%d requests=%u callbacks=%u elapsed=%llu state=%d sent=%u\n",
                 cases[i].name,
                 outer_status,
-                state.nested_status,
-                state.request_count,
-                state.callback_count,
+                nested_status,
+                request_count,
+                callback_count,
                 (unsigned long long)elapsed_ms,
                 dcc_flow_state(&state.ctx.flow),
                 dcc_ctx_response_sent(&state.ctx)
@@ -391,8 +482,15 @@ int main(void) {
         .intents = DCC_INTENT_GUILDS,
     };
     dcc_status_t status = dcc_client_create(&opts, &client);
-    if (status != DCC_OK) {
+    if (status != DCC_OK || dcc_client_start(client) != DCC_OK) {
         fprintf(stderr, "failed to create flow client: %s\n", dcc_status_string(status));
+        dcc_client_destroy(client);
+        return 1;
+    }
+    flow_runner_t runner = {.client = client, .status = DCC_ERR_STATE};
+    pthread_t runner_thread;
+    if (pthread_create(&runner_thread, NULL, flow_runner_main, &runner) != 0) {
+        dcc_client_destroy(client);
         return 1;
     }
     historical_flow->client = client;
@@ -410,8 +508,11 @@ int main(void) {
     };
     historical_flow_reentry_t historical_reentry = {
         .flow = historical_flow,
-        .nested_status = DCC_OK,
     };
+    atomic_init(&historical_reentry.request_count, 0U);
+    atomic_init(&historical_reentry.callback_count, 0U);
+    atomic_init(&historical_reentry.nested_status, DCC_ERR_RUNTIME);
+    atomic_init(&historical_reentry.allow_callback, false);
     dcc_rest_set_interceptor(
         client,
         historical_flow_intercept,
@@ -423,9 +524,30 @@ int main(void) {
         historical_flow_outer_cb,
         &historical_reentry
     );
-    if (status != DCC_OK || historical_reentry.nested_status != DCC_ERR_STATE ||
-        historical_reentry.request_count != 1U ||
-        historical_reentry.callback_count != 1U ||
+    atomic_store_explicit(
+        &historical_reentry.allow_callback,
+        true,
+        memory_order_release
+    );
+    dcc_status_t drain_status = status == DCC_OK
+        ? dcc_rest_async_wait(client, 5000U)
+        : DCC_ERR_STATE;
+    dcc_status_t historical_nested_status = (dcc_status_t)atomic_load_explicit(
+        &historical_reentry.nested_status,
+        memory_order_acquire
+    );
+    unsigned historical_request_count = atomic_load_explicit(
+        &historical_reentry.request_count,
+        memory_order_acquire
+    );
+    unsigned historical_callback_count = atomic_load_explicit(
+        &historical_reentry.callback_count,
+        memory_order_acquire
+    );
+    if (status != DCC_OK || drain_status != DCC_OK ||
+        historical_nested_status != DCC_ERR_STATE ||
+        historical_request_count != 1U ||
+        historical_callback_count != 1U ||
         historical_flow->state != DCC_INTERACTION_FLOW_REPLIED ||
         !dcc_flow_initial_sent(historical_flow) ||
         memcmp(historical.canary, expected_canary, sizeof(expected_canary)) != 0) {
@@ -433,12 +555,12 @@ int main(void) {
             stderr,
             "historical flow reentry escaped state fallback or touched canary\n"
         );
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
     dcc_rest_set_interceptor(client, NULL, NULL);
     if (check_initial_reentry_claims(client) != 0) {
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
 
@@ -457,12 +579,13 @@ int main(void) {
 
     if (set_message(&message, "hello") != DCC_OK ||
         !start_flow_server(&server, &thread)) {
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
     memset(&seen, 0, sizeof(seen));
     status = dcc_flow_reply(&flow, &message, flow_rest_cb, &seen);
     if (!expect_request(
+            client,
             &server,
             thread,
             status,
@@ -473,19 +596,20 @@ int main(void) {
         ) ||
         dcc_flow_state(&flow) != DCC_INTERACTION_FLOW_REPLIED) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
 
     if (set_message(&message, "again") != DCC_OK ||
         !start_flow_server(&server, &thread)) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
     memset(&seen, 0, sizeof(seen));
     status = dcc_flow_reply(&flow, &message, flow_rest_cb, &seen);
     if (!expect_request(
+            client,
             &server,
             thread,
             status,
@@ -496,7 +620,7 @@ int main(void) {
         ) ||
         dcc_flow_state(&flow) != DCC_INTERACTION_FLOW_FOLLOWED_UP) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
 
@@ -507,12 +631,13 @@ int main(void) {
         dcc_flow_state(&flow) != DCC_INTERACTION_FLOW_READY ||
         !start_flow_server(&server, &thread)) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
     memset(&seen, 0, sizeof(seen));
     status = dcc_flow_maybe_auto_defer(&flow, 2600U, flow_rest_cb, &seen);
     if (!expect_request(
+            client,
             &server,
             thread,
             status,
@@ -523,19 +648,20 @@ int main(void) {
         ) ||
         dcc_flow_state(&flow) != DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
 
     if (set_message(&message, "done") != DCC_OK ||
         !start_flow_server(&server, &thread)) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
     memset(&seen, 0, sizeof(seen));
     status = dcc_flow_reply(&flow, &message, flow_rest_cb, &seen);
     if (!expect_request(
+            client,
             &server,
             thread,
             status,
@@ -547,7 +673,7 @@ int main(void) {
         dcc_flow_state(&flow) != DCC_INTERACTION_FLOW_ORIGINAL_EDITED ||
         strcmp(dcc_flow_state_string(dcc_flow_state(&flow)), "original_edited") != 0) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
 
@@ -562,12 +688,13 @@ int main(void) {
         set_message(&message, "recovered") != DCC_OK ||
         !start_flow_server(&server, &thread)) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
     memset(&seen, 0, sizeof(seen));
     status = dcc_flow_reply(&flow, &message, flow_rest_cb, &seen);
     if (!expect_request(
+            client,
             &server,
             thread,
             status,
@@ -578,12 +705,12 @@ int main(void) {
         ) ||
         dcc_flow_state(&flow) != DCC_INTERACTION_FLOW_REPLIED) {
         (void)unsetenv("DCC_DISCORD_API_BASE");
-        dcc_client_destroy(client);
+        flow_client_shutdown(client, runner_thread);
         return 1;
     }
 
     (void)unsetenv("DCC_DISCORD_API_BASE");
-    dcc_client_destroy(client);
+    flow_client_shutdown(client, runner_thread);
     return 0;
 }
 

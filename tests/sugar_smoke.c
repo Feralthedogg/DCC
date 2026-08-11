@@ -2636,18 +2636,11 @@ static int run_sugar_options_smoke(void) {
         .privacy_level = DCC_SCHEDULED_EVENT_PRIVACY_GUILD_ONLY,
         .entity_type = DCC_SCHEDULED_EVENT_ENTITY_VOICE,
     };
-    dcc_webhook_params_t webhook_params = {
-        .size = sizeof(webhook_params),
-        .webhook_id = 666ULL,
-        .channel_id = 333ULL,
+    dcc_rest_webhook_builder_t webhook_builder = {
+        .size = sizeof(webhook_builder),
+        .version = DCC_REST_WEBHOOK_BUILDER_VERSION,
+        .present = DCC_REST_WEBHOOK_BUILDER_PRESENT_NAME,
         .name = "sugar-webhook",
-    };
-    dcc_webhook_params_t webhook_token_params = {
-        .size = sizeof(webhook_token_params),
-        .webhook_id = 666ULL,
-        .channel_id = 333ULL,
-        .name = "sugar-webhook",
-        .token = "token",
     };
     dcc_current_user_params_t user_params = {
         .size = sizeof(user_params),
@@ -4064,12 +4057,13 @@ static int run_sugar_options_smoke(void) {
         dcc_app_get_webhook(NULL, 666ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_get_webhook_with_token(NULL, 666ULL, "token", NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_create_webhook(NULL, 333ULL, "{\"name\":\"sugar\"}", NULL, NULL) != DCC_ERR_INVALID_ARG ||
-        dcc_app_create_webhook_params(NULL, &webhook_params, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_app_create_webhook_params(NULL, 333ULL, &webhook_builder, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_modify_webhook(NULL, 666ULL, "{\"name\":\"sugar\"}", NULL, NULL) != DCC_ERR_INVALID_ARG ||
-        dcc_app_modify_webhook_params(NULL, &webhook_params, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_app_modify_webhook_params(NULL, 666ULL, &webhook_builder, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_modify_webhook_with_token(NULL, 666ULL, "token", "{\"name\":\"sugar\"}", NULL, NULL) !=
             DCC_ERR_INVALID_ARG ||
-        dcc_app_modify_webhook_with_token_params(NULL, &webhook_token_params, NULL, NULL) !=
+        dcc_app_modify_webhook_with_token_params(
+            NULL, 666ULL, "token", &webhook_builder, NULL, NULL) !=
             DCC_ERR_INVALID_ARG ||
         dcc_app_delete_webhook(NULL, 666ULL, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_app_delete_webhook_with_token(NULL, 666ULL, "token", NULL, NULL) != DCC_ERR_INVALID_ARG ||
@@ -4156,11 +4150,12 @@ static int run_sugar_options_smoke(void) {
         DCC_APP_GET_WEBHOOK(NULL, 666ULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_GET_WEBHOOK_TOKEN(NULL, 666ULL, "token") != DCC_ERR_INVALID_ARG ||
         DCC_APP_CREATE_WEBHOOK(NULL, 333ULL, "{\"name\":\"sugar\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_APP_CREATE_WEBHOOK_PARAMS(NULL, &webhook_params) != DCC_ERR_INVALID_ARG ||
+        DCC_APP_CREATE_WEBHOOK_PARAMS(NULL, 333ULL, &webhook_builder) != DCC_ERR_INVALID_ARG ||
         DCC_APP_EDIT_WEBHOOK(NULL, 666ULL, "{\"name\":\"sugar\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_APP_EDIT_WEBHOOK_PARAMS(NULL, &webhook_params) != DCC_ERR_INVALID_ARG ||
+        DCC_APP_EDIT_WEBHOOK_PARAMS(NULL, 666ULL, &webhook_builder) != DCC_ERR_INVALID_ARG ||
         DCC_APP_EDIT_WEBHOOK_TOKEN(NULL, 666ULL, "token", "{\"name\":\"sugar\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_APP_EDIT_WEBHOOK_TOKEN_PARAMS(NULL, &webhook_token_params) != DCC_ERR_INVALID_ARG ||
+        DCC_APP_EDIT_WEBHOOK_TOKEN_PARAMS(
+            NULL, 666ULL, "token", &webhook_builder) != DCC_ERR_INVALID_ARG ||
         DCC_APP_DELETE_WEBHOOK(NULL, 666ULL) != DCC_ERR_INVALID_ARG ||
         DCC_APP_DELETE_WEBHOOK_TOKEN(NULL, 666ULL, "token") != DCC_ERR_INVALID_ARG ||
         DCC_APP_EXECUTE_WEBHOOK(NULL, 666ULL, "token", NULL, "{\"content\":\"hello\"}") !=
@@ -4203,11 +4198,12 @@ static int run_sugar_options_smoke(void) {
         DCC_WEBHOOK_FETCH(NULL, 666ULL) != DCC_ERR_INVALID_ARG ||
         DCC_WEBHOOK_FETCH_TOKEN(NULL, 666ULL, "token") != DCC_ERR_INVALID_ARG ||
         DCC_WEBHOOK_CREATE(NULL, 333ULL, "{\"name\":\"sugar\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_WEBHOOK_CREATE_PARAMS(NULL, &webhook_params) != DCC_ERR_INVALID_ARG ||
+        DCC_WEBHOOK_CREATE_PARAMS(NULL, 333ULL, &webhook_builder) != DCC_ERR_INVALID_ARG ||
         DCC_WEBHOOK_EDIT(NULL, 666ULL, "{\"name\":\"sugar\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_WEBHOOK_EDIT_PARAMS(NULL, &webhook_params) != DCC_ERR_INVALID_ARG ||
+        DCC_WEBHOOK_EDIT_PARAMS(NULL, 666ULL, &webhook_builder) != DCC_ERR_INVALID_ARG ||
         DCC_WEBHOOK_EDIT_TOKEN(NULL, 666ULL, "token", "{\"name\":\"sugar\"}") != DCC_ERR_INVALID_ARG ||
-        DCC_WEBHOOK_EDIT_TOKEN_PARAMS(NULL, &webhook_token_params) != DCC_ERR_INVALID_ARG ||
+        DCC_WEBHOOK_EDIT_TOKEN_PARAMS(
+            NULL, 666ULL, "token", &webhook_builder) != DCC_ERR_INVALID_ARG ||
         DCC_WEBHOOK_DELETE(NULL, 666ULL) != DCC_ERR_INVALID_ARG ||
         DCC_WEBHOOK_DELETE_TOKEN(NULL, 666ULL, "token") != DCC_ERR_INVALID_ARG ||
         DCC_WEBHOOK_SEND_JSON(NULL, 666ULL, "token", "{\"content\":\"hello\"}") != DCC_ERR_INVALID_ARG ||

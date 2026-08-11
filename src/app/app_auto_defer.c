@@ -19,6 +19,35 @@ static void dcc_app_auto_defer_release(dcc_app_auto_defer_t *state) {
     }
 }
 
+static void dcc_app_auto_defer_complete(
+    dcc_client_t *client,
+    const dcc_rest_response_t *response,
+    void *user_data
+) {
+    (void)client;
+    dcc_app_auto_defer_t *state = (dcc_app_auto_defer_t *)user_data;
+    if (state == NULL) {
+        return;
+    }
+
+    const dcc_status_t status = response != NULL
+        ? response->error
+        : DCC_ERR_RUNTIME;
+    atomic_store_explicit(
+        &state->initial_response_admitted,
+        true,
+        memory_order_release
+    );
+    atomic_store_explicit(
+        &state->response_state,
+        status == DCC_OK
+            ? DCC_APP_RESPONSE_DEFERRED
+            : DCC_APP_RESPONSE_FAILED,
+        memory_order_release
+    );
+    dcc_app_auto_defer_release(state);
+}
+
 static void dcc_app_auto_defer_task(void *arg) {
     dcc_app_auto_defer_t *state = (dcc_app_auto_defer_t *)arg;
     if (state == NULL) {
@@ -35,23 +64,38 @@ static void dcc_app_auto_defer_task(void *arg) {
                 memory_order_acq_rel,
                 memory_order_acquire
             )) {
+            (void)atomic_fetch_add_explicit(
+                &state->refs,
+                1U,
+                memory_order_relaxed
+            );
             dcc_status_t status = state->ephemeral
-                ? dcc_interaction_defer_ephemeral(state->client, &state->interaction, NULL, NULL)
-                : dcc_interaction_defer(state->client, &state->interaction, NULL, NULL);
+                ? dcc_interaction_defer_ephemeral(
+                    state->client,
+                    &state->interaction,
+                    dcc_app_auto_defer_complete,
+                    state
+                )
+                : dcc_interaction_defer(
+                    state->client,
+                    &state->interaction,
+                    dcc_app_auto_defer_complete,
+                    state
+                );
             if (status == DCC_OK) {
                 atomic_store_explicit(
                     &state->initial_response_admitted,
                     true,
                     memory_order_release
                 );
+            } else {
+                dcc_app_auto_defer_release(state);
+                atomic_store_explicit(
+                    &state->response_state,
+                    DCC_APP_RESPONSE_FAILED,
+                    memory_order_release
+                );
             }
-            atomic_store_explicit(
-                &state->response_state,
-                status == DCC_OK
-                    ? DCC_APP_RESPONSE_DEFERRED
-                    : DCC_APP_RESPONSE_FAILED,
-                memory_order_release
-            );
         }
     }
 

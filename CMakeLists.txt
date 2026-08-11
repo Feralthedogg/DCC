@@ -1370,6 +1370,7 @@ target_sources(dcc
         src/rest/rest_entitlements.c
         src/rest/rest_entitlements_test.c
         src/rest/rest_entitlements_test_body.c
+        src/rest/rest_endpoint_v2.c
         src/rest/rest_guild_emojis.c
         src/rest/rest_guild_emojis_params.c
         src/rest/rest_future_lifecycle.c
@@ -1383,22 +1384,13 @@ target_sources(dcc
         src/rest/rest_header_parse.c
         src/rest/rest_headers.c
         src/rest/rest_interaction_followup_create.c
-        src/rest/rest_interaction_followup_interaction_create.c
-        src/rest/rest_interaction_followup_interaction_message.c
-        src/rest/rest_interaction_followup_interaction_multipart.c
         src/rest/rest_interaction_followup_message.c
-        src/rest/rest_interaction_followup_multipart.c
         src/rest/rest_interaction_helpers.c
         src/rest/rest_interaction_shortcuts.c
         src/rest/rest_interaction_original.c
         src/rest/rest_interaction_original_edit.c
-        src/rest/rest_interaction_original_interaction.c
         src/rest/rest_interaction_response_body.c
-        src/rest/rest_interaction_response_builders.c
-        src/rest/rest_interaction_response_named.c
-        src/rest/rest_interaction_response_named_wrappers.c
         src/rest/rest_interaction_response_create.c
-        src/rest/rest_interaction_response_wrappers.c
         src/rest/rest_intercept.c
         src/rest/rest_response_helpers.c
         src/rest/firewall/rest_firewall_client.c
@@ -1439,9 +1431,6 @@ target_sources(dcc
         src/rest/rest_message_actions.c
         src/rest/rest_message_create.c
         src/rest/rest_message_edit.c
-        src/rest/rest_message_edit_builder.c
-        src/rest/rest_message_edit_multipart.c
-        src/rest/rest_message_flags.c
         src/rest/rest_message_pins.c
         src/rest/rest_message_polls.c
         src/rest/rest_message_reaction_paths.c
@@ -1528,14 +1517,10 @@ target_sources(dcc
         src/rest/rest_voice_state_body.c
         src/rest/rest_voice_states_current_user.c
         src/rest/rest_voice_states_user.c
-        src/rest/rest_webhook_body.c
         src/rest/rest_webhook_execute.c
-        src/rest/rest_webhook_execute_multipart.c
         src/rest/rest_webhook_helpers.c
         src/rest/rest_webhook_messages_delete.c
         src/rest/rest_webhook_messages_edit.c
-        src/rest/rest_webhook_messages_edit_builder.c
-        src/rest/rest_webhook_messages_edit_multipart.c
         src/rest/rest_webhook_messages_fetch.c
         src/rest/rest_webhooks_create.c
         src/rest/rest_webhooks_delete.c
@@ -1731,14 +1716,68 @@ else()
 endif()
 dcc_target_enable_sanitizers(dcc)
 
+function(dcc_target_export_hot_reload_symbols target)
+    set_target_properties(${target} PROPERTIES ENABLE_EXPORTS ON)
+    if(DCC_BUILD_SHARED)
+        return()
+    endif()
+    if(APPLE)
+        target_link_options(${target} PRIVATE
+            "LINKER:-force_load,$<TARGET_FILE:dcc>"
+        )
+    elseif(UNIX)
+        target_link_options(${target} PRIVATE
+            "LINKER:--whole-archive,$<TARGET_FILE:dcc>,--no-whole-archive"
+        )
+    elseif(MSVC)
+        set_target_properties(${target} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+        target_link_options(${target} PRIVATE
+            "/WHOLEARCHIVE:$<TARGET_FILE:dcc>"
+        )
+    elseif(MINGW)
+        target_link_options(${target} PRIVATE
+            "LINKER:--whole-archive,$<TARGET_FILE:dcc>,--no-whole-archive"
+            "LINKER:--export-all-symbols"
+        )
+    endif()
+endfunction()
+
+function(dcc_target_configure_hot_reload_module target host_target)
+    target_include_directories(${target} PRIVATE
+        ${DCC_PUBLIC_INCLUDE_DIR}
+        ${DCC_GENERATED_INCLUDE_DIR}
+    )
+    if(DCC_BUILD_SHARED)
+        target_link_libraries(${target} PRIVATE dcc::dcc)
+    elseif(WIN32)
+        if(NOT TARGET ${host_target})
+            message(FATAL_ERROR
+                "static Windows hot-reload modules require an exported host target; "
+                "use DCC_BUILD_SHARED=ON when no host target is available"
+            )
+        endif()
+        target_link_libraries(${target} PRIVATE ${host_target})
+    elseif(APPLE)
+        target_link_options(${target} PRIVATE
+            "LINKER:-undefined,dynamic_lookup"
+        )
+    endif()
+endfunction()
+
 if(DCC_BUILD_TOOLS OR DCC_BUILD_EXAMPLES OR DCC_BUILD_TESTS)
     add_executable(dcc_hot_reload_worker tools/dcc_hot_reload_worker.c)
+    set_target_properties(dcc_hot_reload_worker PROPERTIES
+        EXPORT_NAME hot_reload_worker
+    )
     dcc_target_use_private_headers(dcc_hot_reload_worker)
     target_link_libraries(dcc_hot_reload_worker PRIVATE dcc::dcc)
+    dcc_target_export_hot_reload_symbols(dcc_hot_reload_worker)
     dcc_target_enable_sanitizers(dcc_hot_reload_worker)
     if(DCC_BUILD_TOOLS)
         install(
             TARGETS dcc_hot_reload_worker
+            EXPORT dcc-targets
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         )
     endif()
@@ -1854,6 +1893,7 @@ if(DCC_BUILD_TOOLS OR DCC_BUILD_EXAMPLES)
         tools/dcc_hot_reload_host_worker_path.c
     )
     target_link_libraries(dcc_hot_reload_host PRIVATE dcc::dcc)
+    dcc_target_export_hot_reload_symbols(dcc_hot_reload_host)
     dcc_target_enable_sanitizers(dcc_hot_reload_host)
     if(DCC_BUILD_TOOLS)
         install(
@@ -1909,7 +1949,9 @@ if(DCC_BUILD_EXAMPLES)
 
     add_library(dcc_hot_reload_bot MODULE examples/hot_reload_bot.c)
     target_include_directories(dcc_hot_reload_bot PRIVATE ${DCC_PUBLIC_INCLUDE_DIR})
-    target_link_libraries(dcc_hot_reload_bot PRIVATE dcc::dcc)
+    dcc_target_configure_hot_reload_module(
+        dcc_hot_reload_bot dcc_hot_reload_worker
+    )
     set_target_properties(dcc_hot_reload_bot PROPERTIES PREFIX "")
     dcc_target_enable_sanitizers(dcc_hot_reload_bot)
 
@@ -1917,6 +1959,7 @@ if(DCC_BUILD_EXAMPLES)
         examples/hot_reload/host.c
     )
     target_link_libraries(dcc_hot_reload_test_host PRIVATE dcc::dcc)
+    dcc_target_export_hot_reload_symbols(dcc_hot_reload_test_host)
     dcc_target_enable_sanitizers(dcc_hot_reload_test_host)
 
     set(DCC_HOT_RELOAD_TEST_LOCAL_BUILD_DIR
@@ -1943,7 +1986,9 @@ if(DCC_BUILD_EXAMPLES)
             ${DCC_PUBLIC_INCLUDE_DIR}
             ${DCC_HOT_RELOAD_TEST_LOCAL_BUILD_DIR}
     )
-    target_link_libraries(dcc_hot_reload_test_bot PRIVATE dcc::dcc)
+    dcc_target_configure_hot_reload_module(
+        dcc_hot_reload_test_bot dcc_hot_reload_worker
+    )
     set_target_properties(dcc_hot_reload_test_bot PROPERTIES PREFIX "")
     dcc_target_enable_sanitizers(dcc_hot_reload_test_bot)
 endif()
@@ -2046,7 +2091,10 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_rest_v2_request_smoke)
     add_test(NAME dcc_rest_v2_request_smoke COMMAND dcc_rest_v2_request_smoke)
 
-    add_executable(dcc_rest_v2_endpoint_smoke tests/rest_v2_endpoint_smoke.c)
+    add_executable(dcc_rest_v2_endpoint_smoke
+        tests/rest_v2_endpoint_smoke.c
+        tests/support/rest_v2_endpoint_resource_contracts.c
+    )
     dcc_target_use_private_headers(dcc_rest_v2_endpoint_smoke)
     target_link_libraries(dcc_rest_v2_endpoint_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_rest_v2_endpoint_smoke)
@@ -2608,13 +2656,17 @@ if(DCC_BUILD_TESTS)
 
     add_library(dcc_hot_reload_isolated_module MODULE tests/hot_reload_isolated_module.c)
     target_include_directories(dcc_hot_reload_isolated_module PRIVATE ${DCC_PUBLIC_INCLUDE_DIR})
-    target_link_libraries(dcc_hot_reload_isolated_module PRIVATE dcc::dcc)
+    dcc_target_configure_hot_reload_module(
+        dcc_hot_reload_isolated_module dcc_hot_reload_worker
+    )
     set_target_properties(dcc_hot_reload_isolated_module PROPERTIES PREFIX "")
     dcc_target_enable_sanitizers(dcc_hot_reload_isolated_module)
 
     add_library(dcc_hot_reload_isolated_crash_module MODULE tests/hot_reload_isolated_crash_module.c)
     target_include_directories(dcc_hot_reload_isolated_crash_module PRIVATE ${DCC_PUBLIC_INCLUDE_DIR})
-    target_link_libraries(dcc_hot_reload_isolated_crash_module PRIVATE dcc::dcc)
+    dcc_target_configure_hot_reload_module(
+        dcc_hot_reload_isolated_crash_module dcc_hot_reload_worker
+    )
     set_target_properties(dcc_hot_reload_isolated_crash_module PROPERTIES PREFIX "")
     dcc_target_enable_sanitizers(dcc_hot_reload_isolated_crash_module)
 

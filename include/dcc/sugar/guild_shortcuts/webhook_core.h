@@ -13,16 +13,20 @@
     dcc_app_get_webhook_with_token((app_), (webhook_id_), (webhook_token_), NULL, NULL)
 #define DCC_APP_CREATE_WEBHOOK(app_, channel_id_, json_body_) \
     dcc_app_create_webhook((app_), (channel_id_), (json_body_), NULL, NULL)
-#define DCC_APP_CREATE_WEBHOOK_PARAMS(app_, params_) \
-    dcc_app_create_webhook_params((app_), (params_), NULL, NULL)
+#define DCC_APP_CREATE_WEBHOOK_PARAMS(app_, channel_id_, builder_) \
+    dcc_app_create_webhook_params((app_), (channel_id_), (builder_), NULL, NULL)
 #define DCC_APP_EDIT_WEBHOOK(app_, webhook_id_, json_body_) \
     dcc_app_modify_webhook((app_), (webhook_id_), (json_body_), NULL, NULL)
-#define DCC_APP_EDIT_WEBHOOK_PARAMS(app_, params_) \
-    dcc_app_modify_webhook_params((app_), (params_), NULL, NULL)
+#define DCC_APP_EDIT_WEBHOOK_PARAMS(app_, webhook_id_, builder_) \
+    dcc_app_modify_webhook_params((app_), (webhook_id_), (builder_), NULL, NULL)
 #define DCC_APP_EDIT_WEBHOOK_TOKEN(app_, webhook_id_, webhook_token_, json_body_) \
     dcc_app_modify_webhook_with_token((app_), (webhook_id_), (webhook_token_), (json_body_), NULL, NULL)
-#define DCC_APP_EDIT_WEBHOOK_TOKEN_PARAMS(app_, params_) \
-    dcc_app_modify_webhook_with_token_params((app_), (params_), NULL, NULL)
+#define DCC_APP_EDIT_WEBHOOK_TOKEN_PARAMS( \
+    app_, webhook_id_, webhook_token_, builder_ \
+) \
+    dcc_app_modify_webhook_with_token_params( \
+        (app_), (webhook_id_), (webhook_token_), (builder_), NULL, NULL \
+    )
 #define DCC_APP_DELETE_WEBHOOK(app_, webhook_id_) \
     dcc_app_delete_webhook((app_), (webhook_id_), NULL, NULL)
 #define DCC_APP_DELETE_WEBHOOK_TOKEN(app_, webhook_id_, webhook_token_) \

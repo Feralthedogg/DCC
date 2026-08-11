@@ -19,6 +19,39 @@ void *dcc_hot_reload_test_wait_main(void *arg) {
     return NULL;
 }
 
+int dcc_hot_reload_test_client_runtime_start(
+    dcc_client_t *client,
+    dcc_hot_reload_test_wait_state_t *state,
+    pthread_t *thread
+) {
+    if (client == NULL || state == NULL || thread == NULL) {
+        return -1;
+    }
+    state->client = client;
+    state->status = DCC_ERR_RUNTIME;
+    if (dcc_client_start(client) != DCC_OK) {
+        return -1;
+    }
+    if (pthread_create(thread, NULL, dcc_hot_reload_test_wait_main, state) != 0) {
+        (void)dcc_client_stop(client);
+        (void)dcc_client_wait(client);
+        return -1;
+    }
+    return 0;
+}
+
+dcc_status_t dcc_hot_reload_test_client_runtime_stop(
+    dcc_client_t *client,
+    dcc_hot_reload_test_wait_state_t *state,
+    pthread_t thread
+) {
+    dcc_status_t status = dcc_client_stop(client);
+    if (pthread_join(thread, NULL) != 0) {
+        return DCC_ERR_RUNTIME;
+    }
+    return status == DCC_OK ? state->status : status;
+}
+
 void *dcc_hot_reload_test_server_main(void *arg) {
     dcc_hot_reload_test_server_t *server = (dcc_hot_reload_test_server_t *)arg;
     size_t max_requests = server->max_requests != 0U ? server->max_requests : 5U;

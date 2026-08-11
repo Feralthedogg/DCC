@@ -27,6 +27,7 @@ int run_public_rest_wrapper_expect(
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
     dcc_status_t st = call(client, rest_cb, &seen);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
 
@@ -64,8 +65,11 @@ int run_public_rest_wrapper_smoke(void) {
         return 1;
     }
     st = dcc_client_set_dm_channel(client, 444, 222);
+    if (st == DCC_OK) {
+        st = rest_activate_client(client);
+    }
     if (st != DCC_OK) {
-        fprintf(stderr, "dcc_client_set_dm_channel failed: %s\n", dcc_status_string(st));
+        fprintf(stderr, "REST wrapper client setup failed: %s\n", dcc_status_string(st));
         dcc_client_destroy(client);
         return 1;
     }
@@ -106,7 +110,16 @@ int run_public_rest_wrapper_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_create_message(client, 222, "{\"content\":\"hi\"}", rest_cb, &seen);
+    dcc_message_builder_t create_message;
+    dcc_message_builder_init(&create_message);
+    st = dcc_message_builder_set_content(&create_message, "hi");
+    dcc_rest_message_payload_t create_payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_call_options_t create_options = rest_call_options(&seen);
+    create_payload.message = &create_message;
+    if (st == DCC_OK) {
+        st = dcc_rest_create_message(client, 222, &create_payload, &create_options, NULL);
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||

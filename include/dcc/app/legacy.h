@@ -2387,7 +2387,8 @@ DCC_API dcc_status_t dcc_app_create_webhook(
 );
 DCC_API dcc_status_t dcc_app_create_webhook_params(
     dcc_app_t *app,
-    const dcc_webhook_params_t *params,
+    dcc_snowflake_t channel_id,
+    const dcc_rest_webhook_builder_t *builder,
     dcc_rest_cb cb,
     void *user_data
 );
@@ -2400,7 +2401,8 @@ DCC_API dcc_status_t dcc_app_modify_webhook(
 );
 DCC_API dcc_status_t dcc_app_modify_webhook_params(
     dcc_app_t *app,
-    const dcc_webhook_params_t *params,
+    dcc_snowflake_t webhook_id,
+    const dcc_rest_webhook_builder_t *builder,
     dcc_rest_cb cb,
     void *user_data
 );
@@ -2414,7 +2416,9 @@ DCC_API dcc_status_t dcc_app_modify_webhook_with_token(
 );
 DCC_API dcc_status_t dcc_app_modify_webhook_with_token_params(
     dcc_app_t *app,
-    const dcc_webhook_params_t *params,
+    dcc_snowflake_t webhook_id,
+    const char *webhook_token,
+    const dcc_rest_webhook_builder_t *builder,
     dcc_rest_cb cb,
     void *user_data
 );

@@ -250,7 +250,7 @@ int run_public_rest_wrapper_expect_webhooks_apps_smoke(dcc_client_t *client) {
                     call_rest_create_webhook_params,
                     "POST",
                     "/channels/222/webhooks",
-                    "{\"name\":\"relay typed\",\"channel_id\":\"222\",\"avatar\":\"data:image/png;base64,AA==\"}"
+                    "{\"name\":\"relay typed\",\"avatar\":\"data:image/png;base64,AA==\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -298,7 +298,7 @@ int run_public_rest_wrapper_expect_webhooks_apps_smoke(dcc_client_t *client) {
                     call_rest_modify_webhook_params,
                     "PATCH",
                     "/webhooks/666",
-                    "{\"name\":\"relay2 typed\",\"channel_id\":\"223\",\"avatar\":\"data:image/png;base64,BB==\"}"
+                    "{\"name\":\"relay2 typed\",\"avatar\":\"data:image/png;base64,BB==\",\"channel_id\":\"223\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,

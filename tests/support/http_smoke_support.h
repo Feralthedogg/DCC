@@ -68,6 +68,11 @@ typedef struct event_wait_thread_state {
 typedef dcc_status_t (*rest_wrapper_call_fn)(dcc_client_t *client, dcc_rest_cb cb, void *user_data);
 
 void rest_cb(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data);
+void rest_result_cb(dcc_client_t *client, const dcc_rest_result_t *result, void *user_data);
+dcc_rest_call_options_t rest_call_options(void *user_data);
+dcc_rest_call_options_t rest_call_options_from_legacy(dcc_rest_cb cb, void *user_data);
+dcc_status_t rest_activate_client(dcc_client_t *client);
+dcc_status_t rest_await_submission(dcc_client_t *client, dcc_status_t admission_status);
 void rate_limited_cb(dcc_client_t *client, const dcc_event_t *event, void *user_data);
 void async_rest_cb(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data);
 void async_order_cb(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data);

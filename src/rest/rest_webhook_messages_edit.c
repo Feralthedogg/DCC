@@ -1,54 +1,51 @@
-#include "internal/rest/dcc_rest_buffer_internal.h"
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
+#include "internal/rest/dcc_rest_paths_internal.h"
 #include "internal/rest/dcc_rest_query_append_internal.h"
-#include "internal/rest/dcc_rest_request_core_internal.h"
-#include "internal/rest/dcc_rest_request_webhooks_internal.h"
 
 #include <stdlib.h>
 
 dcc_status_t dcc_rest_modify_webhook_message(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    dcc_snowflake_t message_id,
-    const char *query,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
+    dcc_client_t *client, dcc_snowflake_t webhook_id,
+    const char *webhook_token, dcc_snowflake_t message_id,
+    const dcc_rest_webhook_message_edit_t *edit,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request
 ) {
-    char *path = NULL;
-    dcc_status_t status = dcc_rest_webhook_token_path(&path, webhook_id, webhook_token, "messages", message_id);
-    if (status != DCC_OK) {
-        return status;
-    }
-    status = dcc_rest_request_with_query(client, DCC_REST_PATCH, path, query, json_body, cb, user_data);
-    free(path);
-    return status;
-}
-
-dcc_status_t dcc_rest_modify_webhook_message_thread(
-    dcc_client_t *client,
-    dcc_snowflake_t webhook_id,
-    const char *webhook_token,
-    dcc_snowflake_t message_id,
-    dcc_snowflake_t thread_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-) {
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || webhook_id == 0U || message_id == 0U ||
+        webhook_token == NULL || webhook_token[0] == '\0')
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    const uint64_t known = DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID |
+        DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_WITH_COMPONENTS;
+    if (edit == NULL || edit->size < sizeof(*edit) ||
+        edit->version != DCC_REST_WEBHOOK_MESSAGE_EDIT_VERSION ||
+        (edit->present & ~known) != 0U || edit->payload == NULL ||
+        ((edit->present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID) != 0U &&
+            edit->thread_id == 0U) ||
+        ((edit->present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_WITH_COMPONENTS) != 0U &&
+            edit->with_components > 1U)) return DCC_ERR_INVALID_ARG;
+    dcc_endpoint_body_t body = {0};
+    status = dcc_endpoint_build_message_body(edit->payload, &body);
     dcc_rest_buffer_t query = {0};
-    dcc_status_t status = dcc_rest_query_append_u64(&query, "thread_id", thread_id);
-    if (status == DCC_OK) {
-        status = dcc_rest_modify_webhook_message(
-            client,
-            webhook_id,
-            webhook_token,
-            message_id,
-            query.data,
-            json_body,
-            cb,
-            user_data
-        );
-    }
+    if (status == DCC_OK && (edit->present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID) != 0U)
+        status = dcc_rest_query_append_u64_value(&query, "thread_id", edit->thread_id);
+    if (status == DCC_OK && (edit->present & DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_WITH_COMPONENTS) != 0U)
+        status = dcc_rest_query_append_bool(&query, "with_components", edit->with_components);
+    char *token = NULL;
+    char *base = NULL;
+    char *path = NULL;
+    if (status == DCC_OK) status = dcc_rest_escape_path_segment(webhook_token, &token);
+    if (status == DCC_OK) status = dcc_rest_alloc_formatted_path(
+        &base, DCC_REST_ROUTE_WEBHOOK_MESSAGE,
+        (unsigned long long)webhook_id, token, (unsigned long long)message_id);
+    if (status == DCC_OK) status = dcc_endpoint_path_with_query(base, &query, &path);
+    if (status == DCC_OK) status = dcc_endpoint_submit(
+        client, DCC_REST_PATCH, path, &body, &resolved, out_request);
+    free(token);
+    free(base);
+    free(path);
     dcc_rest_buffer_deinit(&query);
+    dcc_endpoint_body_deinit(&body);
     return status;
 }

@@ -4,6 +4,8 @@
 #include <dcc/interaction_flow.h>
 #include <dcc/rest.h>
 
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

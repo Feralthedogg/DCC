@@ -19,13 +19,16 @@ dcc_status_t dcc_flow_show_modal(
         status = DCC_ERR_INVALID_ARG;
     }
     if (status == DCC_OK) {
-        status = dcc_rest_interaction_response_create_modal_from_interaction(
-            flow->client,
-            flow->interaction,
-            modal,
-            cb,
-            user_data
-        );
+        dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+        status = dcc_rest_interaction_response_set_modal(&response, modal);
+        dcc_rest_call_options_t options;
+        void *bridge = NULL;
+        if (status == DCC_OK) status = dcc_endpoint_legacy_options(
+            cb, user_data, &options, &bridge);
+        if (status == DCC_OK) status = dcc_rest_interaction_response_create(
+            flow->client, flow->interaction->id, flow->interaction->token,
+            &response, &options, NULL);
+        if (status != DCC_OK) dcc_endpoint_legacy_bridge_release(bridge);
     }
     return dcc_flow_mark_initial(flow, DCC_INTERACTION_FLOW_MODAL, status);
 }

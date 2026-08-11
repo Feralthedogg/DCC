@@ -1,82 +1,36 @@
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
-#include "internal/rest/dcc_rest_request_core_internal.h"
-#include "internal/rest/dcc_rest_request_message_builders_internal.h"
-#include "internal/rest/dcc_rest_request_payload_multipart_internal.h"
+
+#include <stdlib.h>
 
 dcc_status_t dcc_rest_create_message(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_message_payload_t *payload,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[80];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/channels/%llu/messages", (unsigned long long)channel_id);
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_POST, path, json_body, cb, user_data) : status;
-}
-
-dcc_status_t dcc_rest_create_message_builder(
-    dcc_client_t *client,
-    dcc_snowflake_t channel_id,
-    const dcc_message_builder_t *message,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[80];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/channels/%llu/messages", (unsigned long long)channel_id);
-    return status == DCC_OK
-        ? dcc_rest_request_message_builder_json(client, DCC_REST_POST, path, message, cb, user_data)
-        : status;
-}
-
-dcc_status_t dcc_rest_create_message_multipart(
-    dcc_client_t *client,
-    dcc_snowflake_t channel_id,
-    const char *payload_json,
-    const dcc_rest_multipart_file_t *files,
-    size_t file_count,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[80];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/channels/%llu/messages", (unsigned long long)channel_id);
-    return status == DCC_OK
-        ? dcc_rest_request_payload_files_multipart(
-              client,
-              DCC_REST_POST,
-              path,
-              NULL,
-              payload_json,
-              files,
-              file_count,
-              cb,
-              user_data
-          )
-        : status;
-}
-
-dcc_status_t dcc_rest_create_message_builder_multipart(
-    dcc_client_t *client,
-    dcc_snowflake_t channel_id,
-    const dcc_message_builder_t *message,
-    const dcc_rest_multipart_file_t *files,
-    size_t file_count,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[80];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/channels/%llu/messages", (unsigned long long)channel_id);
-    return status == DCC_OK
-        ? dcc_rest_request_message_builder_multipart(
-              client,
-              DCC_REST_POST,
-              path,
-              NULL,
-              message,
-              files,
-              file_count,
-              cb,
-              user_data
-          )
-        : status;
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U) {
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    }
+    dcc_endpoint_body_t body = {0};
+    status = dcc_endpoint_build_message_body(payload, &body);
+    char *path = NULL;
+    if (status == DCC_OK) {
+        status = dcc_rest_alloc_formatted_path(
+            &path, DCC_REST_ROUTE_CHANNEL_MESSAGES,
+            (unsigned long long)channel_id
+        );
+    }
+    if (status == DCC_OK) {
+        status = dcc_endpoint_submit(
+            client, DCC_REST_POST, path, &body, &resolved, out_request
+        );
+    }
+    free(path);
+    dcc_endpoint_body_deinit(&body);
+    return status;
 }

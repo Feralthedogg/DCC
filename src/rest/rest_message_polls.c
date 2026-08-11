@@ -1,55 +1,53 @@
-#include "internal/rest/dcc_rest_buffer_internal.h"
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
 #include "internal/rest/dcc_rest_query_append_internal.h"
-#include "internal/rest/dcc_rest_request_internal.h"
+
+#include <stdlib.h>
 
 dcc_status_t dcc_rest_get_poll_answer_voters(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
     uint32_t answer_id,
-    const char *query,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_id_page_t *page,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[144];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/channels/%llu/polls/%llu/answers/%u",
-        (unsigned long long)channel_id,
-        (unsigned long long)message_id,
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U ||
+        message_id == 0U || answer_id == 0U) {
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    }
+    dcc_rest_buffer_t query = {0};
+    const uint64_t allowed = DCC_REST_ID_PAGE_PRESENT_AFTER |
+        DCC_REST_ID_PAGE_PRESENT_LIMIT;
+    if (page != NULL && (page->size < sizeof(*page) ||
+            page->version != DCC_REST_ID_PAGE_VERSION ||
+            (page->present & ~allowed) != 0U ||
+            ((page->present & DCC_REST_ID_PAGE_PRESENT_AFTER) != 0U && page->after == 0U) ||
+            ((page->present & DCC_REST_ID_PAGE_PRESENT_LIMIT) != 0U &&
+                (page->limit == 0U || page->limit > 100U)))) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    if (page != NULL && (page->present & DCC_REST_ID_PAGE_PRESENT_AFTER) != 0U)
+        status = dcc_rest_query_append_u64_value(&query, "after", page->after);
+    if (status == DCC_OK && page != NULL && (page->present & DCC_REST_ID_PAGE_PRESENT_LIMIT) != 0U)
+        status = dcc_rest_query_append_u64_value(&query, "limit", page->limit);
+    char *base = NULL;
+    char *path = NULL;
+    if (status == DCC_OK) status = dcc_rest_alloc_formatted_path(
+        &base, DCC_REST_ROUTE_CHANNEL_MESSAGE_POLL_ANSWER,
+        (unsigned long long)channel_id, (unsigned long long)message_id,
         (unsigned)answer_id
     );
-    return status == DCC_OK ? dcc_rest_request_with_query(client, DCC_REST_GET, path, query, NULL, cb, user_data) : status;
-}
-
-dcc_status_t dcc_rest_get_poll_answer_voters_page(
-    dcc_client_t *client,
-    dcc_snowflake_t channel_id,
-    dcc_snowflake_t message_id,
-    uint32_t answer_id,
-    dcc_snowflake_t after,
-    uint64_t limit,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_rest_buffer_t query = {0};
-    dcc_status_t status = dcc_rest_query_append_u64(&query, "after", after);
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_u64(&query, "limit", limit);
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_get_poll_answer_voters(
-            client,
-            channel_id,
-            message_id,
-            answer_id,
-            query.data,
-            cb,
-            user_data
-        );
-    }
+    if (status == DCC_OK) status = dcc_endpoint_path_with_query(base, &query, &path);
+    if (status == DCC_OK) status = dcc_endpoint_submit(
+        client, DCC_REST_GET, path, NULL, &resolved, out_request
+    );
+    free(base);
+    free(path);
     dcc_rest_buffer_deinit(&query);
     return status;
 }
@@ -58,16 +56,22 @@ dcc_status_t dcc_rest_end_poll(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[136];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/channels/%llu/polls/%llu/expire",
-        (unsigned long long)channel_id,
-        (unsigned long long)message_id
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U) {
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    }
+    char *path = NULL;
+    status = dcc_rest_alloc_formatted_path(
+        &path, DCC_REST_ROUTE_CHANNEL_MESSAGE_POLL_EXPIRE,
+        (unsigned long long)channel_id, (unsigned long long)message_id
     );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_POST, path, NULL, cb, user_data) : status;
+    if (status == DCC_OK) status = dcc_endpoint_submit(
+        client, DCC_REST_POST, path, NULL, &resolved, out_request
+    );
+    free(path);
+    return status;
 }

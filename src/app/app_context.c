@@ -2,6 +2,7 @@
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"
 #include "internal/objects/dcc_autocomplete_builder_internal.h"
 #include "internal/objects/dcc_builder_abi_internal.h"
+#include "internal/rest/dcc_rest_endpoint_internal.h"
 
 #include <dcc/cache.h>
 #include <dcc/rest/interactions/responses.h>
@@ -745,13 +746,26 @@ dcc_status_t dcc_ctx_reply_autocomplete(
         dcc_app_auto_defer_release_initial_claim(ctx);
         return status;
     }
-    status = dcc_rest_interaction_response_create_autocomplete_from_interaction(
-        ctx->client,
-        ctx->interaction,
-        autocomplete,
-        cb,
-        user_data
-    );
+    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+    status = dcc_rest_interaction_response_set_autocomplete(&response, autocomplete);
+    dcc_rest_call_options_t options;
+    void *bridge = NULL;
+    if (status == DCC_OK) {
+        status = dcc_endpoint_legacy_options(cb, user_data, &options, &bridge);
+    }
+    if (status == DCC_OK) {
+        status = dcc_rest_interaction_response_create(
+            ctx->client,
+            ctx->interaction->id,
+            ctx->interaction->token,
+            &response,
+            &options,
+            NULL
+        );
+    }
+    if (status != DCC_OK) {
+        dcc_endpoint_legacy_bridge_release(bridge);
+    }
     status = dcc_flow_mark_initial(
         &ctx->flow,
         DCC_INTERACTION_FLOW_REPLIED,
@@ -823,14 +837,27 @@ dcc_status_t dcc_ctx_edit_original(
 }
 
 dcc_status_t dcc_ctx_delete_original(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_data) {
-    return ctx != NULL
-        ? dcc_rest_interaction_original_response_delete_from_interaction(
+    if (ctx == NULL || ctx->interaction == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    dcc_rest_call_options_t options;
+    void *bridge = NULL;
+    dcc_status_t status = dcc_endpoint_legacy_options(
+        cb, user_data, &options, &bridge
+    );
+    if (status == DCC_OK) {
+        status = dcc_rest_interaction_original_response_delete(
             ctx->client,
-            ctx->interaction,
-            cb,
-            user_data
-        )
-        : DCC_ERR_INVALID_ARG;
+            ctx->interaction->application_id,
+            ctx->interaction->token,
+            &options,
+            NULL
+        );
+    }
+    if (status != DCC_OK) {
+        dcc_endpoint_legacy_bridge_release(bridge);
+    }
+    return status;
 }
 
 dcc_status_t dcc_ctx_followup(

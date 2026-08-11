@@ -288,6 +288,7 @@ EXPECTED_REST_GAP_LABELS = {
     "edit_message",
     "get_all_guild_command_permissions",
     "get_channel_messages",
+    "get_channel_messages_after",
     "get_channel_messages_page",
     "get_global_command",
     "get_global_commands",
@@ -326,7 +327,9 @@ EXPECTED_INTERACTION_CONVENIENCE_LABELS = {
 }
 
 DIRECT_REQUEST_REQUIRED_TOKENS = {
-    "/channels/222/messages?after=666&around=888&before=777&limit=100",
+    "/channels/222/messages?before=777&limit=2",
+    "/channels/222/messages?around=888&limit=100",
+    "/channels/222/messages?after=666&limit=25",
     "/applications/123/guilds/333/commands/permissions",
     "/applications/123/guilds/333/commands?with_localizations=true",
     "/webhooks/123/tok/messages/@original",

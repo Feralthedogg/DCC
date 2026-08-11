@@ -13,6 +13,19 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
     pthread_t thread;
     rest_seen_t seen;
     dcc_status_t st;
+    dcc_rest_call_options_t call_options = rest_call_options(&seen);
+
+    dcc_message_builder_t pong_message;
+    dcc_message_builder_init(&pong_message);
+    st = dcc_message_builder_set_content(&pong_message, "pong");
+    dcc_rest_interaction_response_t message_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    if (st != DCC_OK ||
+        dcc_rest_interaction_response_set_message(
+            &message_response, &pong_message) != DCC_OK) {
+        fprintf(stderr, "failed to build interaction callback response\n");
+        return 1;
+    }
 
     if (start_server(&server, &thread) != 0) {
         fprintf(stderr, "failed to start interaction callback server: %s\n", strerror(errno));
@@ -24,10 +37,11 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
         client,
         555,
         "tok/en",
-        "{\"type\":4,\"data\":{\"content\":\"pong\"}}",
-        rest_cb,
-        &seen
+        &message_response,
+        &call_options,
+        NULL
     );
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -49,15 +63,22 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_response_create_options(
+    dcc_rest_interaction_response_t launch_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    st = dcc_rest_interaction_response_set_launch_activity(&launch_response);
+    launch_response.present |= DCC_REST_INTERACTION_RESPONSE_PRESENT_WITH_RESPONSE;
+    launch_response.with_response = 1U;
+    if (st == DCC_OK) {
+        st = dcc_rest_interaction_response_create(
         client,
         555,
         "tok/en",
-        "{\"type\":12}",
-        1U,
-        rest_cb,
-        &seen
-    );
+        &launch_response,
+        &call_options,
+        NULL
+        );
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -65,15 +86,14 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
         strcmp(server.method, "POST") != 0 ||
         strcmp(server.path, "/interactions/555/tok%2Fen/callback?with_response=true") != 0 ||
         strcmp(server.body, "{\"type\":12}") != 0 ||
-        dcc_rest_interaction_response_create_options(
+        ((launch_response.with_response = 2U), dcc_rest_interaction_response_create(
             client,
             555,
             "tok/en",
-            "{\"type\":12}",
-            2U,
-            rest_cb,
-            &seen
-        ) != DCC_ERR_INVALID_ARG) {
+            &launch_response,
+            &call_options,
+            NULL
+        )) != DCC_ERR_INVALID_ARG) {
         fprintf(stderr, "unexpected interaction callback with_response request\n");
         return 1;
     }
@@ -84,14 +104,16 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_response_create_type(
-        client,
-        555,
-        "tok/en",
-        DCC_INTERACTION_RESPONSE_DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
-        rest_cb,
-        &seen
-    );
+    dcc_rest_interaction_response_t deferred_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    st = dcc_rest_interaction_response_set_deferred_message(
+        &deferred_response, NULL);
+    if (st == DCC_OK) {
+        st = dcc_rest_interaction_response_create(
+            client, 555, "tok/en", &deferred_response, &call_options, NULL
+        );
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -99,14 +121,15 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
         strcmp(server.method, "POST") != 0 ||
         strcmp(server.path, "/interactions/555/tok%2Fen/callback") != 0 ||
         strcmp(server.body, "{\"type\":5}") != 0 ||
-        dcc_rest_interaction_response_create_type(
+        ((deferred_response.type = (dcc_interaction_response_type_t)0),
+         dcc_rest_interaction_response_create(
             client,
             555,
             "tok/en",
-            (dcc_interaction_response_type_t)0,
-            rest_cb,
-            &seen
-        ) != DCC_ERR_INVALID_ARG) {
+            &deferred_response,
+            &call_options,
+            NULL
+        )) != DCC_ERR_INVALID_ARG) {
         fprintf(stderr, "unexpected interaction callback type request: st=%s method=%s path=%s body=%s\n",
                 dcc_status_string(st),
                 server.method,
@@ -121,7 +144,15 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_response_create_pong(client, 555, "tok/en", rest_cb, &seen);
+    dcc_rest_interaction_response_t pong_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    st = dcc_rest_interaction_response_set_pong(&pong_response);
+    if (st == DCC_OK) {
+        st = dcc_rest_interaction_response_create(
+            client, 555, "tok/en", &pong_response, &call_options, NULL
+        );
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -150,15 +181,16 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_response_create_message_builder(
-        client,
-        555,
-        "tok/en",
-        DCC_INTERACTION_RESPONSE_CHANNEL_MESSAGE_WITH_SOURCE,
-        &interaction_message,
-        rest_cb,
-        &seen
-    );
+    dcc_rest_interaction_response_t builder_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    st = dcc_rest_interaction_response_set_message(
+        &builder_response, &interaction_message);
+    if (st == DCC_OK) {
+        st = dcc_rest_interaction_response_create(
+            client, 555, "tok/en", &builder_response, &call_options, NULL
+        );
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -210,7 +242,15 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_response_create_modal(client, 556, "tok/en", &modal, rest_cb, &seen);
+    dcc_rest_interaction_response_t modal_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    st = dcc_rest_interaction_response_set_modal(&modal_response, &modal);
+    if (st == DCC_OK) {
+        st = dcc_rest_interaction_response_create(
+            client, 556, "tok/en", &modal_response, &call_options, NULL
+        );
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -257,7 +297,16 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_response_create_autocomplete(client, 557, "tok/en", &autocomplete, rest_cb, &seen);
+    dcc_rest_interaction_response_t autocomplete_response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    st = dcc_rest_interaction_response_set_autocomplete(
+        &autocomplete_response, &autocomplete);
+    if (st == DCC_OK) {
+        st = dcc_rest_interaction_response_create(
+            client, 557, "tok/en", &autocomplete_response, &call_options, NULL
+        );
+    }
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -286,7 +335,10 @@ int run_public_rest_wrapper_interactions_smoke(dcc_client_t *client) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_interaction_followup_get(client, 123, "tok/en", 999, rest_cb, &seen);
+    st = dcc_rest_interaction_followup_get(
+        client, 123, "tok/en", 999, &call_options, NULL
+    );
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||

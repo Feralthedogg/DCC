@@ -209,7 +209,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     "get_message_reactions",
                     call_rest_get_message_reactions,
                     "GET",
-                    "/channels/222/messages/777/reactions/wave%3A888?limit=2&after=444",
+                    "/channels/222/messages/777/reactions/wave%3A888?after=444&limit=2",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -217,7 +217,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     "get_message_reactions_page",
                     call_rest_get_message_reactions_page,
                     "GET",
-                    "/channels/222/messages/777/reactions/wave%3A888?after=444&before=333&limit=2",
+                    "/channels/222/messages/777/reactions/wave%3A888?type=1&after=444&limit=2",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -257,7 +257,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     "get_channel_pins",
                     call_rest_get_channel_pins,
                     "GET",
-                    "/channels/222/messages/pins?limit=50&before=2024-01-01T00:00:00.000000%2B00:00",
+                    "/channels/222/messages/pins?before=2024-01-01T00%3A00%3A00.000000%2B00%3A00&limit=50",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -265,7 +265,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     "get_channel_pins_page",
                     call_rest_get_channel_pins_page,
                     "GET",
-                    "/channels/222/messages/pins?limit=50&before=2024-01-01T00%3A00%3A00.000000%2B00%3A00",
+                    "/channels/222/messages/pins?before=2024-01-01T00%3A00%3A00.000000%2B00%3A00",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -289,7 +289,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     "get_legacy_channel_pins",
                     call_rest_get_legacy_channel_pins,
                     "GET",
-                    "/channels/222/pins?limit=50",
+                    "/channels/222/pins",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -297,7 +297,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     "get_poll_answer_voters",
                     call_rest_get_poll_answer_voters,
                     "GET",
-                    "/channels/222/polls/777/answers/3?limit=2&after=444",
+                    "/channels/222/polls/777/answers/3?after=444&limit=2",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(

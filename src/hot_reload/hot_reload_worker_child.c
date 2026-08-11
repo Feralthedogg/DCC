@@ -5,6 +5,78 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
+typedef struct dcc_worker_client_wait_state {
+    dcc_client_t *client;
+    dcc_status_t status;
+} dcc_worker_client_wait_state_t;
+
+#if defined(_WIN32)
+typedef HANDLE dcc_worker_client_wait_thread_t;
+
+static DWORD WINAPI dcc_worker_client_wait_main(void *arg) {
+    dcc_worker_client_wait_state_t *state =
+        (dcc_worker_client_wait_state_t *)arg;
+    state->status = dcc_client_wait(state->client);
+    return 0U;
+}
+
+static int dcc_worker_client_wait_start(
+    dcc_worker_client_wait_thread_t *thread,
+    dcc_worker_client_wait_state_t *state
+) {
+    *thread = CreateThread(
+        NULL,
+        0U,
+        dcc_worker_client_wait_main,
+        state,
+        0U,
+        NULL
+    );
+    return *thread != NULL ? 0 : -1;
+}
+
+static dcc_status_t dcc_worker_client_wait_join(
+    dcc_worker_client_wait_thread_t thread,
+    dcc_worker_client_wait_state_t *state
+) {
+    if (WaitForSingleObject(thread, INFINITE) != WAIT_OBJECT_0) {
+        (void)CloseHandle(thread);
+        return DCC_ERR_RUNTIME;
+    }
+    (void)CloseHandle(thread);
+    return state->status;
+}
+#else
+typedef pthread_t dcc_worker_client_wait_thread_t;
+
+static void *dcc_worker_client_wait_main(void *arg) {
+    dcc_worker_client_wait_state_t *state =
+        (dcc_worker_client_wait_state_t *)arg;
+    state->status = dcc_client_wait(state->client);
+    return NULL;
+}
+
+static int dcc_worker_client_wait_start(
+    dcc_worker_client_wait_thread_t *thread,
+    dcc_worker_client_wait_state_t *state
+) {
+    return pthread_create(thread, NULL, dcc_worker_client_wait_main, state);
+}
+
+static dcc_status_t dcc_worker_client_wait_join(
+    dcc_worker_client_wait_thread_t thread,
+    dcc_worker_client_wait_state_t *state
+) {
+    return pthread_join(thread, NULL) == 0 ? state->status : DCC_ERR_RUNTIME;
+}
+#endif
+
 static int dcc_worker_parse_generation(const char *text, uint64_t *out) {
     if (text == NULL || text[0] == '\0' || out == NULL) {
         return -1;
@@ -78,6 +150,26 @@ int dcc_hot_reload_worker_main(int argc, char **argv) {
 
     dcc_client_t *client = NULL;
     dcc_status_t status = dcc_client_create(&client_options, &client);
+    uint8_t client_started = 0U;
+    uint8_t wait_thread_started = 0U;
+    dcc_worker_client_wait_state_t wait_state = {
+        .client = client,
+        .status = DCC_ERR_RUNTIME,
+    };
+    dcc_worker_client_wait_thread_t wait_thread;
+    if (status == DCC_OK) {
+        status = dcc_client_start(client);
+        if (status == DCC_OK) {
+            client_started = 1U;
+        }
+    }
+    if (status == DCC_OK) {
+        if (dcc_worker_client_wait_start(&wait_thread, &wait_state) != 0) {
+            status = DCC_ERR_RUNTIME;
+        } else {
+            wait_thread_started = 1U;
+        }
+    }
     dcc_hot_reload_t *hot_reload = NULL;
     if (status == DCC_OK) {
         dcc_hot_reload_options_t options;
@@ -98,6 +190,15 @@ int dcc_hot_reload_worker_main(int argc, char **argv) {
     }
     int rc = status == DCC_OK ? dcc_hot_reload_worker_child_event_loop(hot_reload) : 1;
     dcc_hot_reload_destroy(hot_reload);
+    if (client_started != 0U) {
+        (void)dcc_client_stop(client);
+        dcc_status_t wait_status = wait_thread_started != 0U
+            ? dcc_worker_client_wait_join(wait_thread, &wait_state)
+            : dcc_client_wait(client);
+        if (wait_status != DCC_OK) {
+            rc = 1;
+        }
+    }
     dcc_client_destroy(client);
     return rc;
 }

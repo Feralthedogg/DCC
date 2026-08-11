@@ -1,99 +1,96 @@
-#include "internal/rest/dcc_rest_buffer_internal.h"
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
-#include "internal/rest/dcc_rest_request_core_internal.h"
+#include "internal/rest/dcc_rest_query_append_internal.h"
 
-#include <stdio.h>
 #include <stdlib.h>
+
+static dcc_status_t dcc_pin_submit(
+    dcc_client_t *client,
+    dcc_rest_method_t method,
+    const char *path,
+    const dcc_rest_call_options_t *resolved,
+    dcc_rest_request_t **out_request
+) {
+    return dcc_endpoint_submit(client, method, path, NULL, resolved, out_request);
+}
 
 dcc_status_t dcc_rest_pin_message(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[120];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/channels/%llu/messages/pins/%llu",
-        (unsigned long long)channel_id,
-        (unsigned long long)message_id
-    );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_PUT, path, NULL, cb, user_data) : status;
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    char *path = NULL;
+    status = dcc_rest_alloc_formatted_path(&path, DCC_REST_ROUTE_CHANNEL_MESSAGE_PIN,
+        (unsigned long long)channel_id, (unsigned long long)message_id);
+    if (status == DCC_OK) status = dcc_pin_submit(
+        client, DCC_REST_PUT, path, &resolved, out_request);
+    free(path);
+    return status;
 }
 
 dcc_status_t dcc_rest_unpin_message(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[120];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/channels/%llu/messages/pins/%llu",
-        (unsigned long long)channel_id,
-        (unsigned long long)message_id
-    );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_DELETE, path, NULL, cb, user_data) : status;
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    char *path = NULL;
+    status = dcc_rest_alloc_formatted_path(&path, DCC_REST_ROUTE_CHANNEL_MESSAGE_PIN,
+        (unsigned long long)channel_id, (unsigned long long)message_id);
+    if (status == DCC_OK) status = dcc_pin_submit(
+        client, DCC_REST_DELETE, path, &resolved, out_request);
+    free(path);
+    return status;
 }
 
 dcc_status_t dcc_rest_get_channel_pins(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
-    const char *query,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_pin_page_t *query,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[88];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/channels/%llu/messages/pins", (unsigned long long)channel_id);
-    return status == DCC_OK ? dcc_rest_request_with_query(client, DCC_REST_GET, path, query, NULL, cb, user_data) : status;
-}
-
-dcc_status_t dcc_rest_get_channel_pins_page(
-    dcc_client_t *client,
-    dcc_snowflake_t channel_id,
-    const char *before_iso8601,
-    uint64_t limit,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char limit_text[32];
-    int written = snprintf(
-        limit_text,
-        sizeof(limit_text),
-        "%llu",
-        (unsigned long long)(limit != 0 ? limit : 50ULL)
-    );
-    if (written < 0 || (size_t)written >= sizeof(limit_text)) {
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    const uint64_t known = DCC_REST_PIN_PAGE_PRESENT_BEFORE |
+        DCC_REST_PIN_PAGE_PRESENT_LIMIT;
+    if (query != NULL && (query->size < sizeof(*query) ||
+            query->version != DCC_REST_PIN_PAGE_VERSION ||
+            (query->present & ~known) != 0U ||
+            ((query->present & DCC_REST_PIN_PAGE_PRESENT_BEFORE) != 0U &&
+                (query->before == NULL || query->before[0] == '\0')) ||
+            ((query->present & DCC_REST_PIN_PAGE_PRESENT_LIMIT) != 0U &&
+                (query->limit == 0U || query->limit > 50U))))
         return DCC_ERR_INVALID_ARG;
-    }
-
-    dcc_rest_buffer_t query = {0};
-    dcc_status_t status = dcc_rest_buffer_append_cstr(&query, "limit=");
-    if (status == DCC_OK) {
-        status = dcc_rest_buffer_append_cstr(&query, limit_text);
-    }
-
-    char *encoded_before = NULL;
-    if (status == DCC_OK && before_iso8601 != NULL && before_iso8601[0] != '\0') {
-        status = dcc_rest_escape_path_segment(before_iso8601, &encoded_before);
-        if (status == DCC_OK) {
-            status = dcc_rest_buffer_append_cstr(&query, "&before=");
-        }
-        if (status == DCC_OK) {
-            status = dcc_rest_buffer_append_cstr(&query, encoded_before);
-        }
-    }
-
-    if (status == DCC_OK) {
-        status = dcc_rest_get_channel_pins(client, channel_id, query.data, cb, user_data);
-    }
-    free(encoded_before);
-    dcc_rest_buffer_deinit(&query);
+    dcc_rest_buffer_t text = {0};
+    if (query != NULL && (query->present & DCC_REST_PIN_PAGE_PRESENT_BEFORE) != 0U)
+        status = dcc_rest_query_append_string(&text, "before", query->before);
+    if (status == DCC_OK && query != NULL && (query->present & DCC_REST_PIN_PAGE_PRESENT_LIMIT) != 0U)
+        status = dcc_rest_query_append_u64_value(&text, "limit", query->limit);
+    char *base = NULL;
+    char *path = NULL;
+    if (status == DCC_OK) status = dcc_rest_alloc_formatted_path(
+        &base, DCC_REST_ROUTE_CHANNEL_MESSAGE_PINS, (unsigned long long)channel_id);
+    if (status == DCC_OK) status = dcc_endpoint_path_with_query(base, &text, &path);
+    if (status == DCC_OK) status = dcc_pin_submit(
+        client, DCC_REST_GET, path, &resolved, out_request);
+    free(base);
+    free(path);
+    dcc_rest_buffer_deinit(&text);
     return status;
 }
 
@@ -101,46 +98,57 @@ dcc_status_t dcc_rest_legacy_pin_message(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[96];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/channels/%llu/pins/%llu",
-        (unsigned long long)channel_id,
-        (unsigned long long)message_id
-    );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_PUT, path, NULL, cb, user_data) : status;
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    char *path = NULL;
+    status = dcc_rest_alloc_formatted_path(&path, DCC_REST_ROUTE_LEGACY_CHANNEL_PIN,
+        (unsigned long long)channel_id, (unsigned long long)message_id);
+    if (status == DCC_OK) status = dcc_pin_submit(
+        client, DCC_REST_PUT, path, &resolved, out_request);
+    free(path);
+    return status;
 }
 
 dcc_status_t dcc_rest_legacy_unpin_message(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[96];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/channels/%llu/pins/%llu",
-        (unsigned long long)channel_id,
-        (unsigned long long)message_id
-    );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_DELETE, path, NULL, cb, user_data) : status;
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U || message_id == 0U)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    char *path = NULL;
+    status = dcc_rest_alloc_formatted_path(&path, DCC_REST_ROUTE_LEGACY_CHANNEL_PIN,
+        (unsigned long long)channel_id, (unsigned long long)message_id);
+    if (status == DCC_OK) status = dcc_pin_submit(
+        client, DCC_REST_DELETE, path, &resolved, out_request);
+    free(path);
+    return status;
 }
 
 dcc_status_t dcc_rest_get_legacy_channel_pins(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
-    const char *query,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[64];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/channels/%llu/pins", (unsigned long long)channel_id);
-    return status == DCC_OK ? dcc_rest_request_with_query(client, DCC_REST_GET, path, query, NULL, cb, user_data) : status;
+    dcc_rest_call_options_t resolved;
+    dcc_status_t status = dcc_endpoint_prepare(options, out_request, &resolved);
+    if (status != DCC_OK || client == NULL || channel_id == 0U)
+        return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+    char *path = NULL;
+    status = dcc_rest_alloc_formatted_path(&path, DCC_REST_ROUTE_LEGACY_CHANNEL_PINS,
+        (unsigned long long)channel_id);
+    if (status == DCC_OK) status = dcc_pin_submit(
+        client, DCC_REST_GET, path, &resolved, out_request);
+    free(path);
+    return status;
 }

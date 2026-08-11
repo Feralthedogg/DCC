@@ -3,23 +3,144 @@
 
 #include <dcc/rest/base.h>
 
+#define DCC_REST_MESSAGE_PAYLOAD_VERSION 1U
+#define DCC_REST_MESSAGE_LIST_QUERY_VERSION 1U
+#define DCC_REST_ID_PAGE_VERSION 1U
+#define DCC_REST_PIN_PAGE_VERSION 1U
+#define DCC_REST_REACTION_QUERY_VERSION 1U
+
+#define DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND UINT64_C(1)
+#define DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE (UINT64_C(1) << 1U)
+#define DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER (UINT64_C(1) << 2U)
+#define DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT (UINT64_C(1) << 3U)
+
+#define DCC_REST_ID_PAGE_PRESENT_BEFORE UINT64_C(1)
+#define DCC_REST_ID_PAGE_PRESENT_AFTER (UINT64_C(1) << 1U)
+#define DCC_REST_ID_PAGE_PRESENT_LIMIT (UINT64_C(1) << 2U)
+
+#define DCC_REST_PIN_PAGE_PRESENT_BEFORE UINT64_C(1)
+#define DCC_REST_PIN_PAGE_PRESENT_LIMIT (UINT64_C(1) << 1U)
+
+#define DCC_REST_REACTION_QUERY_PRESENT_TYPE UINT64_C(1)
+#define DCC_REST_REACTION_QUERY_PRESENT_AFTER (UINT64_C(1) << 1U)
+#define DCC_REST_REACTION_QUERY_PRESENT_LIMIT (UINT64_C(1) << 2U)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct dcc_message_reaction_params {
+typedef struct dcc_rest_message_payload {
     size_t size;
-    dcc_snowflake_t channel_id;
-    dcc_snowflake_t message_id;
-    const char *reaction;
-} dcc_message_reaction_params_t;
+    uint32_t version;
+    const dcc_message_builder_t *message;
+    const dcc_rest_multipart_file_t *files;
+    size_t file_count;
+} dcc_rest_message_payload_t;
 
-typedef struct dcc_message_flags_params {
+#define DCC_REST_MESSAGE_PAYLOAD_INIT \
+    { sizeof(dcc_rest_message_payload_t), DCC_REST_MESSAGE_PAYLOAD_VERSION, \
+      NULL, NULL, 0U }
+
+static inline void dcc_rest_message_payload_init(
+    dcc_rest_message_payload_t *payload,
+    const dcc_message_builder_t *message
+) {
+    if (payload != NULL) {
+        dcc_rest_message_payload_t value = DCC_REST_MESSAGE_PAYLOAD_INIT;
+        value.message = message;
+        *payload = value;
+    }
+}
+
+typedef struct dcc_rest_message_list_query {
     size_t size;
-    dcc_snowflake_t channel_id;
-    dcc_snowflake_t message_id;
-    uint64_t flags;
-} dcc_message_flags_params_t;
+    uint32_t version;
+    uint64_t present;
+    dcc_snowflake_t around;
+    dcc_snowflake_t before;
+    dcc_snowflake_t after;
+    uint64_t limit;
+} dcc_rest_message_list_query_t;
+
+#define DCC_REST_MESSAGE_LIST_QUERY_INIT \
+    { sizeof(dcc_rest_message_list_query_t), \
+      DCC_REST_MESSAGE_LIST_QUERY_VERSION, UINT64_C(0), \
+      UINT64_C(0), UINT64_C(0), UINT64_C(0), UINT64_C(0) }
+
+static inline void dcc_rest_message_list_query_init(
+    dcc_rest_message_list_query_t *query
+) {
+    if (query != NULL) {
+        dcc_rest_message_list_query_t value = DCC_REST_MESSAGE_LIST_QUERY_INIT;
+        *query = value;
+    }
+}
+
+typedef struct dcc_rest_id_page {
+    size_t size;
+    uint32_t version;
+    uint64_t present;
+    dcc_snowflake_t before;
+    dcc_snowflake_t after;
+    uint64_t limit;
+} dcc_rest_id_page_t;
+
+#define DCC_REST_ID_PAGE_INIT \
+    { sizeof(dcc_rest_id_page_t), DCC_REST_ID_PAGE_VERSION, UINT64_C(0), \
+      UINT64_C(0), UINT64_C(0), UINT64_C(0) }
+
+static inline void dcc_rest_id_page_init(dcc_rest_id_page_t *page) {
+    if (page != NULL) {
+        dcc_rest_id_page_t value = DCC_REST_ID_PAGE_INIT;
+        *page = value;
+    }
+}
+
+typedef struct dcc_rest_pin_page {
+    size_t size;
+    uint32_t version;
+    uint64_t present;
+    const char *before;
+    uint64_t limit;
+} dcc_rest_pin_page_t;
+
+#define DCC_REST_PIN_PAGE_INIT \
+    { sizeof(dcc_rest_pin_page_t), DCC_REST_PIN_PAGE_VERSION, UINT64_C(0), \
+      NULL, UINT64_C(0) }
+
+static inline void dcc_rest_pin_page_init(dcc_rest_pin_page_t *page) {
+    if (page != NULL) {
+        dcc_rest_pin_page_t value = DCC_REST_PIN_PAGE_INIT;
+        *page = value;
+    }
+}
+
+typedef enum dcc_rest_reaction_type {
+    DCC_REST_REACTION_NORMAL = 0,
+    DCC_REST_REACTION_BURST = 1
+} dcc_rest_reaction_type_t;
+
+typedef struct dcc_rest_reaction_query {
+    size_t size;
+    uint32_t version;
+    uint64_t present;
+    dcc_rest_reaction_type_t type;
+    dcc_snowflake_t after;
+    uint64_t limit;
+} dcc_rest_reaction_query_t;
+
+#define DCC_REST_REACTION_QUERY_INIT \
+    { sizeof(dcc_rest_reaction_query_t), DCC_REST_REACTION_QUERY_VERSION, \
+      UINT64_C(0), DCC_REST_REACTION_NORMAL, UINT64_C(0), UINT64_C(0) }
+
+static inline void dcc_rest_reaction_query_init(
+    dcc_rest_reaction_query_t *query
+) {
+    if (query != NULL) {
+        dcc_rest_reaction_query_t value = DCC_REST_REACTION_QUERY_INIT;
+        *query = value;
+    }
+}
 
 typedef enum dcc_message_search_has {
     DCC_MESSAGE_SEARCH_HAS_IMAGE = 0,
