@@ -5,8 +5,8 @@ Implement only Task 9 from
 the corrected active-endpoint inventory below, the Task 7 common call-option
 contract, and this brief are authoritative. Work test-first, do not push, and
 do not edit the ignored progress ledger. Keep intermediate commits buildable
-and do not begin Task 10 domains or remove the public App REST mirrors owned by
-Task 10.
+and do not begin Task 10 domains or remove the public App REST mirrors frozen
+through Task 10 and owned by the Task 14/15 compatibility cutover.
 
 ## Outcome
 
@@ -275,9 +275,11 @@ adds `uint64_t nulls`. It reuses that member's `present` bit: absent omits it,
 present with a clear null bit reads and serializes its value, and present with
 a set null bit emits null without reading the value storage. Reject unknown
 null bits, null-without-present, and null on a nonnullable field. The already-
-published Task 5 application-command builders retain their frozen version-1
-prefix and existing default-permission null representation; append their new
-Task 9 fields and bits without shifting that historical layout.
+published Task 5 autocomplete/application-command builders retain their
+version-1 prefix and existing default-permission null representation; append
+the typed Task 9 fields and bits without shifting that transition layout.
+Task 14 removes and compacts the mutually exclusive raw-JSON members in the
+coordinated ABI-2 cut before the first stable release.
 
 Use version 1. Larger version-1 records and historical prefixes are accepted
 when the prefix covers every mandatory and present field. Reject zero/unknown
@@ -317,6 +319,112 @@ Raw JSON compatibility members are not a substitute for typed fields. Existing
 typed-builder JSON escape members may survive only where the Task 5 builder
 contract explicitly retained them, with the same mutual-exclusion,
 validation, and ownership rules.
+
+### Shared application leaf types and typed replacement fields
+
+Create one neutral `<dcc/application_types.h>` owner, included by autocomplete,
+application-command, and Task 10 role-connection types. It owns exactly these
+fixed semantic values:
+
+```c
+typedef struct dcc_localization {
+    const char *locale;
+    const char *value;
+} dcc_localization_t;
+
+typedef enum dcc_application_integration_type {
+    DCC_APPLICATION_INTEGRATION_TYPE_GUILD_INSTALL = 0,
+    DCC_APPLICATION_INTEGRATION_TYPE_USER_INSTALL = 1
+} dcc_application_integration_type_t;
+
+typedef enum dcc_interaction_context_type {
+    DCC_INTERACTION_CONTEXT_GUILD = 0,
+    DCC_INTERACTION_CONTEXT_BOT_DM = 1,
+    DCC_INTERACTION_CONTEXT_PRIVATE_CHANNEL = 2
+} dcc_interaction_context_type_t;
+```
+
+Remove the duplicate integration enum from the transition official-surface
+header. A localization array is borrowed, fixed-stride, and ordered only for
+deterministic serialization; locale keys must be nonempty, values must satisfy
+the owning Discord field's constraints, and duplicate locale keys are invalid.
+Integration/context arrays reject invalid values and duplicates. A null pointer
+is valid only with count zero; checked span arithmetic precedes every read.
+
+Append these exact seven typed pointer/count fields and seven semantic presence
+values while the corresponding raw fields remain transition-only:
+
+```c
+/* dcc_autocomplete_choice_t */
+const dcc_localization_t *name_localizations;
+size_t name_localization_count;
+
+/* dcc_application_command_option_builder_t */
+const dcc_localization_t *name_localizations;
+size_t name_localization_count;
+const dcc_localization_t *description_localizations;
+size_t description_localization_count;
+
+/* dcc_application_command_builder_t */
+const dcc_localization_t *name_localizations;
+size_t name_localization_count;
+const dcc_localization_t *description_localizations;
+size_t description_localization_count;
+const dcc_application_integration_type_t *integration_types;
+size_t integration_type_count;
+const dcc_interaction_context_type_t *contexts;
+size_t context_count;
+```
+
+The word “seven” counts logical pointer/count fields: one choice, two option,
+and four command fields. Publish these exact validated setters:
+
+```c
+dcc_status_t dcc_autocomplete_choice_set_name_localizations(
+    dcc_autocomplete_choice_t *choice,
+    const dcc_localization_t *localizations,
+    size_t localization_count);
+dcc_status_t dcc_application_command_option_builder_set_name_localizations(
+    dcc_application_command_option_builder_t *builder,
+    const dcc_localization_t *localizations,
+    size_t localization_count);
+dcc_status_t dcc_application_command_option_builder_set_description_localizations(
+    dcc_application_command_option_builder_t *builder,
+    const dcc_localization_t *localizations,
+    size_t localization_count);
+dcc_status_t dcc_application_command_builder_set_name_localizations(
+    dcc_application_command_builder_t *builder,
+    const dcc_localization_t *localizations,
+    size_t localization_count);
+dcc_status_t dcc_application_command_builder_set_description_localizations(
+    dcc_application_command_builder_t *builder,
+    const dcc_localization_t *localizations,
+    size_t localization_count);
+dcc_status_t dcc_application_command_builder_set_integration_types(
+    dcc_application_command_builder_t *builder,
+    const dcc_application_integration_type_t *integration_types,
+    size_t integration_type_count);
+dcc_status_t dcc_application_command_builder_set_contexts(
+    dcc_application_command_builder_t *builder,
+    const dcc_interaction_context_type_t *contexts,
+    size_t context_count);
+```
+
+Each typed bit is mutually exclusive with its corresponding raw-JSON bit.
+`choices_json`/typed choices and `options_json`/typed options retain the same
+rule. Task 9 endpoint and registry code uses only typed fields. Task 14 deletes
+all ten autocomplete/command raw fields, their ten raw presence names, and the
+six exported raw setters that exist for this subset; it does not delete the
+JSON output build/free functions.
+
+As a macro-hygiene prerequisite for the later Bot aggregate, convert every
+autocomplete/application-command builder VERSION and PRESENT value, including
+transition raw names and new Task 9 fields, from `#define` to an enum constant.
+Do the same for the two request VERSION values. They are ordinary integral
+constants and are never used by preprocessor conditionals. Keep only public
+constant initializer macros; registry options/result/operation versions are
+also enum constants, so Task 9 adds exactly three registry initializer macros,
+not one VERSION macro per record.
 
 ## Application commands and permissions
 
@@ -435,7 +543,6 @@ typedef struct dcc_command_registry_operation_options {
 dcc_status_t dcc_command_registry_apply(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
-    const dcc_command_registry_options_t *registry_options,
     const dcc_command_registry_plan_t *plan,
     const dcc_command_registry_operation_options_t *operation_options,
     dcc_command_registry_operation_t **out_operation
@@ -457,8 +564,17 @@ void dcc_command_registry_operation_destroy(
 );
 ```
 
-Publish version constants and complete initializer macros/functions for the
-options and result. `planned_count` counts executable create/update/delete
+`plan` is the sole scope/provenance authority for apply. Its deep-copied
+`guild_id`, `delete_stale`, and `dry_run` values were normalized by
+`dcc_command_registry_build_plan()` and cannot be overridden at execution.
+There is deliberately no second `registry_options` argument whose global/guild
+scope could disagree with remote IDs and diffs in the plan. Fetch and plan
+construction still take registry options; apply validates the plan's own
+version, ownership state, scope, and diff provenance before the first request.
+
+Publish version values as enum constants and exactly three complete initializer
+macros/static-inline initializers for registry options, operation options, and
+operation result. `planned_count` counts executable create/update/delete
 entries, while `noop_count` records skipped NOOP entries. A no-failure result
 uses `SIZE_MAX` for `failed_plan_index`, `DCC_COMMAND_REGISTRY_NOOP` for
 `failed_action`, and null for `failed_rest_result`. A later local admission
@@ -534,11 +650,15 @@ accounting. A worker must never block waiting for another runtime request.
 
 Migrate direct Task 9 consumers in the same change. The CLI may wait from its
 non-runtime main thread before destroying the client. App/READY code must keep
-its registry, plan, client guard, and operation state alive through terminal
-completion instead of deinitializing the plan after submission. A private
-bridge is allowed when needed to avoid exposing a new App mirror. Task 10 may
-later add a fetch-parse-plan-apply composite and remove App mirrors, but Task 9
-must leave every current direct registry consumer correct and compilable.
+the client/runtime guard and opaque operation state alive through terminal
+completion. A successful `dcc_command_registry_apply()` has already deep-copied
+the executable plan, builders, options, JSON, and names, so the source registry,
+remote snapshot, diff/plan, and their strings may be deinitialized immediately
+after that call; no App bridge may retain them merely for the operation. A
+private bridge is allowed when needed to avoid exposing a new App mirror. Task
+10 may later add a fetch-parse-plan-apply composite and retire internal mirror
+use, but Task 9 must leave every current direct registry consumer correct and
+compilable.
 
 ## Auto moderation
 

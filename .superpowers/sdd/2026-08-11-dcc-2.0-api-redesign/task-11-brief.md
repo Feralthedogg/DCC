@@ -16,8 +16,9 @@ Before writing RED tests, verify all of the following:
 - `tools/audit_rest_v2_endpoints.py` passes in strict mode with no progress
   allowance and reports the final 224 active endpoints plus 60 generic REST
   operations;
-- all endpoint-mirroring public `dcc_app_*` REST declarations and
-  `src/app/app_rest_shortcuts*.c` units are gone;
+- no internal consumer calls an App REST mirror, while the exact 196 public
+  compatibility declarations and four `src/app/app_rest_shortcuts*.c` units
+  remain frozen for Task 14 with their audited names, owners, and hash;
 - the Task 6 interaction endpoints still have their one canonical typed
   signatures ending in `options, out_request`;
 - the worktree is clean apart from the Task 11 RED fixture being written.
@@ -44,9 +45,17 @@ but is not put on the network until the initial response reaches a successful
 the original response.
 
 This task also makes auto-defer use the same queue mutex as explicit actions,
-adds honest queued public states, gives standalone flow objects an explicit
-`deinit`, and drains queues before App-owned callback data or the App error sink
-can be reclaimed.
+adds honest queued public states, makes standalone flows opaque
+`create/destroy` objects, and drains queues before App-owned callback data or
+the App error sink can be reclaimed.
+
+This task also removes the legacy response type from the canonical
+interaction layer: every completion parameter in `<dcc/app/context.h>`,
+`<dcc/interaction_flow.h>`, and `<dcc/interaction_helpers.h>` is
+`dcc_rest_result_fn`, and every terminal payload is `dcc_rest_result_t`.
+`dcc_rest_cb` and `dcc_rest_response_t` remain available only to not-yet-
+converted transition consumers until Task 14; no new queue node, flow, context,
+or helper may depend on them.
 
 ## What Tasks 4, 6, and 10 already solved
 
@@ -56,7 +65,7 @@ Do not re-solve or weaken these contracts:
 | --- | --- | --- |
 | Task 4 | request handle, copied raw descriptor data, nonblocking admission, exactly one terminal result, cancellation, callback-before-observer order, callback/observer delivery before successful wait | one private post-terminal hook and an internal take-owned admission path; no public signature or ordering regression |
 | Task 6 | typed interaction payload validation, exact JSON/multipart serialization, path/query escaping, input copying before return, and the eight canonical interaction endpoints | a private prepare-without-submit seam shared by the existing public wrappers and the queue |
-| Task 10 | all remaining REST domains migrated, strict endpoint manifest, composite consumers made asynchronous, App endpoint mirrors removed | context-local response queuing only; no endpoint aliases or App REST mirrors |
+| Task 10 | all remaining REST domains migrated, strict endpoint manifest, composite consumers made asynchronous, internal App-mirror use retired, and exactly 196 compatibility exports frozen for Task 14 | context-local response queuing only; no endpoint aliases or new/internal App REST mirror use |
 
 Task 11 is the cross-request sequencing layer. It must not add `_v2`, async,
 future, builder, raw JSON, or callback endpoint overloads; change any public
@@ -75,7 +84,7 @@ Create at minimum:
 
 - `src/internal/app/dcc_app_interaction_queue_internal.h` — queue, action,
   registry, refcount, transition, and private App/flow integration contracts;
-- `src/app/app_interaction_queue.c` — queue/registry construction, lookup,
+- `src/app/app_interaction_queue.c` — client queue/registry construction, lookup,
   retirement, ownership, state queries, close, and drain;
 - `src/app/app_interaction_queue_worker.c` — FIFO pump, REST admission,
   terminal commit, synthetic completion, failure cascade, and reentry guard;
@@ -90,13 +99,16 @@ Modify as required:
 
 - `include/dcc/app/context.h` for canonical context action/state ownership
   documentation in the post-Task-10 header layout;
-- `include/dcc/interaction_flow.h` for queued states, the opaque tail field,
-  and `dcc_flow_deinit()`;
-- transition-only `include/dcc/sugar/flow.h` so every in-tree named flow is
-  deinitialized; do not broaden this into Task 14 Sugar cleanup;
+- `include/dcc/interaction_flow.h` for queued states and the opaque
+  `dcc_flow_create()`/`dcc_flow_destroy()` lifecycle;
+- `include/dcc/interaction_helpers.h` for the same `dcc_rest_result_fn`
+  completion contract as context and flow actions;
+- transition-only `include/dcc/sugar/flow.h` so every in-tree named flow uses
+  the opaque pointer lifecycle and is destroyed; do not broaden this into Task
+  14 Sugar cleanup;
 - `src/internal/app/dcc_app_internal.h`, `src/app/app.c`,
   `src/app/app_routes.c`, `src/app/app_context.c`, and
-  `src/app/app_auto_defer.c` for App registry, context attachment, timer, and
+  `src/app/app_auto_defer.c` for client registry, context attachment, timer, and
   teardown integration;
 - `src/internal/interaction_flow/dcc_interaction_flow_internal.h` and the
   `src/interaction_flow/interaction_flow_{core,messages,defer,modal,auto_defer}.c`
@@ -143,99 +155,278 @@ typedef enum dcc_interaction_flow_state {
 `"deferred_queued"` for the new values. Do not insert the values beside their
 semantic neighbors and renumber the historical enum.
 
-Append exactly one `void *internal_queue` queue-state pointer at the end of
-`dcc_interaction_flow_t`; do not repurpose `reserved`, `response_flags`, or old
-tail padding. Add:
+Replace the exposed flow layout and its unsafe external initializer with an
+opaque DCC 2 owner. Publish exactly:
 
 ```c
-DCC_API void dcc_flow_deinit(dcc_interaction_flow_t *flow);
+DCC_API dcc_status_t dcc_flow_create(
+    dcc_client_t *client,
+    const dcc_interaction_t *interaction,
+    dcc_interaction_flow_t **out_flow);
+DCC_API void dcc_flow_destroy(dcc_interaction_flow_t *flow);
 ```
 
-The member is opaque to callers and its ownership comment is mandatory.
-`dcc_flow_init()` initializes the full current layout without
-retaining caller input beyond the normal pre-action lifetime. Queue creation
-may be lazy so the existing `void` initializer remains valid; its first action
-must report allocation failure without mutating the flow.
+`dcc_flow_create()` clears `*out_flow` before validation, copies the complete
+interaction/application/channel identity and token before returning, creates
+the private queue owner, and retains no parser/event view. It returns non-OK
+without a live object or callback. The client is borrowed until flow destroy
+and completion of any already accepted action. `dcc_flow_destroy(NULL)` is a
+no-op; otherwise it consumes exactly one caller-owned flow pointer, drops only
+the standalone owner reference, and does not cancel or suppress work that
+already returned `DCC_OK`. Queue work continues from its independent strong
+references.
 
-A current-layout flow becomes non-copyable once its private pointer is
-attached. It must be deinitialized before its storage is reused or leaves
-scope; null and repeated deinit calls are safe no-ops. The first current-layout
-deinit detaches `internal_queue`, drops only the caller/flow owner
-reference, clears borrowed context pointers, sets the state snapshot to
-`FAILED`, and sets `size` to zero as the deinitialized marker. It does not
-cancel an action that already returned `DCC_OK`, suppress its callback, or
-shorten callback `user_data` lifetime. Reinitialization through
-`dcc_flow_init()` is permitted only after that deinit.
-
-For a historical prefix whose declared `size` does not cover the new pointer:
-
-- `dcc_flow_state()` and state-string inspection retain the bounded old-state
-  behavior;
-- `dcc_flow_deinit()` is a bounded no-op;
-- every action that would enqueue work returns `DCC_ERR_STATE`, invokes no
-  callback or observer, performs no network request, and leaves all covered
-  bytes and following canaries unchanged.
-
-Do not hide this with an old coarse optimistic path: a historical object cannot
-hold the owner reference required for safe asynchronous sequencing.
-
-The public `.state` field is a compatibility snapshot. Once a queue exists,
-only `dcc_flow_state()` and `dcc_ctx_response_state()` are synchronized state
-authorities; direct concurrent field reads have no terminal-completion
-guarantee. Document this in both headers.
+Remove `dcc_flow_init`, `dcc_flow_deinit`, and the public struct definition in
+this task. This avoids an external initializer writing a newer library's
+`sizeof(dcc_interaction_flow_t)` into an older caller allocation. There is no
+historical-prefix mode for an opaque object and no public `.state` snapshot;
+`dcc_flow_state()` and `dcc_ctx_response_state()` are the synchronized state
+authorities.
 
 ## Queue identity, registry, and ownership
 
-### App registry
+### Bounded admission and telemetry
 
-Each App owns a private collision-safe hash registry. Its exact key is the pair
-`(interaction_id, interaction_token bytes)`. The application ID and client
-must also match the queue found under that key; a mismatch is rejected rather
-than silently sharing state. Copy the token once when creating the queue and
-never retain `dcc_interaction_t *` or any event/parser view.
+All REST jobs and prepared interaction actions use one client resource ledger,
+so admission has hard, configurable memory bounds rather than bounding only
+one queue in front of an unbounded REST queue. Append these eleven size-gated
+fields to `dcc_client_options_t` in this exact order; zero selects the exact
+default shown:
 
-Registry lookup must be average O(1), use checked capacity arithmetic, and
-compare full key bytes after hashing. A growth/allocation failure leaves the
-registry unchanged and returns `DCC_ERR_NOMEM`. Two concurrent deliveries of
-the same interaction acquire the same queue, so they cannot emit two initial
-responses. Distinct token bytes remain distinct even if IDs collide.
+```c
+size_t rest_max_queued_requests;                /* default 4096 */
+size_t rest_max_request_bytes;                  /* default 32 * 1024 * 1024 */
+size_t rest_max_queued_bytes;                   /* default 128 * 1024 * 1024 */
+size_t rest_max_active_bytes;                   /* default 128 * 1024 * 1024 */
+size_t rest_max_response_bytes;                 /* default 32 * 1024 * 1024 */
+size_t interaction_max_live_queues;             /* default 1024 */
+size_t interaction_max_tombstones;              /* default 65536 */
+uint64_t interaction_tombstone_ttl_ms;          /* default 20 * 60 * 1000 */
+size_t interaction_max_actions_per_queue;       /* default 32, active included */
+size_t interaction_max_reserved_bytes_per_queue;/* default 32 * 1024 * 1024 */
+size_t interaction_max_reserved_bytes_total;    /* default 128 * 1024 * 1024 */
+```
 
-The registry owns one strong queue reference. Acquisition increments the
-strong reference while holding the registry mutex, before publishing it to the
-context. Normal retirement occurs only when that registry reference is the
-sole remaining reference. Under the registry mutex, either a new acquire
-retains the existing entry first or retirement unlinks it first; it must never
-be possible for an active old queue and a new registry queue for the same key
-to overlap.
+Publish those defaults as enum constants, not macros. A nonzero limit is used
+verbatim. Reject an options combination unless queued bytes are at least one
+maximum request, active bytes are at least one maximum request plus one maximum
+response using checked addition, and total interaction bytes are at least the
+per-queue limit. Add `DCC_ERR_RESOURCE_LIMIT` at the end of `dcc_status_t`,
+preserving every existing numeric value.
 
-Use a separate live-queue count/condition for App teardown. Closing the
-registry detaches its entries and prevents new acquisition, but the live count
-reaches zero only after context owners, timer tasks, active terminal hooks, and
-queued work have released their references.
+The interaction byte limits cover every variable-size live-queue allocation,
+not only prepared actions: queue object and registry entry, complete copied
+identity key/token allocation, App attachment bookkeeping, every action node,
+and every unsubmitted prepared payload. Queue creation exact-measures this
+identity charge, reserves it before copying any token byte or allocating the
+queue, and stores it in a distinct move-only `identity_reservation`. It counts
+against both the per-queue and total limits until live-to-tombstone conversion
+or failed/free teardown releases the matching physical storage.
 
-Registry close takes one temporary drain reference for every entry before
-unlinking it under the registry mutex. After unlocking, it closes/cancels each
-queue, drops the old registry reference, then drops the drain reference. It
-must never walk or call into a queue through a pointer whose registry reference
-was already released.
+Registry buckets and tombstone records are fixed-size control-plane storage:
+client creation checks the configured count bounds and checked-multiplies their
+maximum storage, then preallocates them. They are governed by live/tombstone
+slot limits rather than the byte gauges and never grow later. Tombstones hold
+only fixed IDs/digest/expiry and no variable token. Thus every post-create
+variable interaction allocation is ledger-managed, while the explicitly
+excluded fixed preallocation is still hard-bounded by configured counts.
+
+Charge a REST request for its job/handle bookkeeping and every owned URL/path,
+header, content type, body, filename/metadata, auth/audit copy, and terminating
+byte using allocated capacity, not logical payload length. A request larger
+than `rest_max_request_bytes`, a full queued-request count, or a queued-byte
+overflow is rejected synchronously before any caller input is copied. Raw
+submission can measure from its explicit lengths. Every typed submission must
+run the shared validate/exact-measure pass first, atomically reserve the full
+charge, and then allocate/build each exact-size buffer once; it may not build
+or `realloc` an uncharged temporary. Activation atomically moves the same
+reservation from queued to active accounting. If active capacity is currently
+full, the request remains queued; it is not failed merely because another
+request is active.
+
+Response-buffer growth checks both the per-response and global active-byte
+limits before allocating each new capacity. Exceeding either after acceptance
+terminates that request once with `DCC_ERR_RESOURCE_LIMIT`; sensitive response
+growth uses Task 7's exact allocate-copy-wipe-free path and never raw
+`realloc`. Completed result storage leaves the client ledger when terminal
+delivery transfers it to the caller-owned request/result lifetime, but every
+individual stored response remains capped by `rest_max_response_bytes`.
+
+Interaction measurement includes the queue node and every owned path, content
+type, body, filename/metadata, and terminating byte. Under the queue lock, run
+the pure validator/exact-measurer without allocation, then atomically reserve
+the per-queue and client interaction charge as two exact sub-reservations, then
+allocate and build exact buffers. The queue node/bookkeeping reservation stays
+owned by the interaction queue until the post-terminal hook unlinks and frees
+that node. The move-only prepared value owns a distinct payload reservation for
+its path, content type, body, filename/metadata, and terminating bytes. Release
+both on build failure before unlocking.
+
+Submission retags only the payload reservation from interaction-prepared to
+REST-queued under the single ledger lock and simultaneously reserves the exact
+positive REST job/handle bookkeeping delta. The node reservation remains
+interaction-owned. Both affected gauges and high-water marks update in that
+one critical section. There is never a period with no owner, a duplicate charge,
+or an allocated unreserved byte. A failed transfer leaves both sub-reservations
+interaction-owned until the failure path releases the prepared payload and the
+queue rollback unlinks/releases the node.
+
+Live-queue capacity is reserved before publication and released after final
+unlink. An unsubmitted/cascaded node releases its node and payload reservations
+together. A submitted node's REST retirement releases transferred payload plus
+REST bookkeeping only after their physical storage retires; its node charge is
+released separately only after callback, observers, and the post hook complete
+and unlink/free the node. Cancel, registry retirement, and client teardown use
+the same ownership-specific releases. Every sub-reservation releases exactly
+once on its physical owner's terminal path.
+Concurrent producers racing the last slot or byte have one deterministic
+linearization winner under the private resource-accounting mutex. No queue,
+REST, rate-limit, callback, or registry lock is acquired while that mutex is
+held; callers may acquire the accounting mutex briefly while holding a queue
+only in the documented measure/reserve and transfer steps.
+
+Task 11 introduces the versioned output record and canonical generic operation
+`dcc_rest_runtime_stats(dcc_client_t *, dcc_rest_runtime_stats_t *)`. Its
+version-1 fields, in exact order after `size, version`, are:
+
+```text
+queued_requests, queued_requests_high_water,
+active_requests, active_requests_high_water,
+completed_requests, canceled_requests, retried_requests,
+rate_limited_requests, admission_rejections,
+queued_request_bytes, queued_request_bytes_high_water,
+active_request_bytes, active_request_bytes_high_water,
+response_bytes, response_bytes_high_water,
+rest_rejected_queued_requests,
+rest_rejected_request_bytes,
+rest_rejected_queued_bytes,
+rest_rejected_active_bytes,
+rest_rejected_response_bytes,
+interaction_live_queues, interaction_live_queues_high_water,
+interaction_tombstones, interaction_tombstones_high_water,
+interaction_duplicate_deliveries,
+interaction_actions, interaction_actions_high_water,
+interaction_reserved_bytes, interaction_reserved_bytes_high_water,
+interaction_rejected_live_queues,
+interaction_rejected_tombstones,
+interaction_rejected_actions_per_queue,
+interaction_rejected_bytes_per_queue,
+interaction_rejected_bytes_total
+```
+
+Every field is `uint64_t`. The caller supplies a version-1, size-gated output
+initialized with `DCC_REST_RUNTIME_STATS_INIT`; the function writes only fully
+covered fields. Every transition updates all affected gauges, counters, and
+high-water values while holding the same short-lived resource-accounting
+mutex. The stats operation acquires that mutex once, copies one linearizable
+snapshot, and releases it; it does not take or nest another client lock.
+Monotonic counters saturate instead of wrapping and gauges/high-water marks
+never underflow. `active_request_bytes` includes active request storage plus
+response capacity, while `response_bytes` is its response-only subset. This
+`interaction_reserved_bytes` includes persistent live-queue identity and node
+charges plus payloads that have not transferred to REST. On transfer only the
+payload bytes leave that gauge and enter `queued_request_bytes` together with
+the new REST bookkeeping delta; identity and node bytes remain interaction-
+charged until their distinct physical frees. This
+operation is the final request-runtime observability API; it does not
+reintroduce a future, global wait, or bulk-cancel family.
+
+Adding this one operation moves the transition manifest from Task 10's 60
+generic external symbols to 61 through Tasks 11–13. Task 14 performs the
+coordinated legacy generic cut and leaves the exact final 35/259 inventory; no
+earlier task should pretend that final cut has already occurred.
+
+### Client interaction registry
+
+Each client owns one private collision-safe registry shared by App contexts and
+standalone flows. Its exact key is `(application_id, interaction_id,
+interaction_token bytes)`. An App owner, if any, is metadata on the live entry;
+a same-key owner mismatch is rejected rather than silently sharing state. Copy
+the token once when creating the queue and its exact length, never retain
+`dcc_interaction_t *` or an event/parser view, and securely wipe the copied
+token before every queue free. Removal, App detach, client close, allocation
+rollback, and concurrent retirement all use Task 7's private secure-zero
+primitive; the token never appears in diagnostics, observer operations,
+hash-table debug values, tombstones, or error messages.
+
+Before that copy, checked measurement includes the complete token/key capacity,
+queue/entry objects, and attachment bookkeeping in `identity_reservation`.
+Oversized identities fail with `DCC_ERR_RESOURCE_LIMIT` before allocation or
+copy and cannot bypass the per-queue/total byte caps even if the wire protocol
+does not publish a token-length maximum. Live-to-tombstone conversion first
+installs its already-reserved fixed tombstone slot, then wipes/frees the token
+and queue identity storage and releases the identity byte reservation exactly
+once.
+
+Registry lookup is average O(1), uses checked capacity arithmetic, and compares
+the full live key after hashing in the fixed preallocated bucket table. Live
+entries use collision chains whose entry/object/token bytes are covered by the
+identity reservation; an entry allocation failure leaves the table unchanged
+and returns `DCC_ERR_NOMEM`. Bucket and tombstone capacity never grows or
+allocates after successful client creation. The internal acquire result distinguishes
+`CREATED`, `DUPLICATE_LIVE`, and `DUPLICATE_COMPLETED`. Only `CREATED` may attach
+an App context and enter middleware/user dispatch. Both duplicate results are
+benignly suppressed before any middleware, check, handler, auto-defer, or user
+side effect and increment `interaction_duplicate_deliveries`; public
+`dcc_flow_create()` reports them as `DCC_ERR_STATE` with null output. Distinct
+token bytes or application IDs remain independent even if interaction IDs
+collide.
+
+A new live identity must reserve both a live-queue slot and one future
+tombstone slot under the registry/resource linearization point. The invariant
+is `live_tombstone_reservations + unexpired_tombstones <=
+interaction_max_tombstones`; capacity is checked after lazy expiry cleanup.
+Never evict an unexpired tombstone. If no slot remains, reject creation with
+`DCC_ERR_RESOURCE_LIMIT`, increment `interaction_rejected_tombstones`, and run
+no user code. This up-front reservation means final retirement can never fail
+for lack of tombstone capacity.
+
+Normal final retirement atomically converts the live reservation/entry into a
+completed tombstone containing application ID, interaction ID, a SHA-256 token
+fingerprint, and a monotonic expiry. It retains no raw token or response data.
+Expiry/removal releases exactly one tombstone slot; failed live construction
+releases its reservation; client teardown clears both live reservations and
+tombstones. The once-only dispatch guarantee therefore covers concurrent and
+sequential redelivery for the configured TTL without unbounded memory. The
+20-minute default is a monotonic library safety window, not wall-clock expiry.
+Convert configured milliseconds to the runtime's monotonic tick unit with
+checked multiplication. Compute `expiry = now + ttl` with checked addition;
+either overflow saturates the deadline to `UINT64_MAX` and never wraps to an
+immediate expiry. Expiration uses the direct ordered comparison `now >= expiry`
+in that common unit and never subtracts unsigned timestamps. Fake-clock tests
+cover conversion/addition boundaries, saturation, and exact deadline equality.
+
+The client registry owns one strong queue reference. Acquisition/publishing and
+live-to-tombstone conversion occur under its mutex. It must never be possible
+for an old live queue and a new queue for the same key to overlap. Each App also
+tracks its own attached live-queue count/condition for teardown, while the
+client tracks the total. App close detaches and closes only entries owned by
+that App and waits for its count; client close rejects all new identities,
+drains every remaining App/standalone entry, and clears tombstones.
+
+Close takes one temporary drain reference for every selected live entry before
+unlinking/detaching it under the registry mutex. After unlocking, it
+closes/cancels each queue, drops the old registry reference, then drops the
+drain reference. It never calls through a pointer whose registry reference was
+already released.
 
 ### Strong references
 
 Use an atomic refcount, but do not use atomics as a second response-state
 machine. Account explicitly for:
 
-- one App-registry reference while discoverable;
+- one client-registry reference while discoverable;
 - one owner reference for each attached App context or standalone flow;
 - one work reference for a nonempty/active queue epoch;
 - one reference for an armed/running auto-defer timer;
 - short-lived pump/terminal/retirement references.
 
 The queue owns all linked action nodes. Each node owns its prepared request and
-its callback function/user-data values; only the values are copied, not the
-object behind `user_data`. Free a queue only after it is unlinked and the last
-strong reference is released. Queue destruction decrements the owning App's
-live-queue count before the App's registry synchronization primitives are
-destroyed.
+its `dcc_rest_result_fn` function/user-data values; only the values are copied,
+not the object behind `user_data`. Free a queue only after it is unlinked and
+the last strong reference is released. Queue destruction decrements the
+optional owning App's count and the client's total count before either owner's
+synchronization primitives are destroyed.
 
 This refcount shape also supplies a lock-safe retirement rule: a release that
 leaves only the registry reference attempts unlink under the registry mutex.
@@ -243,21 +434,19 @@ No queue mutex is needed while the registry mutex is held.
 
 ### Standalone flows
 
-A standalone flow creates one unregistered queue on first mutating action and
-keeps one owner reference until `dcc_flow_deinit()`. Two separately initialized
-flow objects do not share state even when they point at the same interaction;
-callers that need ordering must reuse one flow. App-created flows are attached
-to the App registry before middleware/handler execution and never create a
-second standalone queue.
+`dcc_flow_create()` claims one new identity in the client interaction registry
+with no App owner and keeps one owner reference until `dcc_flow_destroy()`.
+A second create for the same live or tombstoned identity returns
+`DCC_ERR_STATE`; it never creates or attaches another flow. App contexts use
+the same registry before middleware/handler execution, so standalone and App
+paths cannot create competing queues for one client/key.
 
-Because `dcc_flow_init()` cannot report allocation, a standalone flow's first
-lazy mutating action is caller-serialized. Once `internal_queue` is attached,
-action/state calls may come from multiple producers and are serialized by its
-queue mutex. The caller must serialize `dcc_flow_deinit()` and reinitialization
-against other entries on the same flow object; accepted terminal callbacks may
-continue afterward from their independent queue references.
+After creation, action/state calls may come from multiple producers and are
+serialized by the queue mutex. The caller must serialize destruction against
+new entries using that same pointer; accepted terminal callbacks may destroy
+the flow and continue afterward from their independent queue references.
 
-The client must outlive the standalone flow owner. Deinitialize the flow before
+The client must outlive the standalone flow owner. Destroy the flow before
 final client destruction; accepted work is still allowed to finish/cancel
 during the client's Task 4 drain. Keeping the caller-owned flow and invoking a
 new action after its client has been destroyed is invalid caller behavior.
@@ -357,25 +546,30 @@ Make helper behavior explicit and test it:
   the queue's independent lifetime does not extend the context view.
 
 Do not retain the current `dcc_app_response_state_t`, `response_state` atomic,
-`initial_response_admitted` atomic, and flow `response_flags` as competing
-authorities. Current-layout App contexts and flows derive all of these answers
-from the queue mutex. Keep only bounded historical-layout compatibility reads
-where required.
+`initial_response_admitted` atomic, or old flow `response_flags` as competing
+authorities. App contexts and opaque flows derive all answers from the queue
+mutex.
 
 ## Admission and pump algorithm
 
 The following is the required linearization model:
 
 1. Validate the flow/context identity and acquire its queue owner reference.
-2. Lock the queue and reject closed, deinitialized, failed, or illegal
+2. Lock the queue and reject closed, owner-detached, failed, or illegal
    projected transitions without mutation.
 3. Use the projected transition to choose the exact concrete endpoint.
-4. Run the Task 6 shared prepare function while still serialized by the queue.
-   Preparation is pure with respect to network/global REST state. It may
-   allocate, validate, escape, and serialize, but cannot call user code.
-5. Allocate the node and prepare all ownership before linking it. On any
-   error, restore the byte-for-byte state/list snapshot, free temporary data,
-   unlock, and return the local status. No callback or observer runs.
+4. Run the Task 6 shared validate/exact-measure function while still serialized
+   by the queue. It is pure with respect to allocation, network, and global
+   REST state and cannot call user code.
+5. Compute the complete node plus prepared-buffer charge with checked
+   arithmetic. Acquire the resource-accounting mutex under the documented
+   queue-to-accounting lock order, atomically reserve distinct node/bookkeeping
+   and payload sub-reservations plus the per-queue action slot, and release the
+   accounting mutex. Only then allocate the node
+   and exact-size buffers and run the one-pass builder. On any error, wipe/free
+   partial sensitive storage, release the reservation exactly once, restore
+   the byte-for-byte state/list snapshot, unlock, and return the local status.
+   No callback or observer runs.
 6. Append the node at the tail, assign its monotonic sequence number, update
    projected state/capabilities, and acquire the nonempty work reference if
    this was the empty-to-nonempty transition.
@@ -391,8 +585,8 @@ The following is the required linearization model:
 
 Keeping the queue mutex across the short, nonblocking first REST admission is
 intentional: no second caller can append a dependent action between a failed
-head admission and its exact rollback. Never hold the App registry mutex at
-the same time.
+head admission and its exact rollback. Never hold the client interaction-
+registry mutex at the same time.
 
 After a predecessor terminal result, the pump submits at most the next head.
 It never waits on a request and never submits a later node merely because the
@@ -413,42 +607,65 @@ outermost pump iterates FIFO.
 ## Fully owned prepared requests
 
 Do not retain builders in queue nodes and do not duplicate the Task 6
-serializers or path formatters. Introduce this private, move-only value (the
-body pointer may be typed `unsigned char *` instead of `void *`):
+serializers or path formatters. Introduce a private measure plan containing the
+method, canonical operation, exact path/content-type/body allocation lengths,
+request sensitivity bits, and total checked charge. It contains no caller
+pointer after the build call and owns no allocation. Introduce this private,
+move-only prepared value (the body pointer may be typed `unsigned char *`
+instead of `void *`):
 
 ```c
 typedef struct dcc_rest_interaction_prepared_request {
     dcc_rest_method_t method;
+    const char *operation;
     char *path;
+    size_t path_len;
     char *content_type;
     void *body;
     size_t body_len;
+    uint8_t sensitive_path;
+    uint64_t sensitivity_flags;
+    dcc_rest_resource_reservation_t payload_reservation;
 } dcc_rest_interaction_prepared_request_t;
 ```
 
-`path` is always an owned nonempty string after successful preparation;
+The enclosing private queue node owns a separate `node_reservation`; it is
+never moved into this value or into REST.
+
+`operation` is the exact nonowned canonical endpoint symbol literal. `path` is
+always an owned nonempty string after successful preparation, `path_len`
+excludes its terminator, and all four prepared interaction operations set
+`sensitive_path` to one;
 `content_type` is either null or owned; `body` owns exactly `body_len` bytes
 and may contain NUL. Its zero initializer and deinitializer are internal.
-Binary body length is authoritative; never recover it with `strlen`.
+Binary body length is authoritative; never recover it with `strlen`. The
+deinitializer securely wipes the complete token-bearing path allocation before
+freeing it on every path, including partial preparation.
 
-Expose private prepare operations with these responsibilities and parameter
-order for exactly the network operations needed by the queue:
+For exactly the network operations needed by the queue, split each prior
+prepare stem into a `_measure` and `_build` pair:
 
-- `dcc_rest_interaction_prepare_response_create(interaction_id, token,
-  response, out)` for initial response types 4–9;
-- `dcc_rest_interaction_prepare_original_edit(application_id, token, payload,
-  out)`;
-- `dcc_rest_interaction_prepare_original_delete(application_id, token, out)`;
-- `dcc_rest_interaction_prepare_followup_create(application_id, token,
-  payload, out)`.
+- `dcc_rest_interaction_response_create_measure/build` for initial response
+  types 4–9;
+- `dcc_rest_interaction_original_edit_measure/build`;
+- `dcc_rest_interaction_original_delete_measure/build`;
+- `dcc_rest_interaction_followup_create_measure/build`.
 
-Every prepare function zeroes `out` before validation, takes no client/call
-options/request handle, performs no REST admission, and leaves `out` empty on
-non-OK return.
+Each measure function takes the same operation inputs followed by its output
+plan, validates the complete historical-prefix/presence graph, performs exact
+JSON/multipart/path measurement with checked arithmetic, allocates nothing,
+and leaves a zero plan on failure. Each build function takes those inputs, the
+validated plan, an already-acquired move-only reservation, and `out`; it
+zeroes `out`, allocates each planned buffer at its exact final capacity once,
+writes exactly the measured bytes, and consumes the reservation on success.
+It performs no REST admission and never grows a buffer. A mismatch between
+measured and written length is an internal hard error with full rollback, not
+a fallback allocation.
 
-The existing public Task 6 wrappers call these same prepare operations and then
-submit immediately. The queue calls them and holds the result until its node is
-head. The shared seam must preserve all Task 6 validation, historical-prefix,
+The existing public Task 6 wrappers call the same measure/build engine through
+the common bounded REST admission path and then submit immediately. The queue
+calls it after reserving and holds the result until its node is head. The
+shared seam must preserve all Task 6 validation, historical-prefix,
 presence-bit, multipart, escaping, allocation-overflow, and explicit-false
 behavior. Public wrappers retain their current `*out_request = NULL` local
 rejection and exactly-one-terminal guarantees.
@@ -459,18 +676,22 @@ private post hook/user data, and optional output handle in that order. It
 consumes and zeroes the prepared request on every return and can install the
 post-terminal hook described below. Public
 `dcc_rest_submit()` retains its documented copy-in behavior and uses the same
-common admission core after making its copy. Successful take-owned admission
-must transfer buffers into the async job without copying them again. A
+bounded common admission core. Successful take-owned admission atomically
+retags the prepared payload reservation as REST-queued, adds the exact REST
+job/handle reservation delta, and transfers buffers into the async job without
+copying them again. It never retags or consumes the queue node reservation. A
 non-OK take-owned admission frees them, publishes no handle, callback,
 observer, or hook, and leaves no queued REST work.
 
 Because this runs after Task 10, take-owned admission must still pass through
 Task 7's one common call-options/authentication/audit transport normalization.
 It must enforce each interaction endpoint's manifest capabilities, copy and
-later wipe any covered credential material, and preserve historical call-
-options prefixes. Do not construct an async job through a shortcut that bypasses
-that policy. Queue-generated calls use the current default call-options
-initializer plus the private result callback/post hook.
+later wipe any covered credential material, preserve the canonical nonsecret
+operation identity separately from the wire path, build only Task 7's opaque
+fingerprinted rate key, and preserve historical call-options prefixes. Do not
+construct an async job through a shortcut that bypasses that policy. Queue-
+generated calls use the current default call-options initializer plus the
+private result callback/post hook.
 
 The strict endpoint manifest remains authoritative. If moving route formatting
 behind a private prepare helper makes the existing audit lose sight of the
@@ -500,7 +721,8 @@ For a queue-backed request, terminal delivery order is exactly:
 
 1. atomically claim/build the one Task 4 terminal result;
 2. run the queue's result callback, which commits queue state under the queue
-   mutex, releases it, and invokes the action's public `dcc_rest_cb` once;
+   mutex, releases it, and invokes the action's public `dcc_rest_result_fn`
+   once with the one borrowed `dcc_rest_result_t`;
 3. run the existing App and public REST error observers once for a non-OK
    result;
 4. invoke the private post hook once, with no REST/request/observer/registry or
@@ -515,9 +737,12 @@ non-OK local admission. Callback-local handle destruction remains safe, and
 public requests with no hook preserve Task 4 behavior exactly.
 
 Synthetic dependent/cancellation terminals use the same callback → observer →
-post-pump sequence and terminal-lifetime guard. A synthetic legacy response
-has HTTP status 0, no body, and `.error` equal to its synthetic status. Do not
-call the App observer manually in addition to the common delivery path.
+post-pump sequence and terminal-lifetime guard. A synthetic result is a valid
+full version-1 `dcc_rest_result_t` with `http_status == 0`, null/zero body,
+zero Discord metadata, and `transport_status` equal to its synthetic status.
+It traverses the same Task 4 result delivery helper as a network result. Do not
+construct `dcc_rest_response_t` or call the App observer manually in addition
+to the common delivery path.
 
 Keeping the next submission after the prior observer is deliberate. It makes
 action callbacks, observer side effects, and network dispatch share one FIFO
@@ -564,7 +789,7 @@ nodes remain linked. An action appended from that callback or its observer is
 planned from the existing projected tail and is placed after all preexisting
 nodes. The post hook then resumes at the old next node.
 
-A callback may call `dcc_flow_deinit()` on its standalone flow. The accepted
+A callback may call `dcc_flow_destroy()` on its standalone flow. The accepted
 queue work continues from its work/terminal references. A callback may not use
 an expired `dcc_ctx_t`; deinit does not make such use valid. Existing App/client
 guards continue to reject destroy/wait from managed or terminal callback
@@ -575,7 +800,7 @@ cancel function. Accepted actions run to a terminal result; App/client teardown
 is the cancellation boundary. This keeps one canonical context vocabulary and
 avoids a second request abstraction.
 
-The callback function and `user_data` are borrowed until that node's eventual
+The `dcc_rest_result_fn` function and `user_data` are borrowed until that node's eventual
 terminal callback, which may be delayed behind earlier actions. State this
 beside every affected public callback declaration. A non-OK action return means
 they are no longer borrowed because no callback can occur.
@@ -618,7 +843,7 @@ Required race outcomes:
 
 `dcc_flow_maybe_auto_defer()` performs the same locked check-and-enqueue using
 its supplied `now_ms`; it must not read/write `.state` concurrently outside the
-queue. App timer finish and `dcc_flow_deinit()` are bounded even for a timer
+queue. App timer finish and `dcc_flow_destroy()` are bounded even for a timer
 configured many hours ahead.
 
 ## App teardown and lock ordering
@@ -628,7 +853,9 @@ App stop/schedule-reap behavior. Once teardown mutation is allowed, order it as
 follows:
 
 1. set `app->tearing_down` under the existing App lifecycle/listener lock;
-2. close the interaction registry to new acquisitions;
+2. mark this App owner closing and detach its client-registry entries so no new
+   context can attach to the App; standalone/other-owner entries remain until
+   client close;
 3. mark every detached queue closed, cancel its auto-defer timer, and mark
    local pending nodes canceled. If a REST head is active, do not deliver a
    later callback ahead of it; let its cancellation terminal trigger the FIFO
@@ -657,7 +884,11 @@ Use these lock rules literally:
 - registry mutex `R` and per-queue mutex `Q` are never nested;
 - obtain a strong queue reference under `R`, release `R`, then acquire `Q`;
 - do not acquire the App listener/lifecycle lock while holding `R` or `Q`;
-- preparation and the nonblocking Task 4 admission may run under `Q`;
+- pure measure, exact build, and the nonblocking Task 4 admission may run under
+  `Q`;
+- `Q` may briefly acquire the resource-accounting mutex `A` only for reserve,
+  release, or ownership transfer; `A` never acquires `Q`, `R`, an App lock, or
+  a REST/rate-limit lock;
 - Task 4 must never invoke callbacks or hooks while holding its client/REST,
   rate-limit, route, request, wait, or observer locks;
 - release `Q` before callbacks, observers, LLAM timer cancel/destroy, request
@@ -707,14 +938,54 @@ baseline. At minimum, the RED/green suite must cover all cases below.
   builder storage after each action returns. Free the parser/event interaction
   and original token after handler return. The server must receive the original
   serialized bytes.
+- Force each prepared interaction operation through transport failure,
+  cancellation, later-node admission failure, App close, and standalone-flow
+  destroy. Logs, App/public observers, and terminal hooks must see only the exact
+  canonical operation symbol and zero token bytes; route/bucket state contains
+  only Task 7's fingerprint.
+- Instrument the private secure-zero seam and prove the registry token and every
+  owned prepared/async wire path are wiped exactly once before free on success,
+  rollback, cancellation, retirement, and destruction. Reuse addresses with a
+  test allocator and scan them before reuse so a plain `free()` cannot pass.
 - Cover empty strings, historical builder prefixes, unknown presence bits,
   malformed nested builders, and serialization overflow through the existing
   Task 6 validator. Every local rejection preserves queue/state/request/
   callback/observer snapshots.
-- Iterate deterministic allocation failpoints across registry growth, token
-  copy, queue/node creation, route escaping, JSON/multipart preparation, and
+- Set each interaction budget to its exact boundary and boundary plus one.
+  Cover one 25-MiB head plus dependents, concurrent queues racing the last
+  global byte reservation, and simultaneous producers paused between measure
+  and reservation. Allocator hooks must prove no path/body/node allocation
+  occurs before the winning reservation. Cover reentrant enqueue at the action
+  limit, every allocation rollback point, cancellation/cascade/drain release,
+  and a successful retry after release. Assert exact stats gauges, high-water
+  marks, saturated counters, rejection buckets, no state mutation on
+  rejection, and no starvation or leaked reservation.
+- Exercise a huge interaction token, exact-last-byte token/key admission races,
+  identity-allocation failpoints, and live-to-tombstone conversion. At barriers
+  before/after build, payload transfer, callback, observer, post-hook unlink,
+  cascade, cancel, and teardown, allocator hooks prove ledger-managed physical
+  bytes equal the sum of live identity, node, payload, REST bookkeeping,
+  request, and response reservations. Fixed preallocated registry/tombstone
+  storage is reported separately and remains constant.
+- Independently hit every general REST boundary with raw and typed requests:
+  queued count, per-request bytes, queued bytes, active bytes, per-response
+  bytes, and global response growth. Prove measure-before-reserve, no uncharged
+  temporary, active-capacity waiting, one terminal result for an accepted
+  response overflow, exact resource-stat reasons, and capacity recovery.
+- Deliver the same identity concurrently, after successful retirement, just
+  before/after monotonic tombstone expiry, and while the tombstone table is
+  full. Prove one initial response within the safety window, no raw token in a
+  tombstone, no unexpired eviction, exact duplicate/resource status, and
+  teardown cleanup.
+- Iterate deterministic allocation failpoints across client-create fixed-table
+  preallocation, live entry/identity and token copy, queue/node creation, route
+  escaping, JSON/multipart preparation, and
   first Task 4 admission. Each failure is atomic and a subsequent valid reply
   succeeds.
+- After client creation, allocator counters prove bucket/tombstone capacity and
+  storage never change and perform exactly zero allocations across collision-
+  chain insertion, tombstone conversion, expiry, duplicate lookup, and table-
+  full rejection.
 - Inject a later-node Task 4 admission failure after its public call returned
   `DCC_OK`; deliver that exact failure once, observe it once, and fail only its
   remaining dependents locally.
@@ -738,27 +1009,29 @@ baseline. At minimum, the RED/green suite must cover all cases below.
   destroy race.
 - Cover callback-only actions, null callbacks, callback/user-data pairing,
   callback cleanup performed by the test owner, and exact once behavior after
-  `dcc_flow_deinit()`.
+  `dcc_flow_destroy()`.
 
 ### Reentry, concurrency, and registry sharing
 
 - Prequeue A then B; from A's callback enqueue C. B remains before C. Repeat
   from the App observer. No recursive stack growth or lock-held callback is
   permitted.
-- From a terminal callback deinitialize the standalone flow. B and C already
-  accepted still finish; a later action on the deinitialized flow returns
-  `DCC_ERR_STATE` silently.
+- From a terminal callback destroy the standalone flow. B and C already
+  accepted still finish; the pointer is consumed, so no later API call may use
+  it.
 - Run multiple producer tasks/threads against one already attached queue.
   Record the mutex linearization sequence and assert request/callback order
   matches it with at most one REST request active for that interaction.
-- Dispatch two concurrent App contexts with identical `(id, token)` and prove
-  one registry queue/one initial response. Different tokens remain independent;
-  a same-key application/client mismatch is rejected.
+- Dispatch two concurrent App events with identical
+  `(application_id, id, token)` and prove one registry queue, one complete
+  middleware/handler execution, and one initial response. Different tokens or
+  application IDs remain independent; a same-key App-owner mismatch is
+  rejected before user code.
 - Race success, cancel, post hook, reentrant enqueue, registry retirement, and
   a new registry acquire. Prove no ABA, duplicate queue, lost callback, UAF,
   deadlock, or leak.
 
-### Auto-defer and flow ABI
+### Auto-defer and opaque flow lifecycle
 
 - Use barriers on both sides of the timer deadline for reply-wins,
   timer-wins, finish-wins, and explicit-defer races. Timer-wins reply must
@@ -768,14 +1041,16 @@ baseline. At minimum, the RED/green suite must cover all cases below.
 - Configure an hours-long timer, finish/destroy immediately, and require a
   bounded teardown. Cover the largest valid conversion and the first
   overflowing `after_ms` without wraparound.
-- Test current layout init/state/action/deinit, deinit before terminal, repeated
-  null/deinitialized deinit, and action after deinit.
-- Construct every supported historical prefix with poisoned tail bytes and
-  canaries. State reads remain bounded; every action returns `DCC_ERR_STATE`
-  without a write or callback.
-- Compile and execute the transition Sugar flow macros only as named lvalues
-  followed by deinit. Audit all in-tree `DCC_FLOW*` values so Task 11 introduces
-  no owner leak before Task 14 removes Sugar.
+- Test create/state/action/destroy, destroy before terminal, null destroy,
+  allocation rollback, copied interaction/token lifetime, and callback-local
+  destroy. An ownership test, not undefined repeated destruction, proves every
+  created object is consumed exactly once.
+- Compile an old-layout fixture separately and prove the final header exposes
+  no complete flow struct and no `dcc_flow_init`/`dcc_flow_deinit` symbol that
+  could overflow caller storage.
+- Compile and execute the transition Sugar flow macros only as owned pointers
+  followed by destroy. Audit all in-tree `DCC_FLOW*` values so Task 11
+  introduces no owner leak before Task 14 removes Sugar.
 - Exercise modal, autocomplete, update, defer, and defer-update competing for
   the initial slot. Exactly the first projected initial action is accepted;
   each later explicit initial-only operation is a silent local state error.
@@ -794,10 +1069,11 @@ commit buildable if intermediate commits are necessary:
    regression tests.
 4. Implement the refcounted queue, committed/projected state engine, FIFO pump,
    synthetic terminal path, failure cascade, and reentry guard.
-5. Append the public states/private flow tail, add `dcc_flow_deinit()`, migrate
-   standalone flow operations, and pass historical-prefix/layout tests.
-6. Add the App hash registry, attach/release it on every dispatch exit,
-   migrate all context response actions, and share duplicate contexts.
+5. Make flows opaque, add create/destroy, migrate standalone flow operations,
+   and pass ownership plus old-layout negative tests.
+6. Add the client interaction/tombstone registry, attach/release it on every
+   dispatch exit, migrate all context response actions, and suppress duplicate
+   dispatch before middleware/user code.
 7. Replace auto-defer atomics with same-lock timer arbitration; add checked,
    cancellable timing and the full race fixture.
 8. Integrate close/cancel/drain into App destroy before error-sink detach; pass

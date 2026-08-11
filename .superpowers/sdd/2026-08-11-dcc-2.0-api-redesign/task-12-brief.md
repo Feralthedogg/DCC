@@ -113,6 +113,17 @@ typedef struct dcc_component_v2_choice_option {
     uint8_t is_default;
     uint8_t has_default;
 } dcc_component_v2_choice_option_t;
+
+typedef enum dcc_component_v2_select_default_type {
+    DCC_COMPONENT_V2_SELECT_DEFAULT_USER = 1,
+    DCC_COMPONENT_V2_SELECT_DEFAULT_ROLE = 2,
+    DCC_COMPONENT_V2_SELECT_DEFAULT_CHANNEL = 3
+} dcc_component_v2_select_default_type_t;
+
+typedef struct dcc_component_v2_select_default_value {
+    dcc_snowflake_t id;
+    dcc_component_v2_select_default_type_t type;
+} dcc_component_v2_select_default_value_t;
 ```
 
 String Select continues to use `dcc_select_option_t`, which can contain an
@@ -154,30 +165,144 @@ metadata and its presence bit determines whether it is serialized; a present
 zero retains Discord's documented behavior of being treated as empty and
 reassigned.
 
-Use named nested variants selected by the top-level `type`:
+The nested ABI is exact, including member order and scalar width. Forward-
+declare `dcc_component_v2_builder_t`, then publish these definitions before the
+complete builder:
 
-- `as.button`: style, label, emoji, disabled, and a target union containing
-  `custom_id`, `url`, or `sku_id`;
-- `as.select`: custom ID, placeholder, min/max values, required, disabled, and
-  a nested union for String Select options, entity-select defaults, or Channel
-  Select defaults plus channel types;
-- `as.layout.action_row`: component pointer/count;
-- `as.layout.section`: component pointer/count plus accessory pointer;
-- `as.layout.container`: component pointer/count, accent color, and spoiler;
-- `as.layout.label`: label, description, and one component pointer;
-- `as.media.thumbnail`: one media URL, description, and spoiler;
-- `as.media.gallery`: gallery-item pointer/count;
-- `as.media.file`: one attachment media URL and spoiler;
-- `as.text_input`: custom ID, style, placeholder, min/max length, value, and
-  required;
-- `as.modal.file_upload`: custom ID, min/max values, required, and file-type
-  string pointer/count;
-- `as.modal.radio_group`: custom ID, choice-option pointer/count, and required;
-- `as.modal.checkbox_group`: custom ID, choice-option pointer/count, min/max
-  values, and required;
-- `as.modal.checkbox`: custom ID and default boolean;
-- `as.text_display`: content; and
-- `as.separator`: divider and spacing.
+```c
+typedef struct dcc_component_v2_builder dcc_component_v2_builder_t;
+
+typedef struct dcc_component_v2_button_value {
+    dcc_button_style_t style;
+    const char *label;
+    dcc_component_emoji_t emoji;
+    uint8_t disabled;
+    union {
+        const char *custom_id;
+        const char *url;
+        dcc_snowflake_t sku_id;
+    } target;
+} dcc_component_v2_button_value_t;
+
+typedef struct dcc_component_v2_select_value {
+    const char *custom_id;
+    const char *placeholder;
+    uint32_t min_values;
+    uint32_t max_values;
+    uint8_t required;
+    uint8_t disabled;
+    union {
+        struct {
+            const dcc_select_option_t *options;
+            size_t option_count;
+        } string_select;
+        struct {
+            const dcc_component_v2_select_default_value_t *default_values;
+            size_t default_value_count;
+        } entity_select;
+        struct {
+            const dcc_component_v2_select_default_value_t *default_values;
+            size_t default_value_count;
+            const uint32_t *channel_types;
+            size_t channel_type_count;
+        } channel_select;
+    } data;
+} dcc_component_v2_select_value_t;
+
+typedef union dcc_component_v2_layout_value {
+    struct {
+        const dcc_component_v2_builder_t *components;
+        size_t component_count;
+    } action_row;
+    struct {
+        const dcc_component_v2_builder_t *components;
+        size_t component_count;
+        const dcc_component_v2_builder_t *accessory;
+    } section;
+    struct {
+        const dcc_component_v2_builder_t *components;
+        size_t component_count;
+        uint32_t accent_color;
+        uint8_t spoiler;
+    } container;
+    struct {
+        const char *label;
+        const char *description;
+        const dcc_component_v2_builder_t *component;
+    } label;
+} dcc_component_v2_layout_value_t;
+
+typedef union dcc_component_v2_media_value {
+    struct {
+        dcc_component_v2_unfurled_media_t media;
+        const char *description;
+        uint8_t spoiler;
+    } thumbnail;
+    struct {
+        const dcc_component_v2_media_gallery_item_t *items;
+        size_t item_count;
+    } gallery;
+    struct {
+        dcc_component_v2_unfurled_media_t file;
+        uint8_t spoiler;
+    } file;
+} dcc_component_v2_media_value_t;
+
+typedef struct dcc_component_v2_text_input_value {
+    const char *custom_id;
+    dcc_text_input_style_t style;
+    const char *placeholder;
+    uint32_t min_length;
+    uint32_t max_length;
+    const char *value;
+    uint8_t required;
+} dcc_component_v2_text_input_value_t;
+
+typedef union dcc_component_v2_modal_value {
+    struct {
+        const char *custom_id;
+        uint32_t min_values;
+        uint32_t max_values;
+        uint8_t required;
+        const char *const *file_types;
+        size_t file_type_count;
+    } file_upload;
+    struct {
+        const char *custom_id;
+        const dcc_component_v2_choice_option_t *options;
+        size_t option_count;
+        uint8_t required;
+    } radio_group;
+    struct {
+        const char *custom_id;
+        const dcc_component_v2_choice_option_t *options;
+        size_t option_count;
+        uint32_t min_values;
+        uint32_t max_values;
+        uint8_t required;
+    } checkbox_group;
+    struct {
+        const char *custom_id;
+        uint8_t default_value;
+    } checkbox;
+} dcc_component_v2_modal_value_t;
+
+typedef struct dcc_component_v2_text_display_value {
+    const char *content;
+} dcc_component_v2_text_display_value_t;
+
+typedef struct dcc_component_v2_separator_value {
+    uint8_t divider;
+    dcc_component_v2_separator_spacing_t spacing;
+} dcc_component_v2_separator_value_t;
+```
+
+Thus the selected members are `button.target`, `select.data`,
+`layout.{action_row,section,container,label}`,
+`media.{thumbnail,gallery,file}`, `text_input`,
+`modal.{file_upload,radio_group,checkbox_group,checkbox}`, `text_display`, and
+`separator`; no implementation may substitute a layout-compatible anonymous
+bag or reorder pointer/count pairs.
 
 The top-level type is the only discriminant. Do not add a second public subtag
 that can disagree with it. The nested unions only prevent storage of mutually
@@ -262,11 +387,59 @@ Keep per-type allowed and required masks in one private descriptor table. The
 same table must provide each field's covered byte range and JSON field name so
 setter checks, validation, path reporting, build, and measure cannot drift.
 
+Freeze the nonconditional mask inventory exactly as follows; `ID` is allowed
+for every type and omitted from the table only for readability:
+
+| Type | Other allowed fields | Unconditionally required |
+| --- | --- | --- |
+| ACTION_ROW | COMPONENTS | COMPONENTS |
+| BUTTON | STYLE, LABEL, EMOJI, CUSTOM_ID, URL, SKU_ID, DISABLED | STYLE |
+| STRING_SELECT | CUSTOM_ID, OPTIONS, PLACEHOLDER, MIN_VALUES, MAX_VALUES, REQUIRED, DISABLED | CUSTOM_ID, OPTIONS |
+| USER_SELECT / ROLE_SELECT / MENTIONABLE_SELECT | CUSTOM_ID, PLACEHOLDER, DEFAULT_VALUES, MIN_VALUES, MAX_VALUES, REQUIRED, DISABLED | CUSTOM_ID |
+| CHANNEL_SELECT | CUSTOM_ID, PLACEHOLDER, DEFAULT_VALUES, CHANNEL_TYPES, MIN_VALUES, MAX_VALUES, REQUIRED, DISABLED | CUSTOM_ID |
+| TEXT_INPUT | CUSTOM_ID, STYLE, PLACEHOLDER, MIN_LENGTH, MAX_LENGTH, VALUE, REQUIRED | CUSTOM_ID, STYLE |
+| SECTION | COMPONENTS, ACCESSORY | COMPONENTS, ACCESSORY |
+| TEXT_DISPLAY | CONTENT | CONTENT |
+| THUMBNAIL | MEDIA, DESCRIPTION, SPOILER | MEDIA |
+| MEDIA_GALLERY | ITEMS | ITEMS |
+| FILE | MEDIA, SPOILER | MEDIA |
+| SEPARATOR | DIVIDER, SPACING | none |
+| CONTAINER | COMPONENTS, ACCENT_COLOR, SPOILER | COMPONENTS |
+| LABEL | LABEL, DESCRIPTION, COMPONENT | LABEL, COMPONENT |
+| FILE_UPLOAD | CUSTOM_ID, MIN_VALUES, MAX_VALUES, REQUIRED, FILE_TYPES | CUSTOM_ID |
+| RADIO_GROUP | CUSTOM_ID, OPTIONS, REQUIRED | CUSTOM_ID, OPTIONS |
+| CHECKBOX_GROUP | CUSTOM_ID, OPTIONS, MIN_VALUES, MAX_VALUES, REQUIRED | CUSTOM_ID, OPTIONS |
+| CHECKBOX | CUSTOM_ID, DEFAULT | CUSTOM_ID |
+
+The conditional Button target/content rules and context-only REQUIRED/DISABLED
+rules remain predicates layered on this exact table; they never change the
+field byte range. The complete Button style matrix is:
+
+| Style | Required | Forbidden | Visible content |
+| --- | --- | --- | --- |
+| PRIMARY/SECONDARY/SUCCESS/DANGER (1–4) | CUSTOM_ID | URL, SKU_ID | at least one of LABEL or EMOJI |
+| LINK (5) | URL | CUSTOM_ID, SKU_ID | at least one of LABEL or EMOJI |
+| PREMIUM (6) | SKU_ID | CUSTOM_ID, URL, LABEL, EMOJI | generated by Discord; neither LABEL nor EMOJI may be present |
+
+No unknown style serializes. Required target strings are non-empty and Premium
+`sku_id` is nonzero. These predicates are applied both at mutation and final
+validate/measure/serialize time.
+
+Before the first RED production compile, add
+`tests/support/component_v2_expected_layout.h`. It repeats the complete public
+typedef skeleton above under test-only names and defines the exact per-type
+allowed/required masks plus every logical field's `offsetof`/end expression.
+Compile a probe that compares production versus expected member types,
+`offsetof`, `_Alignof`, and `sizeof` on each supported ILP32, LP64, and Windows
+ABI. The probe also drives every mask/range through the public validator. Use
+this same skeleton for the macro sentinel; do not generate expected layout from
+the production header being tested.
+
 Conditional required rules remain predicates beside that table:
 
 - Action Row requires components;
-- Button requires style and, according to style, custom ID, URL, or SKU ID;
-- ordinary Button also requires at least one of label/emoji;
+- Button follows the complete six-style required/forbidden/content matrix
+  above; there is no style-neutral fallback;
 - String Select requires custom ID and options;
 - User/Role/Mentionable/Channel Select requires custom ID;
 - Text Input requires custom ID and style;
@@ -374,10 +547,14 @@ declared object and surrounding canaries remain byte-for-byte unchanged.
 
 ### Macro budget
 
-Task 13's authoritative projected preprocessed `<dcc/bot.h>` surface is 288
-visible `DCC_` macros. The hard project budget is 300. Task 12 may therefore
-add at most 12 transitive `DCC_` macros and must not consume that entire
-allowance without review.
+The old 256-name snapshot predates the Task 7 message leaf types and the Task 9
+command-registry/request include graph, so it is not a valid Task 12 baseline.
+Measure the completed Task 11 tree with the exact C11 Bot-dependency sentinel
+used by Task 13 and record the bytewise-sorted full macro dump. The hard project
+budget is 300. Within that measured baseline, Task 12 converts the seven
+retained `DCC_COMPONENT_V2_MAX_*` semantic limits to enum constants and removes
+the obsolete `DCC_COMPONENT_V2_MAX_CHANNEL_TYPES` ceiling, so all eight current
+limit macros leave the compiler macro dump.
 
 The recommended design adds exactly three:
 
@@ -386,10 +563,11 @@ The recommended design adds exactly three:
 3. `DCC_COMPONENT_V2_VALIDATION_ERROR_INIT`.
 
 All version values, field indices, limits, contexts, and error reasons are enum
-constants; the field-mask operation is static inline. The projected final Bot
-surface is therefore 291, leaving nine macros of headroom. Existing macros
-whose expansions are changed do not count as additions. Do not introduce any
-new `DCC_V2_*`, `DCC_UI_*`, or `DCC_ROUTE_*` spelling in this task.
+constants; the field-mask operation is static inline. Task 12's exact compiler-
+macro delta is therefore minus five (`-8 + 3`). Task 13 derives its exact final
+count from the checked post-Task-12 dump plus its reviewed Bot-owned inventory;
+neither task hard-codes the stale 251/283 arithmetic. Do not introduce any new
+`DCC_V2_*`, `DCC_UI_*`, or `DCC_ROUTE_*` spelling in this task.
 
 ## Size-gated reads and recursive array stride
 
@@ -456,7 +634,8 @@ Publish these exact public context and reason constants:
 ```c
 typedef enum dcc_component_v2_context {
     DCC_COMPONENT_V2_CONTEXT_ANY = 0,
-    DCC_COMPONENT_V2_CONTEXT_MESSAGE,
+    DCC_COMPONENT_V2_CONTEXT_MESSAGE_LEGACY,
+    DCC_COMPONENT_V2_CONTEXT_MESSAGE_V2,
     DCC_COMPONENT_V2_CONTEXT_MODAL
 } dcc_component_v2_context_t;
 
@@ -488,10 +667,18 @@ dcc_status_t dcc_component_v2_validate(
 );
 ```
 
-The context enum includes ANY, MESSAGE, and MODAL. `out_error == NULL` is valid
-and preserves status-only callers. On failure, an initialized and sufficiently
-large error record receives the same status plus a stable reason and a
-NUL-terminated JSON-oriented path. Representative exact paths are:
+The context enum includes structural ANY, normal-message MESSAGE_LEGACY,
+layout-message MESSAGE_V2, and MODAL. `ANY` validates only type-local shape and
+nesting safety; it is not sufficient before message serialization. The normal
+message context accepts Action Row roots containing buttons or exactly one
+select, permits at most five top-level Action Rows, and rejects component types
+9 and above. The V2 context accepts the documented Components v2 root grammar.
+Keeping these modes in the shared
+traversal prevents message setters from implementing a second, divergent
+validator. `out_error == NULL` is valid and preserves status-only callers. On
+failure, an initialized and sufficiently large error record receives the same
+status plus a stable reason and a NUL-terminated JSON-oriented path.
+Representative exact paths are:
 
 ```text
 components[0].size
@@ -522,6 +709,8 @@ limit, while making these corrections:
 - Action Row contains up to five Buttons or exactly one Select. Deprecated
   modal Action Row/Text Input input is deliberately rejected by the DCC 2
   canonical surface.
+- A normal `MESSAGE_LEGACY` message has at most five top-level Action Rows;
+  Components-v2 message roots follow their separate 40-total grammar.
 - Section contains one to three Text Displays and exactly one Button or
   Thumbnail accessory.
 - Container children are limited to Action Row, Text Display, Section, Media
@@ -545,9 +734,11 @@ limit, while making these corrections:
 - Radio Group and Checkbox Group options have label, value, optional
   description/default, but no emoji. Radio Group has 2–10 choices and at most
   one default. Checkbox Group has 1–10 choices.
-- String Select has at most 25 options. Entity-select default counts must fall
-  within effective min/max values, and their default object type must match the
-  active select kind.
+- String Select has at most 25 options and has no `default_values` field.
+  Entity-select default counts must fall within effective min/max values. The
+  exact default object matrix is USER_SELECT=user only, ROLE_SELECT=role only,
+  CHANNEL_SELECT=channel only, and MENTIONABLE_SELECT=user or role; every other
+  kind/value combination is rejected.
 - Select/Checkbox Group/File Upload min/max values honor default values,
   `min <= max`, option-count bounds where applicable, and the rule that an
   omitted/true `required` cannot combine with explicit zero minimum.
@@ -572,6 +763,8 @@ that owns:
 
 - prefix, presence, and stride reads;
 - active-type and context validation;
+- normal-message versus Components-v2 root grammar, including buttons/selects
+  under Action Rows, rejection of types 9+, and rejection of mixed modes;
 - recursive path construction;
 - total/duplicate-ID state;
 - fixed-leaf validation; and
@@ -622,6 +815,7 @@ v2 code lives under `src/objects/`. Use this actual file map:
 - Modify: `include/dcc/sugar/message_component_ui/ui_aliases.h`
 - Modify component-session, focused Sugar, package-consumer, examples, and
   direct designated-initializer callers discovered by `rg`
+- Create: `tests/support/component_v2_expected_layout.h`
 - Create: `tests/component_v2_abi_smoke.c`
 - Modify: `tests/component_v2_smoke.c`
 - Modify: `CMakeLists.txt`
@@ -685,7 +879,8 @@ The final fixture and focused existing tests must cover all of the following.
 - exact positive JSON for all 20 kinds;
 - a table-driven check of every known field bit against every active type;
 - explicit Button/Select/Layout/Media/Text Input/Modal cross-kind mixes;
-- ordinary/link/premium Button target conflicts;
+- every allowed and forbidden cell of the ordinary/link/premium Button matrix,
+  including Link label-or-emoji and Premium rejection of label and emoji;
 - String Select defaults/channel types, auto-select options, and non-Channel
   Select channel types;
 - File description, duplicate spoiler source, Text Input label, Checkbox
@@ -694,10 +889,13 @@ The final fixture and focused existing tests must cover all of the following.
 
 ### Discord semantics and limits
 
-- required and conditional target fields;
+- required and conditional Button target/content fields plus every
+  entity-select/default-value kind pair (including both Mentionable positives
+  and String Select rejection);
 - min/max defaults, `min <= max`, selection count versus option count, radio
   single-default, boolean canonicalization, and duplicate ID/custom ID;
 - total components 40/41;
+- legacy-message top-level Action Rows 5/6;
 - Action Row children 5/6 and one-select/two-select;
 - Section children 1, 3/4 and accessory types;
 - Media Gallery items 1, 10/11;
@@ -749,8 +947,8 @@ Run at minimum:
   `component.h`, and `component_v2.h`;
 - native plus i686/x86_64 MinGW header/layout/source probes;
 - the V2 transition/public-surface/source-layout/public-API audits;
-- the exact preprocessed Bot macro audit, proving Task 12 adds no more than 12
-  and preferably exactly three visible `DCC_` macros;
+- the exact preprocessed Bot-dependency macro audit, proving the reviewed three
+  additions, eight removals, net `-5`, and a bytewise-sorted post-Task-12 dump;
 - focused ASan/UBSan and TSan where the endpoint/message ownership path is
   concurrent;
 - `mkdocs --strict`; and

@@ -65,6 +65,93 @@ overflow before endpoint-owned allocation or output mutation. Versioned arrays
 use their validated declared element stride rather than the library's current
 `sizeof`.
 
+## Typed message references and attachment metadata
+
+Task 7 closes the two remaining untyped holes in `dcc_message_builder_t`
+before the raw compatibility fields are removed in Task 14. Add these exact
+version-1 records; VERSION and PRESENT values are enum constants rather than
+preprocessor macros, while each type has a constant initializer macro and a
+null-safe `static inline` initializer:
+
+```c
+typedef enum dcc_message_reference_type {
+    DCC_MESSAGE_REFERENCE_DEFAULT = 0,
+    DCC_MESSAGE_REFERENCE_FORWARD = 1
+} dcc_message_reference_type_t;
+
+typedef struct dcc_message_reference {
+    size_t size;
+    uint32_t version;
+    uint64_t present; /* TYPE, MESSAGE_ID, CHANNEL_ID, GUILD_ID, FAIL_IF_NOT_EXISTS */
+    dcc_message_reference_type_t type;
+    dcc_snowflake_t message_id;
+    dcc_snowflake_t channel_id;
+    dcc_snowflake_t guild_id;
+    uint8_t fail_if_not_exists;
+} dcc_message_reference_t;
+
+typedef struct dcc_message_attachment {
+    size_t size;
+    uint32_t version;
+    uint64_t present; /* FILENAME, TITLE, DESCRIPTION, DURATION_SECS, WAVEFORM, IS_SPOILER */
+    dcc_snowflake_t id;
+    const char *filename;
+    const char *title;
+    const char *description;
+    double duration_secs;
+    const char *waveform;
+    uint8_t is_spoiler;
+} dcc_message_attachment_t;
+```
+
+`id` is the one mandatory attachment field and may be zero because a new
+`files[0]` upload uses ID 0. Optional strings are nonnull when present;
+filename/title are nonempty canonical UTF-8, description is at most 1,024
+Unicode scalar values, duration is finite and nonnegative, waveform is
+canonical base64 decoding to at most 256 bytes, and `is_spoiler` is exactly 0
+or 1. Attachment IDs are unique. For a request with uploaded files, every new
+ID in `[0, file_count)` maps to exactly that `files[n]`; retained edit
+attachments use their existing snowflake IDs. A voice message has exactly one
+audio upload and its metadata contains both duration and waveform; either
+voice field without the other is invalid.
+
+An absent reference type means `DEFAULT`. A default reply requires a present,
+nonzero message ID; channel and guild IDs are optional and nonzero when
+present. `fail_if_not_exists` is a strict boolean and omission lets Discord use
+its default. A forward requires explicit `TYPE`, nonzero message and channel
+IDs, rejects `FAIL_IF_NOT_EXISTS`, and obeys Discord's forward-only message
+payload restrictions. In particular a forward reference cannot be combined
+with content, embeds, stickers, components, poll, or uploaded attachments.
+
+Append these logical fields and presence values to the transition builder
+without moving its historical prefix:
+
+```c
+const dcc_message_reference_t *message_reference;
+const dcc_message_attachment_t *attachments;
+size_t attachment_count;
+```
+
+Publish these exact setters:
+
+```c
+dcc_status_t dcc_message_builder_set_message_reference(
+    dcc_message_builder_t *builder,
+    const dcc_message_reference_t *reference);
+dcc_status_t dcc_message_builder_set_attachments(
+    dcc_message_builder_t *builder,
+    const dcc_message_attachment_t *attachments,
+    size_t attachment_count);
+```
+
+The typed reference is mutually exclusive with `message_reference_json`; the
+typed attachment array is mutually exclusive with `attachments_json`. The
+records and all nested strings are borrowed only until a build or endpoint
+call serializes them. Task 7 endpoints use only the typed forms. Task 14
+deletes the two raw fields, bits, and setters as part of the complete 19-field
+raw-builder cut; it retains the typed fields and JSON output build/free
+operations.
+
 ## Historical-prefix-safe call options
 
 Append this exact tail to the existing version-1 type; do not add a separate
@@ -87,6 +174,7 @@ typedef struct dcc_rest_call_options {
     const char *audit_log_reason;
     dcc_rest_auth_mode_t auth_mode;
     const char *auth_token;
+    uint64_t flags; /* SENSITIVE_REQUEST_BODY and SENSITIVE_RESULT_BODY in v1 */
 } dcc_rest_call_options_t;
 ```
 
@@ -95,12 +183,38 @@ field only when `size` fully covers that field and default every uncovered
 suffix field to null/default authentication. Reject a size that ends inside a
 logical field. `DCC_REST_CALL_OPTIONS_INIT` and
 `dcc_rest_call_options_init()` initialize the full current size, null audit
-reason, `DCC_REST_AUTH_DEFAULT`, and null token.
+reason, `DCC_REST_AUTH_DEFAULT`, null token, and zero flags. Unknown covered
+flag bits are invalid. `DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY` and
+`DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY` are enum constants. The former
+securely wipes every owned request-body/form copy; the latter selects the
+sensitive result contract below. Typed operations with known secret request or
+response material force the corresponding private bit even when the public
+options suffix is uncovered. Caller sensitivity can only strengthen, never
+weaken, a typed endpoint's private policy.
 
-The embedded options inside `dcc_rest_request_desc_t` obey the same rule. Its
-outer declared size must cover every nested option byte that the nested option
-size claims. A descriptor and nested options compiled to the Task 4 layout
-remain accepted. Never copy either caller structure with a current-size raw
+Remove the unsafe by-value parent edge in the raw descriptor. Its final
+version-1 layout is exactly:
+
+```c
+typedef struct dcc_rest_request_desc {
+    size_t size;
+    uint32_t version;
+    dcc_rest_method_t method;
+    const char *path;
+    const char *content_type;
+    const void *body;
+    size_t body_len;
+    const dcc_rest_call_options_t *options;
+} dcc_rest_request_desc_t;
+```
+
+Null `options` selects the complete default initializer. A non-null pointer is
+borrowed only through `dcc_rest_submit()`, independently size/version validated,
+normalized, and copied before return. The outer descriptor size must cover the
+pointer field before it is read, but never purports to cover bytes in the
+pointed record. The interim Task 4 embedded layout was never a released DCC 2
+baseline and is deliberately replaced rather than freezing a non-extensible
+parent tail. Never copy either caller structure with a current-size raw
 assignment or `memcpy`.
 
 Authentication semantics are exact:
@@ -163,6 +277,123 @@ Reject rather than silently discard an audit reason or non-default auth state.
 Do not include credentials in redirects, diagnostics, observer payloads, or
 route/rate-limit keys. Preserve the existing rule that path, content type, and
 exact body bytes are copied before admission.
+
+## Sensitive paths and nonsecret operation identity
+
+The common submission core owns two distinct strings. `wire_path` is the exact
+relative path or absolute URL sent only to the transport. `operation` is the
+nonsecret identity used by terminal completions, request handles, logs, the App
+error sink, and the public error observer. A typed endpoint's operation is its
+exact canonical `dcc_rest_*` symbol; raw `dcc_rest_submit()` always uses the
+literal `dcc_rest_submit`. No observer-visible operation may be derived from a
+wire path, contain `/` or `?`, or include an audit reason, Bot/Bearer token,
+interaction token, webhook token, or absolute URL.
+
+Exactly 17 existing Task 6 endpoints have a credential-bearing wire path: all
+eight interaction endpoints and these nine webhook-token operations:
+
+- `dcc_rest_delete_webhook`
+- `dcc_rest_delete_webhook_message`
+- `dcc_rest_execute_webhook`
+- `dcc_rest_execute_webhook_github`
+- `dcc_rest_execute_webhook_slack`
+- `dcc_rest_get_webhook`
+- `dcc_rest_get_webhook_message`
+- `dcc_rest_modify_webhook`
+- `dcc_rest_modify_webhook_message`
+
+Mark exactly those entries `sensitive_path: true`; every other active manifest
+entry is false. The audit cross-checks the exact set against the canonical path
+parameter declarations and source policy. Endpoint code must wipe each escaped
+token temporary, owned sensitive wire path, copied Bearer token, and constructed
+Authorization storage before release on success, cancellation, admission
+failure, allocation rollback, and client teardown. Use one private secure-zero
+primitive whose writes cannot be optimized away; plain `free()` or ordinary
+dead-store `memset()` is not sufficient.
+
+Every owned wire-path/absolute-URL allocation is securely wiped before free,
+not only the 17 known typed paths; this makes a raw webhook token or absolute
+query secret safe without guessing its grammar. Rate-limit grouping must
+preserve Discord's webhook/interaction major-parameter
+semantics without retaining the token. Replace the sensitive segment in async
+route state and client bucket keys with the lowercase hexadecimal form of the
+full `SHA-256("dcc-rest-route-token-v1\0" || encoded_segment_bytes)` digest;
+the separator includes its terminating NUL and the segment bytes are exactly
+the percent-encoded wire segment. Never log or expose that fingerprint, and
+wipe temporary token/digest buffers. The transport
+interceptor may receive `wire_path` because it stands in for the HTTP transport;
+terminal/error observers receive only `operation`.
+
+For raw `dcc_rest_submit()`, route/firewall/bucket state stores only the
+lowercase full SHA-256 of the domain-separated method plus exact wire-path byte
+span, never the plaintext relative path or absolute URL. This intentionally
+uses exact-path grouping for the untyped escape hatch; canonical typed
+endpoints retain their manifest-aware Discord major-parameter grouping. A raw
+embedded-NUL body is governed by `body_len`, and the sensitive-request flag
+wipes all exact bytes on success, retry, rejection rollback, cancellation, and
+teardown.
+
+Sensitive response ownership is part of the same common core. Append a
+size-gated `uint64_t flags` field after `retry_after_ms` in version-1
+`dcc_rest_result_t` and publish
+the enum constant `DCC_REST_RESULT_FLAG_SENSITIVE_BODY`. Historical result
+prefixes default it to zero. A sensitive operation sets the flag before any
+terminal delivery; `dcc_rest_result_clone()` preserves it and deep-copies the
+exact body/message bytes. Request-owned and cloned sensitive bodies and any
+separate decoded Discord-message storage are securely wiped before every free,
+including request destruction, replacement, cancellation, retry exhaustion,
+allocation rollback, and client teardown.
+
+`sensitive_result` is an audited endpoint-manifest boolean, independent of
+`sensitive_path`. It is forced true for the exact 20-operation REST set: all 17
+`sensitive_path` operations listed above, plus
+`dcc_rest_create_webhook`, `dcc_rest_get_channel_webhooks`, and
+`dcc_rest_get_guild_webhooks`. Thus every token-bearing path is conservatively
+treated as returning sensitive bytes, while webhook list/create responses are
+covered even though their request paths contain no credential. Separately, the
+non-REST OAuth policy table forces sensitive results for exactly
+`dcc_oauth2_exchange_code` and `dcc_oauth2_refresh_token`. Caller flags may add
+sensitivity but cannot clear either forced policy. The audit cross-checks both
+exact sets against manifest/policy source and rejects a missing, extra, or
+unenforced entry.
+
+An owned clone has a private allocation header recording initialized allocation
+sizes and sensitivity; it is never inferred from an untrusted pointer. Clone
+validates the public source prefix and flag, allocates/copies exact spans, then
+publishes the result. `dcc_rest_result_free()` accepts only a clone returned by
+that API, securely wipes sensitive body/message storage and the complete private
+allocation before release, and remains null-safe. A caller-constructed
+historical result has no covered flag and is therefore non-sensitive unless it
+is delivered through a request whose private policy sets the current result
+view.
+
+The result callback and successful `dcc_rest_request_wait()` still receive the
+complete sensitive result because they are the explicit data consumer. App and
+public error observers instead receive a sanitized borrowed view with null
+body, zero body length, zero Discord code, and null Discord message; no log or
+diagnostic may derive text from the sensitive body. The transport interceptor
+may receive response bytes only under its documented transport-testing
+contract. `dcc_rest_result_status()` and `dcc_rest_result_ok()` depend only on
+validated metadata and preserve their behavior. Add allocator/secure-zero test
+hooks proving original and cloned storage is wiped without exposing secret
+bytes in production diagnostics.
+
+Every response buffer that ever carries a forced-sensitive result retains that
+bit through raw HTTP receipt, parse, retry scheduling, replacement, request
+storage, wait/callback delivery, clone storage, and retirement/finalization.
+All retired and final backing buffers are securely wiped before release.
+
+Sensitivity propagates below REST into every DCC-owned HTTP representation:
+parsed URL parts, escaped segments, Authorization/header storage, serialized
+wire request, request body/form buffers, raw wire response, parsed response
+headers/body, retry copies, and interceptor fixtures. A sensitive buffer must
+not grow with plain `realloc`, because the allocator may release its old
+secret-bearing block first. Exact-measure and allocate once where possible;
+otherwise use allocate-copy-secure-zero-free and preserve the sensitivity bit
+across the move. Every HTTP/REST exit, including parse/TLS failure and partial
+construction, wipes the initialized byte capacity that may contain secret
+data. Allocator-hook tests force each growth/move point and inspect retired as
+well as final blocks.
 
 ## Complete Task 7 endpoint manifest
 
@@ -424,8 +655,9 @@ for the deleted thread aliases.
 Migrate every in-tree caller in the same GREEN commit: HTTP/official/sugar and
 package fixtures, examples, generated shortcuts, and the transition App REST
 mirrors in `include/dcc/app/legacy.h` plus `src/app/app_rest_shortcuts*.c`.
-Task 10 still owns removal of the App mirror surface, so existing App symbols
-may remain only as transition adapters. Typed mirrors create call options from
+Task 10 retires internal mirror use and freezes the App mirror surface for
+physical deletion in Task 14, so existing App symbols remain only as
+transition adapters. Typed mirrors create call options from
 their callback/user data and submit the canonical `dcc_rest_*` function through
 `dcc_app_client(app)`. Raw-JSON App mirrors may use the private Task 6 legacy
 raw adapter over `dcc_rest_submit()` until Task 10; they must not resurrect a
@@ -443,15 +675,21 @@ and package consumers so removed REST names no longer compile anywhere in-tree.
 
 ## Manifest and audit rules
 
-Extend each active manifest entry with checked authentication and audit-reason
-capabilities in addition to its method, route, owner, typed input, canonical
-parameters, multipart flag, source evidence, and legacy list. The audit must
+Extend each active manifest entry with checked authentication, audit-reason,
+`sensitive_path`, and `sensitive_result` capabilities in addition to its method, route, owner,
+typed input, canonical parameters, multipart flag, source evidence, and legacy
+list. The audit must
 prove all of the following:
 
 - exactly 224 active endpoint entries with task counts 41/35/47/57/44;
 - exactly 35 Task 7 entries split 12 channels, 13 threads, and 10 invites;
 - exactly the 18 legacy Task 7 symbols above, all absent after migration;
 - exactly three Task 7 multipart entries and exactly 12 audit-reason entries;
+- exactly 17 sensitive-path entries, all from Task 6, with canonical nonsecret
+  operation identity and opaque route-key policy evidence;
+- exactly 20 sensitive-result entries: the exact 17 sensitive-path entries plus
+  create/channel-list/guild-list webhook, with forced source policy; and the
+  separate exact two-operation OAuth sensitive-result table;
 - the exact per-symbol auth matrix, including self-lobby Bearer-only,
   user-lobby Bot-only, and Get Invite None/Bot;
 - the common client/options/request-output positions and exact public
@@ -501,6 +739,18 @@ RED for at least:
 - every auth mode against every exceptional endpoint policy, empty/uncovered
   Bearer tokens, copied-and-wiped Bearer lifetime, and absence of secrets in
   diagnostics;
+- all 17 interaction/webhook path-token operations failing through transport,
+  HTTP, cancellation, and teardown while logs and both error-observer paths see
+  only canonical operation identities; raw submit sees `dcc_rest_submit`;
+- secure-wipe evidence for temporary/owned sensitive paths, Bearer tokens, and
+  Authorization storage on success, admission failure, cancel, destroy, and
+  allocation rollback, plus route/bucket keys containing only the required
+  fingerprint and never the raw token;
+- all 20 forced REST results and both OAuth results retaining sensitivity
+  through success, retry, callback, wait, clone, cancellation, replacement,
+  request destroy, allocation rollback, and client teardown; callbacks/waits
+  see the complete result, observers/logs see only redacted views, and hooks
+  prove every retired/final buffer is wiped;
 - all 12 audit-capable endpoints accepting a Unicode reason and all other Task
   7 endpoints rejecting it; empty, invalid UTF-8, 512/513-scalar boundaries,
   percent characters, non-ASCII, CR/LF, and exactly-once RFC 3986 encoding;

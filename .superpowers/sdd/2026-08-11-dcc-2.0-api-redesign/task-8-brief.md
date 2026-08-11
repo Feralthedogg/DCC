@@ -79,6 +79,7 @@ redesign, this exact public suffix on `dcc_rest_call_options_t`:
 const char *audit_log_reason;
 dcc_rest_auth_mode_t auth_mode;
 const char *auth_token;
+uint64_t flags;
 ```
 
 `dcc_rest_auth_mode_t` has exactly `DCC_REST_AUTH_DEFAULT`,
@@ -89,15 +90,20 @@ The mandatory historical call-options prefix ends after `user_data`. Read each
 tail field only when fully covered by `size`. `DCC_REST_AUTH_BEARER` requires
 both the complete `auth_token` field and a non-null, non-empty token. Typed
 endpoints apply a private capability policy and reject unsupported modes before
-body/query allocation or queue admission.
+body/query allocation or queue admission. `flags` accepts only Task 7's
+`DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY` and
+`DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY`; an uncovered field defaults to
+zero. Endpoint-mandated sensitivity is ORed with caller flags and cannot be
+cleared by a historical or current caller.
 
 Task 7 must already copy normalized auth/audit metadata through raw submission,
 the asynchronous request, worker, request preparation, header construction,
 interceptors, cancellation, and cleanup. It must accept the historical
 call-options prefix, default every uncovered suffix field, and avoid shallow
-copying an uncovered tail. The enclosing `dcc_rest_request_desc_t` validator
-must require a nested field to be covered by both the descriptor and nested
-options sizes.
+copying an uncovered tail. The final raw descriptor points to optional call
+options: outer coverage gates reading that pointer, and the non-null pointed
+record is validated independently. There is no nested-by-value outer-size
+claim.
 
 For Task 8, bot-authenticated operations accept `DEFAULT` and `BOT` and reject
 `NONE` and `BEARER` unless explicitly listed below. Add Guild Member always
@@ -375,6 +381,12 @@ The following lists fields after the common prefix and, when applicable,
 Add Member requires a non-empty user OAuth token with `guilds.join`; its HTTP
 Authorization remains Bot. Non-null nicknames contain 1..32 Unicode scalar
 values after valid UTF-8 validation. Every role/user ID in an array is nonzero.
+The Add Member manifest row unconditionally forces
+`DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY` because `access_token` is embedded
+in JSON. The measure/build path, interceptor view, async job, all replaced
+serialization buffers, cancellation/rollback, and terminal cleanup preserve
+that bit and securely wipe the complete body allocation; caller options cannot
+disable it.
 Modify Member deliberately replaces the old combined voice flag and the
 timeout/move/clear overloads: mute and deaf have distinct presence bits,
 `channel_id: null` disconnects, and `communication_disabled_until: null`
@@ -675,9 +687,9 @@ consumer set includes:
 
 Repeat an exact-symbol search after implementation because the compiler and
 manifest audit may reveal additional aggregate-header or generated-fixture
-consumers. Task 10 eventually removes App/Sugar transition APIs, but Task 8
-must keep the current tree buildable or deliberately coordinate their early
-removal rather than leave calls to deleted REST declarations.
+consumers. Task 10 retires internal use of App REST mirrors while preserving
+their frozen compatibility exports for Task 14; Task 8 must keep the current
+tree buildable and must not leave calls to deleted REST declarations.
 
 There are no direct command-registry calls to the exact Task 8 endpoint names
 at the reviewed base. Keep command-registry and command-sync tests as

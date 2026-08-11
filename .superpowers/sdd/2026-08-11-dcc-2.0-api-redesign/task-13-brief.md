@@ -28,14 +28,14 @@ curated application vocabulary:
 - state-aware static-inline context action families;
 - allocation-free Components v2 `DCC_UI_*` value constructors;
 - exactly nine C-only variadic UI array helpers;
-- one versioned `dcc_bot_config_t` and one public static-inline runner; and
+- one versioned `dcc_bot_config_t` and one exported runner; and
 - exactly four entrypoint macros, split into development/production and
   default/advanced forms.
 
 Task 13 does not delete Sugar, `include/dcc/app/legacy.h`, void-handler
 adapters, or repository-wide DCC 1 consumers; Task 14 owns that cut. It does
 not add REST endpoints, another registration engine, another interaction
-state machine, another Components v2 layout, exported Bot runner symbols, or
+state machine, another Components v2 layout, or more than one Bot runner symbol,
 listener suffix matrices. It does not add a coroutine abstraction.
 
 The Bot implementation is a typed construction layer over the canonical App,
@@ -125,30 +125,59 @@ DCC_BOT_MAIN_H
 
 ## Exact macro budget
 
-The compiler macro dump, not a source `#define` grep, is authoritative. Freeze
-the arithmetic as follows:
+The compiler macro dump, not a source `#define` grep, is authoritative for the
+budget. The old 283 projection predates the Task 7 message types, Task 9 include
+graph, and enum cleanup and is withdrawn. The one canonical budget profile is
+POSIX Clang, C11, static consumption: neither `DCC_SHARED` nor `DCC_BUILD` is
+defined. Before creating a Bot leaf, preprocess a sentinel that includes exactly
+the focused dependencies listed in the topology table (`app/base.h`,
+`app/listeners.h`, `app/context.h`, message, modal, autocomplete, component_v2,
+`app/options.h`, `app/lifecycle.h`, and `app/env.h`). Store every visible `DCC_`
+macro as bytewise-sorted name/kind/arity/normalized-expansion records in
+`tools/bot_v2_dependency_macros_posix_clang_c_static.txt`.
 
-| Contribution visible from C11 `<dcc/bot.h>` | Count |
+Task 13 then adds exactly 30 Bot-owned definitions:
+
+| Bot-owned contribution | Count |
 | --- | ---: |
-| Focused dependency baseline before Task 12 | 256 |
-| Task 12 tagged Components v2 delta | 3 |
 | Six Bot include guards | 6 |
 | Nine handler declaration macros | 9 |
-| `DCC_LISTENER_CONFIG_VERSION` and `DCC_LISTENER_CONFIG_INIT` | 2 |
-| `DCC_BOT_CONFIG_VERSION` and `DCC_BOT_CONFIG_INIT` | 2 |
+| `DCC_LISTENER_CONFIG_INIT` | 1 |
+| `DCC_BOT_CONFIG_INIT` | 1 |
 | Nine C-only variadic UI helpers | 9 |
 | Four main macros | 4 |
-| **Complete preprocessed `<dcc/bot.h>` surface** | **291** |
+| **Exact Bot-owned delta** | **30** |
 
-Thus Task 13's Bot-owned delta is exactly `6 + 9 + 2 + 2 + 9 + 4 = 32`,
-and the final count is exactly `256 + 3 + 32 = 291`, leaving nine below the
-hard ceiling of 300. A count below 291 is also a failure in this task because
-it means a required surface disappeared or the baseline was measured
-incorrectly. A later task may use the nine-name headroom only through a
-separately reviewed design change.
+`DCC_LISTENER_CONFIG_VERSION` and `DCC_BOT_CONFIG_VERSION` are enum constants,
+not macros. The complete canonical-profile C11 count is therefore exactly the
+checked dependency record count plus 30 and must be at most 300. Generate
+`tools/bot_v2_macros_posix_clang_c_static.txt` from `<dcc/bot.h>` and reject any
+missing, extra, duplicate, or changed expansion. Generate the equivalent
+`tools/bot_v2_macros_posix_clang_cpp_static.txt`; its exact set omits the nine
+C-only variadic UI helpers. These two full-expansion artifacts are the focused
+Bot source-compatibility and budget contract, rather than a stale hand count.
+
+Do not compare those POSIX/static expansions byte-for-byte with another build
+role or platform: inherited definitions such as `DCC_API` and
+`DCC_DEPRECATED` are intentionally conditional. In addition to the canonical
+artifacts, run a name/kind/arity smoke matrix over these exact 12 profiles:
+
+```text
+platform/compiler     language     build role
+POSIX/Clang           C11, C++17   static, shared-build, shared-consumer
+Windows/ClangCL       C11, C++17   static, shared-build, shared-consumer
+```
+
+`static` defines neither role macro, `shared-build` defines `DCC_SHARED` and
+`DCC_BUILD`, and `shared-consumer` defines only `DCC_SHARED`. Every profile must
+have the same expected Bot-owned 30-name contribution in C or the corresponding
+21-name contribution in C++, and no forbidden Bot name. Task 15 owns the exact
+per-profile full installed-header expansion baselines and the compiler-
+independent conditional-definition artifact. The Task 13 report records the
+canonical numeric counts and all 12 smoke commands.
 
 All uppercase listener constructors, handler-union constructors, config
-helpers, fixed/array UI constructors, context actions, `DCC_BOT_CONFIG(name)`,
+helpers, fixed/array UI constructors, context actions, `DCC_BOT_CONFIG()`,
 and `dcc_bot_run()` are functions, not macros. Enum values are not macros.
 There are no private helper macros with a `DCC_` prefix. Local implementation
 helpers use lowercase static-inline functions.
@@ -156,16 +185,18 @@ helpers use lowercase static-inline functions.
 `tools/audit_v2_surface.py` must:
 
 1. preprocess a sentinel translation unit containing only
-   `#include <dcc/bot.h>` with the configured C compiler's full macro-dump
-   option;
+   `#include <dcc/bot.h>` with the canonical POSIX/Clang static C compiler's
+   full macro-dump option;
 2. prove the sentinel itself appears, so an empty/broken dump cannot pass;
-3. count unique visible `DCC_` definitions and require exactly 291 and at most
-   300;
-4. compare the Bot-owned definitions against the exact 32-name inventory;
+3. compare the complete normalized dump with the checked C artifact, require
+   dependency-count plus 30, and enforce at most 300;
+4. compare the Bot-owned definitions against the exact 30-name inventory;
 5. reject a function intended to be inline if it was accidentally implemented
    as a macro; and
-6. run a C++17 dump proving the nine C-only UI macro names are absent while the
-   fixed/array surface remains usable.
+6. run the canonical C++17 dump proving the nine C-only UI macro names are
+   absent while the fixed/array surface remains usable; and
+7. run the 12-profile name/kind/arity smoke matrix with the exact role defines
+   above, including explicit `DCC_API`/`DCC_DEPRECATED` branch assertions.
 
 ## Nine handler declaration macros
 
@@ -221,6 +252,69 @@ without hiding the argument object type behind an unsafe function-pointer cast.
 
 ## Listener configuration and handler values
 
+Before adding the Bot helpers, normalize the canonical App listener input
+graph. `dcc_listener_t` and `dcc_listener_route_policy_t` keep their existing
+stable prefixes but replace evolvable children that occur before later parent
+fields with borrowed pointers:
+
+```c
+typedef struct dcc_listener_route_policy {
+    size_t size;
+    uint32_t version;
+    const dcc_listener_middleware_t *middlewares;
+    size_t middleware_count;
+    const dcc_snowflake_t *owner_user_ids;
+    size_t owner_user_id_count;
+    dcc_permission_t required_permissions;
+    uint8_t guild_only;
+    const dcc_listener_cooldown_t *cooldown;
+    const dcc_listener_check_t *checks;
+    size_t check_count;
+    uint8_t dm_only;
+    uint8_t nsfw_only;
+    const uint32_t *channel_types;
+    size_t channel_type_count;
+    const dcc_snowflake_t *required_role_ids;
+    size_t required_role_id_count;
+    const dcc_snowflake_t *any_role_ids;
+    size_t any_role_id_count;
+} dcc_listener_route_policy_t;
+
+typedef struct dcc_listener {
+    size_t size;
+    uint32_t version;
+    dcc_listener_kind_t kind;
+    dcc_listener_handler_t handler;
+    void *user_data;
+    dcc_app_cleanup_fn cleanup;
+    const dcc_listener_route_policy_t *policy;
+    size_t args_size;
+    const dcc_listener_bindings_t *bindings;
+    const dcc_listener_validators_t *validators;
+    const dcc_listener_validation_policy_t *validation;
+    dcc_listener_target_t target;
+} dcc_listener_t;
+```
+
+A null pointer selects the corresponding empty/default value. The middleware,
+check, cooldown, binding, validator, each target variant, their pointer unions,
+and `dcc_listener_target_t` are exact fixed-layout/fixed-alignment leaves for
+ABI major 2 even where an inherited `size, version` prefix remains. In
+particular, array element stride is their frozen `sizeof`, and the target union
+is the listener's frozen final tail. The policy, bindings collection,
+validators collection, validation policy, listener, and command schema remain
+append-extensible because every non-final parent edge to them is a pointer.
+No same-major change may enlarge a frozen leaf, add a larger-alignment target,
+or reinterpret its version prefix.
+
+Replace the external `dcc_listener_init` symbol with a same-name public
+`static inline void dcc_listener_init(dcc_listener_t *, dcc_listener_kind_t)`.
+It zero-initializes the complete caller-visible object, sets listener
+size/version/kind, and sets the selected fixed target member's size/version.
+It performs no allocation and a null destination is a no-op. The Task 14/15
+inline baseline treats this as public source API; do not retain an exported
+wrapper or introduce an `_v2` spelling.
+
 `<dcc/bot/listeners.h>` introduces this header-only convenience value:
 
 ```c
@@ -230,30 +324,28 @@ typedef struct dcc_listener_config {
     void *user_data;
     dcc_app_cleanup_fn cleanup;
     const dcc_application_command_builder_t *command;
-    dcc_listener_route_policy_t policy;
+    const dcc_listener_route_policy_t *policy;
     size_t args_size;
-    dcc_listener_bindings_t bindings;
-    dcc_listener_validators_t validators;
-    dcc_listener_validation_policy_t validation;
+    const dcc_listener_bindings_t *bindings;
+    const dcc_listener_validators_t *validators;
+    const dcc_listener_validation_policy_t *validation;
     uint8_t once;
 } dcc_listener_config_t;
 
-#define DCC_LISTENER_CONFIG_VERSION 1U
+enum { DCC_LISTENER_CONFIG_VERSION = 1U };
 #define DCC_LISTENER_CONFIG_INIT /* complete C11/C++17 initializer */
 ```
 
-The initializer sets full current size/version and initializes every nested
-evolvable value to its corresponding Task 2 size/version. It selects no user
-data, cleanup, schema, policy, binding, validator, or once behavior. It is a
-valid empty configuration, not a zero-filled object with invalid nested
-versions.
+The initializer sets full current size/version and nulls every optional child
+pointer. It selects no user data, cleanup, schema, policy, binding, validator,
+or once behavior and is a valid empty configuration.
 
 Provide documented public static-inline value helpers, including:
 
 ```c
 dcc_listener_config_t DCC_LISTENER_CONFIG(void);
 dcc_listener_config_t DCC_LISTENER_CONFIG_WITH_POLICY(
-    dcc_listener_route_policy_t policy
+    const dcc_listener_route_policy_t *policy
 );
 dcc_listener_handler_t DCC_LISTENER_PLAIN_HANDLER(dcc_app_handler_fn handler);
 dcc_listener_handler_t DCC_LISTENER_TYPED_HANDLER(dcc_app_typed_handler_fn handler);
@@ -277,6 +369,16 @@ each argument once. Do not add `DCC_ROUTE_CONFIG`, `DCC_ROUTE_PARAMS`,
 Advanced callers start from `DCC_LISTENER_CONFIG()` or
 `DCC_LISTENER_CONFIG_INIT`, assign the desired policy/binding/validation fields,
 and pass one value to one `_WITH` constructor.
+
+The listener/config records and every pointed descriptor, string, and array are
+borrowed through the synchronous `dcc_app_listen()` call only. That function
+validates each covered size/version and active union member, then deep-copies
+the complete descriptor graph and all strings/arrays before returning. It
+copies callback and `user_data` pointer values but never dereferences or clones
+the user object; the registered cleanup contract continues to govern that
+object. On failure it publishes no listener and retains nothing. A caller that
+stores a descriptor before registration must keep all referenced input alive
+until registration returns.
 
 `command` is an optional complete command schema. A constructor maps it to the
 Task 2 route target without retaining redundant name/description fields that
@@ -356,12 +458,12 @@ not add a twentieth enum kind. Do not substitute `READY_ONCE` or split task
 schedules into extra listener pairs. Once behavior belongs to the one config,
 and schedule shape belongs to the one task target value.
 
-Each constructor calls/duplicates only the canonical initialization semantics
-of `dcc_listener_init()`, sets exactly one compatible handler member, and fills
-only the active target union. It does not register, allocate, serialize, or
-retain a pointer to one of its own parameters. Invalid config size/version
-produces a deterministically invalid descriptor that `dcc_app_listen()` rejects;
-it never causes an uncovered read.
+Each constructor calls/duplicates only the canonical static-inline
+`dcc_listener_init()` semantics, sets exactly one compatible handler member,
+copies the config's borrowed pointer values, and fills only the active target
+union. It does not register, allocate, serialize, or point into its own stack
+parameters. Invalid config size/version produces a deterministically invalid
+descriptor that `dcc_app_listen()` rejects; it never causes an uncovered read.
 
 Because these are function calls, a listener expression is not a C constant
 initializer. Update `tests/api_v2_surface_smoke.c` and examples introduced in
@@ -392,6 +494,81 @@ Expose these canonical groups:
 | modal | `DCC_CTX_SHOW_MODAL` |
 | autocomplete | `DCC_CTX_AUTOCOMPLETE` |
 
+The table above is an exact inventory of **27** functions, not a naming
+pattern. Their complete public signatures are:
+
+```c
+static inline dcc_status_t DCC_CTX_REPLY(
+    dcc_ctx_t *ctx, dcc_message_builder_t message);
+static inline dcc_status_t DCC_CTX_REPLY_TEXT(
+    dcc_ctx_t *ctx, const char *content);
+static inline dcc_status_t DCC_CTX_REPLY_EPHEMERAL(
+    dcc_ctx_t *ctx, dcc_message_builder_t message);
+static inline dcc_status_t DCC_CTX_REPLY_EPHEMERAL_TEXT(
+    dcc_ctx_t *ctx, const char *content);
+static inline dcc_status_t DCC_CTX_REPLY_UI(
+    dcc_ctx_t *ctx, dcc_component_v2_builder_t component);
+static inline dcc_status_t DCC_CTX_REPLY_UI_ARRAY(
+    dcc_ctx_t *ctx,
+    const dcc_component_v2_builder_t *components,
+    size_t component_count);
+static inline dcc_status_t DCC_CTX_REPLY_EPHEMERAL_UI(
+    dcc_ctx_t *ctx, dcc_component_v2_builder_t component);
+static inline dcc_status_t DCC_CTX_REPLY_EPHEMERAL_UI_ARRAY(
+    dcc_ctx_t *ctx,
+    const dcc_component_v2_builder_t *components,
+    size_t component_count);
+
+static inline dcc_status_t DCC_CTX_DEFER(dcc_ctx_t *ctx);
+static inline dcc_status_t DCC_CTX_DEFER_EPHEMERAL(dcc_ctx_t *ctx);
+
+static inline dcc_status_t DCC_CTX_UPDATE(
+    dcc_ctx_t *ctx, dcc_message_builder_t message);
+static inline dcc_status_t DCC_CTX_UPDATE_UI(
+    dcc_ctx_t *ctx, dcc_component_v2_builder_t component);
+static inline dcc_status_t DCC_CTX_UPDATE_UI_ARRAY(
+    dcc_ctx_t *ctx,
+    const dcc_component_v2_builder_t *components,
+    size_t component_count);
+
+static inline dcc_status_t DCC_CTX_FOLLOWUP(
+    dcc_ctx_t *ctx, dcc_message_builder_t message);
+static inline dcc_status_t DCC_CTX_FOLLOWUP_TEXT(
+    dcc_ctx_t *ctx, const char *content);
+static inline dcc_status_t DCC_CTX_FOLLOWUP_EPHEMERAL(
+    dcc_ctx_t *ctx, dcc_message_builder_t message);
+static inline dcc_status_t DCC_CTX_FOLLOWUP_EPHEMERAL_TEXT(
+    dcc_ctx_t *ctx, const char *content);
+static inline dcc_status_t DCC_CTX_FOLLOWUP_UI(
+    dcc_ctx_t *ctx, dcc_component_v2_builder_t component);
+static inline dcc_status_t DCC_CTX_FOLLOWUP_UI_ARRAY(
+    dcc_ctx_t *ctx,
+    const dcc_component_v2_builder_t *components,
+    size_t component_count);
+static inline dcc_status_t DCC_CTX_FOLLOWUP_EPHEMERAL_UI(
+    dcc_ctx_t *ctx, dcc_component_v2_builder_t component);
+static inline dcc_status_t DCC_CTX_FOLLOWUP_EPHEMERAL_UI_ARRAY(
+    dcc_ctx_t *ctx,
+    const dcc_component_v2_builder_t *components,
+    size_t component_count);
+
+static inline dcc_status_t DCC_CTX_SEND(
+    dcc_ctx_t *ctx, dcc_message_builder_t message);
+static inline dcc_status_t DCC_CTX_SEND_TEXT(
+    dcc_ctx_t *ctx, const char *content);
+static inline dcc_status_t DCC_CTX_SEND_UI(
+    dcc_ctx_t *ctx, dcc_component_v2_builder_t component);
+static inline dcc_status_t DCC_CTX_SEND_UI_ARRAY(
+    dcc_ctx_t *ctx,
+    const dcc_component_v2_builder_t *components,
+    size_t component_count);
+
+static inline dcc_status_t DCC_CTX_SHOW_MODAL(
+    dcc_ctx_t *ctx, dcc_modal_builder_t modal);
+static inline dcc_status_t DCC_CTX_AUTOCOMPLETE(
+    dcc_ctx_t *ctx, dcc_autocomplete_builder_t autocomplete);
+```
+
 Message/modal/autocomplete builder-taking short forms accept the value by value,
 take its address only inside the inline body, and call the lowercase operation
 before returning. Single-component UI helpers similarly make a local one-item
@@ -408,6 +585,17 @@ followup after a completed initial reply. Update always means component-source
 update, while followup always forces a followup and send always creates an
 unrelated channel message.
 
+The builder-taking ephemeral forms copy the builder, preserve every covered
+existing flag, and add `DCC_MESSAGE_FLAG_EPHEMERAL` through
+`dcc_message_builder_set_flags()`. They never read `flags` unless the caller's
+declared size covers the complete field; if the field is not covered, the
+setter rejection is returned without admission. The UI-array forms initialize
+one current `dcc_message_builder_t`, install the exact pointer/count through
+`dcc_message_builder_set_components_v2()`, and rely on that canonical setter
+to add `DCC_MESSAGE_FLAG_IS_COMPONENTS_V2`. Ephemeral UI adds the ephemeral bit
+without clearing the Components v2 bit. A setter failure is returned directly;
+no lowercase context operation is called.
+
 Do not expose `RESPONSE`, `RESPOND`, `PUBLIC`, `PRIVATE`, `DONE`, `OK`,
 `OR_EDIT`, `OR_FOLLOWUP`, `_CB`, `V2`, or silent/no-embed aliases. Visibility is
 spelled `EPHEMERAL`. `DCC_CTX_REPLY_AUTOCOMPLETE` is not an alias for
@@ -415,31 +603,146 @@ spelled `EPHEMERAL`. `DCC_CTX_REPLY_AUTOCOMPLETE` is not an alias for
 
 ## Canonical UI surface
 
-`<dcc/bot/ui.h>` builds only Task 12 version-1 tagged values. Fixed and array
-forms are documented public `static inline` functions and perform no
-allocation. They call the low-level `dcc_component_v2_*` constructors/setters
-instead of reintroducing flat designated initializers or inactive-union writes.
+`<dcc/bot/ui.h>` builds only Task 12 version-1 tagged values. Its public
+function surface is exactly the following **44** documented `static inline`
+functions. Every function allocates nothing and evaluates each argument once.
+Component-producing functions call the matching low-level
+`dcc_component_v2_*` value constructor and, where needed, its validated setter;
+they never recreate the removed flat layout or write an inactive union member.
 
-The fixed surface covers at least this one-way vocabulary:
+```c
+static inline dcc_component_v2_builder_t DCC_UI_TEXT(const char *content);
+static inline dcc_component_v2_builder_t DCC_UI_BUTTON(
+    dcc_button_style_t style, const char *label, const char *custom_id);
+static inline dcc_component_v2_builder_t DCC_UI_PRIMARY(
+    const char *label, const char *custom_id);
+static inline dcc_component_v2_builder_t DCC_UI_SECONDARY(
+    const char *label, const char *custom_id);
+static inline dcc_component_v2_builder_t DCC_UI_SUCCESS(
+    const char *label, const char *custom_id);
+static inline dcc_component_v2_builder_t DCC_UI_DANGER(
+    const char *label, const char *custom_id);
+static inline dcc_component_v2_builder_t DCC_UI_LINK(
+    const char *label, const char *url);
+static inline dcc_component_v2_builder_t DCC_UI_PREMIUM(
+    dcc_snowflake_t sku_id);
 
-- text: `DCC_UI_TEXT`;
-- buttons: `DCC_UI_BUTTON`, `DCC_UI_PRIMARY`, `DCC_UI_SECONDARY`,
-  `DCC_UI_SUCCESS`, `DCC_UI_DANGER`, `DCC_UI_LINK`, and `DCC_UI_PREMIUM`;
-- layouts: `DCC_UI_ROW_ARRAY`, `DCC_UI_SECTION_ARRAY`, `DCC_UI_CARD_ARRAY`,
-  and `DCC_UI_CARD_ACCENT_ARRAY`;
-- separators: `DCC_UI_SEPARATOR` and `DCC_UI_SEPARATOR_LARGE`;
-- media: `DCC_UI_MEDIA`, `DCC_UI_MEDIA_SPOILER`, `DCC_UI_THUMBNAIL`,
-  `DCC_UI_FILE`, and `DCC_UI_GALLERY_ARRAY`;
-- selects: `DCC_UI_STRING_SELECT_ARRAY`, `DCC_UI_USER_SELECT`,
-  `DCC_UI_ROLE_SELECT`, `DCC_UI_MENTIONABLE_SELECT`, and
-  `DCC_UI_CHANNEL_SELECT_ARRAY`;
-- modal children: `DCC_UI_LABEL`, `DCC_UI_INPUT`,
-  `DCC_UI_INPUT_PLACEHOLDER`, `DCC_UI_FILE_UPLOAD`,
-  `DCC_UI_FILE_UPLOAD_WITH_TYPES`, `DCC_UI_RADIO_GROUP_ARRAY`,
-  `DCC_UI_CHECKBOX_GROUP_ARRAY`, and `DCC_UI_CHECKBOX`;
-- fixed leaf values for select options, select defaults, and radio/checkbox
-  choice options; and
-- `DCC_UI_MODAL_ARRAY` for a fixed component pointer/count.
+static inline dcc_component_v2_builder_t DCC_UI_ROW_ARRAY(
+    const dcc_component_v2_builder_t *components, size_t component_count);
+static inline dcc_component_v2_builder_t DCC_UI_SECTION_ARRAY(
+    const dcc_component_v2_builder_t *components,
+    size_t component_count,
+    const dcc_component_v2_builder_t *accessory);
+static inline dcc_component_v2_builder_t DCC_UI_CARD_ARRAY(
+    const dcc_component_v2_builder_t *components, size_t component_count);
+static inline dcc_component_v2_builder_t DCC_UI_CARD_ACCENT_ARRAY(
+    const dcc_component_v2_builder_t *components,
+    size_t component_count,
+    uint32_t accent_color);
+static inline dcc_component_v2_builder_t DCC_UI_SEPARATOR(void);
+static inline dcc_component_v2_builder_t DCC_UI_SEPARATOR_LARGE(void);
+
+static inline dcc_component_v2_media_gallery_item_t DCC_UI_MEDIA(
+    const char *url, const char *description);
+static inline dcc_component_v2_media_gallery_item_t DCC_UI_MEDIA_SPOILER(
+    const char *url, const char *description);
+static inline dcc_component_v2_builder_t DCC_UI_THUMBNAIL(const char *url);
+static inline dcc_component_v2_builder_t DCC_UI_FILE(
+    const char *attachment_url);
+static inline dcc_component_v2_builder_t DCC_UI_GALLERY_ARRAY(
+    const dcc_component_v2_media_gallery_item_t *items, size_t item_count);
+
+static inline dcc_select_option_t DCC_UI_OPTION(
+    const char *label, const char *value);
+static inline dcc_select_option_t DCC_UI_OPTION_DESCRIPTION(
+    const char *label, const char *value, const char *description);
+static inline dcc_select_option_t DCC_UI_OPTION_DEFAULT(
+    const char *label, const char *value);
+static inline dcc_select_option_t DCC_UI_OPTION_DEFAULT_DESCRIPTION(
+    const char *label, const char *value, const char *description);
+static inline dcc_component_v2_select_default_value_t DCC_UI_DEFAULT_USER(
+    dcc_snowflake_t id);
+static inline dcc_component_v2_select_default_value_t DCC_UI_DEFAULT_ROLE(
+    dcc_snowflake_t id);
+static inline dcc_component_v2_select_default_value_t DCC_UI_DEFAULT_CHANNEL(
+    dcc_snowflake_t id);
+static inline dcc_component_v2_choice_option_t DCC_UI_CHOICE(
+    const char *label, const char *value);
+static inline dcc_component_v2_choice_option_t DCC_UI_CHOICE_DESCRIPTION(
+    const char *label, const char *value, const char *description);
+static inline dcc_component_v2_choice_option_t DCC_UI_CHOICE_DEFAULT(
+    const char *label, const char *value);
+static inline dcc_component_v2_choice_option_t DCC_UI_CHOICE_DEFAULT_DESCRIPTION(
+    const char *label, const char *value, const char *description);
+
+static inline dcc_component_v2_builder_t DCC_UI_STRING_SELECT_ARRAY(
+    const char *custom_id,
+    const dcc_select_option_t *options,
+    size_t option_count);
+static inline dcc_component_v2_builder_t DCC_UI_USER_SELECT(
+    const char *custom_id);
+static inline dcc_component_v2_builder_t DCC_UI_ROLE_SELECT(
+    const char *custom_id);
+static inline dcc_component_v2_builder_t DCC_UI_MENTIONABLE_SELECT(
+    const char *custom_id);
+static inline dcc_component_v2_builder_t DCC_UI_CHANNEL_SELECT_ARRAY(
+    const char *custom_id,
+    const dcc_component_v2_select_default_value_t *default_values,
+    size_t default_value_count,
+    const uint32_t *channel_types,
+    size_t channel_type_count);
+
+static inline dcc_component_v2_builder_t DCC_UI_LABEL(
+    const char *label, const dcc_component_v2_builder_t *component);
+static inline dcc_component_v2_builder_t DCC_UI_INPUT(
+    const char *custom_id, dcc_text_input_style_t style);
+static inline dcc_component_v2_builder_t DCC_UI_INPUT_PLACEHOLDER(
+    const char *custom_id,
+    dcc_text_input_style_t style,
+    const char *placeholder);
+static inline dcc_component_v2_builder_t DCC_UI_FILE_UPLOAD(
+    const char *custom_id);
+static inline dcc_component_v2_builder_t DCC_UI_FILE_UPLOAD_WITH_TYPES(
+    const char *custom_id,
+    const char *const *file_types,
+    size_t file_type_count);
+static inline dcc_component_v2_builder_t DCC_UI_RADIO_GROUP_ARRAY(
+    const char *custom_id,
+    const dcc_component_v2_choice_option_t *options,
+    size_t option_count);
+static inline dcc_component_v2_builder_t DCC_UI_CHECKBOX_GROUP_ARRAY(
+    const char *custom_id,
+    const dcc_component_v2_choice_option_t *options,
+    size_t option_count);
+static inline dcc_component_v2_builder_t DCC_UI_CHECKBOX(
+    const char *custom_id, uint8_t default_value);
+
+static inline dcc_modal_builder_t DCC_UI_MODAL_ARRAY(
+    const char *custom_id,
+    const char *title,
+    const dcc_component_v2_builder_t *components,
+    size_t component_count);
+```
+
+`DCC_UI_OPTION*` deliberately omits an emoji matrix. An advanced String Select
+caller supplies a fully initialized fixed `dcc_select_option_t` containing its
+`dcc_component_emoji_t`; this does not require or permit another public
+`DCC_UI_*` alias. Optional Thumbnail/File fields use the Task 12 setters on the
+returned builder. The three default constructors set exactly their matching
+entity tag, and the four choice constructors set `description` and
+`has_default/is_default` only when their spelling says so.
+
+The wrappers that need a setter (`CARD_ACCENT_ARRAY`,
+`CHANNEL_SELECT_ARRAY`, `INPUT_PLACEHOLDER`, and
+`FILE_UPLOAD_WITH_TYPES`) start from the matching valid Task 12 constructor.
+If a setter rejects its argument, the returned component keeps no borrowed
+pointer from the rejected call and has `size == 0`, so the one Task 12
+validator deterministically rejects it at the component `.size` path. This is
+the only value-returning error transport; invalid input is never clamped,
+dropped, or converted to a valid default. `DCC_UI_MODAL_ARRAY` initializes a
+current modal and invokes the three canonical modal setters in custom-ID,
+title, components order; any rejection returns a modal with `size == 0` and
+no context operation may admit it.
 
 Array functions always take an explicit pointer and count and are the safe
 C/C++ interface. Pointer/count mismatch, checked-span overflow, wrong tagged
@@ -472,6 +775,17 @@ variadic element, are valid at block scope, and borrow the compound literals
 until the end of the enclosing C block. The action/build operation still must
 serialize before those values expire.
 
+The call shapes are exact: `DCC_UI_SECTION(accessory, ...)`,
+`DCC_UI_CARD_ACCENT(accent_color, ...)`,
+`DCC_UI_STRING_SELECT(custom_id, ...)`,
+`DCC_UI_RADIO_GROUP(custom_id, ...)`,
+`DCC_UI_CHECKBOX_GROUP(custom_id, ...)`, and
+`DCC_UI_MODAL(custom_id, title, ...)`; Row, Card, and Gallery take only their
+variadic elements. They delegate respectively to `ROW_ARRAY`, `SECTION_ARRAY`,
+`CARD_ARRAY`, `CARD_ACCENT_ARRAY`, `GALLERY_ARRAY`, `STRING_SELECT_ARRAY`,
+`RADIO_GROUP_ARRAY`, `CHECKBOX_GROUP_ARRAY`, and `MODAL_ARRAY`. No macro
+evaluates a custom ID, title, accessory, accent, or element expression twice.
+
 `DCC_UI_FILE_UPLOAD` is a fixed static-inline function, not a variadic macro.
 There is no tenth convenience macro for message, ephemeral message, option
 arrays, default arrays, channel types, namespace IDs, or context actions.
@@ -494,26 +808,27 @@ Task 14 deletes it, but Bot tests include no Sugar header.
 typedef struct dcc_bot_config {
     size_t size;
     uint32_t version;
-    const char *name;
     const dcc_app_options_t *app_options;
     const char *token_env;
     uint8_t install_default_error_handler;
     uint8_t handle_signals;
 } dcc_bot_config_t;
 
-#define DCC_BOT_CONFIG_VERSION 1U
-#define DCC_BOT_CONFIG_INIT /* full size/version, NULL name/options,
+enum { DCC_BOT_CONFIG_VERSION = 1 };
+#define DCC_BOT_CONFIG_INIT /* full size/version, NULL options,
                                "DISCORD_TOKEN", 1U, 1U */
 ```
 
 Provide a documented public static-inline
-`dcc_bot_config_t DCC_BOT_CONFIG(const char *name)`. It starts from the exact
-initializer and assigns `name`; it is a function and contributes no macro.
+`dcc_bot_config_t DCC_BOT_CONFIG(void)`. It returns the exact initializer; it
+is a function and contributes no macro. There is deliberately no mandatory
+bot-name field: the prior draft never consumed it, so freezing it would add
+borrowed lifetime and validation with no runtime meaning.
 
-Provide exactly one documented public runner, also static inline:
+Provide exactly one documented public runner:
 
 ```c
-static inline dcc_status_t dcc_bot_run(
+DCC_API dcc_status_t dcc_bot_run(
     const dcc_bot_config_t *config,
     const dcc_listener_t *listeners,
     size_t listener_count,
@@ -521,23 +836,35 @@ static inline dcc_status_t dcc_bot_run(
 );
 ```
 
-Do not add a `DCC_API` declaration or external Bot runner symbol. The runner
-performs these steps in this order:
+The implementation lives in one focused Bot translation unit so same-major
+library updates can fix orchestration and cleanup behavior without recompiling
+applications. Do not inline the lifecycle algorithm into every caller. The
+runner performs these steps in this order:
 
-1. Validate the config historical prefix and version, required non-empty name,
-   boolean fields, `development` as exactly 0 or 1, and the listener
-   pointer/count pair. `NULL, 0` is the only empty-listener representation.
+1. Reject `DCC_ERR_STATE` before allocation when the existing private
+   LLAM/App/REST execution-frame guard reports a managed task, App-owned
+   callback/cleanup, or REST terminal callback. Then validate the config
+   historical prefix and version, boolean fields, `development` as exactly 0
+   or 1, and the listener pointer/count pair.
+   `NULL, 0` is the only empty-listener representation.
 2. Normalize only covered config fields, supplying initializer defaults for an
-   uncovered suffix. Do not copy `sizeof(current)` from a historical prefix.
+   uncovered suffix. A covered null or empty `token_env` also normalizes to the
+   exact default `"DISCORD_TOKEN"`; it never means "disable environment
+   lookup." Do not copy `sizeof(current)` from a historical prefix.
 3. In development mode call `dcc_app_env_load_dotenv()` first. Continue on
    `DCC_ERR_NOT_FOUND`; return any other failure. Production never reads a
    dotenv file.
 4. Start with `dcc_app_options_init()` and normalize the covered bytes of a
    provided `app_options` into a current local value. Validate the mandatory
-   nested client prefix before inspecting it. Do not read an uncovered suffix.
-5. A covered, non-empty `app_options->client.token` wins. Otherwise obtain a
-   token through `dcc_app_env_get_token()` using the covered non-empty
-   `token_env`, whose default is `"DISCORD_TOKEN"`. Missing token is a local
+   nested client-options prefix before inspecting it. Do not read an uncovered
+   suffix. Keep this normalization behind one private helper so Task 14's
+   atomic embedded-to-pointer App-options cut changes the helper, not runner
+   policy.
+5. A covered, non-empty token in the normalized client options wins. Otherwise
+   obtain a token through `dcc_app_env_get_token()` using the normalized
+   `token_env` (therefore always non-empty and defaulting to `"DISCORD_TOKEN"`),
+   and install the copied token
+   in the runner's current local client-options record. Missing token is a local
    failure before App creation.
 6. Development forces command synchronization to apply once on READY with
    application-ID inference while preserving the selected registry scope.
@@ -547,11 +874,29 @@ performs these steps in this order:
    policy. Register listeners in source order through `dcc_app_listen()` only.
 8. Select `dcc_app_run_with_signals()` when `handle_signals` is one and
    `dcc_app_run()` when it is zero.
-9. Destroy the App on every post-create exit. Return the first setup/register/
-   run failure. If run succeeds and destroy fails, return the destroy status;
-   if both run and destroy fail, preserve the run status.
+9. Stop and destroy the App on every post-create exit without losing its only
+   pointer. `dcc_app_destroy()` consumes the App only on `DCC_OK`; on any
+   non-OK result retain the pointer, remember the first destroy failure, call
+   the idempotent stop plus `dcc_app_wait()` to make forward progress, and
+   retry destruction until it reports `DCC_OK`. The wait/reap path supplies
+   the blocking boundary, so this is not a busy-spin. Return the first setup,
+   register, or run failure; if no earlier failure exists, return the first
+   destroy failure after cleanup eventually succeeds. An injected one-shot
+   schedule-reap timeout therefore produces an error return with zero live
+   App/client/listener objects, rather than an unreachable live App.
 
-The runner borrows `config`, `config->name`, `config->token_env`, the pointed-to
+This is deliberately a blocking ownership cleanup: after App creation the
+runner never returns while it still owns a live App. Its liveness precondition
+is that every user handler, middleware, check, error observer, and cleanup
+eventually returns after stop/cancellation; violating that precondition may
+block the runner indefinitely, just as it blocks App teardown directly. The
+entry context guard prevents self-wait from a currently managed frame, while
+the condition-based wait prevents retry busy-spin; neither is claimed to make
+non-returning user code cancellable. Test a gated long-running callback that is
+released, repeated transient reap failures, and the explicit non-returning
+fixture under an external test timeout so the blocking contract is observable.
+
+The runner borrows `config`, `config->token_env`, the pointed-to
 App options and their nested values, and the listener array only for the call.
 `dcc_app_listen()` deep-copies descriptor targets, policy arrays, bindings,
 validators, and schema data before each successful registration returns.
@@ -561,16 +906,16 @@ listener lifetime; cleanup runs exactly once under the Task 2 contract.
 Define exactly these four entrypoint macros:
 
 ```c
-DCC_DEV_BOT_MAIN(name, ...)
-DCC_BOT_MAIN(name, ...)
+DCC_DEV_BOT_MAIN(...)
+DCC_BOT_MAIN(...)
 DCC_DEV_BOT_MAIN_WITH(config, ...)
 DCC_BOT_MAIN_WITH(config, ...)
 ```
 
-Each emits one `int main(void)`, evaluates its config/name expression once,
-creates one block-local flat `dcc_listener_t[]` whose elements are each
+Each emits one `int main(void)`, evaluates its config expression (when present)
+once, creates one block-local flat `dcc_listener_t[]` whose elements are each
 evaluated once, calls only `dcc_bot_run()`, and maps `DCC_OK` to exit code 0 and
-every other status to exit code 1. Default forms use `DCC_BOT_CONFIG(name)`.
+every other status to exit code 1. Default forms use `DCC_BOT_CONFIG()`.
 Development forms pass `development = 1`; production forms pass zero.
 
 The four macros require at least one listener in standard C11. A deliberately
@@ -625,6 +970,11 @@ implementation. Document its borrowed App lifetime, owning-thread restriction,
 single active signal monitor, signal-handler restoration, and returned run
 status. Preserve `src/app/app_signal.c`; this is a declaration ownership move,
 not a new ABI symbol and not a removal.
+
+The managed-execution query remains private. Do not add
+`dcc_app_managed_execution_active()` to the public ABI merely to implement the
+runner; `dcc_bot_run()` calls the existing internal guard and
+`dcc_app_destroy()` remains the authoritative object-specific guard.
 
 `<dcc/app/options.h>` documents the `size`-gated historical-prefix contract and
 the lifetime of client token, registry, command-sync, and store-path inputs so
@@ -725,7 +1075,8 @@ coverage includes:
 - exact nine handler macro names/signatures and status propagation;
 - exact 19 short plus 19 `_WITH` function names, with no extra listener stem or
   suffix;
-- exact six/config/handler/UI/main Bot macro inventory and 291 total dump; and
+- exact six/config/handler/UI/main Bot macro inventory, checked complete dump,
+  derived numeric total, and hard ceiling 300; and
 - banned-name scans of installed Bot headers and preprocessed Bot surface.
 
 ### Listener construction and ownership
@@ -763,8 +1114,9 @@ coverage includes:
 
 ### Runner and App promotion
 
-- null/short/future config, bad version, empty name, non-boolean flags,
-  non-boolean development, and every listener pointer/count pairing;
+- null/short/future config, bad version, null/empty `token_env` defaulting,
+  non-boolean flags, non-boolean development, and every listener pointer/count
+  pairing;
 - missing dotenv tolerated only in development, malformed/I/O dotenv failure
   propagated, and production never loads it;
 - covered non-empty App client token beats environment lookup; otherwise the
@@ -777,6 +1129,9 @@ coverage includes:
   registration failure cleanup, run choice with/without signals, and App
   destruction on every post-create path;
 - first-failure versus destroy-failure precedence exactly as specified;
+- managed-execution entry rejection before App creation, plus injected
+  one-shot reap failure followed by retry, exact cleanup, and preservation of
+  the first destroy error;
 - all four main macros compile in separate C11 and C++17 object targets and
   evaluate config/listener expressions once;
 - canonical env names link and behave identically to the transition wrappers;
@@ -805,7 +1160,7 @@ Keep the default repository green at each commit:
    but the completed implementation commit is
    `feat: add canonical Bot API`.
 
-Do not fold Task 14 Sugar deletion or its ABI cutover into this task. Do not
+Do not fold Task 14 Sugar deletion or its remaining-compatibility cutover into this task. Do not
 push. Do not start repository-wide example/generator migration beyond the
 focused fixtures needed to keep current transition targets building.
 
@@ -817,7 +1172,9 @@ Run at minimum:
 - `dcc_api_v2_surface_smoke`, `dcc_bot_v2_surface_smoke`, and
   `dcc_bot_v2_runner_smoke`;
 - four separate main compile objects in C11 and C++17;
-- exact compiler macro dump proving 291/300 and exact Bot-owned delta 32;
+- exact canonical-profile compiler macro artifacts proving the derived total is
+  at most 300 and the Bot-owned C delta is exactly 30, plus the 12-profile
+  platform/language/build-role name and export/deprecation smoke matrix;
 - exact 9-handler, 19-pair/38-function, nine-C-only-UI, four-main, six-guard,
   and five-leaf topology audits;
 - standalone/include-order strict C11 and C++17 probes;

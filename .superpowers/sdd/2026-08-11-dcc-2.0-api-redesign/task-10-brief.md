@@ -1,4 +1,4 @@
-# Task 10 brief — finish REST, migrate composites, and remove App mirrors
+# Task 10 brief — finish REST, migrate composites, and retire App mirror use
 
 Implement only Task 10 from
 `docs/superpowers/plans/2026-08-11-dcc-2.0-api-redesign.md`. The approved
@@ -11,19 +11,22 @@ intermediate commits buildable.
 ## Outcome and boundaries
 
 Complete the last 44 active Discord REST operations, make strict endpoint
-auditing unconditional, and leave no public App REST mirror. The installed
-REST surface after this task is exactly 224 canonical Discord endpoint symbols
-plus 60 generic operations, for 284 exported `dcc_rest_*` operations. Tasks 6
-through 10 own exactly 41, 35, 47, 57, and 44 active endpoints.
+auditing unconditional, and leave no internal consumer of an App REST mirror.
+The installed REST surface after this task is exactly 224 canonical Discord
+endpoint symbols plus 60 generic operations, for 284 exported `dcc_rest_*`
+operations. Tasks 6 through 10 own exactly 41, 35, 47, 57, and 44 active
+endpoints. Exactly 196 `dcc_app_*` REST compatibility exports remain frozen
+until the Task 14/15 remaining-compatibility cutover; they are not part of the
+284-operation `dcc_rest_*` inventory.
 
 Task 10 removes the obsolete bot-facing Get Current User DMs candidate, all 28
 Task 10 legacy endpoint spellings, `dcc_rest_official_body_json_free`, and the
-two direct-message create-and-send composite symbols. It removes exactly 196
-App REST mirror declarations and definitions. It does not delete the ten
-legacy `dcc_app_*` operations implemented by `src/app/app_messages.c`; Task 14
-owns their public-surface deletion. This task rewrites the retained managed
-message, command-sync, and send-with-thread consumers so none borrows stack
-state or blocks a runtime worker.
+two direct-message create-and-send composite symbols. It freezes, but does not
+remove, exactly 196 App REST mirror declarations and definitions. Task 14 owns
+their physical deletion together with the ten legacy `dcc_app_*` operations
+implemented by `src/app/app_messages.c`. This task rewrites the retained
+managed-message, command-sync, and send-with-thread consumers so none borrows
+stack state or blocks a runtime worker.
 
 Do not start Task 11 interaction-queue semantics, Task 12 Components v2 work,
 or Task 14 wholesale DCC 1/Sugar deletion. `src/interactions/` is inbound HTTP
@@ -151,17 +154,20 @@ typedef struct dcc_rest_call_options {
     const char *audit_log_reason;
     dcc_rest_auth_mode_t auth_mode;
     const char *auth_token;
+    uint64_t flags;
 } dcc_rest_call_options_t;
 ```
 
 There is no call-options presence mask. The mandatory historical prefix ends
 at `user_data`. Normalize each covered field into current-layout private state;
 do not require `size >= sizeof(current)` and do not assign the caller's entire
-struct. An uncovered suffix means null audit reason, `DEFAULT`, and null auth
-token. Reject partial field coverage. `BEARER` requires both the mode and token
+struct. An uncovered suffix means null audit reason, `DEFAULT`, null auth
+token, and zero flags. Reject partial field coverage. `BEARER` requires both the mode and token
 fields to be covered and a non-empty token. `BOT` always uses the client token
 and rejects a non-null override token. `NONE` and `DEFAULT` also reject a
-non-null token.
+non-null token. The only known flags remain
+`DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY` and
+`DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY`; reject unknown covered bits.
 
 The typed endpoint helper receives a private auth capability. BOT permits
 DEFAULT/BOT, NONE permits DEFAULT/NONE, BEARER permits only a usable BEARER,
@@ -171,8 +177,8 @@ relative-Discord default is Bot. Absolute URLs accept no audit reason or auth
 override and never receive a client credential.
 
 Normalize the outer `dcc_rest_request_desc_t` by covered fields too. Its
-declared size must cover every nested option byte claimed by
-`description.options.size`. Update the endpoint preparation path,
+declared size gates the optional options pointer; a non-null pointed options
+record is independently size/version-normalized. Update the endpoint preparation path,
 `dcc_rest_submit()`, the async request constructor/storage, HTTP preparation,
 and header construction together. A queued Bearer token and encoded audit
 reason are owned copies; wipe the Bearer token before free and never put it in
@@ -193,6 +199,17 @@ worker. Callback and callback `user_data` are the only intentionally borrowed
 values retained to terminal callback return. Local rejection clears a supplied
 `*out_request`, queues nothing, and invokes neither callback nor observer;
 `DCC_OK` guarantees one terminal result.
+
+The endpoint manifest unconditionally forces
+`DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY` for
+`dcc_rest_add_group_dm_recipient` (`access_token`) and
+`dcc_rest_create_or_join_lobby` (`secret`). This is ORed with caller flags and
+cannot be disabled. Validation/measurement, exact serialization, interceptor
+views, async ownership, every retired buffer, cancellation/rollback, and final
+cleanup propagate the effective bit and securely wipe the full allocated body
+capacity. Add allocator-hook tests for both endpoints and for a historical
+call-options prefix whose uncovered flags default to zero but cannot suppress
+manifest sensitivity.
 
 ## Exact caller-owned records
 
@@ -524,9 +541,11 @@ typedef struct dcc_application_role_connection_metadata_params {
     dcc_application_role_connection_metadata_type_t type;
     const char *key;
     const char *name;
-    const dcc_rest_string_map_t *name_localizations;
+    const dcc_localization_t *name_localizations;
+    size_t name_localization_count;
     const char *description;
-    const dcc_rest_string_map_t *description_localizations;
+    const dcc_localization_t *description_localizations;
+    size_t description_localization_count;
 } dcc_application_role_connection_metadata_params_t;
 
 typedef struct dcc_application_role_connection_params {
@@ -547,11 +566,15 @@ typedef struct dcc_soundboard_send_params {
 } dcc_soundboard_send_params_t;
 ```
 
+`<dcc/rest/role_connections.h>` includes Task 9's neutral
+`<dcc/application_types.h>` instead of owning a second locale-map type.
 Application metadata replacement accepts 0–5 records. Each record type is
 1–8; key is 1–50 ASCII `[a-z0-9_]`; name is 1–100 Unicode scalar values; and
 description is 1–200. Localization maps are non-null when present, reject
 duplicate or unsupported locale keys, and enforce the corresponding value
-limit. The metadata array uses checked historical stride.
+limit. A localization pointer is null exactly when its count is zero and span
+arithmetic is checked before every read. The metadata array uses checked
+historical stride.
 
 Current-user role connection platform name is at most 50 and platform username
 at most 100 Unicode scalar values. A present value is non-null. Metadata is a
@@ -618,13 +641,13 @@ The direct-message public header and implementation are composite-only. Delete:
 
 Keep `src/rest/rest_capture.c` and its internal header: the asynchronous worker
 still uses them. Do not replace the removed direct-message composite with dead
-private machinery. There is no retained in-repository consumer after the App
-mirror deletion; callers compose active Create DM Channel and Create Message
-requests explicitly.
+private machinery. There is no retained in-repository consumer after internal
+App-mirror use is retired; callers compose active Create DM Channel and Create
+Message requests explicitly.
 
-## Remove exactly 196 App REST mirrors
+## Freeze exactly 196 App REST mirrors for Task 14
 
-Delete the four translation units and their CMake entries:
+Keep these four translation units and their CMake entries through Task 10:
 
 | Unit | Exact external `dcc_app_*` definitions |
 | --- | ---: |
@@ -636,16 +659,19 @@ Delete the four translation units and their CMake entries:
 
 The sorted, newline-terminated 196-name baseline has SHA-256
 `4b3246e7c89911bba7bf3256b1021294845aae343e8a6f32580fcd116e6a660f`.
-Freeze that exact name set in the audit/self-test before deleting the sources,
-then remove exactly those 196 declarations from `include/dcc/app/legacy.h`.
+Freeze that exact name set in the audit/self-test. Every name remains declared
+exactly once in `include/dcc/app/legacy.h` and externally defined exactly once
+by its frozen owner until Task 14 deletes all 196 in the remaining-
+compatibility cutover.
 Prefix-only matching is insufficient: the current removed-name wildcard set
-misses 32 of these exact mirrors. Strict audit must fail on one restored name,
-one declaration without a definition, one definition without a declaration,
-or one mirror moved to another owner.
+misses 32 of these exact mirrors. Strict Task 10 audit must fail on one missing
+name, one declaration without a definition, one definition without a
+declaration, a duplicate, or one mirror moved to another owner. The records are
+compatibility exports with `removal_task: 14`, never active REST endpoints or
+generic operations.
 
-Produce the frozen baseline before source deletion with this exact extraction;
-the count and digest are acceptance checks, not a generated allowlist at test
-time:
+Produce the frozen baseline with this exact extraction; the count and digest
+are acceptance checks, not a generated allowlist at test time:
 
 ```sh
 for f in \
@@ -663,7 +689,8 @@ test "$(shasum -a 256 /tmp/task-10-app-mirror-names.txt | awk '{print $1}')" = \
 
 `src/app/app_rest_shortcuts_resources.c` also owns nine non-mirror context
 operations. Move their definitions, without changing behavior or public
-ownership, into `src/app/app_context_shortcuts.c` before deleting the unit:
+ownership, into `src/app/app_context_shortcuts.c`, leaving the four frozen
+mirror units with exactly the 196 compatibility definitions above:
 
 ```text
 dcc_ctx_add_member_role
@@ -690,15 +717,17 @@ surface. Task 10 may rewrite their internals, but must not delete the unit or
 inflate the mirror count. Do not introduce new uses of the raw
 `dcc_app_send_json` escape.
 
-Update internal App call sites, package-consumer checks, focused docs, and
-transition tests to call canonical REST via `dcc_app_client(app)`. Do not add
-macros, inline functions, or renamed App wrappers that reproduce the deleted
-mirror. Sugar headers are deleted in Task 14; stop expanding removed mirrors in
-Task 10 tests instead of inventing a temporary compatibility layer.
+Update internal App call sites, package-consumer checks, focused docs, and new
+transition tests to call canonical REST via `dcc_app_client(app)`. The frozen
+wrappers remain functional compatibility shims and may delegate to canonical
+REST, but no new in-tree consumer may call them. Do not add macros, inline
+functions, or renamed App wrappers that reproduce the mirror. Sugar headers
+are deleted in Task 14; do not add new mirror expansions to Task 10 tests.
 
-`dcc_app_infer_guild_id_from_channel` disappears with the mirror unit and has no
-retained consumer. Keep cache-only `dcc_client_infer_guild_id_from_channel`;
-do not retain the old fallback network composite.
+`dcc_app_infer_guild_id_from_channel` remains only as one of the frozen
+compatibility exports and disappears in Task 14. No retained internal consumer
+may call it. Keep cache-only `dcc_client_infer_guild_id_from_channel`; do not
+add another fallback network composite.
 
 ## Composite state machines
 
@@ -733,10 +762,48 @@ until terminal return. Use canonical `dcc_rest_delete_message` and
 `dcc_rest_create_message` with `dcc_rest_result_t`; do not format paths or call
 `dcc_endpoint_submit_legacy_raw`.
 
-Until Task 14 removes the legacy managed-message callback shape, convert the
-borrowed canonical result to its callback view only while delivering the final
-callback; never retain a `dcc_rest_result_t` or compatibility view past that
-return.
+Replace the legacy managed-message callback typedef in this task. The canonical
+header publishes only this result-model shape:
+
+```c
+typedef enum dcc_managed_message_publish_stage {
+    DCC_MANAGED_MESSAGE_STAGE_LOAD = 0,
+    DCC_MANAGED_MESSAGE_STAGE_DELETE = 1,
+    DCC_MANAGED_MESSAGE_STAGE_CREATE = 2,
+    DCC_MANAGED_MESSAGE_STAGE_SAVE = 3,
+    DCC_MANAGED_MESSAGE_STAGE_DONE = 4
+} dcc_managed_message_publish_stage_t;
+
+typedef struct dcc_managed_message_publish_result {
+    size_t size;
+    uint32_t version;
+    dcc_status_t status;
+    dcc_managed_message_publish_stage_t stage;
+    const dcc_rest_result_t *rest_result;
+    dcc_managed_message_ref_t new_ref;
+    dcc_status_t storage_status;
+    uint8_t has_new_ref;
+} dcc_managed_message_publish_result_t;
+
+typedef void (*dcc_managed_message_publish_fn)(
+    dcc_client_t *client,
+    const dcc_managed_message_publish_result_t *result,
+    void *user_data);
+```
+
+`dcc_managed_message_publish_cb` and every `dcc_rest_response_t` bridge are
+removed. The aggregate result is borrowed only through callback return.
+`status` is the authoritative composite outcome; `stage` is DONE only on full
+success and otherwise names the failing step. `rest_result` is the most recent
+actual child result when one exists and is null for pre-request/local admission
+failures; clone it to retain it. `storage_status` is non-OK only for load/save
+failure, and `has_new_ref` gates `new_ref`. Thus ID parse failure reports
+`DCC_ERR_JSON` at CREATE while retaining the successful create result; a create
+admission failure after delete reports its local status at CREATE with null
+`rest_result`; a save failure reports that status at SAVE with the created ref
+and create result. The public publish function takes
+`dcc_managed_message_publish_fn` directly and never fabricates a legacy
+response view.
 
 On successful create, parse the new message ID, set the new channel/message ref,
 then call `save` synchronously if supplied. Preserve four separate final facts:
@@ -761,19 +828,22 @@ completion. Dry-run emits one aggregate terminal completion and performs zero
 HTTP requests.
 
 Fix the App lifetime bug in `src/app/app_commands.c`. The current fetch callback
-builds stack `snapshot`/`plan` values, submits apply, and immediately deinitializes
-them. Replace that with an App-owned heap state:
+builds stack `snapshot`/`plan` values around an asynchronous apply admission.
+Replace that with an App-owned heap bridge:
 
 ```text
 FETCH_PENDING -> PARSE -> PLAN -> [APPLY_PENDING] -> DONE
 ```
 
-The state owns the normalized command-sync options, remote snapshot, plan, and
-any callback bridge until aggregate terminal delivery. It may release the
-snapshot once the plan has demonstrably deep-copied all required data; it must
-never deinitialize the plan immediately after an asynchronous apply returns
-`DCC_OK`. A later apply admission failure is terminal. Preserve READY
-application-ID inference, once-only behavior, and structured logging.
+The bridge owns normalized command-sync options plus the source remote snapshot
+and source plan only through apply admission. Task 9 apply synchronously validates
+and deep-copies its complete executable plan before returning `DCC_OK`; therefore
+the bridge must deinitialize both source snapshot and source plan immediately
+after that successful return. Its terminal heap state retains only the client/App
+lifetime guard, opaque apply operation, aggregate callback bridge, and terminal
+bookkeeping. A local apply admission failure deinitializes the source values and
+is terminal. Preserve READY application-ID inference, once-only behavior, and
+structured logging.
 
 `dcc_app_apply_command_plan` and `dcc_app_sync_commands_from_json` must not make
 the caller retain a plan or remote JSON past return without an explicit public
@@ -794,7 +864,8 @@ CREATE_MESSAGE_PENDING -> PARSE_MESSAGE_ID -> CREATE_THREAD_PENDING
 Submit canonical `dcc_rest_create_message` directly through
 `dcc_app_client(app)`. After a successful result, parse and retain the message
 ID, then submit Task 7 canonical `dcc_rest_create_thread_from_message`; never
-call the removed `dcc_app_create_thread_from_message` mirror. The heap state
+call the frozen `dcc_app_create_thread_from_message` compatibility mirror. The
+heap state
 owns the copied thread name, normalized thread params/options, applied-tag
 array, IDs, and callback bridge. The first endpoint serializes the message
 before returning, so caller message storage is not retained.
@@ -822,8 +893,9 @@ Update `tools/rest_v2_endpoints.json` and
   definition in its recorded owner, with exact parameters/method/route/input;
 - all 28 Task 10 legacy names, the helper, both DM composites, and the stale
   canonical name are absent;
-- all 196 exact App mirror names are absent as declarations and external
-  definitions, while the nine relocated context operations remain;
+- all 196 exact App mirror names remain declared and externally defined once
+  by their frozen owners, carry `removal_task: 14`, and have no internal caller,
+  while the nine relocated context operations remain;
 - exactly 60 immutable generic operations remain; helper/composite provenance
   can stay represented in a removal ledger, but never as an allowed public
   strict symbol;
@@ -836,8 +908,9 @@ and synthetic progress fixture. Register
 script with `--progress-through 6` or `--progress-through 10` must fail through
 argparse as an unrecognized option; there is no hidden compatibility mode.
 
-Add self-tests that restore one legacy, helper, composite, App mirror, and stale
-canonical symbol and prove rejection. Also prove rejection for missing or
+Add self-tests that restore one removed REST legacy, helper, composite, and
+stale canonical symbol, delete one frozen App mirror, add a 197th mirror, and
+move one mirror to the wrong owner, then prove rejection. Also prove rejection for missing or
 duplicate canonical declaration/definition, wrong header/source owner, wrong
 input/signature, method/route mismatch, invalid auth-policy value, missing
 audit-reason capability, wrong final counts, and a third opaque-payload
@@ -849,8 +922,8 @@ Add focused Task 10 cases to `dcc_rest_v2_endpoint_smoke` (split support files
 by REST records/auth and composite behavior rather than growing one monolith).
 Capture RED before production edits for at least the stale DMs entry, one raw
 Task 10 overload, unconditional Bot header behavior, immediate App plan
-deinitialization, legacy managed-message raw submission, and one surviving App
-mirror.
+deinitialization, legacy managed-message raw submission, one internal call to a
+frozen App mirror, and the missing exact mirror compatibility ledger.
 
 The green matrix must cover:
 
@@ -886,10 +959,11 @@ The green matrix must cover:
 9. **Send-with-thread:** first/second HTTP failure, both ID parse failures,
    second admission failure, caller input mutation, cancel/shutdown, exact IDs
    at each failure stage, and exactly-one callback under ASan.
-10. **App removal:** all exact 196 declarations/definitions absent, four units
-    absent from CMake, nine context functions link and retain behavior, ten
-    `app_messages.c` exports remain owned by Task 14, and package/Sugar tests do
-    not invoke a removed mirror.
+10. **App compatibility freeze:** all exact 196 declarations/definitions and
+    four CMake units remain with unchanged signatures and behavior, the hash
+    and per-owner counts match, no internal consumer invokes them, nine context
+    functions link from their relocated owner, and the ten `app_messages.c`
+    exports remain owned by Task 14.
 
 ## Verification and handoff
 
@@ -910,10 +984,10 @@ Run at minimum:
   audits, and `git diff --check`.
 
 Document exact RED evidence, final manifest arithmetic, auth-policy counts,
-record minimum prefixes, deleted symbol/file counts, the frozen App mirror set
-and hash, state-machine failure coverage, sanitizer/platform evidence, known
-pre-existing failures, and implementation commit hash in
-`task-10-implementer-report.md`. Commit implementation/tests with
+record minimum prefixes, deleted REST symbol/file counts, the preserved App
+mirror set, owner counts, and hash, state-machine failure coverage,
+sanitizer/platform evidence, known pre-existing failures, and implementation
+hash in `task-10-implementer-report.md`. Commit implementation/tests with
 `feat: complete request-based REST API`, commit the report separately, do not
 push, and stop for independent review.
 
