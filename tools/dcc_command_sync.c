@@ -95,18 +95,22 @@ static dcc_status_t dcc_command_sync_run(const dcc_command_sync_options_t *optio
             );
         }
         if (status == DCC_OK && options->apply && !options->check_only) {
-            dcc_command_sync_remote_body_t apply_state = {0};
+            dcc_command_registry_operation_t *operation = NULL;
             status = dcc_command_registry_apply(
                 client,
                 options->application_id,
-                &registry_options,
                 &plan,
-                dcc_command_sync_apply_cb,
-                &apply_state
+                NULL,
+                &operation
             );
-            if (status == DCC_OK && apply_state.error != DCC_OK) {
-                status = apply_state.error;
+            const dcc_command_registry_operation_result_t *result = NULL;
+            if (status == DCC_OK) {
+                status = dcc_command_registry_operation_wait(operation, 0U, &result);
             }
+            if (status == DCC_OK && result != NULL) {
+                status = result->status;
+            }
+            dcc_command_registry_operation_destroy(operation);
         }
         free(plan_text);
         dcc_command_registry_plan_deinit(&plan);

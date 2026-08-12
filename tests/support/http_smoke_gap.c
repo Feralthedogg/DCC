@@ -1,4 +1,5 @@
 #include "http_smoke_support.h"
+#include "task9_test_legacy_shims.h"
 
 #if !defined(_WIN32)
 #include <errno.h>
@@ -73,6 +74,8 @@ int run_public_rest_gap_smoke(void) {
     };
     const dcc_guild_command_permissions_params_t command_permission_params = {
         .size = sizeof(command_permission_params),
+        .version = DCC_GUILD_COMMAND_PERMISSIONS_PARAMS_VERSION,
+        .present = DCC_GUILD_COMMAND_PERMISSIONS_PARAMS_PRESENT_PERMISSIONS,
         .application_id = 123,
         .guild_id = 333,
         .command_id = 444,

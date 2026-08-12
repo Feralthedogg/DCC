@@ -1,4 +1,5 @@
 #include "http_smoke_support.h"
+#include "task9_test_legacy_shims.h"
 
 #if !defined(_WIN32)
 #include <errno.h>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile the complete manifest-derived Task 9 surface and keep it RED."""
+"""Compile the complete manifest-derived Task 9 surface."""
 
 from __future__ import annotations
 
@@ -79,22 +79,21 @@ def main() -> int:
     legacy_lines.append("}")
     legacy = compile_unit(args, "\n".join(legacy_lines) + "\n")
 
-    if canonical.returncode == 0:
-        print("Task 9 canonical signatures unexpectedly became GREEN", file=sys.stderr)
+    if canonical.returncode != 0:
+        print("Task 9 canonical signatures do not compile:", file=sys.stderr)
+        print(f"{canonical.stdout}\n{canonical.stderr}"[:12000], file=sys.stderr)
         return 1
     canonical_output = f"{canonical.stdout}\n{canonical.stderr}"
     if "No such file or directory" in canonical_output or "file not found" in canonical_output:
         print("Task 9 canonical compile failed because an include is unavailable",
               file=sys.stderr)
         return 1
-    if legacy.returncode != 0:
-        print("Task 9 removal baseline no longer compiles:", file=sys.stderr)
-        print(f"{legacy.stdout}\n{legacy.stderr}"[:12000], file=sys.stderr)
+    if legacy.returncode == 0:
+        print("Task 9 removal symbols unexpectedly remain declared", file=sys.stderr)
         return 1
     print(
-        "Task 9 RED compile contract confirmed: all 57 exact request signatures "
-        "are unavailable, all 35 active-alias/composite removal symbols remain "
-        "declared, and the four stale endpoint symbols are already absent")
+        "Task 9 compile contract confirmed: all 57 exact request signatures are "
+        "available and all 39 alias/composite/stale symbols are absent")
     return 0
 
 

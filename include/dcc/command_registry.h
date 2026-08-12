@@ -5,6 +5,7 @@
 #include <dcc/error.h>
 #include <dcc/export.h>
 #include <dcc/rest/base.h>
+#include <dcc/rest/request.h>
 #include <dcc/snowflake.h>
 
 #include <stddef.h>
@@ -23,10 +24,25 @@ typedef enum dcc_command_registry_diff_action {
 
 typedef struct dcc_command_registry_options {
     size_t size;
+    uint32_t version;
+    uint64_t present;
     dcc_snowflake_t guild_id;
     uint8_t delete_stale;
     uint8_t dry_run;
 } dcc_command_registry_options_t;
+
+enum {
+    DCC_COMMAND_REGISTRY_OPTIONS_VERSION = 1U,
+    DCC_COMMAND_REGISTRY_OPERATION_OPTIONS_VERSION = 1U,
+    DCC_COMMAND_REGISTRY_OPERATION_RESULT_VERSION = 1U,
+    DCC_COMMAND_REGISTRY_OPTIONS_PRESENT_GUILD_ID = UINT64_C(1),
+    DCC_COMMAND_REGISTRY_OPTIONS_PRESENT_DELETE_STALE = UINT64_C(1) << 1U,
+    DCC_COMMAND_REGISTRY_OPTIONS_PRESENT_DRY_RUN = UINT64_C(1) << 2U
+};
+
+#define DCC_COMMAND_REGISTRY_OPTIONS_INIT                                      \
+    { sizeof(dcc_command_registry_options_t), DCC_COMMAND_REGISTRY_OPTIONS_VERSION, \
+      UINT64_C(0), UINT64_C(0), 0U, 0U }
 
 typedef struct dcc_command_registry {
     size_t size;
@@ -77,6 +93,50 @@ typedef struct dcc_command_registry_plan {
     uint8_t delete_stale;
     uint8_t dry_run;
 } dcc_command_registry_plan_t;
+
+typedef struct dcc_command_registry_operation dcc_command_registry_operation_t;
+
+typedef struct dcc_command_registry_operation_result {
+    size_t size;
+    uint32_t version;
+    dcc_status_t status;
+    size_t planned_count;
+    size_t submitted_count;
+    size_t succeeded_count;
+    size_t create_completed;
+    size_t update_completed;
+    size_t delete_stale_completed;
+    size_t noop_count;
+    size_t failed_plan_index;
+    dcc_command_registry_diff_action_t failed_action;
+    const dcc_rest_result_t *failed_rest_result;
+} dcc_command_registry_operation_result_t;
+
+typedef void (*dcc_command_registry_operation_result_fn)(
+    dcc_client_t *client,
+    const dcc_command_registry_operation_result_t *result,
+    void *user_data
+);
+
+typedef struct dcc_command_registry_operation_options {
+    size_t size;
+    uint32_t version;
+    dcc_rest_priority_t priority;
+    dcc_rest_auth_mode_t auth_mode;
+    const char *auth_token;
+    dcc_command_registry_operation_result_fn callback;
+    void *user_data;
+} dcc_command_registry_operation_options_t;
+
+#define DCC_COMMAND_REGISTRY_OPERATION_OPTIONS_INIT                            \
+    { sizeof(dcc_command_registry_operation_options_t),                        \
+      DCC_COMMAND_REGISTRY_OPERATION_OPTIONS_VERSION,                          \
+      DCC_REST_PRIORITY_NORMAL, DCC_REST_AUTH_DEFAULT, NULL, NULL, NULL }
+
+#define DCC_COMMAND_REGISTRY_OPERATION_RESULT_INIT                             \
+    { sizeof(dcc_command_registry_operation_result_t),                         \
+      DCC_COMMAND_REGISTRY_OPERATION_RESULT_VERSION, DCC_OK, 0U, 0U, 0U, 0U, \
+      0U, 0U, 0U, SIZE_MAX, DCC_COMMAND_REGISTRY_NOOP, NULL }
 
 DCC_API void dcc_command_registry_options_init(dcc_command_registry_options_t *options);
 DCC_API dcc_status_t dcc_command_registry_options_set_global(dcc_command_registry_options_t *options);
@@ -129,17 +189,30 @@ DCC_API dcc_status_t dcc_command_registry_plan_format(
 DCC_API dcc_status_t dcc_command_registry_fetch_remote(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
-    const dcc_command_registry_options_t *options,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_command_registry_options_t *registry_options,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 DCC_API dcc_status_t dcc_command_registry_apply(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
-    const dcc_command_registry_options_t *options,
     const dcc_command_registry_plan_t *plan,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_command_registry_operation_options_t *operation_options,
+    dcc_command_registry_operation_t **out_operation
+);
+DCC_API dcc_status_t dcc_command_registry_operation_wait(
+    dcc_command_registry_operation_t *operation,
+    uint32_t timeout_ms,
+    const dcc_command_registry_operation_result_t **out_result
+);
+DCC_API dcc_status_t dcc_command_registry_operation_cancel(
+    dcc_command_registry_operation_t *operation
+);
+DCC_API uint8_t dcc_command_registry_operation_completed(
+    const dcc_command_registry_operation_t *operation
+);
+DCC_API void dcc_command_registry_operation_destroy(
+    dcc_command_registry_operation_t *operation
 );
 
 #ifdef __cplusplus

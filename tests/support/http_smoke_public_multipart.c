@@ -1,4 +1,5 @@
 #include "http_smoke_support.h"
+#include "internal/rest/dcc_rest_endpoint_internal.h"
 
 #if !defined(_WIN32)
 #include <errno.h>
@@ -368,6 +369,24 @@ int run_public_rest_multipart_smoke(void) {
         .data = sticker_data,
         .data_len = sizeof(sticker_data) - 1U,
     };
+    dcc_guild_sticker_params_t sticker_params = {
+        .size = sizeof(sticker_params),
+        .version = DCC_GUILD_STICKER_PARAMS_VERSION,
+        .present = DCC_GUILD_STICKER_PARAMS_PRESENT_NAME |
+            DCC_GUILD_STICKER_PARAMS_PRESENT_DESCRIPTION |
+            DCC_GUILD_STICKER_PARAMS_PRESENT_TAGS |
+            DCC_GUILD_STICKER_PARAMS_PRESENT_FILE,
+        .nulls = 0U,
+        .name = "slap",
+        .description = "slap desc",
+        .tags = "slap",
+        .file = sticker_file,
+        .guild_id = 0U,
+        .filename = NULL,
+        .content_type = NULL,
+        .data = NULL,
+        .data_len = 0U,
+    };
 
     if (start_server(&server, &thread) != 0) {
         fprintf(stderr, "failed to start sticker multipart server: %s\n", strerror(errno));
@@ -377,15 +396,16 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_create_guild_sticker_multipart(
-        client,
-        333,
-        sticker_fields,
-        sizeof(sticker_fields) / sizeof(sticker_fields[0]),
-        &sticker_file,
-        rest_cb,
-        &seen
-    );
+    (void)sticker_fields;
+    dcc_rest_call_options_t sticker_options;
+    void *sticker_bridge = NULL;
+    st = dcc_endpoint_legacy_options(
+        rest_cb, &seen, &sticker_options, &sticker_bridge);
+    if (st == DCC_OK)
+        st = dcc_rest_create_guild_sticker(
+            client, 333, &sticker_params, &sticker_options, NULL);
+    if (st != DCC_OK) dcc_endpoint_legacy_bridge_release(sticker_bridge);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||
@@ -404,17 +424,6 @@ int run_public_rest_multipart_smoke(void) {
         return 1;
     }
 
-    const dcc_guild_sticker_params_t sticker_params = {
-        .size = sizeof(sticker_params),
-        .guild_id = 333,
-        .name = "slap",
-        .description = "slap desc",
-        .tags = "slap",
-        .filename = "slap.png",
-        .content_type = "image/png",
-        .data = sticker_data,
-        .data_len = sizeof(sticker_data) - 1U,
-    };
     if (start_server(&server, &thread) != 0) {
         fprintf(stderr, "failed to start sticker params server: %s\n", strerror(errno));
         (void)unsetenv("DCC_DISCORD_API_BASE");
@@ -423,7 +432,14 @@ int run_public_rest_multipart_smoke(void) {
     }
     set_api_base_for_server(&server);
     memset(&seen, 0, sizeof(seen));
-    st = dcc_rest_create_guild_sticker_params(client, &sticker_params, rest_cb, &seen);
+    sticker_bridge = NULL;
+    st = dcc_endpoint_legacy_options(
+        rest_cb, &seen, &sticker_options, &sticker_bridge);
+    if (st == DCC_OK)
+        st = dcc_rest_create_guild_sticker(
+            client, 333, &sticker_params, &sticker_options, NULL);
+    if (st != DCC_OK) dcc_endpoint_legacy_bridge_release(sticker_bridge);
+    st = rest_await_submission(client, st);
     (void)pthread_join(thread, NULL);
     close(server.fd);
     if (st != DCC_OK ||

@@ -1,6 +1,7 @@
 #ifndef DCC_REST_APPLICATION_COMMANDS_GLOBAL_COMMANDS_BULK_H
 #define DCC_REST_APPLICATION_COMMANDS_GLOBAL_COMMANDS_BULK_H
 
+#include <dcc/rest/request.h>
 #include <dcc/rest/types.h>
 
 #ifdef __cplusplus
@@ -10,25 +11,10 @@ extern "C" {
 DCC_API dcc_status_t dcc_rest_bulk_overwrite_global_commands(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_bulk_overwrite_global_commands_builder(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
     const dcc_application_command_builder_t *commands,
     size_t command_count,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_delete_all_global_commands(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 #ifdef __cplusplus

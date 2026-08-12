@@ -108,6 +108,21 @@ def intentional_api_removals(source: pathlib.Path) -> set[str]:
             )
         symbols.add(canonical)
         symbols.update(legacy_symbols)
+    composites = manifest.get("transition_composites")
+    if not isinstance(composites, list):
+        raise ValueError("rest_v2_endpoints.json transition_composites must be a list")
+    for index, composite in enumerate(composites):
+        if not isinstance(composite, dict):
+            raise ValueError(f"transition composite {index} must be an object")
+        composite_symbols = composite.get("symbols")
+        if not isinstance(composite_symbols, list) or not all(
+            isinstance(symbol, str) and symbol.startswith("dcc_")
+            for symbol in composite_symbols
+        ):
+            raise ValueError(
+                f"transition composite {index} symbols must contain dcc_ names"
+            )
+        symbols.update(composite_symbols)
     return symbols
 
 

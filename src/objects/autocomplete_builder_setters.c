@@ -80,6 +80,41 @@ dcc_status_t dcc_autocomplete_choice_set_name_localizations_json(
     return DCC_OK;
 }
 
+dcc_status_t dcc_autocomplete_choice_set_name_localizations(
+    dcc_autocomplete_choice_t *choice,
+    const dcc_localization_t *localizations,
+    size_t localization_count
+) {
+    if (!dcc_autocomplete_choice_target(
+            choice, offsetof(dcc_autocomplete_choice_t, name_localization_count),
+            sizeof(choice->name_localization_count)) ||
+        (localization_count != 0U && localizations == NULL)) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    for (size_t i = 0U; i < localization_count; ++i) {
+        if (localizations[i].locale == NULL || localizations[i].locale[0] == '\0' ||
+            localizations[i].value == NULL) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        for (size_t j = 0U; j < i; ++j) {
+            if (strcmp(localizations[i].locale, localizations[j].locale) == 0) {
+                return DCC_ERR_INVALID_ARG;
+            }
+        }
+    }
+    choice->name_localizations = localizations;
+    choice->name_localization_count = localization_count;
+    if (localization_count != 0U) {
+        choice->name_localizations_json = NULL;
+        choice->present &= ~DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS_JSON;
+    }
+    dcc_autocomplete_choice_presence(
+        choice, DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS,
+        localization_count != 0U
+    );
+    return DCC_OK;
+}
+
 dcc_status_t dcc_autocomplete_choice_set_string_value(
     dcc_autocomplete_choice_t *choice,
     const char *value

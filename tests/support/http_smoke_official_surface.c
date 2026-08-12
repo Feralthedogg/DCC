@@ -224,7 +224,8 @@ static dcc_status_t call_official_get_entitlement(dcc_client_t *client, dcc_rest
 }
 
 static dcc_status_t call_official_get_sticker_pack(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_sticker_pack(client, 888, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_sticker_pack(client, 888, &options, NULL);
 }
 
 static dcc_status_t call_official_get_current_user_guild_member(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {

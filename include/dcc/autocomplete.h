@@ -1,6 +1,7 @@
 #ifndef DCC_AUTOCOMPLETE_H
 #define DCC_AUTOCOMPLETE_H
 
+#include <dcc/application_types.h>
 #include <dcc/error.h>
 #include <dcc/export.h>
 #include <stddef.h>
@@ -11,13 +12,15 @@ extern "C" {
 #endif
 
 #define DCC_AUTOCOMPLETE_MAX_CHOICES 25U
-#define DCC_AUTOCOMPLETE_CHOICE_VERSION 1U
-#define DCC_AUTOCOMPLETE_BUILDER_VERSION 1U
-
-#define DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME UINT64_C(1)
-#define DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS_JSON (UINT64_C(1) << 1U)
-#define DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE (UINT64_C(1) << 2U)
-#define DCC_AUTOCOMPLETE_BUILDER_PRESENT_CHOICES UINT64_C(1)
+enum {
+  DCC_AUTOCOMPLETE_CHOICE_VERSION = 1U,
+  DCC_AUTOCOMPLETE_BUILDER_VERSION = 1U,
+  DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME = UINT64_C(1),
+  DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS_JSON = UINT64_C(1) << 1U,
+  DCC_AUTOCOMPLETE_CHOICE_PRESENT_VALUE = UINT64_C(1) << 2U,
+  DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME_LOCALIZATIONS = UINT64_C(1) << 3U,
+  DCC_AUTOCOMPLETE_BUILDER_PRESENT_CHOICES = UINT64_C(1)
+};
 
 typedef enum dcc_autocomplete_choice_value_type {
     DCC_AUTOCOMPLETE_CHOICE_STRING = 1,
@@ -37,6 +40,8 @@ typedef struct dcc_autocomplete_choice {
     /* Reserved ABI padding: initialize to zero; version 1 ignores this field. */
     uint32_t abi_padding;
     const char *name_localizations_json;
+    const dcc_localization_t *name_localizations;
+    size_t name_localization_count;
 } dcc_autocomplete_choice_t;
 
 typedef struct dcc_autocomplete_builder {
@@ -51,13 +56,13 @@ typedef struct dcc_autocomplete_builder {
     { \
         sizeof(dcc_autocomplete_choice_t), DCC_AUTOCOMPLETE_CHOICE_VERSION, \
         UINT64_C(0), NULL, NULL, INT64_C(0), 0.0, \
-        (dcc_autocomplete_choice_value_type_t)0, 0U, NULL \
+        (dcc_autocomplete_choice_value_type_t)0, 0U, NULL, NULL, 0U \
     }
 #define DCC_AUTOCOMPLETE_CHOICE_NAMED_INIT(name_) \
     { \
         sizeof(dcc_autocomplete_choice_t), DCC_AUTOCOMPLETE_CHOICE_VERSION, \
         DCC_AUTOCOMPLETE_CHOICE_PRESENT_NAME, (name_), NULL, INT64_C(0), 0.0, \
-        (dcc_autocomplete_choice_value_type_t)0, 0U, NULL \
+        (dcc_autocomplete_choice_value_type_t)0, 0U, NULL, NULL, 0U \
     }
 #define DCC_AUTOCOMPLETE_BUILDER_INIT \
     { \
@@ -70,6 +75,11 @@ DCC_API dcc_status_t dcc_autocomplete_choice_set_name(dcc_autocomplete_choice_t 
 DCC_API dcc_status_t dcc_autocomplete_choice_set_name_localizations_json(
     dcc_autocomplete_choice_t *choice,
     const char *name_localizations_json
+);
+DCC_API dcc_status_t dcc_autocomplete_choice_set_name_localizations(
+    dcc_autocomplete_choice_t *choice,
+    const dcc_localization_t *localizations,
+    size_t localization_count
 );
 DCC_API dcc_status_t dcc_autocomplete_choice_set_string_value(
     dcc_autocomplete_choice_t *choice,

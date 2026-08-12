@@ -8,6 +8,7 @@
 #define DCC_REST_OFFICIAL_SURFACE_H
 
 #include <dcc/rest/base.h>
+#include <dcc/application_types.h>
 #include <dcc/rest/request.h>
 #include <dcc/rest/types/guild_members.h>
 #include <dcc/rest/types/guilds.h>
@@ -33,11 +34,6 @@ DCC_API dcc_status_t dcc_rest_get_gateway(dcc_client_t *client, dcc_rest_cb cb,
 DCC_API dcc_status_t dcc_rest_get_current_application(dcc_client_t *client,
                                                       dcc_rest_cb cb,
                                                       void *user_data);
-
-typedef enum dcc_application_integration_type {
-  DCC_APPLICATION_INTEGRATION_TYPE_GUILD_INSTALL = 0,
-  DCC_APPLICATION_INTEGRATION_TYPE_USER_INSTALL = 1
-} dcc_application_integration_type_t;
 
 typedef enum dcc_application_event_webhook_status {
   DCC_APPLICATION_EVENT_WEBHOOK_DISABLED = 1,
@@ -289,9 +285,12 @@ DCC_API dcc_status_t dcc_rest_get_entitlement(dcc_client_t *client,
 /**
  * @brief Submits `GET /sticker-packs/{pack.id}`.
  */
-DCC_API dcc_status_t dcc_rest_get_sticker_pack(dcc_client_t *client,
-                                               dcc_snowflake_t pack_id,
-                                               dcc_rest_cb cb, void *user_data);
+DCC_API dcc_status_t dcc_rest_get_sticker_pack(
+    dcc_client_t *client,
+    dcc_snowflake_t pack_id,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
+);
 
 /**
  * @brief Submits `GET /users/@me/guilds/{guild.id}/member`.

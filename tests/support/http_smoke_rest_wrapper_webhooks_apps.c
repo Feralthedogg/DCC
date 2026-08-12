@@ -434,7 +434,7 @@ int run_public_rest_wrapper_expect_webhooks_apps_smoke(dcc_client_t *client) {
                     call_rest_create_application_emoji_params,
                     "POST",
                     "/applications/123/emojis",
-                    "{\"name\":\"appwave-typed\",\"image\":\"data:image/png;base64,BB==\",\"roles\":[]}"
+                    "{\"name\":\"appwave-typed\",\"image\":\"data:image/png;base64,BB==\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -450,7 +450,7 @@ int run_public_rest_wrapper_expect_webhooks_apps_smoke(dcc_client_t *client) {
                     call_rest_modify_application_emoji_params,
                     "PATCH",
                     "/applications/123/emojis/777",
-                    "{\"name\":\"appwave-edited\",\"roles\":[]}"
+                    "{\"name\":\"appwave-edited\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,

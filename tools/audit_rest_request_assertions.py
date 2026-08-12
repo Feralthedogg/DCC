@@ -17,22 +17,14 @@ SURFACE_AUDIT = ROOT / "tools/audit_rest_surface.py"
 # These wrappers are covered by bespoke smoke blocks rather than the generic
 # run_public_rest_wrapper_expect()/EXPECT_* request assertion helpers.
 MANUAL_REQUEST_ASSERTED = {
-    "dcc_rest_bulk_overwrite_global_commands_builder",
-    "dcc_rest_bulk_overwrite_guild_commands_builder",
-    "dcc_rest_create_global_command_builder",
-    "dcc_rest_create_guild_command_builder",
-    "dcc_rest_create_guild_sticker_multipart",
-    "dcc_rest_create_guild_sticker_params",
+    "dcc_rest_create_guild_sticker",
     "dcc_rest_create_message",
     "dcc_rest_edit_message",
-    "dcc_rest_edit_global_command_builder",
-    "dcc_rest_edit_guild_command_builder",
     "dcc_rest_edit_guild_command_permissions",
     "dcc_rest_execute_webhook",
     "dcc_rest_get_channel",
     "dcc_rest_get_message",
     "dcc_rest_guild_message_search",
-    "dcc_rest_guild_message_search_params",
     "dcc_rest_interaction_response_create",
     "dcc_rest_modify_webhook_message",
 }

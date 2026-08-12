@@ -1,4 +1,5 @@
 #include "http_smoke_support.h"
+#include "task9_test_legacy_shims.h"
 
 #if !defined(_WIN32)
 
@@ -96,6 +97,11 @@ dcc_status_t call_rest_create_guild_emoji_params(dcc_client_t *client, dcc_rest_
     const dcc_snowflake_t roles[] = {555, 556};
     const dcc_emoji_params_t params = {
         .size = sizeof(params),
+        .version = DCC_EMOJI_PARAMS_VERSION,
+        .present = DCC_EMOJI_PARAMS_PRESENT_NAME |
+            DCC_EMOJI_PARAMS_PRESENT_IMAGE |
+            DCC_EMOJI_PARAMS_PRESENT_ROLES,
+        .nulls = 0U,
         .name = "wave-typed",
         .image = "data:image/png;base64,AA==",
         .roles = roles,
@@ -109,6 +115,10 @@ dcc_status_t call_rest_modify_guild_emoji(dcc_client_t *client, dcc_rest_cb cb, 
 dcc_status_t call_rest_modify_guild_emoji_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_emoji_params_t params = {
         .size = sizeof(params),
+        .version = DCC_EMOJI_PARAMS_VERSION,
+        .present = DCC_EMOJI_PARAMS_PRESENT_NAME |
+            DCC_EMOJI_PARAMS_PRESENT_ROLES,
+        .nulls = 0U,
         .emoji_id = 777,
         .name = "wave-edited"
     };
@@ -320,6 +330,10 @@ dcc_status_t call_rest_create_application_emoji(dcc_client_t *client, dcc_rest_c
 dcc_status_t call_rest_create_application_emoji_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_emoji_params_t params = {
         .size = sizeof(params),
+        .version = DCC_EMOJI_PARAMS_VERSION,
+        .present = DCC_EMOJI_PARAMS_PRESENT_NAME |
+            DCC_EMOJI_PARAMS_PRESENT_IMAGE,
+        .nulls = 0U,
         .name = "appwave-typed",
         .image = "data:image/png;base64,BB=="
     };
@@ -331,6 +345,9 @@ dcc_status_t call_rest_modify_application_emoji(dcc_client_t *client, dcc_rest_c
 dcc_status_t call_rest_modify_application_emoji_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_emoji_params_t params = {
         .size = sizeof(params),
+        .version = DCC_EMOJI_PARAMS_VERSION,
+        .present = DCC_EMOJI_PARAMS_PRESENT_NAME,
+        .nulls = 0U,
         .emoji_id = 777,
         .name = "appwave-edited"
     };

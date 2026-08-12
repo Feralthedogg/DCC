@@ -1,5 +1,6 @@
 #include <dcc/sugar.h>
 #include <dcc/rest/interactions.h>
+#include <dcc/rest/application_commands.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -39,7 +40,7 @@ static dcc_snowflake_t parse_guild_env(const char *name) {
     return 0;
 }
 
-static void on_command_registered(dcc_client_t *client, const dcc_rest_response_t *response, void *user_data) {
+static void on_command_registered(dcc_client_t *client, const dcc_rest_result_t *response, void *user_data) {
     (void)client;
     const char *scope = user_data != NULL ? (const char *)user_data : "unknown";
 
@@ -48,12 +49,12 @@ static void on_command_registered(dcc_client_t *client, const dcc_rest_response_
         return;
     }
 
-    if (response->error == DCC_OK && response->status >= 200 && response->status < 300) {
+    if (response->transport_status == DCC_OK && response->http_status >= 200 && response->http_status < 300) {
         printf(
             "Slash command /%s registered (%s, HTTP %u)\n",
             HOT_RELOAD_TEST_COMMAND_NAME,
             scope,
-            (unsigned)response->status
+            (unsigned)response->http_status
         );
         return;
     }
@@ -63,8 +64,8 @@ static void on_command_registered(dcc_client_t *client, const dcc_rest_response_
         "Slash command /%s registration failed (%s): HTTP %u, %s",
         HOT_RELOAD_TEST_COMMAND_NAME,
         scope,
-        (unsigned)response->status,
-        dcc_status_string(response->error)
+        (unsigned)response->http_status,
+        dcc_status_string(response->transport_status)
     );
     if (response->body != NULL && response->body_len > 0) {
         size_t body_len = response->body_len > 512 ? 512 : response->body_len;
@@ -81,10 +82,9 @@ static void register_test_command(dcc_client_t *client, dcc_snowflake_t applicat
 
     dcc_application_command_builder_t command =
         DCC_SLASH_COMMAND_DM(HOT_RELOAD_TEST_COMMAND_NAME, "핫 리로드 테스트 임베드를 보냅니다", 1U);
-    dcc_application_command_registration_options_t options =
-        guild_id != 0
-            ? DCC_APPLICATION_COMMAND_REGISTRATION_GUILD(guild_id)
-            : DCC_APPLICATION_COMMAND_REGISTRATION_GLOBAL();
+    dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+    options.callback = on_command_registered;
+    options.user_data = guild_id != 0 ? "guild" : "global";
 
     if (guild_id != 0) {
         printf(
@@ -99,14 +99,11 @@ static void register_test_command(dcc_client_t *client, dcc_snowflake_t applicat
         );
     }
 
-    dcc_status_t status = dcc_rest_create_application_command_builder(
-        client,
-        application_id,
-        &options,
-        &command,
-        on_command_registered,
-        guild_id != 0 ? "guild" : "global"
-    );
+    dcc_status_t status = guild_id != 0
+        ? dcc_rest_create_guild_command(
+              client, application_id, guild_id, &command, &options, NULL)
+        : dcc_rest_create_global_command(
+              client, application_id, &command, &options, NULL);
 
     if (status != DCC_OK) {
         fprintf(

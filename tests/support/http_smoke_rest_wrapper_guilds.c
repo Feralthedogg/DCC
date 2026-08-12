@@ -218,7 +218,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_create_guild_scheduled_event_params,
                     "POST",
                     "/guilds/333/scheduled-events",
-                    "{\"name\":\"meet typed\",\"description\":\"typed desc\",\"privacy_level\":2,\"status\":1,\"entity_type\":3,\"guild_id\":\"333\",\"scheduled_start_time\":\"2026-06-16T00:00:00.000000+00:00\",\"scheduled_end_time\":\"2026-06-16T01:00:00.000000+00:00\",\"entity_metadata\":{\"location\":\"Seoul\"}}"
+                    "{\"name\":\"meet typed\",\"description\":\"typed desc\",\"scheduled_start_time\":\"2026-06-16T00:00:00.000000+00:00\",\"scheduled_end_time\":\"2026-06-16T01:00:00.000000+00:00\",\"privacy_level\":2,\"entity_type\":3,\"status\":1,\"entity_metadata\":{\"location\":\"Seoul\"}}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -234,7 +234,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_modify_guild_scheduled_event_params,
                     "PATCH",
                     "/guilds/333/scheduled-events/999",
-                    "{\"id\":\"999\",\"name\":\"meet edit\",\"description\":\"edit desc\",\"image\":\"data:image/png;base64,Zm9v\",\"privacy_level\":2,\"status\":2,\"entity_type\":1,\"entity_id\":\"555\",\"channel_id\":\"222\",\"guild_id\":\"333\",\"creator_id\":\"444\",\"scheduled_start_time\":\"2026-06-17T00:00:00.000000+00:00\",\"entity_metadata\":{\"location\":null}}"
+                    "{\"name\":\"meet edit\",\"description\":\"edit desc\",\"image\":\"data:image/png;base64,Zm9v\",\"scheduled_start_time\":\"2026-06-17T00:00:00.000000+00:00\",\"channel_id\":\"222\",\"privacy_level\":2,\"entity_type\":1,\"status\":2}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -257,7 +257,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     "get_guild_scheduled_event_users_page",
                     call_rest_get_guild_scheduled_event_users_page,
                     "GET",
-                    "/guilds/333/scheduled-events/999/users?with_member=true&limit=2&after=444&before=222",
+                    "/guilds/333/scheduled-events/999/users?limit=2&with_member=true&after=444",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -274,7 +274,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_create_stage_instance_params,
                     "POST",
                     "/stage-instances",
-                    "{\"channel_id\":\"222\",\"topic\":\"stage typed\",\"privacy_level\":2}"
+                    "{\"channel_id\":\"222\",\"topic\":\"stage typed\",\"privacy_level\":2,\"send_start_notification\":false,\"guild_scheduled_event_id\":\"999\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -298,7 +298,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_modify_stage_instance_params,
                     "PATCH",
                     "/stage-instances/222",
-                    "{\"channel_id\":\"222\",\"topic\":\"updated typed\",\"privacy_level\":2}"
+                    "{\"privacy_level\":2}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,

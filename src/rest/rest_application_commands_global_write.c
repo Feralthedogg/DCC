@@ -1,87 +1,74 @@
+#include "internal/rest/dcc_rest_builders_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
+#include "internal/rest/dcc_rest_message_search_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
-#include "internal/rest/dcc_rest_request_application_command_builders_internal.h"
-#include "internal/rest/dcc_rest_request_core_internal.h"
+#include "internal/rest/dcc_rest_task9_internal.h"
+#include "internal/rest/dcc_rest_template_paths_internal.h"
+
+#include <stdlib.h>
+#include <string.h>
 
 dcc_status_t dcc_rest_create_global_command(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_application_command_builder_t *params,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[80];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/applications/%llu/commands", (unsigned long long)application_id);
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_POST, path, json_body, cb, user_data) : status;
-}
-
-dcc_status_t dcc_rest_create_global_command_builder(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    const dcc_application_command_builder_t *command,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[80];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/applications/%llu/commands", (unsigned long long)application_id);
-    return status == DCC_OK
-        ? dcc_rest_request_application_command_builder_json(client, DCC_REST_POST, path, command, cb, user_data)
-        : status;
-}
-
-dcc_status_t dcc_rest_edit_global_command(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    dcc_snowflake_t command_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[112];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/applications/%llu/commands/%llu",
-        (unsigned long long)application_id,
-        (unsigned long long)command_id
-    );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_PATCH, path, json_body, cb, user_data) : status;
-}
-
-dcc_status_t dcc_rest_edit_global_command_builder(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    dcc_snowflake_t command_id,
-    const dcc_application_command_builder_t *command,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[112];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/applications/%llu/commands/%llu",
-        (unsigned long long)application_id,
-        (unsigned long long)command_id
-    );
-    return status == DCC_OK
-        ? dcc_rest_request_application_command_builder_json(client, DCC_REST_PATCH, path, command, cb, user_data)
-        : status;
+  (void)DCC_ENDPOINT_PATH_PUBLIC;
+  DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT_OR_BEARER, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+                        DCC_REST_ROUTE_DPP_GLOBAL_COMMAND_CREATE, DCC_REST_POST);
+  if (out_request != NULL) *out_request = NULL;
+  char path[256];
+  dcc_status_t status = dcc_rest_format_path(path, sizeof(path), DCC_REST_ROUTE_DPP_GLOBAL_COMMAND_CREATE, (unsigned long long)application_id);
+  char *body = NULL;
+  if (status == DCC_OK) status = dcc_task9_command_body(params, 1, 0, &body);
+  if (status != DCC_OK) { free(body); return status; }
+  status = dcc_task9_submit_owned(client, "dcc_rest_create_global_command", DCC_REST_POST,
+      path, body, body != NULL ? strlen(body) : 0U, "application/json", options, DCC_ENDPOINT_AUTH_POLICY_BOT_OR_BEARER, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+      out_request);
+  return status;
 }
 
 dcc_status_t dcc_rest_delete_global_command(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
     dcc_snowflake_t command_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 ) {
-    char path[112];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/applications/%llu/commands/%llu",
-        (unsigned long long)application_id,
-        (unsigned long long)command_id
-    );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_DELETE, path, NULL, cb, user_data) : status;
+  (void)DCC_ENDPOINT_PATH_PUBLIC;
+  DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT_OR_BEARER, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+                        DCC_REST_ROUTE_DPP_GLOBAL_COMMAND_DELETE, DCC_REST_DELETE);
+  if (out_request != NULL) *out_request = NULL;
+  char path[256];
+  dcc_status_t status = dcc_rest_format_path(path, sizeof(path), DCC_REST_ROUTE_DPP_GLOBAL_COMMAND_DELETE, (unsigned long long)application_id, (unsigned long long)command_id);
+  if (status != DCC_OK) { return status; }
+  status = dcc_task9_submit_owned(client, "dcc_rest_delete_global_command", DCC_REST_DELETE,
+      path, NULL, 0U, NULL, options, DCC_ENDPOINT_AUTH_POLICY_BOT_OR_BEARER, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+      out_request);
+  return status;
+}
+
+dcc_status_t dcc_rest_edit_global_command(
+    dcc_client_t *client,
+    dcc_snowflake_t application_id,
+    dcc_snowflake_t command_id,
+    const dcc_application_command_builder_t *params,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
+) {
+  (void)DCC_ENDPOINT_PATH_PUBLIC;
+  DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT_OR_BEARER, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+                        DCC_REST_ROUTE_DPP_GLOBAL_COMMAND_EDIT, DCC_REST_PATCH);
+  if (out_request != NULL) *out_request = NULL;
+  char path[256];
+  dcc_status_t status = dcc_rest_format_path(path, sizeof(path), DCC_REST_ROUTE_DPP_GLOBAL_COMMAND_EDIT, (unsigned long long)application_id, (unsigned long long)command_id);
+  char *body = NULL;
+  if (status == DCC_OK) status = dcc_task9_command_body(params, 0, 0, &body);
+  if (status != DCC_OK) { free(body); return status; }
+  status = dcc_task9_submit_owned(client, "dcc_rest_edit_global_command", DCC_REST_PATCH,
+      path, body, body != NULL ? strlen(body) : 0U, "application/json", options, DCC_ENDPOINT_AUTH_POLICY_BOT_OR_BEARER, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+      out_request);
+  return status;
 }

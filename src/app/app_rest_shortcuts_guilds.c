@@ -695,7 +695,7 @@ dcc_status_t dcc_app_modify_guild_onboarding_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_onboarding_params(dcc_app_client(app), params, cb, user_data);
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_get_guild_welcome_screen(
@@ -831,7 +831,10 @@ dcc_status_t dcc_app_create_auto_moderation_rule_params(
     if (app == NULL || guild_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_auto_moderation_rule_params(dcc_app_client(app), guild_id, params, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_auto_moderation_rule,
+        dcc_app_client(app), guild_id, params
+    );
 }
 
 dcc_status_t dcc_app_modify_auto_moderation_rule(
@@ -865,7 +868,11 @@ dcc_status_t dcc_app_modify_auto_moderation_rule_params(
     if (app == NULL || guild_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_auto_moderation_rule_params(dcc_app_client(app), guild_id, params, cb, user_data);
+    if (params->rule_id == 0U) return DCC_ERR_INVALID_ARG;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_auto_moderation_rule,
+        dcc_app_client(app), guild_id, params->rule_id, params
+    );
 }
 
 dcc_status_t dcc_app_delete_auto_moderation_rule(
@@ -929,7 +936,10 @@ dcc_status_t dcc_app_create_guild_emoji_params(
     if (app == NULL || guild_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_emoji_params(dcc_app_client(app), guild_id, params, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_guild_emoji,
+        dcc_app_client(app), guild_id, params
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_emoji(
@@ -956,7 +966,7 @@ dcc_status_t dcc_app_modify_guild_emoji_params(
     if (app == NULL || guild_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_emoji_params(dcc_app_client(app), guild_id, params, cb, user_data);
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_delete_guild_emoji(
@@ -1009,14 +1019,27 @@ dcc_status_t dcc_app_create_guild_sticker_multipart(
     if (app == NULL || guild_id == 0U || file == NULL || (fields == NULL && field_count > 0U)) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_sticker_multipart(
-        dcc_app_client(app),
-        guild_id,
-        fields,
-        field_count,
-        file,
-        cb,
-        user_data
+    dcc_guild_sticker_params_t params = DCC_GUILD_STICKER_PARAMS_INIT;
+    params.present = DCC_GUILD_STICKER_PARAMS_PRESENT_FILE;
+    params.file = *file;
+    for (size_t index = 0U; index < field_count; ++index) {
+        if (fields[index].name == NULL) return DCC_ERR_INVALID_ARG;
+        if (strcmp(fields[index].name, "name") == 0) {
+            params.present |= DCC_GUILD_STICKER_PARAMS_PRESENT_NAME;
+            params.name = fields[index].value;
+        } else if (strcmp(fields[index].name, "description") == 0) {
+            params.present |= DCC_GUILD_STICKER_PARAMS_PRESENT_DESCRIPTION;
+            params.description = fields[index].value;
+        } else if (strcmp(fields[index].name, "tags") == 0) {
+            params.present |= DCC_GUILD_STICKER_PARAMS_PRESENT_TAGS;
+            params.tags = fields[index].value;
+        } else {
+            return DCC_ERR_INVALID_ARG;
+        }
+    }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_guild_sticker,
+        dcc_app_client(app), guild_id, &params
     );
 }
 
@@ -1029,7 +1052,7 @@ dcc_status_t dcc_app_create_guild_sticker_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_sticker_params(dcc_app_client(app), params, cb, user_data);
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_modify_guild_sticker(
@@ -1105,7 +1128,10 @@ dcc_status_t dcc_app_guild_message_search_params(
     if (app == NULL || guild_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_guild_message_search_params(dcc_app_client(app), guild_id, params, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_guild_message_search,
+        dcc_app_client(app), guild_id, params
+    );
 }
 
 dcc_status_t dcc_app_get_guild_scheduled_events(
@@ -1130,7 +1156,13 @@ dcc_status_t dcc_app_get_guild_scheduled_events_with_user_count(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_scheduled_events_with_user_count(dcc_app_client(app), guild_id, cb, user_data);
+    dcc_rest_scheduled_event_query_t query = DCC_REST_SCHEDULED_EVENT_QUERY_INIT;
+    query.present = DCC_REST_SCHEDULED_EVENT_QUERY_PRESENT_WITH_USER_COUNT;
+    query.with_user_count = 1U;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_scheduled_events,
+        dcc_app_client(app), guild_id, &query
+    );
 }
 
 dcc_status_t dcc_app_get_guild_scheduled_event(
@@ -1157,12 +1189,12 @@ dcc_status_t dcc_app_get_guild_scheduled_event_with_user_count(
     if (app == NULL || guild_id == 0U || event_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_scheduled_event_with_user_count(
-        dcc_app_client(app),
-        guild_id,
-        event_id,
-        cb,
-        user_data
+    dcc_rest_scheduled_event_query_t query = DCC_REST_SCHEDULED_EVENT_QUERY_INIT;
+    query.present = DCC_REST_SCHEDULED_EVENT_QUERY_PRESENT_WITH_USER_COUNT;
+    query.with_user_count = 1U;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_scheduled_event,
+        dcc_app_client(app), guild_id, event_id, &query
     );
 }
 
@@ -1188,7 +1220,7 @@ dcc_status_t dcc_app_create_guild_scheduled_event_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_scheduled_event_params(dcc_app_client(app), params, cb, user_data);
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_modify_guild_scheduled_event(
@@ -1214,7 +1246,7 @@ dcc_status_t dcc_app_modify_guild_scheduled_event_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_scheduled_event_params(dcc_app_client(app), params, cb, user_data);
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_delete_guild_scheduled_event(
@@ -1264,14 +1296,20 @@ dcc_status_t dcc_app_get_guild_scheduled_event_users_page(
     if (app == NULL || guild_id == 0U || event_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_scheduled_event_users_page(
-        dcc_app_client(app),
-        guild_id,
-        event_id,
-        limit,
-        before,
-        after,
-        cb,
-        user_data
+    dcc_rest_scheduled_event_users_query_t query =
+        DCC_REST_SCHEDULED_EVENT_USERS_QUERY_INIT;
+    query.present = DCC_REST_SCHEDULED_EVENT_USERS_QUERY_PRESENT_LIMIT;
+    query.limit = limit;
+    if (before != 0U) {
+        query.present |= DCC_REST_SCHEDULED_EVENT_USERS_QUERY_PRESENT_BEFORE;
+        query.before = before;
+    }
+    if (after != 0U) {
+        query.present |= DCC_REST_SCHEDULED_EVENT_USERS_QUERY_PRESENT_AFTER;
+        query.after = after;
+    }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_scheduled_event_users,
+        dcc_app_client(app), guild_id, event_id, &query
     );
 }

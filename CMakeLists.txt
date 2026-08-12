@@ -404,7 +404,6 @@ target_sources(dcc
         src/command_registry/command_registry_action.c
         src/command_registry/command_registry_add.c
         src/command_registry/command_registry_apply.c
-        src/command_registry/command_registry_apply_ops.c
         src/command_registry/command_registry_builder_copy.c
         src/command_registry/command_registry_fetch.c
         src/command_registry/command_registry_format_buffer.c
@@ -1303,10 +1302,8 @@ target_sources(dcc
         src/replay/replay_recorder.c
         src/replay/replay_validate.c
         src/rest/rest_application_command_builders.c
-        src/rest/rest_application_command_permission_builders.c
         src/rest/rest_application_command_permission_json.c
         src/rest/rest_application_command_permissions.c
-        src/rest/rest_application_command_permissions_params.c
         src/rest/rest_application_commands.c
         src/rest/rest_application_commands_global_bulk.c
         src/rest/rest_application_commands_global_write.c
@@ -1314,7 +1311,6 @@ target_sources(dcc
         src/rest/rest_application_commands_guild_delete_bulk.c
         src/rest/rest_application_commands_guild_edit.c
         src/rest/rest_application_commands_guild_fetch.c
-        src/rest/rest_application_commands_registration.c
         src/rest/rest_application_commands_registration_options.c
         src/rest/rest_async_active_queue.c
         src/rest/rest_async_cancel.c
@@ -1355,14 +1351,11 @@ target_sources(dcc
         src/rest/rest_direct_messages.c
         src/rest/rest_direct_messages_json.c
         src/rest/rest_application_emojis.c
-        src/rest/rest_application_emojis_params.c
-        src/rest/rest_emoji_builders.c
         src/rest/rest_entitlements.c
         src/rest/rest_entitlements_test.c
         src/rest/rest_entitlements_test_body.c
         src/rest/rest_endpoint_v2.c
         src/rest/rest_guild_emojis.c
-        src/rest/rest_guild_emojis_params.c
         src/rest/rest_future_lifecycle.c
         src/rest/rest_future_request.c
         src/rest/rest_future_response.c
@@ -1455,6 +1448,7 @@ target_sources(dcc
         src/rest/rest_request_handle.c
         src/rest/rest_submit.c
         src/rest/rest_task8_core.c
+        src/rest/rest_task9_core.c
         src/rest/rest_task8_queries.c
         src/rest/rest_task8_member_role_bodies.c
         src/rest/rest_task8_guild_bodies.c
@@ -1479,17 +1473,11 @@ target_sources(dcc
         src/rest/rest_roles_positions.c
         src/rest/rest_routes.c
         src/rest/rest_routes_segments.c
-        src/rest/rest_scheduled_event_body.c
-        src/rest/rest_scheduled_event_builders.c
         src/rest/rest_scheduled_event_users.c
-        src/rest/rest_scheduled_event_validate.c
         src/rest/rest_scheduled_events.c
-        src/rest/rest_scheduled_events_params.c
         src/rest/rest_skus.c
         src/rest/rest_stickers.c
         src/rest/rest_stage_instances.c
-        src/rest/rest_stage_instances_params.c
-        src/rest/rest_template_body.c
         src/rest/rest_template_paths.c
         src/rest/rest_templates_create.c
         src/rest/rest_templates_fetch.c
@@ -2030,7 +2018,7 @@ if(DCC_BUILD_TESTS)
         COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_rest_v2_endpoints.py
             --source ${CMAKE_CURRENT_SOURCE_DIR}
-            --progress-through 8
+            --progress-through 9
     )
     set_tests_properties(dcc_rest_v2_endpoint_manifest_audit PROPERTIES
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

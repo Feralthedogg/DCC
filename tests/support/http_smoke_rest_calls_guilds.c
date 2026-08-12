@@ -1,4 +1,5 @@
 #include "http_smoke_support.h"
+#include "task9_test_legacy_shims.h"
 
 #if !defined(_WIN32)
 
@@ -224,6 +225,16 @@ dcc_status_t call_rest_create_guild_scheduled_event_params(
 ) {
     const dcc_scheduled_event_params_t params = {
         .size = sizeof(dcc_scheduled_event_params_t),
+        .version = DCC_SCHEDULED_EVENT_PARAMS_VERSION,
+        .present = DCC_SCHEDULED_EVENT_PARAMS_PRESENT_NAME |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_DESCRIPTION |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_SCHEDULED_START_TIME |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_SCHEDULED_END_TIME |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_LOCATION |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_PRIVACY_LEVEL |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_STATUS |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_ENTITY_TYPE,
+        .nulls = 0U,
         .guild_id = 333,
         .name = "meet typed",
         .description = "typed desc",
@@ -246,6 +257,16 @@ dcc_status_t call_rest_modify_guild_scheduled_event_params(
 ) {
     const dcc_scheduled_event_params_t params = {
         .size = sizeof(dcc_scheduled_event_params_t),
+        .version = DCC_SCHEDULED_EVENT_PARAMS_VERSION,
+        .present = DCC_SCHEDULED_EVENT_PARAMS_PRESENT_CHANNEL_ID |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_NAME |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_DESCRIPTION |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_IMAGE |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_SCHEDULED_START_TIME |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_PRIVACY_LEVEL |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_STATUS |
+            DCC_SCHEDULED_EVENT_PARAMS_PRESENT_ENTITY_TYPE,
+        .nulls = 0U,
         .guild_id = 333,
         .event_id = 999,
         .creator_id = 444,
@@ -268,7 +289,7 @@ dcc_status_t call_rest_get_guild_scheduled_event_users(dcc_client_t *client, dcc
     return dcc_rest_get_guild_scheduled_event_users(client, 333, 999, "with_member=true&limit=2&after=444", cb, user_data);
 }
 dcc_status_t call_rest_get_guild_scheduled_event_users_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_scheduled_event_users_page(client, 333, 999, 2, 222, 444, cb, user_data);
+    return dcc_rest_get_guild_scheduled_event_users_page(client, 333, 999, 2, 0, 444, cb, user_data);
 }
 dcc_status_t call_rest_create_stage_instance(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_create_stage_instance(client, "{\"channel_id\":\"222\",\"topic\":\"stage\"}", cb, user_data);
@@ -276,9 +297,17 @@ dcc_status_t call_rest_create_stage_instance(dcc_client_t *client, dcc_rest_cb c
 dcc_status_t call_rest_create_stage_instance_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_stage_instance_params_t params = {
         .size = sizeof(params),
+        .version = DCC_STAGE_INSTANCE_PARAMS_VERSION,
+        .present = DCC_STAGE_INSTANCE_PARAMS_PRESENT_CHANNEL_ID |
+            DCC_STAGE_INSTANCE_PARAMS_PRESENT_TOPIC |
+            DCC_STAGE_INSTANCE_PARAMS_PRESENT_PRIVACY_LEVEL |
+            DCC_STAGE_INSTANCE_PARAMS_PRESENT_SEND_START_NOTIFICATION |
+            DCC_STAGE_INSTANCE_PARAMS_PRESENT_GUILD_SCHEDULED_EVENT_ID,
         .channel_id = 222,
         .topic = "stage typed",
-        .privacy_level = DCC_STAGE_PRIVACY_GUILD_ONLY
+        .privacy_level = DCC_STAGE_PRIVACY_GUILD_ONLY,
+        .send_start_notification = 0U,
+        .guild_scheduled_event_id = 999U
     };
     return dcc_rest_create_stage_instance_params(client, &params, cb, user_data);
 }
@@ -291,8 +320,9 @@ dcc_status_t call_rest_modify_stage_instance(dcc_client_t *client, dcc_rest_cb c
 dcc_status_t call_rest_modify_stage_instance_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_stage_instance_params_t params = {
         .size = sizeof(params),
+        .version = DCC_STAGE_INSTANCE_PARAMS_VERSION,
+        .present = DCC_STAGE_INSTANCE_PARAMS_PRESENT_PRIVACY_LEVEL,
         .channel_id = 222,
-        .topic = "updated typed",
         .privacy_level = DCC_STAGE_PRIVACY_GUILD_ONLY
     };
     return dcc_rest_modify_stage_instance_params(client, &params, cb, user_data);
@@ -312,6 +342,10 @@ dcc_status_t call_rest_create_guild_template(dcc_client_t *client, dcc_rest_cb c
 dcc_status_t call_rest_create_guild_template_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_template_params_t params = {
         .size = sizeof(dcc_template_params_t),
+        .version = DCC_TEMPLATE_PARAMS_VERSION,
+        .present = DCC_TEMPLATE_PARAMS_PRESENT_NAME |
+            DCC_TEMPLATE_PARAMS_PRESENT_DESCRIPTION,
+        .nulls = 0U,
         .guild_id = 333,
         .name = "tpl typed",
         .description = "desc typed"
@@ -324,6 +358,10 @@ dcc_status_t call_rest_modify_guild_template(dcc_client_t *client, dcc_rest_cb c
 dcc_status_t call_rest_modify_guild_template_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     const dcc_template_params_t params = {
         .size = sizeof(dcc_template_params_t),
+        .version = DCC_TEMPLATE_PARAMS_VERSION,
+        .present = DCC_TEMPLATE_PARAMS_PRESENT_NAME |
+            DCC_TEMPLATE_PARAMS_PRESENT_DESCRIPTION,
+        .nulls = 0U,
         .guild_id = 333,
         .code = "tpl/abc",
         .name = "tpl2 typed",

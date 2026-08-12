@@ -1,6 +1,7 @@
 #ifndef DCC_REST_APPLICATION_COMMANDS_GLOBAL_COMMANDS_WRITE_H
 #define DCC_REST_APPLICATION_COMMANDS_GLOBAL_COMMANDS_WRITE_H
 
+#include <dcc/rest/request.h>
 #include <dcc/rest/types.h>
 
 #ifdef __cplusplus
@@ -10,43 +11,26 @@ extern "C" {
 DCC_API dcc_status_t dcc_rest_create_global_command(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_create_global_command_builder(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    const dcc_application_command_builder_t *command,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_edit_global_command(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    dcc_snowflake_t command_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_edit_global_command_builder(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    dcc_snowflake_t command_id,
-    const dcc_application_command_builder_t *command,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_application_command_builder_t *params,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 DCC_API dcc_status_t dcc_rest_delete_global_command(
     dcc_client_t *client,
     dcc_snowflake_t application_id,
     dcc_snowflake_t command_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
+);
+
+DCC_API dcc_status_t dcc_rest_edit_global_command(
+    dcc_client_t *client,
+    dcc_snowflake_t application_id,
+    dcc_snowflake_t command_id,
+    const dcc_application_command_builder_t *params,
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 #ifdef __cplusplus

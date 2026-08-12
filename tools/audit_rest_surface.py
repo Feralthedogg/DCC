@@ -419,7 +419,7 @@ def canonical_dcc_wrappers() -> dict[str, set[str]]:
     manifest = json.loads((ROOT / "tools/rest_v2_endpoints.json").read_text())
     legacy_to_canonical: dict[str, str] = {}
     for endpoint in manifest["endpoints"]:
-        if endpoint["task"] > 7:
+        if endpoint["task"] > 9:
             continue
         canonical = endpoint["canonical"]
         for legacy in endpoint["legacy_symbols"]:
@@ -428,6 +428,9 @@ def canonical_dcc_wrappers() -> dict[str, set[str]]:
     for candidate in manifest["removed_candidates"]:
         removed.add(candidate["canonical"])
         removed.update(candidate["legacy_symbols"])
+    for composite in manifest["transition_composites"]:
+        if composite["removal_task"] <= 9:
+            removed.update(composite["symbols"])
 
     normalized: dict[str, set[str]] = {}
     for dpp_method, wrappers in DPP_TO_DCC.items():

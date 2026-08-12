@@ -481,7 +481,10 @@ dcc_status_t dcc_app_create_stage_instance_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_stage_instance_params(dcc_app_client(app), params, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_stage_instance,
+        dcc_app_client(app), params
+    );
 }
 
 dcc_status_t dcc_app_get_stage_instance(
@@ -518,7 +521,11 @@ dcc_status_t dcc_app_modify_stage_instance_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_stage_instance_params(dcc_app_client(app), params, cb, user_data);
+    if (params->channel_id == 0U) return DCC_ERR_INVALID_ARG;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_stage_instance,
+        dcc_app_client(app), params->channel_id, params
+    );
 }
 
 dcc_status_t dcc_app_delete_stage_instance(
@@ -607,7 +614,7 @@ dcc_status_t dcc_app_create_guild_template_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_template_params(dcc_app_client(app), params, cb, user_data);
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_modify_guild_template(
@@ -633,7 +640,7 @@ dcc_status_t dcc_app_modify_guild_template_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_template_params(dcc_app_client(app), params, cb, user_data);
+    return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_app_sync_guild_template(

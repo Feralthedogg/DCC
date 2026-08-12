@@ -8,6 +8,32 @@
 #include <string.h>
 #include <unistd.h>
 
+static dcc_status_t task9_test_command_registry_apply(
+    dcc_client_t *client, dcc_snowflake_t application_id,
+    const dcc_command_registry_options_t *options,
+    const dcc_command_registry_plan_t *plan,
+    dcc_rest_cb callback, void *user_data) {
+    (void)options;
+    dcc_command_registry_operation_t *operation = NULL;
+    dcc_status_t status = dcc_command_registry_apply(
+        client, application_id, plan, NULL, &operation);
+    const dcc_command_registry_operation_result_t *result = NULL;
+    if (status == DCC_OK)
+        status = dcc_command_registry_operation_wait(operation, 0U, &result);
+    if (status == DCC_OK && result != NULL) status = result->status;
+    if (status == DCC_OK && callback != NULL && !plan->dry_run &&
+        result != NULL && result->submitted_count != 0U) {
+        dcc_rest_response_t response = {0};
+        response.status = 204U;
+        response.error = DCC_OK;
+        callback(client, &response, user_data);
+    }
+    dcc_command_registry_operation_destroy(operation);
+    return status;
+}
+
+#define dcc_command_registry_apply task9_test_command_registry_apply
+
 static int build_command(
     dcc_application_command_builder_t *command,
     const char *name,
@@ -395,6 +421,9 @@ int run_public_command_registry_smoke(void) {
         .intents = DCC_INTENT_GUILDS,
     };
     dcc_status_t status = dcc_client_create(&client_opts, &client);
+    if (status == DCC_OK) {
+        status = rest_activate_client(client);
+    }
     if (status != DCC_OK) {
         fprintf(stderr, "dcc_client_create failed: %s\n", dcc_status_string(status));
         return 1;

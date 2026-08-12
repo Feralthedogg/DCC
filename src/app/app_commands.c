@@ -57,7 +57,7 @@ static void dcc_app_command_sync_log_status(
 
 static void dcc_app_command_sync_fetch_cb(
     dcc_client_t *client,
-    const dcc_rest_response_t *response,
+    const dcc_rest_result_t *response,
     void *user_data
 ) {
     dcc_app_command_sync_state_t *state = (dcc_app_command_sync_state_t *)user_data;
@@ -65,14 +65,14 @@ static void dcc_app_command_sync_fetch_cb(
         free(state);
         return;
     }
-    if (response == NULL || response->error != DCC_OK ||
-        response->status < 200U || response->status >= 300U ||
+    if (response == NULL || dcc_rest_result_status(response) != DCC_OK ||
+        response->http_status < 200U || response->http_status >= 300U ||
         response->body == NULL) {
         dcc_app_command_sync_log_status(
             client,
             DCC_LOG_WARN,
             "app command sync remote fetch failed",
-            response != NULL && response->error != DCC_OK ? response->error : DCC_ERR_DISCORD
+            response != NULL ? dcc_rest_result_status(response) : DCC_ERR_DISCORD
         );
         free(state);
         return;
@@ -170,8 +170,12 @@ static void dcc_app_command_sync_ready_cb(
         client,
         state->options.application_id,
         &state->options.command_registry,
-        dcc_app_command_sync_fetch_cb,
-        state
+        &(dcc_rest_call_options_t){
+            sizeof(dcc_rest_call_options_t), DCC_REST_CALL_OPTIONS_VERSION,
+            DCC_REST_PRIORITY_NORMAL, dcc_app_command_sync_fetch_cb, state,
+            NULL, DCC_REST_AUTH_DEFAULT, NULL, UINT64_C(0)
+        },
+        NULL
     );
     if (status != DCC_OK) {
         dcc_app_command_sync_log_status(client, DCC_LOG_WARN, "app command sync remote fetch queue failed", status);
@@ -205,9 +209,10 @@ dcc_status_t dcc_app_apply_command_plan(
     if (app == NULL || application_id == 0U || plan == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    const dcc_command_registry_options_t *effective =
-        options != NULL ? options : &app->command_registry_options;
-    return dcc_command_registry_apply(app->client, application_id, effective, plan, cb, user_data);
+    (void)options;
+    (void)cb;
+    (void)user_data;
+    return dcc_command_registry_apply(app->client, application_id, plan, NULL, NULL);
 }
 
 dcc_status_t dcc_app_sync_commands_from_json(
