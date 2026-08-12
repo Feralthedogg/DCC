@@ -1,4 +1,5 @@
 #include "internal/rest/dcc_rest_json_internal.h"
+#include "internal/rest/dcc_rest_sensitive_internal.h"
 #include "internal/rest/dcc_rest_task8_internal.h"
 
 #include <math.h>
@@ -131,10 +132,16 @@ dcc_task8_build_member_add(const dcc_rest_guild_member_add_t *value,
     status =
         dcc_rest_json_append_bool_member(&body, &first, "deaf", value->deaf);
   if (status != DCC_OK) {
-    dcc_rest_buffer_deinit(&body);
+    dcc_rest_sensitive_free(body.data, body.cap);
     return status;
   }
-  return finish_body(&body, out);
+  status = dcc_rest_buffer_append_cstr(&body, "}");
+  if (status != DCC_OK) {
+    dcc_rest_sensitive_free(body.data, body.cap);
+    return status;
+  }
+  *out = body.data;
+  return DCC_OK;
 }
 
 dcc_status_t

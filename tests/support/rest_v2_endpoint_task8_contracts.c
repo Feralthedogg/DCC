@@ -1,5 +1,6 @@
 #include <dcc/rest.h>
 
+#include "internal/rest/dcc_rest_buffer_internal.h"
 #include "internal/rest/dcc_rest_endpoint_internal.h"
 #include "rest_v2_endpoint_smoke_support.h"
 #include "rest_v2_task7_sensitive_probe.h"
@@ -721,6 +722,38 @@ static int task8_sensitive_body_wipe_contract(dcc_client_t *client) {
             dcc_status_string(submit), (void *)request,
             before.secure_wipe_calls, after.secure_wipe_calls,
             before.secure_wipe_bytes, after.secure_wipe_bytes, expected_wipe);
+    dcc_rest_request_destroy(request);
+    return 1;
+  }
+
+  char long_token[1537];
+  memset(long_token, 's', sizeof(long_token) - 1U);
+  long_token[sizeof(long_token) - 1U] = '\0';
+  body =
+      (dcc_rest_guild_member_add_t)DCC_REST_GUILD_MEMBER_ADD_INIT(long_token);
+  before = (dcc_endpoint_sensitive_probe_snapshot_t)
+      DCC_ENDPOINT_SENSITIVE_PROBE_SNAPSHOT_INIT;
+  after = (dcc_endpoint_sensitive_probe_snapshot_t)
+      DCC_ENDPOINT_SENSITIVE_PROBE_SNAPSHOT_INIT;
+  request = (dcc_rest_request_t *)(uintptr_t)1U;
+  dcc_endpoint_test_sensitive_probe_begin(long_token, sizeof(long_token) - 1U);
+  before_status = dcc_endpoint_test_sensitive_probe_snapshot(&before);
+  dcc_rest_buffer_test_allocation_failure_begin(1U);
+  submit = dcc_rest_add_guild_member(client, 840U, 841U, &body, NULL, &request);
+  dcc_rest_buffer_test_allocation_failure_end();
+  after_status = dcc_endpoint_test_sensitive_probe_snapshot(&after);
+  dcc_endpoint_test_sensitive_probe_end();
+  if (before_status != DCC_OK || after_status != DCC_OK ||
+      submit != DCC_ERR_NOMEM || request != NULL ||
+      after.secure_wipe_calls != before.secure_wipe_calls + 1U ||
+      after.secure_wipe_bytes < before.secure_wipe_bytes + 1024U) {
+    fprintf(stderr,
+            "Task 8 partial sensitive body wipe before=%s after=%s submit=%s "
+            "request=%p wipes=%zu/%zu bytes=%zu/%zu\n",
+            dcc_status_string(before_status), dcc_status_string(after_status),
+            dcc_status_string(submit), (void *)request,
+            before.secure_wipe_calls, after.secure_wipe_calls,
+            before.secure_wipe_bytes, after.secure_wipe_bytes);
     dcc_rest_request_destroy(request);
     return 1;
   }
