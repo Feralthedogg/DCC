@@ -226,15 +226,18 @@ typedef dcc_status_t (*dcc_package_bulk_command_permissions_fn)(
     );
 typedef dcc_status_t (*dcc_package_guild_ban_fn)(
         dcc_client_t *,
-        const dcc_guild_ban_params_t *,
-        dcc_rest_cb,
-        void *
+        dcc_snowflake_t,
+        dcc_snowflake_t,
+        const dcc_rest_guild_ban_create_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_guild_prune_fn)(
         dcc_client_t *,
-        const dcc_guild_prune_params_t *,
-        dcc_rest_cb,
-        void *
+        dcc_snowflake_t,
+        const dcc_rest_guild_prune_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_test_entitlement_fn)(
         dcc_client_t *,
@@ -244,9 +247,11 @@ typedef dcc_status_t (*dcc_package_test_entitlement_fn)(
     );
 typedef dcc_status_t (*dcc_package_member_role_fn)(
         dcc_client_t *,
-        const dcc_guild_member_role_params_t *,
-        dcc_rest_cb,
-        void *
+        dcc_snowflake_t,
+        dcc_snowflake_t,
+        dcc_snowflake_t,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_thread_member_fn)(
         dcc_client_t *,

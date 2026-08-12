@@ -1960,6 +1960,11 @@ int main(void) {
             client, &capture, &callback, &observer
         );
     }
+    if (!failed) {
+        failed = endpoint_task8_contract(
+            client, &capture, &callback, &observer
+        );
+    }
     dcc_status_t stop_status = dcc_client_stop(client);
     (void)pthread_join(runner_thread, NULL);
     if (!failed && stop_status == DCC_OK) {

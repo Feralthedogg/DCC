@@ -330,7 +330,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     call_rest_modify_guild_params,
                     "PATCH",
                     "/guilds/333",
-                    "{\"id\":\"333\",\"name\":\"ops edit\",\"widget_enabled\":false,\"default_message_notifications\":0,\"explicit_content_filter\":1,\"mfa_level\":0,\"system_channel_id\":\"224\",\"premium_progress_bar_enabled\":false,\"description\":\"desc edit\"}"
+                    "{\"name\":\"ops edit\",\"default_message_notifications\":0,\"explicit_content_filter\":1,\"system_channel_id\":\"224\",\"description\":\"desc edit\",\"premium_progress_bar_enabled\":false}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -346,7 +346,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     call_rest_modify_current_guild_member_params,
                     "PATCH",
                     "/guilds/333/members/@me",
-                    "{\"nick\":\"ops typed\",\"banner\":null,\"avatar\":\"data:image/png;base64,AA==\",\"bio\":\"bio typed\"}"
+                    "{\"nick\":\"ops typed\",\"avatar\":\"data:image/png;base64,AA==\",\"bio\":\"bio typed\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -369,7 +369,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     "get_guild_audit_log",
                     call_rest_get_guild_audit_log,
                     "GET",
-                    "/guilds/333/audit-logs?limit=2&action_type=20",
+                    "/guilds/333/audit-logs?action_type=20&limit=2",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -401,7 +401,7 @@ int run_public_rest_wrapper_expect_channels_smoke(dcc_client_t *client) {
                     "get_guild_bans_page",
                     call_rest_get_guild_bans_page,
                     "GET",
-                    "/guilds/333/bans?after=444&before=222&limit=2",
+                    "/guilds/333/bans?limit=2&before=222&after=444",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(

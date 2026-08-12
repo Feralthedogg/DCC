@@ -69,15 +69,22 @@ static dcc_status_t call_official_get_default_soundboard_sounds(dcc_client_t *cl
 }
 
 static dcc_status_t call_official_get_guild_soundboard_sounds(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_soundboard_sounds(client, 333, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_soundboard_sounds(client, 333, &options, NULL);
 }
 
 static dcc_status_t call_official_get_guild_soundboard_sound(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_soundboard_sound(client, 333, 777, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_soundboard_sound(client, 333, 777, &options, NULL);
 }
 
 static dcc_status_t call_official_create_guild_soundboard_sound(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_guild_soundboard_sound(client, 333, "{\"name\":\"bell\"}", cb, user_data);
+    dcc_rest_guild_soundboard_sound_create_t body =
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_INIT(
+            "bell", "data:audio/ogg;base64,AAAA"
+        );
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_create_guild_soundboard_sound(client, 333, &body, &options, NULL);
 }
 
 static dcc_status_t call_official_create_guild_soundboard_sound_params(
@@ -85,20 +92,25 @@ static dcc_status_t call_official_create_guild_soundboard_sound_params(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    dcc_guild_soundboard_sound_params_t params = {
-        .size = sizeof(params),
-        .name = "bell",
-        .sound = "data:audio/ogg;base64,AAAA",
-        .volume = 0.5,
-        .emoji_name = "ding",
-        .has_volume = 1,
-        .has_emoji_name = 1
-    };
-    return dcc_rest_create_guild_soundboard_sound_params(client, 333, &params, cb, user_data);
+    dcc_rest_guild_soundboard_sound_create_t body =
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_INIT(
+            "bell", "data:audio/ogg;base64,AAAA"
+        );
+    body.present = DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_PRESENT_VOLUME |
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_PRESENT_EMOJI_NAME;
+    body.volume = 0.5;
+    body.emoji_name = "ding";
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_create_guild_soundboard_sound(client, 333, &body, &options, NULL);
 }
 
 static dcc_status_t call_official_modify_guild_soundboard_sound(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_modify_guild_soundboard_sound(client, 333, 777, "{\"name\":\"bell2\"}", cb, user_data);
+    dcc_rest_guild_soundboard_sound_update_t body =
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_INIT;
+    body.present = DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_NAME;
+    body.name = "bell2";
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_modify_guild_soundboard_sound(client, 333, 777, &body, &options, NULL);
 }
 
 static dcc_status_t call_official_modify_guild_soundboard_sound_params(
@@ -106,19 +118,21 @@ static dcc_status_t call_official_modify_guild_soundboard_sound_params(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    dcc_guild_soundboard_sound_params_t params = {
-        .size = sizeof(params),
-        .name = "bell2",
-        .volume = 1.0,
-        .emoji_id = 0,
-        .has_volume = 1,
-        .has_emoji_id = 1
-    };
-    return dcc_rest_modify_guild_soundboard_sound_params(client, 333, 777, &params, cb, user_data);
+    dcc_rest_guild_soundboard_sound_update_t body =
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_INIT;
+    body.present = DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_NAME |
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_VOLUME |
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_EMOJI_ID;
+    body.nulls = DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_EMOJI_ID;
+    body.name = "bell2";
+    body.volume = 1.0;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_modify_guild_soundboard_sound(client, 333, 777, &body, &options, NULL);
 }
 
 static dcc_status_t call_official_delete_guild_soundboard_sound(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_guild_soundboard_sound(client, 333, 777, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_delete_guild_soundboard_sound(client, 333, 777, &options, NULL);
 }
 
 static dcc_status_t call_official_get_sku_subscriptions(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
@@ -130,39 +144,51 @@ static dcc_status_t call_official_get_sku_subscription(dcc_client_t *client, dcc
 }
 
 static dcc_status_t call_official_bulk_ban_guild_members(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_bulk_ban_guild_members(client, 333, "{\"user_ids\":[\"444\"]}", cb, user_data);
+    dcc_snowflake_t users[] = {444};
+    dcc_rest_guild_bulk_ban_t body = DCC_REST_GUILD_BULK_BAN_INIT(users, 1U);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_bulk_ban_guild_members(client, 333, &body, &options, NULL);
 }
 
 static dcc_status_t call_official_bulk_ban_guild_members_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     dcc_snowflake_t users[] = {444, 555};
-    dcc_bulk_ban_params_t params = {
-        .size = sizeof(params),
-        .user_ids = users,
-        .user_id_count = 2,
-        .delete_message_seconds = 60,
-        .has_delete_message_seconds = 1
-    };
-    return dcc_rest_bulk_ban_guild_members_params(client, 333, &params, cb, user_data);
+    dcc_rest_guild_bulk_ban_t body = DCC_REST_GUILD_BULK_BAN_INIT(users, 2U);
+    body.present = DCC_REST_GUILD_BULK_BAN_PRESENT_DELETE_MESSAGE_SECONDS;
+    body.delete_message_seconds = 60;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_bulk_ban_guild_members(client, 333, &body, &options, NULL);
 }
 
 static dcc_status_t call_official_get_guild_role(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_role(client, 333, 555, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_role(client, 333, 555, &options, NULL);
 }
 
 static dcc_status_t call_official_get_guild_role_member_counts(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_role_member_counts(client, 333, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_role_member_counts(client, 333, &options, NULL);
 }
 
 static dcc_status_t call_official_get_guild_widget_json(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_widget_json(client, 333, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_widget_json(client, 333, &options, NULL);
 }
 
 static dcc_status_t call_official_get_guild_widget_png(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_widget_png(client, 333, "banner1", cb, user_data);
+    dcc_rest_guild_widget_image_query_t query =
+        DCC_REST_GUILD_WIDGET_IMAGE_QUERY_INIT;
+    query.present = DCC_REST_GUILD_WIDGET_IMAGE_QUERY_PRESENT_STYLE;
+    query.style = DCC_REST_GUILD_WIDGET_STYLE_BANNER1;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_widget_png(client, 333, &query, &options, NULL);
 }
 
 static dcc_status_t call_official_modify_guild_incident_actions(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_modify_guild_incident_actions(client, 333, "{\"invites_disabled_until\":null}", cb, user_data);
+    dcc_rest_guild_incident_actions_t body = DCC_REST_GUILD_INCIDENT_ACTIONS_INIT;
+    body.present = DCC_REST_GUILD_INCIDENT_ACTIONS_PRESENT_INVITES_DISABLED_UNTIL;
+    body.nulls = DCC_REST_GUILD_INCIDENT_ACTIONS_PRESENT_INVITES_DISABLED_UNTIL;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_modify_guild_incident_actions(client, 333, &body, &options, NULL);
 }
 
 static dcc_status_t call_official_modify_guild_incident_actions_params(
@@ -170,14 +196,13 @@ static dcc_status_t call_official_modify_guild_incident_actions_params(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    dcc_guild_incident_actions_params_t params = {
-        .size = sizeof(params),
-        .invites_disabled_until = NULL,
-        .dms_disabled_until = "2026-06-27T00:00:00+00:00",
-        .has_invites_disabled_until = 1,
-        .has_dms_disabled_until = 1
-    };
-    return dcc_rest_modify_guild_incident_actions_params(client, 333, &params, cb, user_data);
+    dcc_rest_guild_incident_actions_t body = DCC_REST_GUILD_INCIDENT_ACTIONS_INIT;
+    body.present = DCC_REST_GUILD_INCIDENT_ACTIONS_PRESENT_INVITES_DISABLED_UNTIL |
+        DCC_REST_GUILD_INCIDENT_ACTIONS_PRESENT_DMS_DISABLED_UNTIL;
+    body.nulls = DCC_REST_GUILD_INCIDENT_ACTIONS_PRESENT_INVITES_DISABLED_UNTIL;
+    body.dms_disabled_until = "2026-06-27T00:00:00+00:00";
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_modify_guild_incident_actions(client, 333, &body, &options, NULL);
 }
 
 static dcc_status_t call_official_get_invite_target_users(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
@@ -203,7 +228,10 @@ static dcc_status_t call_official_get_sticker_pack(dcc_client_t *client, dcc_res
 }
 
 static dcc_status_t call_official_get_current_user_guild_member(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_current_user_guild_member(client, 333, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    options.auth_mode = DCC_REST_AUTH_BEARER;
+    options.auth_token = "guild-member-token";
+    return dcc_rest_get_current_user_guild_member(client, 333, &options, NULL);
 }
 
 static dcc_status_t call_official_delete_current_user_application_role_connection(
@@ -626,23 +654,6 @@ static int run_public_rest_official_body_builder_edges(void) {
         return 1;
     }
 
-    dcc_guild_incident_actions_params_t incident = {
-        .size = sizeof(incident),
-        .invites_disabled_until = "2026-06-27T00:00:00+00:00",
-        .dms_disabled_until = NULL,
-        .has_invites_disabled_until = 1,
-        .has_dms_disabled_until = 1
-    };
-    json = NULL;
-    body_status = dcc_rest_build_guild_incident_actions_body(&incident, &json);
-    if (expect_official_body_json(
-            "incident_nullable_edges",
-            body_status,
-            json,
-            "{\"invites_disabled_until\":\"2026-06-27T00:00:00+00:00\",\"dms_disabled_until\":null}") != 0) {
-        return 1;
-    }
-
     dcc_lobby_message_params_t lobby_message = {
         .size = sizeof(lobby_message),
         .content = "hello \"world\" \\ slash",
@@ -712,7 +723,7 @@ static int run_public_rest_official_surface_routes(dcc_client_t *client) {
             call_official_get_guild_soundboard_sound, "GET", "/guilds/333/soundboard-sounds/777", NULL) != 0 ||
         run_official_rest_wrapper_expect(client, "official_create_guild_soundboard_sound",
             call_official_create_guild_soundboard_sound, "POST", "/guilds/333/soundboard-sounds",
-            "{\"name\":\"bell\"}") != 0 ||
+            "{\"name\":\"bell\",\"sound\":\"data:audio/ogg;base64,AAAA\"}") != 0 ||
         run_official_rest_wrapper_expect(client, "official_create_guild_soundboard_sound_params",
             call_official_create_guild_soundboard_sound_params, "POST", "/guilds/333/soundboard-sounds",
             "{\"name\":\"bell\",\"sound\":\"data:audio/ogg;base64,AAAA\",\"volume\":0.5,\"emoji_name\":\"ding\"}") != 0 ||

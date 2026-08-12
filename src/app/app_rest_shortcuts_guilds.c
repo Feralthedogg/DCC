@@ -47,6 +47,28 @@
 #include <dcc/rest/webhooks/messages/edit.h>
 #include <dcc/rest/webhooks/messages/fetch.h>
 
+#include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_paths_internal.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+static dcc_status_t app_raw_json(
+    dcc_app_t *app,
+    dcc_rest_method_t method,
+    const char *path,
+    const char *query,
+    const char *json,
+    dcc_rest_cb cb,
+    void *user_data
+) {
+    return dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), method, path, query,
+        json != NULL ? "application/json" : NULL,
+        json, json != NULL ? strlen(json) : 0U, cb, user_data
+    );
+}
+
 dcc_status_t dcc_app_get_member(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
@@ -57,7 +79,10 @@ dcc_status_t dcc_app_get_member(
     if (app == NULL || guild_id == 0U || user_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_member(dcc_app_client(app), guild_id, user_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_member,
+        dcc_app_client(app), guild_id, user_id
+    );
 }
 
 dcc_status_t dcc_app_add_member_role(
@@ -71,13 +96,9 @@ dcc_status_t dcc_app_add_member_role(
     if (app == NULL || guild_id == 0U || user_id == 0U || role_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_add_guild_member_role(
-        dcc_app_client(app),
-        guild_id,
-        user_id,
-        role_id,
-        cb,
-        user_data
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_add_guild_member_role,
+        dcc_app_client(app), guild_id, user_id, role_id
     );
 }
 
@@ -92,13 +113,9 @@ dcc_status_t dcc_app_remove_member_role(
     if (app == NULL || guild_id == 0U || user_id == 0U || role_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_remove_guild_member_role(
-        dcc_app_client(app),
-        guild_id,
-        user_id,
-        role_id,
-        cb,
-        user_data
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_remove_guild_member_role,
+        dcc_app_client(app), guild_id, user_id, role_id
     );
 }
 
@@ -113,13 +130,12 @@ dcc_status_t dcc_app_set_member_timeout(
     if (app == NULL || guild_id == 0U || user_id == 0U || communication_disabled_until == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_set_guild_member_timeout(
-        dcc_app_client(app),
-        guild_id,
-        user_id,
-        communication_disabled_until,
-        cb,
-        user_data
+    dcc_rest_guild_member_update_t body = DCC_REST_GUILD_MEMBER_UPDATE_INIT;
+    body.present = DCC_REST_GUILD_MEMBER_UPDATE_PRESENT_COMMUNICATION_DISABLED_UNTIL;
+    body.communication_disabled_until = communication_disabled_until;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_guild_member,
+        dcc_app_client(app), guild_id, user_id, &body
     );
 }
 
@@ -133,7 +149,13 @@ dcc_status_t dcc_app_clear_member_timeout(
     if (app == NULL || guild_id == 0U || user_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_clear_guild_member_timeout(dcc_app_client(app), guild_id, user_id, cb, user_data);
+    dcc_rest_guild_member_update_t body = DCC_REST_GUILD_MEMBER_UPDATE_INIT;
+    body.present = DCC_REST_GUILD_MEMBER_UPDATE_PRESENT_COMMUNICATION_DISABLED_UNTIL;
+    body.nulls = DCC_REST_GUILD_MEMBER_UPDATE_PRESENT_COMMUNICATION_DISABLED_UNTIL;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_guild_member,
+        dcc_app_client(app), guild_id, user_id, &body
+    );
 }
 
 dcc_status_t dcc_app_move_member(
@@ -147,7 +169,13 @@ dcc_status_t dcc_app_move_member(
     if (app == NULL || guild_id == 0U || user_id == 0U || channel_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_move_guild_member(dcc_app_client(app), guild_id, user_id, channel_id, cb, user_data);
+    dcc_rest_guild_member_update_t body = DCC_REST_GUILD_MEMBER_UPDATE_INIT;
+    body.present = DCC_REST_GUILD_MEMBER_UPDATE_PRESENT_CHANNEL_ID;
+    body.channel_id = channel_id;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_guild_member,
+        dcc_app_client(app), guild_id, user_id, &body
+    );
 }
 
 dcc_status_t dcc_app_remove_member(
@@ -160,7 +188,10 @@ dcc_status_t dcc_app_remove_member(
     if (app == NULL || guild_id == 0U || user_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_remove_guild_member(dcc_app_client(app), guild_id, user_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_remove_guild_member,
+        dcc_app_client(app), guild_id, user_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_bans(
@@ -173,7 +204,14 @@ dcc_status_t dcc_app_get_guild_bans(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_bans(dcc_app_client(app), guild_id, query, cb, user_data);
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/bans",
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_GET, path, query, NULL, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_get_guild_bans_page(
@@ -188,7 +226,24 @@ dcc_status_t dcc_app_get_guild_bans_page(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_bans_page(dcc_app_client(app), guild_id, before, after, limit, cb, user_data);
+    dcc_rest_guild_bans_query_t query = DCC_REST_GUILD_BANS_QUERY_INIT;
+    if (before != 0U) {
+        query.present |= DCC_REST_GUILD_BANS_QUERY_PRESENT_BEFORE;
+        query.before = before;
+    }
+    if (after != 0U) {
+        query.present |= DCC_REST_GUILD_BANS_QUERY_PRESENT_AFTER;
+        query.after = after;
+    }
+    if (limit != 0U) {
+        if (limit > UINT16_MAX) return DCC_ERR_INVALID_ARG;
+        query.present |= DCC_REST_GUILD_BANS_QUERY_PRESENT_LIMIT;
+        query.limit = (uint16_t)limit;
+    }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_bans,
+        dcc_app_client(app), guild_id, &query
+    );
 }
 
 dcc_status_t dcc_app_get_guild_ban(
@@ -201,7 +256,10 @@ dcc_status_t dcc_app_get_guild_ban(
     if (app == NULL || guild_id == 0U || user_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_ban(dcc_app_client(app), guild_id, user_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_ban,
+        dcc_app_client(app), guild_id, user_id
+    );
 }
 
 dcc_status_t dcc_app_create_guild_ban(
@@ -215,7 +273,14 @@ dcc_status_t dcc_app_create_guild_ban(
     if (app == NULL || guild_id == 0U || user_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_ban(dcc_app_client(app), guild_id, user_id, json_body, cb, user_data);
+    char path[112];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/bans/%llu",
+        (unsigned long long)guild_id, (unsigned long long)user_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PUT, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_create_guild_ban_seconds(
@@ -229,13 +294,12 @@ dcc_status_t dcc_app_create_guild_ban_seconds(
     if (app == NULL || guild_id == 0U || user_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_ban_seconds(
-        dcc_app_client(app),
-        guild_id,
-        user_id,
-        delete_message_seconds,
-        cb,
-        user_data
+    dcc_rest_guild_ban_create_t body = DCC_REST_GUILD_BAN_CREATE_INIT;
+    body.present = DCC_REST_GUILD_BAN_CREATE_PRESENT_DELETE_MESSAGE_SECONDS;
+    body.delete_message_seconds = delete_message_seconds;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_guild_ban,
+        dcc_app_client(app), guild_id, user_id, &body
     );
 }
 
@@ -248,7 +312,11 @@ dcc_status_t dcc_app_create_guild_ban_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_ban_params(dcc_app_client(app), params, cb, user_data);
+    if (params->size < sizeof(*params)) return DCC_ERR_INVALID_ARG;
+    return dcc_app_create_guild_ban_seconds(
+        app, params->guild_id, params->user_id,
+        params->delete_message_seconds, cb, user_data
+    );
 }
 
 dcc_status_t dcc_app_delete_guild_ban(
@@ -261,7 +329,10 @@ dcc_status_t dcc_app_delete_guild_ban(
     if (app == NULL || guild_id == 0U || user_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_guild_ban(dcc_app_client(app), guild_id, user_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_guild_ban,
+        dcc_app_client(app), guild_id, user_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_audit_log(
@@ -274,7 +345,14 @@ dcc_status_t dcc_app_get_guild_audit_log(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_audit_log(dcc_app_client(app), guild_id, query, cb, user_data);
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/audit-logs",
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_GET, path, query, NULL, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_get_guild_audit_log_page(
@@ -291,16 +369,15 @@ dcc_status_t dcc_app_get_guild_audit_log_page(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_audit_log_page(
-        dcc_app_client(app),
-        guild_id,
-        user_id,
-        action_type,
-        before,
-        after,
-        limit,
-        cb,
-        user_data
+    dcc_rest_guild_audit_log_query_t query = DCC_REST_GUILD_AUDIT_LOG_QUERY_INIT;
+    if (user_id != 0U) { query.present |= DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_USER_ID; query.user_id = user_id; }
+    if (action_type != 0U) { query.present |= DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_ACTION_TYPE; query.action_type = action_type; }
+    if (before != 0U) { query.present |= DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_BEFORE; query.before = before; }
+    if (after != 0U) { query.present |= DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_AFTER; query.after = after; }
+    if (limit != 0U) { if (limit > UINT16_MAX) return DCC_ERR_INVALID_ARG; query.present |= DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_LIMIT; query.limit = (uint16_t)limit; }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_audit_log,
+        dcc_app_client(app), guild_id, &query
     );
 }
 
@@ -314,7 +391,14 @@ dcc_status_t dcc_app_modify_current_guild_member(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_current_guild_member(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/members/@me",
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PATCH, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_current_guild_member_params(
@@ -326,7 +410,17 @@ dcc_status_t dcc_app_modify_current_guild_member_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_current_guild_member_params(dcc_app_client(app), params, cb, user_data);
+    if (params->size < sizeof(*params) || params->guild_id == 0U)
+        return DCC_ERR_INVALID_ARG;
+    dcc_rest_current_guild_member_update_t body = DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_INIT;
+    if (params->nick != NULL) { body.present |= DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_PRESENT_NICK; body.nick = params->nick; }
+    if (params->banner != NULL) { body.present |= DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_PRESENT_BANNER; body.banner = params->banner; }
+    if (params->avatar != NULL) { body.present |= DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_PRESENT_AVATAR; body.avatar = params->avatar; }
+    if (params->bio != NULL) { body.present |= DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_PRESENT_BIO; body.bio = params->bio; }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_current_guild_member,
+        dcc_app_client(app), params->guild_id, &body
+    );
 }
 
 dcc_status_t dcc_app_set_current_guild_member_nickname(
@@ -339,7 +433,14 @@ dcc_status_t dcc_app_set_current_guild_member_nickname(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_set_current_guild_member_nickname(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/members/@me/nick",
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PATCH, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_set_current_guild_member_nickname_params(
@@ -351,7 +452,16 @@ dcc_status_t dcc_app_set_current_guild_member_nickname_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_set_current_guild_member_nickname_params(dcc_app_client(app), params, cb, user_data);
+    if (params->size < sizeof(*params) || params->guild_id == 0U)
+        return DCC_ERR_INVALID_ARG;
+    dcc_rest_current_guild_member_nickname_t body = DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_INIT;
+    body.present = DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_PRESENT_NICK;
+    if (params->nick != NULL) body.nick = params->nick;
+    else body.nulls = DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_PRESENT_NICK;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_set_current_guild_member_nickname,
+        dcc_app_client(app), params->guild_id, &body
+    );
 }
 
 dcc_status_t dcc_app_get_guild_prune_count_options(
@@ -366,14 +476,12 @@ dcc_status_t dcc_app_get_guild_prune_count_options(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_prune_count_options(
-        dcc_app_client(app),
-        guild_id,
-        days,
-        include_roles,
-        include_role_count,
-        cb,
-        user_data
+    dcc_rest_guild_prune_query_t query = DCC_REST_GUILD_PRUNE_QUERY_INIT;
+    if (days != 0U) { query.present |= DCC_REST_GUILD_PRUNE_QUERY_PRESENT_DAYS; query.days = days; }
+    if (include_role_count != 0U) { query.present |= DCC_REST_GUILD_PRUNE_QUERY_PRESENT_INCLUDE_ROLES; query.include_roles = include_roles; query.include_role_count = include_role_count; }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_prune_count,
+        dcc_app_client(app), guild_id, &query
     );
 }
 
@@ -390,15 +498,14 @@ dcc_status_t dcc_app_begin_guild_prune_options(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_begin_guild_prune_options(
-        dcc_app_client(app),
-        guild_id,
-        days,
-        include_roles,
-        include_role_count,
-        compute_prune_count,
-        cb,
-        user_data
+    dcc_rest_guild_prune_t body = DCC_REST_GUILD_PRUNE_INIT;
+    if (days != 0U) { body.present |= DCC_REST_GUILD_PRUNE_PRESENT_DAYS; body.days = days; }
+    body.present |= DCC_REST_GUILD_PRUNE_PRESENT_COMPUTE_PRUNE_COUNT;
+    body.compute_prune_count = compute_prune_count;
+    if (include_role_count != 0U) { body.present |= DCC_REST_GUILD_PRUNE_PRESENT_INCLUDE_ROLES; body.include_roles = include_roles; body.include_role_count = include_role_count; }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_begin_guild_prune,
+        dcc_app_client(app), guild_id, &body
     );
 }
 
@@ -411,7 +518,11 @@ dcc_status_t dcc_app_begin_guild_prune_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_begin_guild_prune_params(dcc_app_client(app), params, cb, user_data);
+    if (params->size < sizeof(*params)) return DCC_ERR_INVALID_ARG;
+    return dcc_app_begin_guild_prune_options(
+        app, params->guild_id, params->days, params->include_roles,
+        params->include_role_count, params->compute_prune_count, cb, user_data
+    );
 }
 
 dcc_status_t dcc_app_get_guild_integrations(
@@ -423,7 +534,10 @@ dcc_status_t dcc_app_get_guild_integrations(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_integrations(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_integrations,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_integration(
@@ -453,7 +567,10 @@ dcc_status_t dcc_app_delete_guild_integration(
     if (app == NULL || guild_id == 0U || integration_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_guild_integration(dcc_app_client(app), guild_id, integration_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_guild_integration,
+        dcc_app_client(app), guild_id, integration_id
+    );
 }
 
 dcc_status_t dcc_app_sync_guild_integration(
@@ -480,7 +597,10 @@ dcc_status_t dcc_app_get_guild_widget(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_widget(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_widget,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_widget(
@@ -493,7 +613,14 @@ dcc_status_t dcc_app_modify_guild_widget(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_widget(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/widget",
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PATCH, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_guild_widget_params(
@@ -506,7 +633,17 @@ dcc_status_t dcc_app_modify_guild_widget_params(
     if (app == NULL || guild_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_widget_params(dcc_app_client(app), guild_id, params, cb, user_data);
+    if (params->size < sizeof(*params)) return DCC_ERR_INVALID_ARG;
+    dcc_rest_guild_widget_update_t body = DCC_REST_GUILD_WIDGET_UPDATE_INIT;
+    body.present = DCC_REST_GUILD_WIDGET_UPDATE_PRESENT_ENABLED |
+        DCC_REST_GUILD_WIDGET_UPDATE_PRESENT_CHANNEL_ID;
+    body.enabled = params->enabled;
+    if (params->channel_id != 0U) body.channel_id = params->channel_id;
+    else body.nulls = DCC_REST_GUILD_WIDGET_UPDATE_PRESENT_CHANNEL_ID;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_guild_widget,
+        dcc_app_client(app), guild_id, &body
+    );
 }
 
 dcc_status_t dcc_app_get_guild_vanity_url(
@@ -518,7 +655,10 @@ dcc_status_t dcc_app_get_guild_vanity_url(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_vanity_url(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_vanity_url,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_onboarding(
@@ -567,7 +707,10 @@ dcc_status_t dcc_app_get_guild_welcome_screen(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_welcome_screen(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_welcome_screen,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_welcome_screen(
@@ -580,7 +723,14 @@ dcc_status_t dcc_app_modify_guild_welcome_screen(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_welcome_screen(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/welcome-screen",
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PATCH, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_guild_welcome_screen_params(
@@ -593,7 +743,44 @@ dcc_status_t dcc_app_modify_guild_welcome_screen_params(
     if (app == NULL || guild_id == 0U || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_welcome_screen_params(dcc_app_client(app), guild_id, params, cb, user_data);
+    if (params->size < sizeof(*params)) return DCC_ERR_INVALID_ARG;
+    dcc_rest_guild_welcome_screen_update_t body = DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_INIT;
+    body.present = DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_PRESENT_ENABLED;
+    body.enabled = params->enabled;
+    if (params->description != NULL) {
+        body.present |= DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_PRESENT_DESCRIPTION;
+        body.description = params->description;
+    }
+    dcc_rest_welcome_channel_t *channels = NULL;
+    if (params->welcome_channel_count != 0U) {
+        channels = calloc(params->welcome_channel_count, sizeof(*channels));
+        if (channels == NULL) return DCC_ERR_NOMEM;
+        for (size_t i = 0U; i < params->welcome_channel_count; ++i) {
+            dcc_rest_welcome_channel_init(
+                &channels[i], params->welcome_channels[i].channel_id,
+                params->welcome_channels[i].description
+            );
+            if (params->welcome_channels[i].emoji_id != 0U) {
+                channels[i].present |= DCC_REST_WELCOME_CHANNEL_PRESENT_EMOJI_ID;
+                channels[i].emoji_id = params->welcome_channels[i].emoji_id;
+            } else if (params->welcome_channels[i].emoji_name != NULL) {
+                channels[i].present |= DCC_REST_WELCOME_CHANNEL_PRESENT_EMOJI_NAME;
+                channels[i].emoji_name = params->welcome_channels[i].emoji_name;
+            }
+        }
+        body.present |= DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_PRESENT_WELCOME_CHANNELS;
+        body.welcome_channels = channels;
+        body.welcome_channel_count = params->welcome_channel_count;
+    }
+    dcc_rest_call_options_t options;
+    void *bridge = NULL;
+    dcc_status_t status = dcc_endpoint_legacy_options(cb, user_data, &options, &bridge);
+    if (status == DCC_OK) status = dcc_rest_modify_guild_welcome_screen(
+        dcc_app_client(app), guild_id, &body, &options, NULL
+    );
+    if (status != DCC_OK) dcc_endpoint_legacy_bridge_release(bridge);
+    free(channels);
+    return status;
 }
 
 dcc_status_t dcc_app_get_auto_moderation_rules(

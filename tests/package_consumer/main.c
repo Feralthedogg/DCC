@@ -99,18 +99,19 @@ int main(void) {
         .mode = DCC_ONBOARDING_MODE_ADVANCED
     };
     const dcc_snowflake_t member_roles[] = {456};
-    const dcc_guild_member_params_t member = {
-        .size = sizeof(dcc_guild_member_params_t),
-        .guild_id = 123,
-        .user_id = 456,
-        .flags = DCC_GUILD_MEMBER_UPDATE_NICK | DCC_GUILD_MEMBER_UPDATE_ROLES,
+    const dcc_rest_guild_member_update_t member = {
+        .size = sizeof(dcc_rest_guild_member_update_t),
+        .version = DCC_REST_GUILD_MEMBER_UPDATE_VERSION,
+        .present = DCC_REST_GUILD_MEMBER_UPDATE_PRESENT_NICK |
+            DCC_REST_GUILD_MEMBER_UPDATE_PRESENT_ROLES,
         .nick = "member",
         .roles = member_roles,
         .role_count = sizeof(member_roles) / sizeof(member_roles[0])
     };
-    const dcc_current_guild_member_params_t current_member = {
-        .size = sizeof(dcc_current_guild_member_params_t),
-        .guild_id = 123,
+    const dcc_rest_current_guild_member_update_t current_member = {
+        .size = sizeof(dcc_rest_current_guild_member_update_t),
+        .version = DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_VERSION,
+        .present = DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_PRESENT_NICK,
         .nick = "self"
     };
     const dcc_current_user_params_t current_user = {
@@ -215,16 +216,19 @@ int main(void) {
         .commands = &command_permission_update,
         .command_count = 1U
     };
-    const dcc_guild_ban_params_t ban = {
-        .size = sizeof(dcc_guild_ban_params_t),
-        .guild_id = 123,
-        .user_id = 456,
+    const dcc_rest_guild_ban_create_t ban = {
+        .size = sizeof(dcc_rest_guild_ban_create_t),
+        .version = DCC_REST_GUILD_BAN_CREATE_VERSION,
+        .present = DCC_REST_GUILD_BAN_CREATE_PRESENT_DELETE_MESSAGE_SECONDS,
         .delete_message_seconds = 60
     };
     const dcc_snowflake_t prune_roles[] = {789};
-    const dcc_guild_prune_params_t prune = {
-        .size = sizeof(dcc_guild_prune_params_t),
-        .guild_id = 123,
+    const dcc_rest_guild_prune_t prune = {
+        .size = sizeof(dcc_rest_guild_prune_t),
+        .version = DCC_REST_GUILD_PRUNE_VERSION,
+        .present = DCC_REST_GUILD_PRUNE_PRESENT_DAYS |
+            DCC_REST_GUILD_PRUNE_PRESENT_INCLUDE_ROLES |
+            DCC_REST_GUILD_PRUNE_PRESENT_COMPUTE_PRUNE_COUNT,
         .days = 7,
         .include_roles = prune_roles,
         .include_role_count = sizeof(prune_roles) / sizeof(prune_roles[0]),
@@ -237,12 +241,6 @@ int main(void) {
         .owner_id = 789,
         .owner_type = 2
     };
-    const dcc_guild_member_role_params_t member_role = {
-        .size = sizeof(dcc_guild_member_role_params_t),
-        .guild_id = 123,
-        .user_id = 456,
-        .role_id = 789
-    };
     dcc_package_metadata_update_fn metadata_update = dcc_rest_update_application_role_connection_metadata_params;
     dcc_package_connection_update_fn connection_update = dcc_rest_update_current_user_application_role_connection_params;
     dcc_package_automod_create_fn automod_create = dcc_rest_create_auto_moderation_rule_params;
@@ -251,8 +249,8 @@ int main(void) {
     dcc_package_scheduled_event_create_fn scheduled_event_create = dcc_rest_create_guild_scheduled_event_params;
     dcc_package_template_create_fn template_create = dcc_rest_create_guild_template_params;
     dcc_package_onboarding_modify_fn onboarding_modify = dcc_rest_modify_guild_onboarding_params;
-    dcc_package_member_modify_fn member_modify = dcc_rest_modify_guild_member_params;
-    dcc_package_current_member_modify_fn current_member_modify = dcc_rest_modify_current_guild_member_params;
+    dcc_package_member_modify_fn member_modify = dcc_rest_modify_guild_member;
+    dcc_package_current_member_modify_fn current_member_modify = dcc_rest_modify_current_guild_member;
     dcc_package_current_user_modify_fn current_user_modify = dcc_rest_modify_current_user_params;
     dcc_package_invite_create_fn invite_create = dcc_rest_create_channel_invite;
     dcc_package_webhook_create_fn webhook_create = dcc_rest_create_webhook;
@@ -331,10 +329,10 @@ int main(void) {
     dcc_package_sticker_create_fn sticker_create = dcc_rest_create_guild_sticker_params;
     dcc_package_command_permissions_fn command_permissions_edit =
         dcc_rest_edit_guild_command_permissions_params;
-    dcc_package_guild_ban_fn ban_create = dcc_rest_create_guild_ban_params;
-    dcc_package_guild_prune_fn prune_begin = dcc_rest_begin_guild_prune_params;
+    dcc_package_guild_ban_fn ban_create = dcc_rest_create_guild_ban;
+    dcc_package_guild_prune_fn prune_begin = dcc_rest_begin_guild_prune;
     dcc_package_test_entitlement_fn test_entitlement_create = dcc_rest_create_test_entitlement_params;
-    dcc_package_member_role_fn member_role_add = dcc_rest_add_guild_member_role_params;
+    dcc_package_member_role_fn member_role_add = dcc_rest_add_guild_member_role;
     dcc_package_task_group_create_fn task_group_create = dcc_task_group_create;
     dcc_package_task_group_spawn_fn task_group_spawn = dcc_task_group_spawn;
     dcc_package_task_group_wait_fn task_group_wait = dcc_task_group_wait;
@@ -528,7 +526,6 @@ int main(void) {
                    ban.delete_message_seconds == 60U &&
                    prune.include_role_count == 1U &&
                    test_entitlement.owner_type == 2U &&
-                   member_role.role_id == 789U &&
                    thread_member_add != NULL &&
                    metadata_update != NULL &&
                    connection_update != NULL &&

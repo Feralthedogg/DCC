@@ -18,7 +18,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_modify_guild_widget_params,
                     "PATCH",
                     "/guilds/333/widget",
-                    "{\"channel_id\":\"222\",\"enabled\":true}"
+                    "{\"enabled\":true,\"channel_id\":\"222\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -58,7 +58,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_begin_guild_prune_options,
                     "POST",
                     "/guilds/333/prune",
-                    "{\"include_roles\":[\"555\",\"556\"],\"compute_prune_count\":false,\"days\":7}"
+                    "{\"days\":7,\"compute_prune_count\":false,\"include_roles\":[\"555\",\"556\"]}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -66,7 +66,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_begin_guild_prune_params,
                     "POST",
                     "/guilds/333/prune",
-                    "{\"include_roles\":[\"555\",\"556\"],\"compute_prune_count\":true,\"days\":7}"
+                    "{\"days\":7,\"compute_prune_count\":true,\"include_roles\":[\"555\",\"556\"]}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -114,7 +114,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_modify_guild_welcome_screen_params,
                     "PATCH",
                     "/guilds/333/welcome-screen",
-                    "{\"description\":\"Welcome home\",\"welcome_channels\":[{\"channel_id\":\"222\",\"description\":\"Read first\",\"emoji_id\":\"777\",\"emoji_name\":\"wave\"}],\"enabled\":true}"
+                    "{\"enabled\":true,\"welcome_channels\":[{\"channel_id\":\"222\",\"description\":\"Read first\",\"emoji_name\":\"wave\"}],\"description\":\"Welcome home\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -425,7 +425,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     "get_current_user_guilds",
                     call_rest_get_current_user_guilds,
                     "GET",
-                    "/users/@me/guilds?limit=2&after=333",
+                    "/users/@me/guilds?after=333&limit=2",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(

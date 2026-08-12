@@ -79,29 +79,25 @@ dcc_soundboard_send_params_t sound = DCC_SOUNDBOARD_SEND(
 );
 DCC_REST_SEND_SOUNDBOARD_PARAMS(client, channel_id, &sound, on_response, NULL);
 
-dcc_guild_soundboard_sound_params_t guild_sound = DCC_GUILD_SOUNDBOARD_SOUND(
-    .name = "bell",
-    .sound = "data:audio/ogg;base64,...",
-    .volume = 0.5,
-    .has_volume = 1,
-    .emoji_name = "ding",
-    .has_emoji_name = 1
-);
-DCC_REST_CREATE_GUILD_SOUNDBOARD_SOUND_PARAMS(
-    client,
-    guild_id,
-    &guild_sound,
-    on_response,
-    NULL
+dcc_rest_guild_soundboard_sound_create_t guild_sound =
+    DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_INIT(
+        "bell", "data:audio/ogg;base64,..."
+    );
+guild_sound.present = DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_PRESENT_VOLUME |
+    DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_PRESENT_EMOJI_NAME;
+guild_sound.volume = 0.5;
+guild_sound.emoji_name = "ding";
+dcc_rest_create_guild_soundboard_sound(
+    client, guild_id, &guild_sound, &call_options, &request
 );
 
-dcc_bulk_ban_params_t ban = DCC_BULK_BAN_BODY(
-    .user_ids = users,
-    .user_id_count = user_count,
-    .delete_message_seconds = 3600,
-    .has_delete_message_seconds = 1
+dcc_rest_guild_bulk_ban_t ban =
+    DCC_REST_GUILD_BULK_BAN_INIT(users, user_count);
+ban.present = DCC_REST_GUILD_BULK_BAN_PRESENT_DELETE_MESSAGE_SECONDS;
+ban.delete_message_seconds = 3600;
+dcc_rest_bulk_ban_guild_members(
+    client, guild_id, &ban, &call_options, &request
 );
-DCC_REST_BULK_BAN_PARAMS(client, guild_id, &ban, on_response, NULL);
 
 dcc_lobby_member_spec_t initial_members[] = {
     DCC_LOBBY_MEMBER_SPEC(
@@ -184,27 +180,21 @@ DCC_REST_UPDATE_LOBBY_MESSAGE_MODERATION_PARAMS(
 );
 ```
 
-The body builders return caller-owned JSON:
+Task 8 guild bodies are versioned records and are serialized synchronously by
+their canonical endpoint. Sound creation requires `name` and `sound`; sound
+modification accepts an empty update because every field is optional. Nullable
+fields use the same bit in `present` and `nulls`:
 
 ```c
-char *json = NULL;
-dcc_rest_build_guild_incident_actions_body(&actions, &json);
-dcc_rest_official_body_json_free(json);
-```
-
-Guild soundboard sound builders follow Discord's field semantics. Create
-requires `name` and `sound`; modify requires at least one explicitly supplied
-field. Nullable fields such as `emoji_id` and `emoji_name` are emitted only
-when their `has_*` flag is set:
-
-```c
-dcc_guild_soundboard_sound_params_t patch = DCC_GUILD_SOUNDBOARD_SOUND(
-    .name = "bell2",
-    .emoji_id = 0,
-    .has_emoji_id = 1
+dcc_rest_guild_soundboard_sound_update_t patch =
+    DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_INIT;
+patch.present = DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_NAME |
+    DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_EMOJI_ID;
+patch.nulls = DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_EMOJI_ID;
+patch.name = "bell2";
+dcc_rest_modify_guild_soundboard_sound(
+    client, guild_id, sound_id, &patch, &call_options, &request
 );
-dcc_rest_build_guild_soundboard_sound_modify_body(&patch, &json);
-dcc_rest_official_body_json_free(json);
 ```
 
 Lobby builders cover compact Social SDK request bodies while keeping metadata
@@ -329,24 +319,16 @@ dcc_rest_get_default_soundboard_sounds
 dcc_rest_get_guild_soundboard_sounds
 dcc_rest_get_guild_soundboard_sound
 dcc_rest_create_guild_soundboard_sound
-dcc_rest_build_guild_soundboard_sound_create_body
-dcc_rest_create_guild_soundboard_sound_params
 dcc_rest_modify_guild_soundboard_sound
-dcc_rest_build_guild_soundboard_sound_modify_body
-dcc_rest_modify_guild_soundboard_sound_params
 dcc_rest_delete_guild_soundboard_sound
 dcc_rest_get_sku_subscriptions
 dcc_rest_get_sku_subscription
-dcc_rest_build_bulk_ban_body
 dcc_rest_bulk_ban_guild_members
-dcc_rest_bulk_ban_guild_members_params
 dcc_rest_get_guild_role
 dcc_rest_get_guild_role_member_counts
 dcc_rest_get_guild_widget_json
 dcc_rest_get_guild_widget_png
-dcc_rest_build_guild_incident_actions_body
 dcc_rest_modify_guild_incident_actions
-dcc_rest_modify_guild_incident_actions_params
 dcc_rest_get_invite_target_users
 dcc_rest_put_invite_target_users
 dcc_rest_get_invite_target_users_job_status
@@ -397,10 +379,7 @@ Sugar aliases are available for the same route families, including
 `DCC_REST_GATEWAY`, `DCC_REST_GATEWAY_BOT`, `DCC_APPLICATION_INSTALL_PARAMS`,
 `DCC_APPLICATION_INTEGRATION_CONFIG`, `DCC_APPLICATION_MODIFY`,
 `DCC_REST_MODIFY_CURRENT_APPLICATION_PARAMS`, `DCC_SOUNDBOARD_SEND`,
-`DCC_GUILD_SOUNDBOARD_SOUND`, `DCC_REST_SEND_SOUNDBOARD_PARAMS`,
-`DCC_REST_CREATE_GUILD_SOUNDBOARD_SOUND_PARAMS`,
-`DCC_REST_MODIFY_GUILD_SOUNDBOARD_SOUND_PARAMS`, `DCC_REST_BULK_BAN`,
-`DCC_BULK_BAN_BODY`, `DCC_INCIDENT_ACTIONS_BODY`, `DCC_REST_GUILD_ROLE`,
+`DCC_REST_SEND_SOUNDBOARD_PARAMS`,
 `DCC_REST_CREATE_LOBBY`, `DCC_LOBBY_MEMBER_SPEC`, `DCC_LOBBY`,
 `DCC_REST_CREATE_LOBBY_PARAMS`, `DCC_LOBBY_CREATE_OR_JOIN`,
 `DCC_REST_CREATE_OR_JOIN_LOBBY`, `DCC_REST_CREATE_OR_JOIN_LOBBY_PARAMS`,
@@ -667,29 +646,13 @@ DCC_REST_ACTIVITY_INSTANCE
 DCC_REST_SEND_SOUNDBOARD
 DCC_REST_SEND_SOUNDBOARD_PARAMS
 DCC_REST_DEFAULT_SOUNDBOARD_SOUNDS
-DCC_REST_GUILD_SOUNDBOARD_SOUNDS
-DCC_REST_GUILD_SOUNDBOARD_SOUND
-DCC_REST_CREATE_GUILD_SOUNDBOARD_SOUND
-DCC_REST_CREATE_GUILD_SOUNDBOARD_SOUND_PARAMS
-DCC_REST_MODIFY_GUILD_SOUNDBOARD_SOUND
-DCC_REST_MODIFY_GUILD_SOUNDBOARD_SOUND_PARAMS
-DCC_REST_DELETE_GUILD_SOUNDBOARD_SOUND
 DCC_REST_SKU_SUBSCRIPTIONS
 DCC_REST_SKU_SUBSCRIPTION
-DCC_REST_BULK_BAN
-DCC_REST_BULK_BAN_PARAMS
-DCC_REST_GUILD_ROLE
-DCC_REST_ROLE_MEMBER_COUNTS
-DCC_REST_WIDGET_JSON
-DCC_REST_WIDGET_PNG
-DCC_REST_INCIDENT_ACTIONS
-DCC_REST_INCIDENT_ACTIONS_PARAMS
 DCC_REST_INVITE_TARGET_USERS
 DCC_REST_PUT_INVITE_TARGET_USERS
 DCC_REST_INVITE_TARGET_USERS_JOB
 DCC_REST_ENTITLEMENT
 DCC_REST_STICKER_PACK
-DCC_REST_CURRENT_USER_GUILD_MEMBER
 DCC_REST_DELETE_USER_ROLE_CONNECTION
 DCC_REST_WEBHOOK_SLACK
 DCC_REST_WEBHOOK_GITHUB

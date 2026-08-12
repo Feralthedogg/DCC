@@ -17,6 +17,19 @@ HEADER_DIR = ROOT / "include/dcc/rest"
 HTTP_SMOKE = ROOT / "tests/http_smoke.c"
 HTTP_SMOKE_SUPPORT_GLOB = "http_smoke*.c"
 
+RETIRED_TASK8_PARAMS = {
+    "dcc_current_guild_member_params_t",
+    "dcc_guild_ban_params_t",
+    "dcc_guild_member_nickname_params_t",
+    "dcc_guild_member_params_t",
+    "dcc_guild_member_role_params_t",
+    "dcc_guild_prune_params_t",
+    "dcc_guild_widget_params_t",
+    "dcc_role_params_t",
+    "dcc_welcome_channel_params_t",
+    "dcc_welcome_screen_params_t",
+}
+
 
 def read_rest_public_headers() -> str:
     parts = [HEADER.read_text(encoding="utf-8")]
@@ -577,7 +590,11 @@ def rest_param_structs(header: str) -> dict[str, list[str]]:
         header,
         re.S,
     ):
-        structs[match.group(3)] = parse_struct_fields(match.group(1), match.group("body"))
+        typedef_name = match.group(3)
+        if typedef_name not in RETIRED_TASK8_PARAMS:
+            structs[typedef_name] = parse_struct_fields(
+                match.group(1), match.group("body")
+            )
     return structs
 
 

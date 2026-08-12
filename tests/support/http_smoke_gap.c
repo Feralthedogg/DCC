@@ -101,6 +101,9 @@ int run_public_rest_gap_smoke(void) {
     dcc_channel_params_t channel_modify = DCC_CHANNEL_PARAMS_INIT;
     channel_modify.payload.guild.present = DCC_CHANNEL_GUILD_PRESENT_NAME;
     channel_modify.payload.guild.name = "ops";
+    dcc_rest_guild_update_t guild_modify = DCC_REST_GUILD_UPDATE_INIT;
+    guild_modify.present = DCC_REST_GUILD_UPDATE_PRESENT_NAME;
+    guild_modify.name = "ops";
 
 #define EXPECT_REST_GAP(label, expected_method, expected_path, expected_body, call_expr) \
     do { \
@@ -192,14 +195,14 @@ int run_public_rest_gap_smoke(void) {
         "GET",
         "/guilds/333",
         NULL,
-        dcc_rest_get_guild(client, 333, rest_cb, &seen)
+        dcc_rest_get_guild(client, 333, NULL, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "modify_guild",
         "PATCH",
         "/guilds/333",
         "{\"name\":\"ops\"}",
-        dcc_rest_modify_guild(client, 333, "{\"name\":\"ops\"}", rest_cb, &seen)
+        dcc_rest_modify_guild(client, 333, &guild_modify, &call_options, NULL)
     );
     EXPECT_REST_GAP(
         "bulk_overwrite_global_commands",

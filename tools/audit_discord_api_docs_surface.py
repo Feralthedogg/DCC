@@ -27,6 +27,13 @@ SUPPLEMENTAL_OFFICIAL_FLOW_ROUTES = [
     ("POST", "/oauth2/token/revoke"),
 ]
 
+# Discord keeps this historical route in the Application Commands resource but
+# explicitly marks the endpoint disabled after the command-permissions v2
+# migration. It is also tracked in DCC's removed-candidate ledger.
+UNAVAILABLE_OFFICIAL_ROUTES = {
+    ("PUT", "/applications/{}/guilds/{}/commands/permissions"),
+}
+
 OFFICIAL_ROUTE_OVERRIDES = {
     ("GET", "/channels/{}/messages/{}/reactions/{}"): {
         "dcc_rest_get_message_reactions",
@@ -109,12 +116,19 @@ REST_SOURCE_ROOTS = [
     ROOT / "src/oauth2.c",
 ]
 
+ROUTE_CATALOG = ROOT / "src/internal/rest/dcc_rest_endpoint_routes_internal.h"
+
 STRING_RE = re.compile(r'"((?:\\.|[^"\\])*)"', re.S)
 ROUTE_RE = re.compile(r'<Route\s+method="([A-Z]+)">\s*(.*?)\s*</Route>', re.S)
 LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]*\)")
 PUBLIC_SYMBOL_RE = re.compile(r"DCC_API\s+dcc_status_t\s+(dcc_(?:rest|oauth2)_[A-Za-z0-9_]+)\s*\(")
 SOURCE_SYMBOL_RE = re.compile(r"^dcc_status_t\s+(dcc_(?:rest|oauth2)_[A-Za-z0-9_]+)\s*\(", re.M)
 METHOD_TOKEN_RE = re.compile(r"\bDCC_REST_(GET|POST|PUT|PATCH|DELETE)\b")
+ROUTE_TOKEN_RE = re.compile(r"\b(DCC_REST_ROUTE_[A-Z0-9_]+)\b")
+ROUTE_DEFINE_RE = re.compile(
+    r'^#define\s+(DCC_REST_ROUTE_[A-Z0-9_]+)\s+"((?:\\.|[^"\\])*)"',
+    re.M,
+)
 QUOTED_METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE"}
 
 
@@ -261,11 +275,23 @@ def body_methods(body: str) -> set[str]:
     return methods
 
 
-def body_paths(body: str) -> set[str]:
+def route_catalog() -> dict[str, str]:
+    text = ROUTE_CATALOG.read_text(encoding="utf-8")
+    return {
+        name: decode_c_string(value)
+        for name, value in ROUTE_DEFINE_RE.findall(text)
+    }
+
+
+def body_paths(body: str, catalog: dict[str, str]) -> set[str]:
     paths: set[str] = set()
     for match in STRING_RE.finditer(body):
         value = decode_c_string(match.group(1))
         if value.startswith("/"):
+            paths.add(canonical_path(value))
+    for token in ROUTE_TOKEN_RE.findall(body):
+        value = catalog.get(token)
+        if value is not None:
             paths.add(canonical_path(value))
     return paths
 
@@ -276,6 +302,7 @@ def route_symbols(public: set[str], official: set[tuple[str, str]] | None = None
         official_canonical = {(method, canonical_path(path)) for method, path in official}
 
     routes: dict[tuple[str, str], set[str]] = {}
+    catalog = route_catalog()
     for source in source_files():
         text = source.read_text(encoding="utf-8", errors="ignore")
         for match in SOURCE_SYMBOL_RE.finditer(text):
@@ -287,7 +314,7 @@ def route_symbols(public: set[str], official: set[tuple[str, str]] | None = None
                 continue
             body = function_body(text, open_brace)
             for method in body_methods(body):
-                for path in body_paths(body):
+                for path in body_paths(body, catalog):
                     route = (method, path)
                     if official_canonical is not None and route not in official_canonical:
                         continue
@@ -320,7 +347,7 @@ def main() -> int:
     for source in sorted(unknown_route_sources):
         errors.append(f"route source not classified by audit: {source}")
 
-    for method, path in sorted(official_canonical):
+    for method, path in sorted(official_canonical - UNAVAILABLE_OFFICIAL_ROUTES):
         if (method, path) not in implemented:
             errors.append(f"route missing public wrapper: {method} {path}")
 

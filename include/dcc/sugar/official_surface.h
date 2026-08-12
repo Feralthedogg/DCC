@@ -60,18 +60,6 @@
 #define DCC_SOUNDBOARD_SEND(...) \
     ((dcc_soundboard_send_params_t){.size = sizeof(dcc_soundboard_send_params_t), __VA_ARGS__})
 
-/** @brief Initializes a guild soundboard sound create/modify body. */
-#define DCC_GUILD_SOUNDBOARD_SOUND(...) \
-    ((dcc_guild_soundboard_sound_params_t){.size = sizeof(dcc_guild_soundboard_sound_params_t), __VA_ARGS__})
-
-/** @brief Initializes a bulk guild ban body. */
-#define DCC_BULK_BAN_BODY(...) \
-    ((dcc_bulk_ban_params_t){.size = sizeof(dcc_bulk_ban_params_t), __VA_ARGS__})
-
-/** @brief Initializes a guild incident-actions body. */
-#define DCC_INCIDENT_ACTIONS_BODY(...) \
-    ((dcc_guild_incident_actions_params_t){.size = sizeof(dcc_guild_incident_actions_params_t), __VA_ARGS__})
-
 /** @brief Initializes a create-or-join lobby body. */
 #define DCC_LOBBY_CREATE_OR_JOIN(...) \
     ((dcc_lobby_create_or_join_params_t){.size = sizeof(dcc_lobby_create_or_join_params_t), __VA_ARGS__})
@@ -155,40 +143,10 @@
     dcc_rest_send_soundboard_sound_params((client_), (channel_id_), (params_), (cb_), (user_data_))
 #define DCC_REST_DEFAULT_SOUNDBOARD_SOUNDS(client_, cb_, user_data_) \
     dcc_rest_get_default_soundboard_sounds((client_), (cb_), (user_data_))
-#define DCC_REST_GUILD_SOUNDBOARD_SOUNDS(client_, guild_id_, cb_, user_data_) \
-    dcc_rest_get_guild_soundboard_sounds((client_), (guild_id_), (cb_), (user_data_))
-#define DCC_REST_GUILD_SOUNDBOARD_SOUND(client_, guild_id_, sound_id_, cb_, user_data_) \
-    dcc_rest_get_guild_soundboard_sound((client_), (guild_id_), (sound_id_), (cb_), (user_data_))
-#define DCC_REST_CREATE_GUILD_SOUNDBOARD_SOUND(client_, guild_id_, json_, cb_, user_data_) \
-    dcc_rest_create_guild_soundboard_sound((client_), (guild_id_), (json_), (cb_), (user_data_))
-#define DCC_REST_CREATE_GUILD_SOUNDBOARD_SOUND_PARAMS(client_, guild_id_, params_, cb_, user_data_) \
-    dcc_rest_create_guild_soundboard_sound_params((client_), (guild_id_), (params_), (cb_), (user_data_))
-#define DCC_REST_MODIFY_GUILD_SOUNDBOARD_SOUND(client_, guild_id_, sound_id_, json_, cb_, user_data_) \
-    dcc_rest_modify_guild_soundboard_sound((client_), (guild_id_), (sound_id_), (json_), (cb_), (user_data_))
-#define DCC_REST_MODIFY_GUILD_SOUNDBOARD_SOUND_PARAMS(client_, guild_id_, sound_id_, params_, cb_, user_data_) \
-    dcc_rest_modify_guild_soundboard_sound_params((client_), (guild_id_), (sound_id_), (params_), (cb_), (user_data_))
-#define DCC_REST_DELETE_GUILD_SOUNDBOARD_SOUND(client_, guild_id_, sound_id_, cb_, user_data_) \
-    dcc_rest_delete_guild_soundboard_sound((client_), (guild_id_), (sound_id_), (cb_), (user_data_))
 #define DCC_REST_SKU_SUBSCRIPTIONS(client_, sku_id_, query_, cb_, user_data_) \
     dcc_rest_get_sku_subscriptions((client_), (sku_id_), (query_), (cb_), (user_data_))
 #define DCC_REST_SKU_SUBSCRIPTION(client_, sku_id_, subscription_id_, cb_, user_data_) \
     dcc_rest_get_sku_subscription((client_), (sku_id_), (subscription_id_), (cb_), (user_data_))
-#define DCC_REST_BULK_BAN(client_, guild_id_, json_, cb_, user_data_) \
-    dcc_rest_bulk_ban_guild_members((client_), (guild_id_), (json_), (cb_), (user_data_))
-#define DCC_REST_BULK_BAN_PARAMS(client_, guild_id_, params_, cb_, user_data_) \
-    dcc_rest_bulk_ban_guild_members_params((client_), (guild_id_), (params_), (cb_), (user_data_))
-#define DCC_REST_GUILD_ROLE(client_, guild_id_, role_id_, cb_, user_data_) \
-    dcc_rest_get_guild_role((client_), (guild_id_), (role_id_), (cb_), (user_data_))
-#define DCC_REST_ROLE_MEMBER_COUNTS(client_, guild_id_, cb_, user_data_) \
-    dcc_rest_get_guild_role_member_counts((client_), (guild_id_), (cb_), (user_data_))
-#define DCC_REST_WIDGET_JSON(client_, guild_id_, cb_, user_data_) \
-    dcc_rest_get_guild_widget_json((client_), (guild_id_), (cb_), (user_data_))
-#define DCC_REST_WIDGET_PNG(client_, guild_id_, style_, cb_, user_data_) \
-    dcc_rest_get_guild_widget_png((client_), (guild_id_), (style_), (cb_), (user_data_))
-#define DCC_REST_INCIDENT_ACTIONS(client_, guild_id_, json_, cb_, user_data_) \
-    dcc_rest_modify_guild_incident_actions((client_), (guild_id_), (json_), (cb_), (user_data_))
-#define DCC_REST_INCIDENT_ACTIONS_PARAMS(client_, guild_id_, params_, cb_, user_data_) \
-    dcc_rest_modify_guild_incident_actions_params((client_), (guild_id_), (params_), (cb_), (user_data_))
 #define DCC_REST_INVITE_TARGET_USERS(client_, invite_code_, options_, out_request_) \
     dcc_rest_get_invite_target_users( \
         (client_), (invite_code_), (options_), (out_request_) \
@@ -205,8 +163,6 @@
     dcc_rest_get_entitlement((client_), (application_id_), (entitlement_id_), (cb_), (user_data_))
 #define DCC_REST_STICKER_PACK(client_, pack_id_, cb_, user_data_) \
     dcc_rest_get_sticker_pack((client_), (pack_id_), (cb_), (user_data_))
-#define DCC_REST_CURRENT_USER_GUILD_MEMBER(client_, guild_id_, cb_, user_data_) \
-    dcc_rest_get_current_user_guild_member((client_), (guild_id_), (cb_), (user_data_))
 #define DCC_REST_DELETE_USER_ROLE_CONNECTION(client_, application_id_, cb_, user_data_) \
     dcc_rest_delete_current_user_application_role_connection((client_), (application_id_), (cb_), (user_data_))
 #define DCC_REST_WEBHOOK_SLACK(client_, webhook_id_, token_, payload_, options_, out_request_) \

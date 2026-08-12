@@ -375,97 +375,137 @@ dcc_status_t call_rest_get_guild_invites(dcc_client_t *client, dcc_rest_cb cb, v
     return dcc_rest_get_guild_invites(client, 333, &options, NULL);
 }
 dcc_status_t call_rest_modify_guild_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_guild_params_t params = {
-        .size = sizeof(params),
-        .guild_id = 333,
-        .name = "ops edit",
-        .widget_enabled = 0,
-        .default_message_notifications = DCC_GUILD_NOTIFY_ALL,
-        .explicit_content_filter = DCC_GUILD_EXPLICIT_CONTENT_MEMBERS_WITHOUT_ROLES,
-        .mfa_level = DCC_GUILD_MFA_NONE,
-        .system_channel_id = 224,
-        .premium_progress_bar_enabled = 0,
-        .description = "desc edit"
-    };
-    return dcc_rest_modify_guild_params(client, &params, cb, user_data);
+    dcc_rest_guild_update_t body = DCC_REST_GUILD_UPDATE_INIT;
+    body.present = DCC_REST_GUILD_UPDATE_PRESENT_NAME |
+        DCC_REST_GUILD_UPDATE_PRESENT_DEFAULT_MESSAGE_NOTIFICATIONS |
+        DCC_REST_GUILD_UPDATE_PRESENT_EXPLICIT_CONTENT_FILTER |
+        DCC_REST_GUILD_UPDATE_PRESENT_SYSTEM_CHANNEL_ID |
+        DCC_REST_GUILD_UPDATE_PRESENT_PREMIUM_PROGRESS_BAR_ENABLED |
+        DCC_REST_GUILD_UPDATE_PRESENT_DESCRIPTION;
+    body.name = "ops edit";
+    body.default_message_notifications = DCC_GUILD_NOTIFY_ALL;
+    body.explicit_content_filter = DCC_GUILD_EXPLICIT_CONTENT_MEMBERS_WITHOUT_ROLES;
+    body.system_channel_id = 224;
+    body.description = "desc edit";
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_modify_guild(client, 333, &body, &options, NULL);
 }
 dcc_status_t call_rest_modify_current_guild_member(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_modify_current_guild_member(client, 333, "{\"nick\":\"ops\"}", cb, user_data);
+    dcc_rest_current_guild_member_update_t body = DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_INIT;
+    body.present = DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_PRESENT_NICK;
+    body.nick = "ops";
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_modify_current_guild_member(client, 333, &body, &options, NULL);
 }
 dcc_status_t call_rest_modify_current_guild_member_params(
     dcc_client_t *client,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    const dcc_current_guild_member_params_t params = {
-        .size = sizeof(params),
-        .guild_id = 333,
-        .nick = "ops typed",
-        .banner = NULL,
-        .avatar = "data:image/png;base64,AA==",
-        .bio = "bio typed"
-    };
-    return dcc_rest_modify_current_guild_member_params(client, &params, cb, user_data);
+    dcc_rest_current_guild_member_update_t body = DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_INIT;
+    body.present = DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_PRESENT_NICK |
+        DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_PRESENT_AVATAR |
+        DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_PRESENT_BIO;
+    body.nick = "ops typed";
+    body.avatar = "data:image/png;base64,AA==";
+    body.bio = "bio typed";
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_modify_current_guild_member(client, 333, &body, &options, NULL);
 }
 dcc_status_t call_rest_set_current_guild_member_nickname(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_set_current_guild_member_nickname(client, 333, "{\"nick\":\"ops\"}", cb, user_data);
+    dcc_rest_current_guild_member_nickname_t body = DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_INIT;
+    body.present = DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_PRESENT_NICK;
+    body.nick = "ops";
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_set_current_guild_member_nickname(client, 333, &body, &options, NULL);
 }
 dcc_status_t call_rest_set_current_guild_member_nickname_params(
     dcc_client_t *client,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    const dcc_guild_member_nickname_params_t params = {
-        .size = sizeof(params),
-        .guild_id = 333,
-        .nick = NULL
-    };
-    return dcc_rest_set_current_guild_member_nickname_params(client, &params, cb, user_data);
+    dcc_rest_current_guild_member_nickname_t body = DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_INIT;
+    body.present = DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_PRESENT_NICK;
+    body.nulls = DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_PRESENT_NICK;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_set_current_guild_member_nickname(client, 333, &body, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_audit_log(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_audit_log(client, 333, "limit=2&action_type=20", cb, user_data);
+    dcc_rest_guild_audit_log_query_t query = DCC_REST_GUILD_AUDIT_LOG_QUERY_INIT;
+    query.present = DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_LIMIT |
+        DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_ACTION_TYPE;
+    query.limit = 2; query.action_type = 20;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_audit_log(client, 333, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_audit_log_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_audit_log_page(client, 333, 444, 20, 555, 666, 2, cb, user_data);
+    dcc_rest_guild_audit_log_query_t query = DCC_REST_GUILD_AUDIT_LOG_QUERY_INIT;
+    query.present = DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_USER_ID |
+        DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_ACTION_TYPE |
+        DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_BEFORE |
+        DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_AFTER |
+        DCC_REST_GUILD_AUDIT_LOG_QUERY_PRESENT_LIMIT;
+    query.user_id=444;query.action_type=20;query.before=555;query.after=666;query.limit=2;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_audit_log(client, 333, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_preview(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_preview(client, 333, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_preview(client, 333, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_bans(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_bans(client, 333, "limit=2&after=444", cb, user_data);
+    dcc_rest_guild_bans_query_t query = DCC_REST_GUILD_BANS_QUERY_INIT;
+    query.present = DCC_REST_GUILD_BANS_QUERY_PRESENT_LIMIT |
+        DCC_REST_GUILD_BANS_QUERY_PRESENT_AFTER;
+    query.limit=2;query.after=444;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_bans(client, 333, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_bans_page(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_bans_page(client, 333, 222, 444, 2, cb, user_data);
+    dcc_rest_guild_bans_query_t query = DCC_REST_GUILD_BANS_QUERY_INIT;
+    query.present = DCC_REST_GUILD_BANS_QUERY_PRESENT_BEFORE |
+        DCC_REST_GUILD_BANS_QUERY_PRESENT_AFTER |
+        DCC_REST_GUILD_BANS_QUERY_PRESENT_LIMIT;
+    query.before=222;query.after=444;query.limit=2;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_bans(client, 333, &query, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_ban(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_ban(client, 333, 444, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_ban(client, 333, 444, &options, NULL);
 }
 dcc_status_t call_rest_create_guild_ban(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_guild_ban(client, 333, 444, "{\"delete_message_seconds\":60}", cb, user_data);
+    dcc_rest_guild_ban_create_t body = DCC_REST_GUILD_BAN_CREATE_INIT;
+    body.present = DCC_REST_GUILD_BAN_CREATE_PRESENT_DELETE_MESSAGE_SECONDS;
+    body.delete_message_seconds=60;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_create_guild_ban(client, 333, 444, &body, &options, NULL);
 }
 dcc_status_t call_rest_create_guild_ban_seconds(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_create_guild_ban_seconds(client, 333, 444, 604801, cb, user_data);
+    dcc_rest_guild_ban_create_t body = DCC_REST_GUILD_BAN_CREATE_INIT;
+    body.present = DCC_REST_GUILD_BAN_CREATE_PRESENT_DELETE_MESSAGE_SECONDS;
+    body.delete_message_seconds=604800;
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_create_guild_ban(client, 333, 444, &body, &options, NULL);
 }
 dcc_status_t call_rest_create_guild_ban_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_guild_ban_params_t params = {
-        .size = sizeof(params),
-        .guild_id = 333,
-        .user_id = 444,
-        .delete_message_seconds = 60
-    };
-    return dcc_rest_create_guild_ban_params(client, &params, cb, user_data);
+    return call_rest_create_guild_ban(client, cb, user_data);
 }
 dcc_status_t call_rest_delete_guild_ban(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_guild_ban(client, 333, 444, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_delete_guild_ban(client, 333, 444, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_integrations(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_integrations(client, 333, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_integrations(client, 333, &options, NULL);
 }
 dcc_status_t call_rest_delete_guild_integration(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_delete_guild_integration(client, 333, 555, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_delete_guild_integration(client, 333, 555, &options, NULL);
 }
 dcc_status_t call_rest_get_guild_widget(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_widget(client, 333, cb, user_data);
+    dcc_rest_call_options_t options = rest_call_options_from_legacy(cb, user_data);
+    return dcc_rest_get_guild_widget(client, 333, &options, NULL);
 }
 
 #endif

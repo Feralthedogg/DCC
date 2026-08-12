@@ -394,7 +394,10 @@ dcc_status_t dcc_app_get_guild_voice_regions(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_voice_regions(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_voice_regions,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_channel_positions(
@@ -549,7 +552,10 @@ dcc_status_t dcc_app_get_guild_roles(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_roles(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_roles,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_create_guild_role(
@@ -562,7 +568,15 @@ dcc_status_t dcc_app_create_guild_role(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_role(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[80];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/roles",
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), DCC_REST_POST, path, NULL, "application/json",
+        json_body, strlen(json_body), cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_create_guild_role_params(
@@ -574,7 +588,24 @@ dcc_status_t dcc_app_create_guild_role_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_role_params(dcc_app_client(app), params, cb, user_data);
+    if (params->size < sizeof(*params) || params->guild_id == 0U)
+        return DCC_ERR_INVALID_ARG;
+    dcc_rest_guild_role_create_t body = DCC_REST_GUILD_ROLE_CREATE_INIT;
+    if (params->name != NULL) { body.present |= DCC_REST_GUILD_ROLE_CREATE_PRESENT_NAME; body.name = params->name; }
+    body.present |= DCC_REST_GUILD_ROLE_CREATE_PRESENT_PERMISSIONS |
+        DCC_REST_GUILD_ROLE_CREATE_PRESENT_COLOR |
+        DCC_REST_GUILD_ROLE_CREATE_PRESENT_HOIST |
+        DCC_REST_GUILD_ROLE_CREATE_PRESENT_MENTIONABLE;
+    body.permissions = params->permissions;
+    body.color = params->color;
+    body.hoist = params->hoist;
+    body.mentionable = params->mentionable;
+    if (params->icon != NULL) { body.present |= DCC_REST_GUILD_ROLE_CREATE_PRESENT_ICON; body.icon = params->icon; }
+    if (params->unicode_emoji != NULL) { body.present |= DCC_REST_GUILD_ROLE_CREATE_PRESENT_UNICODE_EMOJI; body.unicode_emoji = params->unicode_emoji; }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_guild_role,
+        dcc_app_client(app), params->guild_id, &body
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_role(
@@ -588,7 +619,15 @@ dcc_status_t dcc_app_modify_guild_role(
     if (app == NULL || guild_id == 0U || role_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_role(dcc_app_client(app), guild_id, role_id, json_body, cb, user_data);
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), "/guilds/%llu/roles/%llu",
+        (unsigned long long)guild_id, (unsigned long long)role_id
+    );
+    return status == DCC_OK ? dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), DCC_REST_PATCH, path, NULL, "application/json",
+        json_body, strlen(json_body), cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_guild_role_params(
@@ -600,7 +639,24 @@ dcc_status_t dcc_app_modify_guild_role_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_role_params(dcc_app_client(app), params, cb, user_data);
+    if (params->size < sizeof(*params) || params->guild_id == 0U || params->role_id == 0U)
+        return DCC_ERR_INVALID_ARG;
+    dcc_rest_guild_role_update_t body = DCC_REST_GUILD_ROLE_UPDATE_INIT;
+    if (params->name != NULL) { body.present |= DCC_REST_GUILD_ROLE_UPDATE_PRESENT_NAME; body.name = params->name; }
+    body.present |= DCC_REST_GUILD_ROLE_UPDATE_PRESENT_PERMISSIONS |
+        DCC_REST_GUILD_ROLE_UPDATE_PRESENT_COLOR |
+        DCC_REST_GUILD_ROLE_UPDATE_PRESENT_HOIST |
+        DCC_REST_GUILD_ROLE_UPDATE_PRESENT_MENTIONABLE;
+    body.permissions = params->permissions;
+    body.color = params->color;
+    body.hoist = params->hoist;
+    body.mentionable = params->mentionable;
+    if (params->icon != NULL) { body.present |= DCC_REST_GUILD_ROLE_UPDATE_PRESENT_ICON; body.icon = params->icon; }
+    if (params->unicode_emoji != NULL) { body.present |= DCC_REST_GUILD_ROLE_UPDATE_PRESENT_UNICODE_EMOJI; body.unicode_emoji = params->unicode_emoji; }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_guild_role,
+        dcc_app_client(app), params->guild_id, params->role_id, &body
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_role_positions(
@@ -614,14 +670,22 @@ dcc_status_t dcc_app_modify_guild_role_positions(
     if (app == NULL || guild_id == 0U || positions == NULL || position_count == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_role_positions_params(
-        dcc_app_client(app),
-        guild_id,
-        positions,
-        position_count,
-        cb,
-        user_data
+    dcc_rest_guild_role_position_t *typed = calloc(position_count, sizeof(*typed));
+    if (typed == NULL) return DCC_ERR_NOMEM;
+    for (size_t i = 0U; i < position_count; ++i) {
+        dcc_rest_guild_role_position_init(&typed[i], positions[i].role_id);
+        typed[i].present = DCC_REST_GUILD_ROLE_POSITION_PRESENT_POSITION;
+        typed[i].position = positions[i].position;
+    }
+    dcc_rest_call_options_t options;
+    void *bridge = NULL;
+    dcc_status_t status = dcc_endpoint_legacy_options(cb, user_data, &options, &bridge);
+    if (status == DCC_OK) status = dcc_rest_modify_guild_role_positions(
+        dcc_app_client(app), guild_id, typed, position_count, &options, NULL
     );
+    if (status != DCC_OK) dcc_endpoint_legacy_bridge_release(bridge);
+    free(typed);
+    return status;
 }
 
 dcc_status_t dcc_app_delete_guild_role(
@@ -634,7 +698,10 @@ dcc_status_t dcc_app_delete_guild_role(
     if (app == NULL || guild_id == 0U || role_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_guild_role(dcc_app_client(app), guild_id, role_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_guild_role,
+        dcc_app_client(app), guild_id, role_id
+    );
 }
 
 dcc_status_t dcc_app_edit_message(

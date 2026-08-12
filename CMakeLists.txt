@@ -1394,13 +1394,11 @@ target_sources(dcc
         src/rest/rest_json_arrays.c
         src/rest/rest_json_member_key.c
         src/rest/rest_lifecycle.c
-        src/rest/rest_guild_member_controls.c
         src/rest/rest_guild_member_builders.c
         src/rest/rest_guild_member_roles.c
         src/rest/rest_guild_members_lifecycle.c
         src/rest/rest_guild_members_query.c
         src/rest/rest_guild_bans_fetch.c
-        src/rest/rest_guild_bans_create_params.c
         src/rest/rest_guild_bans_modify.c
         src/rest/rest_guild_body.c
         src/rest/rest_guild_body_tail.c
@@ -1456,6 +1454,10 @@ target_sources(dcc
         src/rest/rest_result.c
         src/rest/rest_request_handle.c
         src/rest/rest_submit.c
+        src/rest/rest_task8_core.c
+        src/rest/rest_task8_queries.c
+        src/rest/rest_task8_member_role_bodies.c
+        src/rest/rest_task8_guild_bodies.c
         src/rest/rest_task7_probe.c
         src/rest/rest_sensitive.c
         src/rest/rest_request.c
@@ -2028,7 +2030,7 @@ if(DCC_BUILD_TESTS)
         COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_rest_v2_endpoints.py
             --source ${CMAKE_CURRENT_SOURCE_DIR}
-            --progress-through 7
+            --progress-through 8
     )
     set_tests_properties(dcc_rest_v2_endpoint_manifest_audit PROPERTIES
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -2045,33 +2047,6 @@ if(DCC_BUILD_TESTS)
     set_tests_properties(dcc_rest_v2_endpoint_manifest_schema_smoke PROPERTIES
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         TIMEOUT 60
-    )
-
-    add_test(
-        NAME dcc_rest_v2_task8_red_audit_contract
-        COMMAND ${Python3_EXECUTABLE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/rest_v2_task8_red_audit_contract.py
-            --source ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-    set_tests_properties(dcc_rest_v2_task8_red_audit_contract PROPERTIES
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        TIMEOUT 60
-        LABELS "rest-v2;task8;red-contract"
-    )
-
-    add_test(
-        NAME dcc_rest_v2_task8_red_compile_contract
-        COMMAND ${Python3_EXECUTABLE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/rest_v2_task8_red_compile_contract.py
-            --compiler ${CMAKE_C_COMPILER}
-            --source ${CMAKE_CURRENT_SOURCE_DIR}
-            --binary ${CMAKE_CURRENT_BINARY_DIR}
-            --llam-include ${DCC_V2_SURFACE_LLAM_INCLUDE}
-    )
-    set_tests_properties(dcc_rest_v2_task8_red_compile_contract PROPERTIES
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        TIMEOUT 60
-        LABELS "rest-v2;task8;red-contract"
     )
 
     add_executable(dcc_smoke tests/smoke.c)
@@ -2111,6 +2086,7 @@ if(DCC_BUILD_TESTS)
         tests/support/rest_v2_endpoint_resource_contracts.c
         tests/support/rest_v2_endpoint_task7_forum_contracts.c
         tests/support/rest_v2_endpoint_task7_contracts.c
+        tests/support/rest_v2_endpoint_task8_contracts.c
         tests/support/rest_v2_endpoint_transition_contracts.c
     )
     dcc_target_use_private_headers(dcc_rest_v2_endpoint_smoke)

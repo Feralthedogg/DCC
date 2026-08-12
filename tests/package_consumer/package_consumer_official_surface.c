@@ -80,24 +80,16 @@ int dcc_package_consumer_check_official_surface_api(void) {
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_guild_soundboard_sounds);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_guild_soundboard_sound);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_create_guild_soundboard_sound);
-    DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_build_guild_soundboard_sound_create_body);
-    DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_create_guild_soundboard_sound_params);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_modify_guild_soundboard_sound);
-    DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_build_guild_soundboard_sound_modify_body);
-    DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_modify_guild_soundboard_sound_params);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_delete_guild_soundboard_sound);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_sku_subscriptions);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_sku_subscription);
-    DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_build_bulk_ban_body);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_bulk_ban_guild_members);
-    DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_bulk_ban_guild_members_params);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_guild_role);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_guild_role_member_counts);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_guild_widget_json);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_guild_widget_png);
-    DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_build_guild_incident_actions_body);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_modify_guild_incident_actions);
-    DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_modify_guild_incident_actions_params);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_invite_target_users);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_put_invite_target_users);
     DCC_PACKAGE_REQUIRE_SYMBOL(dcc_rest_get_invite_target_users_job_status);
@@ -217,38 +209,42 @@ int dcc_package_consumer_check_official_surface_api(void) {
         );
     dcc_soundboard_send_params_t soundboard_send =
         DCC_SOUNDBOARD_SEND(.sound_id = 456, .source_guild_id = 789);
-    dcc_guild_soundboard_sound_params_t guild_sound_create =
-        DCC_GUILD_SOUNDBOARD_SOUND(
-            .name = "bell",
-            .sound = "data:audio/ogg;base64,AAAA",
-            .volume = 0.5,
-            .has_volume = 1,
-            .emoji_name = "ding",
-            .has_emoji_name = 1
+    dcc_rest_guild_soundboard_sound_create_t guild_sound_create =
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_INIT(
+            "bell", "data:audio/ogg;base64,AAAA"
         );
-    dcc_guild_soundboard_sound_params_t guild_sound_modify =
-        DCC_GUILD_SOUNDBOARD_SOUND(
-            .name = "bell2",
-            .volume = 1.0,
-            .has_volume = 1,
-            .emoji_id = 0,
-            .has_emoji_id = 1
-        );
+    guild_sound_create.present =
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_PRESENT_VOLUME |
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_PRESENT_EMOJI_NAME;
+    guild_sound_create.volume = 0.5;
+    guild_sound_create.emoji_name = "ding";
+    dcc_rest_guild_soundboard_sound_update_t guild_sound_modify =
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_INIT;
+    guild_sound_modify.present =
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_NAME |
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_VOLUME |
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_EMOJI_ID;
+    guild_sound_modify.nulls =
+        DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_PRESENT_EMOJI_ID;
+    guild_sound_modify.name = "bell2";
+    guild_sound_modify.volume = 1.0;
     dcc_snowflake_t bulk_users[] = {111, 222};
-    dcc_bulk_ban_params_t bulk_ban =
-        DCC_BULK_BAN_BODY(
-            .user_ids = bulk_users,
-            .user_id_count = 2,
-            .delete_message_seconds = 60,
-            .has_delete_message_seconds = 1
-        );
-    dcc_guild_incident_actions_params_t incident_actions =
-        DCC_INCIDENT_ACTIONS_BODY(
-            .invites_disabled_until = "2026-06-27T00:00:00+00:00",
-            .has_invites_disabled_until = 1,
-            .dms_disabled_until = NULL,
-            .has_dms_disabled_until = 1
-        );
+    dcc_rest_guild_bulk_ban_t bulk_ban =
+        DCC_REST_GUILD_BULK_BAN_INIT(bulk_users, 2U);
+    bulk_ban.present = DCC_REST_GUILD_BULK_BAN_PRESENT_DELETE_MESSAGE_SECONDS;
+    bulk_ban.delete_message_seconds = 60U;
+    dcc_rest_guild_incident_actions_t incident_actions =
+        DCC_REST_GUILD_INCIDENT_ACTIONS_INIT;
+    incident_actions.present =
+        DCC_REST_GUILD_INCIDENT_ACTIONS_PRESENT_INVITES_DISABLED_UNTIL |
+        DCC_REST_GUILD_INCIDENT_ACTIONS_PRESENT_DMS_DISABLED_UNTIL;
+    incident_actions.nulls =
+        DCC_REST_GUILD_INCIDENT_ACTIONS_PRESENT_DMS_DISABLED_UNTIL;
+    incident_actions.invites_disabled_until = "2026-06-27T00:00:00+00:00";
+    dcc_rest_guild_widget_image_query_t widget_query =
+        DCC_REST_GUILD_WIDGET_IMAGE_QUERY_INIT;
+    widget_query.present = DCC_REST_GUILD_WIDGET_IMAGE_QUERY_PRESENT_STYLE;
+    widget_query.style = DCC_REST_GUILD_WIDGET_STYLE_BANNER1;
     dcc_lobby_create_or_join_params_t lobby_join =
         DCC_LOBBY_CREATE_OR_JOIN(
             .secret = "join-secret",
@@ -436,38 +432,6 @@ int dcc_package_consumer_check_official_surface_api(void) {
     }
     dcc_rest_official_body_json_free(json);
     json = NULL;
-    if (dcc_rest_build_guild_soundboard_sound_create_body(&guild_sound_create, &json) != DCC_OK ||
-        strcmp(json, "{\"name\":\"bell\",\"sound\":\"data:audio/ogg;base64,AAAA\",\"volume\":0.5,\"emoji_name\":\"ding\"}") != 0) {
-        fprintf(stderr, "official surface guild soundboard create body mismatch\n");
-        dcc_rest_official_body_json_free(json);
-        return 0;
-    }
-    dcc_rest_official_body_json_free(json);
-    json = NULL;
-    if (dcc_rest_build_guild_soundboard_sound_modify_body(&guild_sound_modify, &json) != DCC_OK ||
-        strcmp(json, "{\"name\":\"bell2\",\"volume\":1,\"emoji_id\":null}") != 0) {
-        fprintf(stderr, "official surface guild soundboard modify body mismatch\n");
-        dcc_rest_official_body_json_free(json);
-        return 0;
-    }
-    dcc_rest_official_body_json_free(json);
-    json = NULL;
-    if (dcc_rest_build_bulk_ban_body(&bulk_ban, &json) != DCC_OK ||
-        strcmp(json, "{\"user_ids\":[\"111\",\"222\"],\"delete_message_seconds\":60}") != 0) {
-        fprintf(stderr, "official surface bulk ban body mismatch\n");
-        dcc_rest_official_body_json_free(json);
-        return 0;
-    }
-    dcc_rest_official_body_json_free(json);
-    json = NULL;
-    if (dcc_rest_build_guild_incident_actions_body(&incident_actions, &json) != DCC_OK ||
-        strcmp(json, "{\"invites_disabled_until\":\"2026-06-27T00:00:00+00:00\",\"dms_disabled_until\":null}") != 0) {
-        fprintf(stderr, "official surface incident actions body mismatch\n");
-        dcc_rest_official_body_json_free(json);
-        return 0;
-    }
-    dcc_rest_official_body_json_free(json);
-    json = NULL;
     if (dcc_rest_build_lobby_create_or_join_body(&lobby_join, &json) != DCC_OK ||
         strcmp(json, "{\"secret\":\"join-secret\",\"idle_timeout_seconds\":60,\"lobby_metadata\":{\"topic\":\"redstone\"},\"member_metadata\":null}") != 0) {
         fprintf(stderr, "official surface lobby create-or-join body mismatch\n");
@@ -613,20 +577,20 @@ int dcc_package_consumer_check_official_surface_api(void) {
         ) != DCC_ERR_INVALID_ARG ||
         DCC_REST_ACTIVITY_INSTANCE(NULL, 123, "instance", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_DEFAULT_SOUNDBOARD_SOUNDS(NULL, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_GUILD_SOUNDBOARD_SOUNDS(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_GUILD_SOUNDBOARD_SOUND(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_get_guild_soundboard_sounds(NULL, 123, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_get_guild_soundboard_sound(NULL, 123, 456, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_SEND_SOUNDBOARD_PARAMS(NULL, 123, &soundboard_send, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_CREATE_GUILD_SOUNDBOARD_SOUND_PARAMS(NULL, 123, &guild_sound_create, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_MODIFY_GUILD_SOUNDBOARD_SOUND_PARAMS(NULL, 123, 456, &guild_sound_modify, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_DELETE_GUILD_SOUNDBOARD_SOUND(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_create_guild_soundboard_sound(NULL, 123, &guild_sound_create, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_modify_guild_soundboard_sound(NULL, 123, 456, &guild_sound_modify, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_delete_guild_soundboard_sound(NULL, 123, 456, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_SKU_SUBSCRIPTIONS(NULL, 123, "limit=1", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_SKU_SUBSCRIPTION(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_BULK_BAN_PARAMS(NULL, 123, &bulk_ban, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_GUILD_ROLE(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_ROLE_MEMBER_COUNTS(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_WIDGET_JSON(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_WIDGET_PNG(NULL, 123, "banner1", package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_INCIDENT_ACTIONS_PARAMS(NULL, 123, &incident_actions, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_bulk_ban_guild_members(NULL, 123, &bulk_ban, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_get_guild_role(NULL, 123, 456, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_get_guild_role_member_counts(NULL, 123, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_get_guild_widget_json(NULL, 123, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_get_guild_widget_png(NULL, 123, &widget_query, NULL, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_modify_guild_incident_actions(NULL, 123, &incident_actions, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_INVITE_TARGET_USERS(NULL, "invite", NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_PUT_INVITE_TARGET_USERS(
             NULL,
@@ -638,7 +602,7 @@ int dcc_package_consumer_check_official_surface_api(void) {
         DCC_REST_INVITE_TARGET_USERS_JOB(NULL, "invite", NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_ENTITLEMENT(NULL, 123, 456, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_STICKER_PACK(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
-        DCC_REST_CURRENT_USER_GUILD_MEMBER(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
+        dcc_rest_get_current_user_guild_member(NULL, 123, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_DELETE_USER_ROLE_CONNECTION(NULL, 123, package_official_rest_cb, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_WEBHOOK_SLACK(NULL, 123, "token", &slack_payload, NULL, NULL) != DCC_ERR_INVALID_ARG ||
         DCC_REST_WEBHOOK_GITHUB(NULL, 123, "token", &github_payload, NULL, NULL) != DCC_ERR_INVALID_ARG ||

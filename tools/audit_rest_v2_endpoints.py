@@ -348,10 +348,6 @@ TRANSITION_DECLARATIONS = {
 }
 BODY_BUILDERS = {
     "dcc_rest_build_application_modify_body": "dcc_rest_modify_current_application",
-    "dcc_rest_build_bulk_ban_body": "dcc_rest_bulk_ban_guild_members",
-    "dcc_rest_build_guild_incident_actions_body": "dcc_rest_modify_guild_incident_actions",
-    "dcc_rest_build_guild_soundboard_sound_create_body": "dcc_rest_create_guild_soundboard_sound",
-    "dcc_rest_build_guild_soundboard_sound_modify_body": "dcc_rest_modify_guild_soundboard_sound",
     "dcc_rest_build_lobby_body": "dcc_rest_create_lobby",
     "dcc_rest_build_lobby_channel_link_body": "dcc_rest_link_lobby_channel",
     "dcc_rest_build_lobby_create_or_join_body": "dcc_rest_create_or_join_lobby",
@@ -2177,7 +2173,10 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
         legacy_symbols = entry.get("legacy_symbols")
         if not isinstance(legacy_symbols, list):
             legacy_symbols = []
-        for symbol in [entry.get("canonical"), *legacy_symbols]:
+        symbols = [entry.get("canonical")]
+        if entry.get("task", 0) > 8:
+            symbols.extend(legacy_symbols)
+        for symbol in symbols:
             if isinstance(symbol, str) and symbol.startswith("dcc_rest_build_"):
                 if symbol in body_builder_owners:
                     continue
@@ -2186,7 +2185,7 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
                     unexpected_builders.append(symbol)
     if body_builder_owners != BODY_BUILDERS:
         errors.append(
-            "official body-builder endpoint mapping differs from the reviewed 13-symbol mapping"
+            "official body-builder endpoint mapping differs from the reviewed mapping"
         )
     if unexpected_builders:
         errors.append("unreviewed public body builder(s): " + ", ".join(sorted(unexpected_builders)))
@@ -3134,7 +3133,6 @@ dcc_status_t dcc_rest_inactive_boundary_second(void) {
     parsed_definitions = external_definitions(root)
     boundary_expectations = {
         "dcc_rest_build_auto_moderation_action": "dcc_rest_buffer_append_cstr",
-        "dcc_rest_modify_guild_widget_params": "dcc_rest_buffer_deinit",
     }
     for symbol, terminal_token in boundary_expectations.items():
         items = parsed_definitions.get(symbol, [])

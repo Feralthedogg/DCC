@@ -1,63 +1,29 @@
-#include "internal/rest/dcc_rest_buffer_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
-#include "internal/rest/dcc_rest_request_internal.h"
-
+#include "internal/rest/dcc_rest_task8_internal.h"
 dcc_status_t dcc_rest_modify_guild_role_positions(
-    dcc_client_t *client,
-    dcc_snowflake_t guild_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[80];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/guilds/%llu/roles", (unsigned long long)guild_id);
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_PATCH, path, json_body, cb, user_data) : status;
-}
-
-dcc_status_t dcc_rest_modify_guild_role_positions_params(
-    dcc_client_t *client,
-    dcc_snowflake_t guild_id,
-    const dcc_role_position_t *positions,
-    size_t position_count,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    if (guild_id == 0 || positions == NULL || position_count == 0) {
-        return DCC_ERR_INVALID_ARG;
-    }
-
-    dcc_rest_buffer_t body = {0};
-    dcc_status_t status = dcc_rest_buffer_append_cstr(&body, "[");
-    for (size_t i = 0; i < position_count && status == DCC_OK; ++i) {
-        if (positions[i].role_id == 0) {
-            status = DCC_ERR_INVALID_ARG;
-            break;
-        }
-        if (i != 0) {
-            status = dcc_rest_buffer_append_cstr(&body, ",");
-        }
-        if (status == DCC_OK) {
-            status = dcc_rest_buffer_append_cstr(&body, "{\"id\":\"");
-        }
-        if (status == DCC_OK) {
-            status = dcc_rest_buffer_append_u64_text(&body, positions[i].role_id);
-        }
-        if (status == DCC_OK) {
-            status = dcc_rest_buffer_append_cstr(&body, "\",\"position\":");
-        }
-        if (status == DCC_OK) {
-            status = dcc_rest_buffer_append_u64_text(&body, positions[i].position);
-        }
-        if (status == DCC_OK) {
-            status = dcc_rest_buffer_append_cstr(&body, "}");
-        }
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_buffer_append_cstr(&body, "]");
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_modify_guild_role_positions(client, guild_id, body.data, cb, user_data);
-    }
-    dcc_rest_buffer_deinit(&body);
-    return status;
+    dcc_client_t *client, dcc_snowflake_t guild_id,
+    const dcc_rest_guild_role_position_t *positions, size_t position_count,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  (void)DCC_ENDPOINT_PATH_PUBLIC;
+  (void)"/guilds/%llu/roles";
+  DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT,
+                        DCC_ENDPOINT_AUDIT_REASON_ALLOWED,
+                        DCC_REST_ROUTE_DPP_ROLES_EDIT_POSITION, DCC_REST_PATCH);
+  dcc_rest_call_options_t resolved;
+  dcc_status_t status = dcc_task8_prepare(
+      client, options, DCC_ENDPOINT_AUTH_POLICY_BOT,
+      DCC_ENDPOINT_AUDIT_REASON_ALLOWED, out_request, &resolved);
+  if (status != DCC_OK || guild_id == 0U)
+    return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+  char *json = NULL;
+  status = dcc_task8_build_role_positions(positions, position_count, &json);
+  char path[80];
+  if (status == DCC_OK)
+    status = dcc_rest_format_path(path, sizeof(path),
+                                  DCC_REST_ROUTE_DPP_ROLES_EDIT_POSITION,
+                                  (unsigned long long)guild_id);
+  return dcc_task8_submit_built(
+      status, client, "dcc_rest_modify_guild_role_positions", DCC_REST_PATCH,
+      path, json, &resolved, out_request);
 }

@@ -3,44 +3,33 @@
 #if !defined(_WIN32)
 
 dcc_status_t call_rest_modify_guild_widget(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_modify_guild_widget(client, 333, "{\"enabled\":true,\"channel_id\":\"222\"}", cb, user_data);
+    dcc_rest_guild_widget_update_t body = DCC_REST_GUILD_WIDGET_UPDATE_INIT;
+    body.present = DCC_REST_GUILD_WIDGET_UPDATE_PRESENT_ENABLED |
+        DCC_REST_GUILD_WIDGET_UPDATE_PRESENT_CHANNEL_ID;
+    body.enabled=1;body.channel_id=222;
+    dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);
+    return dcc_rest_modify_guild_widget(client,333,&body,&options,NULL);
 }
 dcc_status_t call_rest_modify_guild_widget_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_guild_widget_params_t params = {
-        .size = sizeof(params),
-        .channel_id = 222,
-        .enabled = 1
-    };
-    return dcc_rest_modify_guild_widget_params(client, 333, &params, cb, user_data);
+    return call_rest_modify_guild_widget(client,cb,user_data);
 }
 dcc_status_t call_rest_get_guild_vanity_url(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_vanity_url(client, 333, cb, user_data);
+    dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_get_guild_vanity_url(client,333,&options,NULL);
 }
 dcc_status_t call_rest_get_guild_prune_count(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_prune_count(client, 333, "days=7&include_roles=555", cb, user_data);
+    const dcc_snowflake_t roles[]={555};dcc_rest_guild_prune_query_t query=DCC_REST_GUILD_PRUNE_QUERY_INIT;query.present=DCC_REST_GUILD_PRUNE_QUERY_PRESENT_DAYS|DCC_REST_GUILD_PRUNE_QUERY_PRESENT_INCLUDE_ROLES;query.days=7;query.include_roles=roles;query.include_role_count=1;dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_get_guild_prune_count(client,333,&query,&options,NULL);
 }
 dcc_status_t call_rest_get_guild_prune_count_options(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    dcc_snowflake_t roles[] = {555, 556};
-    return dcc_rest_get_guild_prune_count_options(client, 333, 7, roles, 2, cb, user_data);
+    const dcc_snowflake_t roles[]={555,556};dcc_rest_guild_prune_query_t query=DCC_REST_GUILD_PRUNE_QUERY_INIT;query.present=DCC_REST_GUILD_PRUNE_QUERY_PRESENT_DAYS|DCC_REST_GUILD_PRUNE_QUERY_PRESENT_INCLUDE_ROLES;query.days=7;query.include_roles=roles;query.include_role_count=2;dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_get_guild_prune_count(client,333,&query,&options,NULL);
 }
 dcc_status_t call_rest_begin_guild_prune(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_begin_guild_prune(client, 333, "{\"days\":7,\"compute_prune_count\":false}", cb, user_data);
+    dcc_rest_guild_prune_t body=DCC_REST_GUILD_PRUNE_INIT;body.present=DCC_REST_GUILD_PRUNE_PRESENT_DAYS|DCC_REST_GUILD_PRUNE_PRESENT_COMPUTE_PRUNE_COUNT;body.days=7;dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_begin_guild_prune(client,333,&body,&options,NULL);
 }
 dcc_status_t call_rest_begin_guild_prune_options(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    dcc_snowflake_t roles[] = {555, 556};
-    return dcc_rest_begin_guild_prune_options(client, 333, 7, roles, 2, 0, cb, user_data);
+    const dcc_snowflake_t roles[]={555,556};dcc_rest_guild_prune_t body=DCC_REST_GUILD_PRUNE_INIT;body.present=DCC_REST_GUILD_PRUNE_PRESENT_DAYS|DCC_REST_GUILD_PRUNE_PRESENT_INCLUDE_ROLES|DCC_REST_GUILD_PRUNE_PRESENT_COMPUTE_PRUNE_COUNT;body.days=7;body.include_roles=roles;body.include_role_count=2;dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_begin_guild_prune(client,333,&body,&options,NULL);
 }
 dcc_status_t call_rest_begin_guild_prune_params(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    const dcc_snowflake_t roles[] = {555, 556};
-    const dcc_guild_prune_params_t params = {
-        .size = sizeof(params),
-        .guild_id = 333,
-        .days = 7,
-        .include_roles = roles,
-        .include_role_count = sizeof(roles) / sizeof(roles[0]),
-        .compute_prune_count = 1
-    };
-    return dcc_rest_begin_guild_prune_params(client, &params, cb, user_data);
+    const dcc_snowflake_t roles[]={555,556};dcc_rest_guild_prune_t body=DCC_REST_GUILD_PRUNE_INIT;body.present=DCC_REST_GUILD_PRUNE_PRESENT_DAYS|DCC_REST_GUILD_PRUNE_PRESENT_INCLUDE_ROLES|DCC_REST_GUILD_PRUNE_PRESENT_COMPUTE_PRUNE_COUNT;body.days=7;body.include_roles=roles;body.include_role_count=2;body.compute_prune_count=1;dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_begin_guild_prune(client,333,&body,&options,NULL);
 }
 dcc_status_t call_rest_get_guild_onboarding(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_guild_onboarding(client, 333, cb, user_data);
@@ -101,32 +90,17 @@ dcc_status_t call_rest_modify_guild_onboarding_params(
     return dcc_rest_modify_guild_onboarding_params(client, &params, cb, user_data);
 }
 dcc_status_t call_rest_get_guild_welcome_screen(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_guild_welcome_screen(client, 333, cb, user_data);
+    dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_get_guild_welcome_screen(client,333,&options,NULL);
 }
 dcc_status_t call_rest_modify_guild_welcome_screen(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_modify_guild_welcome_screen(client, 333, "{\"enabled\":true,\"welcome_channels\":[]}", cb, user_data);
+    dcc_rest_guild_welcome_screen_update_t body=DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_INIT;body.present=DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_PRESENT_ENABLED|DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_PRESENT_WELCOME_CHANNELS;body.enabled=1;dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_modify_guild_welcome_screen(client,333,&body,&options,NULL);
 }
 dcc_status_t call_rest_modify_guild_welcome_screen_params(
     dcc_client_t *client,
     dcc_rest_cb cb,
     void *user_data
 ) {
-    const dcc_welcome_channel_params_t channels[] = {
-        {
-            .channel_id = 222,
-            .description = "Read first",
-            .emoji_name = "wave",
-            .emoji_id = 777
-        }
-    };
-    const dcc_welcome_screen_params_t params = {
-        .size = sizeof(params),
-        .description = "Welcome home",
-        .welcome_channels = channels,
-        .welcome_channel_count = sizeof(channels) / sizeof(channels[0]),
-        .enabled = 1
-    };
-    return dcc_rest_modify_guild_welcome_screen_params(client, 333, &params, cb, user_data);
+    dcc_rest_welcome_channel_t channel=DCC_REST_WELCOME_CHANNEL_INIT(222,"Read first");channel.present=DCC_REST_WELCOME_CHANNEL_PRESENT_EMOJI_NAME;channel.emoji_name="wave";dcc_rest_guild_welcome_screen_update_t body=DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_INIT;body.present=DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_PRESENT_ENABLED|DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_PRESENT_WELCOME_CHANNELS|DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_PRESENT_DESCRIPTION;body.enabled=1;body.welcome_channels=&channel;body.welcome_channel_count=1;body.description="Welcome home";dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_modify_guild_welcome_screen(client,333,&body,&options,NULL);
 }
 dcc_status_t call_rest_get_auto_moderation_rules(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     return dcc_rest_get_auto_moderation_rules(client, 333, cb, user_data);
@@ -388,7 +362,7 @@ dcc_status_t call_rest_get_current_user_connections(dcc_client_t *client, dcc_re
     return dcc_rest_get_current_user_connections(client, cb, user_data);
 }
 dcc_status_t call_rest_get_current_user_guilds(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
-    return dcc_rest_get_current_user_guilds(client, "limit=2&after=333", cb, user_data);
+    dcc_rest_current_user_guilds_query_t query=DCC_REST_CURRENT_USER_GUILDS_QUERY_INIT;query.present=DCC_REST_CURRENT_USER_GUILDS_QUERY_PRESENT_LIMIT|DCC_REST_CURRENT_USER_GUILDS_QUERY_PRESENT_AFTER;query.limit=2;query.after=333;dcc_rest_call_options_t options=rest_call_options_from_legacy(cb,user_data);return dcc_rest_get_current_user_guilds(client,&query,&options,NULL);
 }
 dcc_status_t call_rest_get_current_user_dms(dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
     (void)client;

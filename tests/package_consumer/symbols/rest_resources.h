@@ -65,15 +65,18 @@ typedef dcc_status_t (*dcc_package_onboarding_modify_fn)(
     );
 typedef dcc_status_t (*dcc_package_member_modify_fn)(
         dcc_client_t *,
-        const dcc_guild_member_params_t *,
-        dcc_rest_cb,
-        void *
+        dcc_snowflake_t,
+        dcc_snowflake_t,
+        const dcc_rest_guild_member_update_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_current_member_modify_fn)(
         dcc_client_t *,
-        const dcc_current_guild_member_params_t *,
-        dcc_rest_cb,
-        void *
+        dcc_snowflake_t,
+        const dcc_rest_current_guild_member_update_t *,
+        const dcc_rest_call_options_t *,
+        dcc_rest_request_t **
     );
 typedef dcc_status_t (*dcc_package_current_user_modify_fn)(
         dcc_client_t *,

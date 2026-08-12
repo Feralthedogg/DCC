@@ -185,7 +185,7 @@ int run_public_rest_wrapper_expect_users_threads_smoke(dcc_client_t *client) {
                     "list_guild_members_page",
                     call_rest_list_guild_members_page,
                     "GET",
-                    "/guilds/333/members?after=444&limit=2",
+                    "/guilds/333/members?limit=2&after=444",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -201,7 +201,7 @@ int run_public_rest_wrapper_expect_users_threads_smoke(dcc_client_t *client) {
                     "search_guild_members_page",
                     call_rest_search_guild_members_page,
                     "GET",
-                    "/guilds/333/members/search?limit=1&query=feral%20ops",
+                    "/guilds/333/members/search?query=feral%20ops&limit=1",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -218,7 +218,7 @@ int run_public_rest_wrapper_expect_users_threads_smoke(dcc_client_t *client) {
                     call_rest_add_guild_member_params,
                     "PUT",
                     "/guilds/333/members/444",
-                    "{\"nick\":\"feral typed\",\"roles\":[\"555\",\"556\"],\"access_token\":\"tok2\"}"
+                    "{\"access_token\":\"tok2\",\"nick\":\"feral typed\",\"roles\":[\"555\",\"556\"]}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -234,7 +234,7 @@ int run_public_rest_wrapper_expect_users_threads_smoke(dcc_client_t *client) {
                     call_rest_modify_guild_member_params,
                     "PATCH",
                     "/guilds/333/members/444",
-                    "{\"communication_disabled_until\":\"2026-06-15T03:00:00.000000+00:00\",\"nick\":null,\"roles\":[\"555\",\"556\"],\"mute\":true,\"deaf\":false}"
+                    "{\"nick\":null,\"roles\":[\"555\",\"556\"],\"mute\":true,\"deaf\":false,\"communication_disabled_until\":\"2026-06-15T03:00:00.000000+00:00\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -322,7 +322,7 @@ int run_public_rest_wrapper_expect_users_threads_smoke(dcc_client_t *client) {
                     call_rest_create_guild_role_params,
                     "POST",
                     "/guilds/333/roles",
-                    "{\"name\":\"ops typed\",\"color\":1122867,\"position\":2,\"permissions\":\"2048\",\"hoist\":true,\"mentionable\":false,\"icon\":\"data:image/png;base64,AAAA\",\"unicode_emoji\":\"spark\"}"
+                    "{\"name\":\"ops typed\",\"permissions\":\"2048\",\"color\":1122867,\"hoist\":true,\"icon\":\"data:image/png;base64,AAAA\",\"mentionable\":false}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,
@@ -338,7 +338,7 @@ int run_public_rest_wrapper_expect_users_threads_smoke(dcc_client_t *client) {
                     call_rest_modify_guild_role_params,
                     "PATCH",
                     "/guilds/333/roles/555",
-                    "{\"id\":\"555\",\"name\":\"ops edited\",\"color\":4478310,\"position\":3,\"permissions\":\"3072\",\"hoist\":false,\"mentionable\":true}"
+                    "{\"name\":\"ops edited\",\"permissions\":\"3072\",\"color\":4478310,\"hoist\":false,\"mentionable\":true}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,

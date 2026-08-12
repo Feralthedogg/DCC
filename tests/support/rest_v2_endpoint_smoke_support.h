@@ -123,5 +123,11 @@ int endpoint_task7_forum_multipart_contract(
     dcc_client_t *client,
     endpoint_capture_t *capture
 );
+int endpoint_task8_contract(
+    dcc_client_t *client,
+    endpoint_capture_t *capture,
+    endpoint_callback_t *callback,
+    endpoint_observer_t *observer
+);
 
 #endif

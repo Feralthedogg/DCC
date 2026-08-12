@@ -253,7 +253,10 @@ dcc_status_t dcc_app_get_current_user_guilds(
     if (app == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_current_user_guilds(dcc_app_client(app), query, cb, user_data);
+    return dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), DCC_REST_GET, "/users/@me/guilds", query,
+        NULL, NULL, 0U, cb, user_data
+    );
 }
 
 dcc_status_t dcc_app_get_current_user_dms(
@@ -389,7 +392,10 @@ dcc_status_t dcc_app_leave_guild(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_leave_guild(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_leave_guild,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_invites(
