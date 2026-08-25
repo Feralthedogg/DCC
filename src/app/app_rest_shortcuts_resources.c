@@ -1,4 +1,4 @@
-#include <dcc/app.h>
+#include "internal/app/dcc_app_internal.h"
 
 #include <dcc/rest/channels/actions.h>
 #include <dcc/rest/channels/core.h>

@@ -1,4 +1,4 @@
-#include <dcc/app.h>
+#include "internal/app/dcc_app_internal.h"
 
 #include <dcc/managed_message.h>
 #include <dcc/rest/messages/create.h>

@@ -2,7 +2,7 @@
 #define _POSIX_C_SOURCE 200112L
 #endif
 
-#include <dcc/app.h>
+#include "internal/app/dcc_app_internal.h"
 
 #include <errno.h>
 #include <limits.h>

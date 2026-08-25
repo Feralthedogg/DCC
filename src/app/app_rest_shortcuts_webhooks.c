@@ -1,4 +1,4 @@
-#include <dcc/app.h>
+#include "internal/app/dcc_app_internal.h"
 
 #include <dcc/rest/webhooks.h>
 

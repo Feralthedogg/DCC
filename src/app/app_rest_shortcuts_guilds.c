@@ -1,4 +1,4 @@
-#include <dcc/app.h>
+#include "internal/app/dcc_app_internal.h"
 
 #include <dcc/rest/emojis_stickers/guild_emojis.h>
 #include <dcc/rest/emojis_stickers/guild_stickers.h>

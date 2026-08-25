@@ -5,6 +5,7 @@
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"
 
 #include <dcc/app.h>
+#include <dcc/app/legacy.h>
 #include <dcc/tasks.h>
 
 #include <stdatomic.h>
