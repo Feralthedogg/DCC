@@ -84,14 +84,14 @@ jobs:
           }
           case "$(uname -s)" in
             FreeBSD)
-              retry sudo pkg install -y cmake openssl pkgconf
+              retry sudo pkg install -y cmake openssl pkgconf python3
               ;;
             OpenBSD)
               sudo sh -c 'echo https://cdn.openbsd.org/pub/OpenBSD > /etc/installurl'
-              retry sudo pkg_add cmake pkgconf
+              retry sudo pkg_add cmake pkgconf python
               ;;
             NetBSD)
-              retry sudo pkgin -y install cmake openssl pkgconf
+              retry sudo pkgin -y install cmake openssl pkgconf python312
               ;;
           esac
           command -v cc
@@ -103,6 +103,17 @@ jobs:
           if [ -f "$GITHUB_WORKSPACE/.dcc-bsd-infra-skip" ]; then
             cat "$GITHUB_WORKSPACE/.dcc-bsd-infra-skip"
             exit 0
+          fi
+          python_executable=""
+          for candidate in python3 python3.12; do
+            if command -v "$candidate" >/dev/null 2>&1; then
+              python_executable="$(command -v "$candidate")"
+              break
+            fi
+          done
+          if [ -z "$python_executable" ]; then
+            echo "Python 3 interpreter not found" >&2
+            exit 1
           fi
           openssl_arg=""
           case "$(uname -s)" in
@@ -119,6 +130,7 @@ jobs:
             -DDCC_BUILD_EXAMPLES=OFF \
             -DDCC_BUILD_TESTS=ON \
             -DDCC_BUILD_TOOLS=OFF \
+            -DPython3_EXECUTABLE="$python_executable" \
             ${openssl_arg}
           cmake --build "$GITHUB_WORKSPACE/DCC/build-bsd" --parallel 2 --target \
             dcc_smoke \
