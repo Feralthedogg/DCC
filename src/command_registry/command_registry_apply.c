@@ -1,8 +1,11 @@
 #include "internal/command_registry/dcc_command_registry_internal.h"
+#include "internal/dcc_windows_internal.h"
 
 #include <dcc/rest.h>
 
+#if !defined(_WIN32)
 #include <pthread.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,9 +18,19 @@ typedef struct dcc_command_registry_owned_diff {
     size_t plan_index;
 } dcc_command_registry_owned_diff_t;
 
+#if defined(_WIN32)
+typedef CRITICAL_SECTION dcc_command_registry_mutex_t;
+typedef CONDITION_VARIABLE dcc_command_registry_condition_t;
+typedef DWORD dcc_command_registry_thread_id_t;
+#else
+typedef pthread_mutex_t dcc_command_registry_mutex_t;
+typedef pthread_cond_t dcc_command_registry_condition_t;
+typedef pthread_t dcc_command_registry_thread_id_t;
+#endif
+
 struct dcc_command_registry_operation {
-    pthread_mutex_t mutex;
-    pthread_cond_t condition;
+    dcc_command_registry_mutex_t mutex;
+    dcc_command_registry_condition_t condition;
     size_t references;
     dcc_client_t *client;
     dcc_snowflake_t application_id;
@@ -34,11 +47,112 @@ struct dcc_command_registry_operation {
     char *auth_token;
     dcc_command_registry_operation_result_fn callback;
     void *user_data;
-    pthread_t callback_thread;
+    dcc_command_registry_thread_id_t callback_thread;
     uint8_t in_callback;
     dcc_rest_result_t *failed_result;
     dcc_command_registry_operation_result_t result;
 };
+
+static int dcc_command_registry_mutex_init(dcc_command_registry_mutex_t *mutex) {
+#if defined(_WIN32)
+    InitializeCriticalSection(mutex);
+    return 0;
+#else
+    return pthread_mutex_init(mutex, NULL);
+#endif
+}
+
+static void dcc_command_registry_mutex_destroy(dcc_command_registry_mutex_t *mutex) {
+#if defined(_WIN32)
+    DeleteCriticalSection(mutex);
+#else
+    (void)pthread_mutex_destroy(mutex);
+#endif
+}
+
+static void dcc_command_registry_mutex_lock(dcc_command_registry_mutex_t *mutex) {
+#if defined(_WIN32)
+    EnterCriticalSection(mutex);
+#else
+    (void)pthread_mutex_lock(mutex);
+#endif
+}
+
+static void dcc_command_registry_mutex_unlock(dcc_command_registry_mutex_t *mutex) {
+#if defined(_WIN32)
+    LeaveCriticalSection(mutex);
+#else
+    (void)pthread_mutex_unlock(mutex);
+#endif
+}
+
+static int dcc_command_registry_condition_init(
+    dcc_command_registry_condition_t *condition) {
+#if defined(_WIN32)
+    InitializeConditionVariable(condition);
+    return 0;
+#else
+    return pthread_cond_init(condition, NULL);
+#endif
+}
+
+static void dcc_command_registry_condition_destroy(
+    dcc_command_registry_condition_t *condition) {
+#if defined(_WIN32)
+    (void)condition;
+#else
+    (void)pthread_cond_destroy(condition);
+#endif
+}
+
+static void dcc_command_registry_condition_broadcast(
+    dcc_command_registry_condition_t *condition) {
+#if defined(_WIN32)
+    WakeAllConditionVariable(condition);
+#else
+    (void)pthread_cond_broadcast(condition);
+#endif
+}
+
+static int dcc_command_registry_condition_wait(
+    dcc_command_registry_condition_t *condition,
+    dcc_command_registry_mutex_t *mutex,
+    uint32_t timeout_ms) {
+#if defined(_WIN32)
+    DWORD timeout = timeout_ms == 0U ? INFINITE : (DWORD)timeout_ms;
+    if (SleepConditionVariableCS(condition, mutex, timeout)) return 0;
+    return GetLastError() == ERROR_TIMEOUT ? 1 : -1;
+#else
+    if (timeout_ms == 0U) return pthread_cond_wait(condition, mutex);
+    struct timespec deadline;
+    clock_gettime(CLOCK_REALTIME, &deadline);
+    deadline.tv_sec += (time_t)(timeout_ms / 1000U);
+    deadline.tv_nsec += (long)(timeout_ms % 1000U) * 1000000L;
+    if (deadline.tv_nsec >= 1000000000L) {
+        ++deadline.tv_sec;
+        deadline.tv_nsec -= 1000000000L;
+    }
+    return pthread_cond_timedwait(condition, mutex, &deadline);
+#endif
+}
+
+static dcc_command_registry_thread_id_t dcc_command_registry_thread_self(void) {
+#if defined(_WIN32)
+    return GetCurrentThreadId();
+#else
+    return pthread_self();
+#endif
+}
+
+static int dcc_command_registry_thread_equal(
+    dcc_command_registry_thread_id_t lhs,
+    dcc_command_registry_thread_id_t rhs) {
+#if defined(_WIN32)
+    return lhs == rhs;
+#else
+    return pthread_equal(lhs, rhs);
+#endif
+}
 
 static void dcc_command_registry_operation_free(
     dcc_command_registry_operation_t *operation) {
@@ -52,17 +166,17 @@ static void dcc_command_registry_operation_free(
         free(operation->auth_token);
     }
     dcc_rest_result_free(operation->failed_result);
-    pthread_cond_destroy(&operation->condition);
-    pthread_mutex_destroy(&operation->mutex);
+    dcc_command_registry_condition_destroy(&operation->condition);
+    dcc_command_registry_mutex_destroy(&operation->mutex);
     free(operation);
 }
 
 static void dcc_command_registry_operation_release(
     dcc_command_registry_operation_t *operation) {
     int release = 0;
-    pthread_mutex_lock(&operation->mutex);
+    dcc_command_registry_mutex_lock(&operation->mutex);
     if (--operation->references == 0U) release = 1;
-    pthread_mutex_unlock(&operation->mutex);
+    dcc_command_registry_mutex_unlock(&operation->mutex);
     if (release) dcc_command_registry_operation_free(operation);
 }
 
@@ -120,26 +234,26 @@ static void dcc_command_registry_complete(
     const dcc_rest_result_t *failed_result) {
     if (failed_result != NULL)
         (void)dcc_rest_result_clone(failed_result, &operation->failed_result);
-    pthread_mutex_lock(&operation->mutex);
+    dcc_command_registry_mutex_lock(&operation->mutex);
     operation->result.status = status;
     operation->result.failed_plan_index = failed_index;
     operation->result.failed_action = failed_action;
     operation->result.failed_rest_result = operation->failed_result;
     operation->terminal = 1U;
-    pthread_cond_broadcast(&operation->condition);
+    dcc_command_registry_condition_broadcast(&operation->condition);
     dcc_command_registry_operation_result_fn callback = operation->callback;
     void *user_data = operation->user_data;
     if (callback != NULL) {
         operation->in_callback = 1U;
-        operation->callback_thread = pthread_self();
+        operation->callback_thread = dcc_command_registry_thread_self();
     }
-    pthread_mutex_unlock(&operation->mutex);
+    dcc_command_registry_mutex_unlock(&operation->mutex);
     if (callback != NULL) callback(operation->client, &operation->result, user_data);
-    pthread_mutex_lock(&operation->mutex);
+    dcc_command_registry_mutex_lock(&operation->mutex);
     operation->in_callback = 0U;
     operation->callback_delivered = 1U;
-    pthread_cond_broadcast(&operation->condition);
-    pthread_mutex_unlock(&operation->mutex);
+    dcc_command_registry_condition_broadcast(&operation->condition);
+    dcc_command_registry_mutex_unlock(&operation->mutex);
 }
 
 static void *dcc_command_registry_operation_main(void *opaque) {
@@ -151,9 +265,9 @@ static void *dcc_command_registry_operation_main(void *opaque) {
         return NULL;
     }
     for (size_t i = 0U; i < operation->diff_count; ++i) {
-        pthread_mutex_lock(&operation->mutex);
+        dcc_command_registry_mutex_lock(&operation->mutex);
         int canceled = operation->cancel_requested != 0U;
-        pthread_mutex_unlock(&operation->mutex);
+        dcc_command_registry_mutex_unlock(&operation->mutex);
         if (canceled) {
             dcc_command_registry_complete(operation, DCC_ERR_CANCELED, i,
                                           operation->diffs[i].action, NULL);
@@ -186,18 +300,18 @@ static void *dcc_command_registry_operation_main(void *opaque) {
             dcc_command_registry_operation_release(operation);
             return NULL;
         }
-        pthread_mutex_lock(&operation->mutex);
+        dcc_command_registry_mutex_lock(&operation->mutex);
         operation->active_request = request;
         ++operation->result.submitted_count;
         canceled = operation->cancel_requested != 0U;
-        pthread_mutex_unlock(&operation->mutex);
+        dcc_command_registry_mutex_unlock(&operation->mutex);
         if (canceled) (void)dcc_rest_request_cancel(request);
         const dcc_rest_result_t *result = NULL;
         status = dcc_rest_request_wait(request, 0U, &result);
         if (status == DCC_OK) status = dcc_rest_result_status(result);
-        pthread_mutex_lock(&operation->mutex);
+        dcc_command_registry_mutex_lock(&operation->mutex);
         operation->active_request = NULL;
-        pthread_mutex_unlock(&operation->mutex);
+        dcc_command_registry_mutex_unlock(&operation->mutex);
         if (status != DCC_OK) {
             dcc_status_t final_status = canceled || status == DCC_ERR_CANCELED
                 ? DCC_ERR_CANCELED : status;
@@ -222,6 +336,13 @@ static void *dcc_command_registry_operation_main(void *opaque) {
     dcc_command_registry_operation_release(operation);
     return NULL;
 }
+
+#if defined(_WIN32)
+static DWORD WINAPI dcc_command_registry_operation_main_windows(LPVOID opaque) {
+    (void)dcc_command_registry_operation_main(opaque);
+    return 0U;
+}
+#endif
 
 dcc_status_t dcc_command_registry_apply(
     dcc_client_t *client, dcc_snowflake_t application_id,
@@ -249,9 +370,14 @@ dcc_status_t dcc_command_registry_apply(
         return DCC_ERR_INVALID_ARG;
     dcc_command_registry_operation_t *operation = calloc(1U, sizeof(*operation));
     if (operation == NULL) return DCC_ERR_NOMEM;
-    if (pthread_mutex_init(&operation->mutex, NULL) != 0 ||
-        pthread_cond_init(&operation->condition, NULL) != 0) {
-        free(operation); return DCC_ERR_RUNTIME;
+    if (dcc_command_registry_mutex_init(&operation->mutex) != 0) {
+        free(operation);
+        return DCC_ERR_RUNTIME;
+    }
+    if (dcc_command_registry_condition_init(&operation->condition) != 0) {
+        dcc_command_registry_mutex_destroy(&operation->mutex);
+        free(operation);
+        return DCC_ERR_RUNTIME;
     }
     operation->client = client;
     operation->application_id = application_id;
@@ -294,14 +420,26 @@ dcc_status_t dcc_command_registry_apply(
     operation->result.planned_count = operation->diff_count;
     operation->references = out_operation != NULL ? 2U : 1U;
     if (out_operation != NULL) *out_operation = operation;
+#if defined(_WIN32)
+    HANDLE thread = CreateThread(NULL, 0U,
+                                 dcc_command_registry_operation_main_windows,
+                                 operation, 0U, NULL);
+    if (thread == NULL) {
+#else
     pthread_t thread;
-    if (pthread_create(&thread, NULL, dcc_command_registry_operation_main, operation) != 0) {
+    if (pthread_create(&thread, NULL, dcc_command_registry_operation_main,
+                       operation) != 0) {
+#endif
         if (out_operation != NULL) *out_operation = NULL;
         operation->references = 1U;
         dcc_command_registry_operation_free(operation);
         return DCC_ERR_RUNTIME;
     }
+#if defined(_WIN32)
+    CloseHandle(thread);
+#else
     (void)pthread_detach(thread);
+#endif
     return DCC_OK;
 }
 
@@ -310,50 +448,41 @@ dcc_status_t dcc_command_registry_operation_wait(
     const dcc_command_registry_operation_result_t **out_result) {
     if (out_result != NULL) *out_result = NULL;
     if (operation == NULL || out_result == NULL) return DCC_ERR_INVALID_ARG;
-    pthread_mutex_lock(&operation->mutex);
+    dcc_command_registry_mutex_lock(&operation->mutex);
     if (operation->in_callback &&
-        pthread_equal(operation->callback_thread, pthread_self())) {
-        pthread_mutex_unlock(&operation->mutex); return DCC_ERR_STATE;
+        dcc_command_registry_thread_equal(operation->callback_thread, dcc_command_registry_thread_self())) {
+        dcc_command_registry_mutex_unlock(&operation->mutex); return DCC_ERR_STATE;
     }
     int rc = 0;
-    if (timeout_ms == 0U) {
-        while (!operation->callback_delivered)
-            pthread_cond_wait(&operation->condition, &operation->mutex);
-    } else {
-        struct timespec deadline;
-        clock_gettime(CLOCK_REALTIME, &deadline);
-        deadline.tv_sec += (time_t)(timeout_ms / 1000U);
-        deadline.tv_nsec += (long)(timeout_ms % 1000U) * 1000000L;
-        if (deadline.tv_nsec >= 1000000000L) {
-            ++deadline.tv_sec; deadline.tv_nsec -= 1000000000L;
-        }
-        while (!operation->callback_delivered && rc == 0)
-            rc = pthread_cond_timedwait(&operation->condition, &operation->mutex, &deadline);
-    }
+    while (!operation->callback_delivered && rc == 0)
+        rc = dcc_command_registry_condition_wait(
+            &operation->condition, &operation->mutex, timeout_ms);
     if (!operation->callback_delivered) {
-        pthread_mutex_unlock(&operation->mutex); return DCC_ERR_TIMEOUT;
+        dcc_command_registry_mutex_unlock(&operation->mutex); return DCC_ERR_TIMEOUT;
     }
     *out_result = &operation->result;
-    pthread_mutex_unlock(&operation->mutex);
+    dcc_command_registry_mutex_unlock(&operation->mutex);
     return DCC_OK;
 }
 
 dcc_status_t dcc_command_registry_operation_cancel(
     dcc_command_registry_operation_t *operation) {
     if (operation == NULL) return DCC_ERR_INVALID_ARG;
-    pthread_mutex_lock(&operation->mutex);
+    dcc_command_registry_mutex_lock(&operation->mutex);
     operation->cancel_requested = 1U;
     dcc_rest_request_t *request = operation->active_request;
-    pthread_mutex_unlock(&operation->mutex);
+    dcc_command_registry_mutex_unlock(&operation->mutex);
     return request != NULL ? dcc_rest_request_cancel(request) : DCC_OK;
 }
 
 uint8_t dcc_command_registry_operation_completed(
     const dcc_command_registry_operation_t *operation) {
     if (operation == NULL) return 0U;
-    pthread_mutex_lock((pthread_mutex_t *)&operation->mutex);
+    dcc_command_registry_mutex_lock(
+        (dcc_command_registry_mutex_t *)&operation->mutex);
     uint8_t completed = operation->terminal;
-    pthread_mutex_unlock((pthread_mutex_t *)&operation->mutex);
+    dcc_command_registry_mutex_unlock(
+        (dcc_command_registry_mutex_t *)&operation->mutex);
     return completed;
 }
 
