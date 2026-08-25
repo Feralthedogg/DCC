@@ -2143,14 +2143,11 @@ DCC_API dcc_status_t dcc_app_apply_command_plan(
 );
 
 DCC_API dcc_app_t *dcc_ctx_app(const dcc_ctx_t *ctx);
-DCC_API dcc_client_t *dcc_ctx_client(const dcc_ctx_t *ctx);
 DCC_API const dcc_event_t *dcc_ctx_event(const dcc_ctx_t *ctx);
-DCC_API const dcc_interaction_t *dcc_ctx_interaction(const dcc_ctx_t *ctx);
 DCC_API dcc_interaction_flow_t *dcc_ctx_flow(dcc_ctx_t *ctx);
 DCC_API void *dcc_ctx_user_data(const dcc_ctx_t *ctx);
 DCC_API void *dcc_ctx_state(const dcc_ctx_t *ctx);
 DCC_API dcc_event_type_t dcc_ctx_event_type(const dcc_ctx_t *ctx);
-DCC_API dcc_snowflake_t dcc_ctx_interaction_id(const dcc_ctx_t *ctx);
 DCC_API dcc_snowflake_t dcc_ctx_application_id(const dcc_ctx_t *ctx);
 DCC_API dcc_snowflake_t dcc_ctx_guild_id(const dcc_ctx_t *ctx);
 DCC_API dcc_snowflake_t dcc_ctx_channel_id(const dcc_ctx_t *ctx);

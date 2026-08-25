@@ -1,5 +1,4 @@
 #include <dcc/dcc.h>
-#include <dcc/sugar.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -7,9 +6,9 @@
 
 static int env_bool(const char *name, int fallback) {
     uint8_t parsed = fallback ? 1U : 0U;
-    if (DCC_ENV_BOOL_OR(name, parsed, &parsed) != DCC_OK) {
+    if (dcc_app_env_get_bool_or(name, parsed, &parsed) != DCC_OK) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %d\n", name, value, fallback ? 1 : 0);
         return fallback;
     }
@@ -18,9 +17,9 @@ static int env_bool(const char *name, int fallback) {
 
 static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value, uint32_t max_value) {
     uint32_t parsed = fallback;
-    if (DCC_ENV_U32_RANGE_OR(name, fallback, min_value, max_value, &parsed) != DCC_OK) {
+    if (dcc_app_env_get_u32_range_or(name, fallback, min_value, max_value, &parsed) != DCC_OK) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %u\n", name, value, (unsigned)fallback);
         return fallback;
     }
@@ -29,9 +28,9 @@ static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value,
 
 static dcc_snowflake_t env_guild(const char *name, dcc_snowflake_t fallback) {
     dcc_snowflake_t parsed = fallback;
-    if (DCC_ENV_GUILD_OR(name, fallback, &parsed) != DCC_OK) {
+    if (dcc_app_env_get_guild_or(name, fallback, &parsed) != DCC_OK) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(stderr,
                 "ignoring invalid %s=%s, using %llu\n",
                 name,
@@ -44,9 +43,9 @@ static dcc_snowflake_t env_guild(const char *name, dcc_snowflake_t fallback) {
 
 static dcc_snowflake_t env_channel(const char *name, dcc_snowflake_t fallback) {
     dcc_snowflake_t parsed = fallback;
-    if (DCC_ENV_CHANNEL_OR(name, fallback, &parsed) != DCC_OK) {
+    if (dcc_app_env_get_channel_or(name, fallback, &parsed) != DCC_OK) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(stderr,
                 "ignoring invalid %s=%s, using %llu\n",
                 name,
@@ -59,9 +58,9 @@ static dcc_snowflake_t env_channel(const char *name, dcc_snowflake_t fallback) {
 
 static dcc_snowflake_t env_user(const char *name, dcc_snowflake_t fallback) {
     dcc_snowflake_t parsed = fallback;
-    if (DCC_ENV_USER_OR(name, fallback, &parsed) != DCC_OK) {
+    if (dcc_app_env_get_user_or(name, fallback, &parsed) != DCC_OK) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(stderr,
                 "ignoring invalid %s=%s, using %llu\n",
                 name,
@@ -74,7 +73,7 @@ static dcc_snowflake_t env_user(const char *name, dcc_snowflake_t fallback) {
 
 static const char *env_token(void) {
     const char *token = NULL;
-    return DCC_ENV_TOKEN(&token) == DCC_OK ? token : NULL;
+    return dcc_app_env_get_token(NULL, &token) == DCC_OK ? token : NULL;
 }
 
 static int require_live_config(
@@ -169,7 +168,7 @@ static void stop_client(dcc_client_t *client, int started) {
 }
 
 int main(void) {
-    (void)dcc_app_load_dotenv();
+    (void)dcc_app_env_load_dotenv();
 
     const char *token = NULL;
     dcc_snowflake_t guild_id = 0;
@@ -197,8 +196,11 @@ int main(void) {
     int connected = 0;
     int exit_code = 1;
 
-    dcc_client_options_t options =
-        DCC_CLIENT_OPTIONS(token, DCC_INTENTS_DEFAULT | DCC_INTENT_GUILD_VOICE_STATES);
+    dcc_client_options_t options = {
+        .size = sizeof(options),
+        .token = token,
+        .intents = DCC_INTENTS_DEFAULT | DCC_INTENT_GUILD_VOICE_STATES,
+    };
     options.gateway_max_concurrency = env_u32("DCC_VOICE_MAX_CONCURRENCY", 1U, 1U, 16U);
 
     dcc_status_t status = dcc_client_create(&options, &client);

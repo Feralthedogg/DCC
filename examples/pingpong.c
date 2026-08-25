@@ -1,4 +1,5 @@
-#include <dcc/sugar.h>
+#include <dcc/bot.h>
+#include <dcc/embed.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -45,22 +46,29 @@ DCC_SLASH_FN(on_ping) {
         footer_text,
         sizeof(footer_text),
         "%lld ms",
-        pingpong_latency_ms(DCC_CTX_INTERACTION_ID(ctx))
+        pingpong_latency_ms(dcc_ctx_interaction_id(ctx))
     );
 
-    dcc_embed_builder_t embed =
-        DCC_EMBED_COLOR_FOOTER("🏓", "퐁!", 0xFF0000U, footer_text, NULL);
-    (void)DCC_CTX_REPLY(ctx, DCC_MESSAGE_EMBEDS(embed));
+    dcc_embed_builder_t embed;
+    dcc_embed_builder_init(&embed);
+    dcc_status_t status = dcc_embed_builder_set_title(&embed, "🏓");
+    if (status == DCC_OK) status = dcc_embed_builder_set_description(&embed, "퐁!");
+    if (status == DCC_OK) status = dcc_embed_builder_set_color(&embed, 0xFF0000U);
+    if (status == DCC_OK) status = dcc_embed_builder_set_footer(&embed, footer_text, NULL);
+    dcc_message_builder_t message;
+    dcc_message_builder_init(&message);
+    if (status == DCC_OK) status = dcc_message_builder_set_embeds(&message, &embed, 1U);
+    return status == DCC_OK ? DCC_CTX_REPLY(ctx, message) : status;
 }
 
 DCC_READY_FN(on_ready) {
     (void)app;
     (void)user_data;
     printf("PingPong Bot ready: shard %u/%u\n", ready->shard_id, ready->shard_count);
+    return DCC_OK;
 }
 
-DCC_SIMPLE_BOT_MAIN(
-    "pingpong",
+DCC_DEV_BOT_MAIN(
     DCC_LISTEN_SLASH("핑", "퐁으로 응답합니다", on_ping),
     DCC_LISTEN_READY(on_ready)
 )

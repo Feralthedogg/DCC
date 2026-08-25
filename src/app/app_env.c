@@ -3,7 +3,6 @@
 #endif
 
 #include <dcc/app.h>
-#include <dcc/sugar.h>
 
 #include <errno.h>
 #include <limits.h>

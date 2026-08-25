@@ -1,4 +1,4 @@
-#include <dcc/sugar.h>
+#include <dcc/hot_reload.h>
 
 #include <stdio.h>
 #include <stdint.h>

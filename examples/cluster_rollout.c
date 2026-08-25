@@ -1,5 +1,4 @@
 #include <dcc/dcc.h>
-#include <dcc/sugar.h>
 
 #include <stdatomic.h>
 #include <stdint.h>
@@ -22,9 +21,9 @@ typedef struct rollout_state {
 
 static int env_bool(const char *name, int fallback) {
     uint8_t parsed = fallback ? 1U : 0U;
-    if (DCC_ENV_BOOL_OR(name, parsed, &parsed) != DCC_OK) {
+    if (dcc_app_env_get_bool_or(name, parsed, &parsed) != DCC_OK) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %d\n", name, value, fallback ? 1 : 0);
         return fallback;
     }
@@ -33,9 +32,9 @@ static int env_bool(const char *name, int fallback) {
 
 static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value, uint32_t max_value) {
     uint32_t parsed = fallback;
-    if (DCC_ENV_U32_RANGE_OR(name, fallback, min_value, max_value, &parsed) != DCC_OK) {
+    if (dcc_app_env_get_u32_range_or(name, fallback, min_value, max_value, &parsed) != DCC_OK) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(
             stderr,
             "ignoring invalid %s=%s, using %u\n",
@@ -50,7 +49,7 @@ static uint32_t env_u32(const char *name, uint32_t fallback, uint32_t min_value,
 
 static const char *env_token(void) {
     const char *token = NULL;
-    return DCC_ENV_TOKEN(&token) == DCC_OK ? token : NULL;
+    return dcc_app_env_get_token(NULL, &token) == DCC_OK ? token : NULL;
 }
 
 static void print_status_json(dcc_cluster_t *cluster, const char *label) {
@@ -195,7 +194,7 @@ static void on_ready(dcc_client_t *client, const dcc_event_t *event, void *user_
 }
 
 int main(void) {
-    (void)dcc_app_load_dotenv();
+    (void)dcc_app_env_load_dotenv();
 
     const char *token = env_token();
     if (token == NULL || token[0] == '\0') {
@@ -226,9 +225,14 @@ int main(void) {
     atomic_init(&state.stop_requested, 0U);
 
     dcc_cluster_t *cluster = NULL;
+    dcc_client_options_t client_options = {
+        .size = sizeof(client_options),
+        .token = token,
+        .intents = DCC_INTENTS_DEFAULT,
+    };
     dcc_cluster_options_t opts = {
         .size = sizeof(opts),
-        .client_options = DCC_CLIENT_OPTIONS(token, DCC_INTENTS_DEFAULT),
+        .client_options = client_options,
         .shard_count = shard_count,
         .first_shard_id = first_shard,
         .total_shard_count = total_shards,

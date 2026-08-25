@@ -1,7 +1,8 @@
 #ifndef DCC_DISCORD_GAME_INTERNAL_H
 #define DCC_DISCORD_GAME_INTERNAL_H
 
-#include <dcc/sugar.h>
+#include <dcc/dcc.h>
+#include <dcc/bot.h>
 #include <dcc/rest/interactions.h>
 
 #include <stdint.h>
@@ -32,11 +33,11 @@ dcc_status_t respond_game(
     int game_over
 );
 void rest_response_log_cb(dcc_client_t *client, const dcc_rest_result_t *response, void *user_data);
-void on_game_command(dcc_ctx_t *ctx, void *user_data);
-void on_game_button(dcc_ctx_t *ctx, void *user_data);
+dcc_status_t on_game_command(dcc_ctx_t *ctx, void *user_data);
+dcc_status_t on_game_button(dcc_ctx_t *ctx, void *user_data);
 
-void on_ready(dcc_app_t *app, const dcc_ready_event_t *ready, void *user_data);
-void on_log(dcc_app_t *app, const dcc_event_t *event, void *user_data);
-void on_socket_close(dcc_app_t *app, const dcc_event_t *event, void *user_data);
+dcc_status_t on_ready(dcc_app_t *app, const dcc_ready_event_t *ready, void *user_data);
+dcc_status_t on_log(dcc_app_t *app, const dcc_event_t *event, void *user_data);
+dcc_status_t on_socket_close(dcc_app_t *app, const dcc_event_t *event, void *user_data);
 
 #endif

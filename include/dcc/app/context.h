@@ -18,6 +18,13 @@ extern "C" {
 
 typedef struct dcc_app_modal_flow dcc_app_modal_flow_t;
 
+/** Returns the borrowed context interaction ID, or zero when unavailable. */
+DCC_API dcc_snowflake_t dcc_ctx_interaction_id(const dcc_ctx_t *ctx);
+/** Returns the client borrowed from the context, or null when unavailable. */
+DCC_API dcc_client_t *dcc_ctx_client(const dcc_ctx_t *ctx);
+/** Returns the interaction borrowed for the context callback duration. */
+DCC_API const dcc_interaction_t *dcc_ctx_interaction(const dcc_ctx_t *ctx);
+
 typedef struct dcc_app_wait_result {
   size_t size;
   dcc_event_snapshot_t snapshot;

@@ -49,8 +49,8 @@ static dcc_status_t build_game_message(
     const char *status_text,
     int game_over,
     dcc_message_builder_t *message,
-    dcc_component_builder_t rows[3],
-    dcc_component_builder_t buttons[GAME_BOARD_LEN],
+    dcc_component_v2_builder_t rows[3],
+    dcc_component_v2_builder_t buttons[GAME_BOARD_LEN],
     char custom_ids[GAME_BOARD_LEN][32],
     char *content,
     size_t content_len
@@ -71,19 +71,22 @@ static dcc_status_t build_game_message(
             return DCC_ERR_INVALID_ARG;
         }
 
-        buttons[i] = DCC_BUTTON_BUILDER(cell_style(board[i]), cell_label(board[i]), custom_ids[i]);
-        buttons[i].disabled = (uint8_t)(game_over || board[i] != '0');
-        buttons[i].has_disabled = 1U;
+        buttons[i] = DCC_UI_BUTTON(
+            cell_style(board[i]), cell_label(board[i]), custom_ids[i]);
+        dcc_status_t status = dcc_component_v2_builder_set_disabled(
+            &buttons[i], (uint8_t)(game_over || board[i] != '0'));
+        if (status != DCC_OK) return status;
     }
 
     for (int row = 0; row < 3; ++row) {
-        rows[row] = DCC_ACTION_ROW_ARRAY(&buttons[row * 3], 3U);
+        rows[row] = DCC_UI_ROW_ARRAY(&buttons[row * 3], 3U);
     }
 
-    *message = DCC_MESSAGE_COMPONENTS_ARRAY(rows, 3U);
-    message->content = content;
-    message->present |= DCC_MESSAGE_BUILDER_PRESENT_CONTENT;
-    return DCC_OK;
+    dcc_message_builder_init(message);
+    dcc_status_t status = dcc_message_builder_set_components_v2(message, rows, 3U);
+    return status == DCC_OK
+               ? dcc_message_builder_set_content(message, content)
+               : status;
 }
 
 void rest_response_log_cb(dcc_client_t *client, const dcc_rest_result_t *response, void *user_data) {
@@ -112,9 +115,11 @@ dcc_status_t respond_text(
     dcc_interaction_response_type_t type,
     const char *content
 ) {
-    dcc_message_builder_t message = DCC_MESSAGE_TEXT(content);
+    dcc_message_builder_t message;
+    dcc_message_builder_init(&message);
+    dcc_status_t status = dcc_message_builder_set_content(&message, content);
     dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
-    dcc_status_t status = type == DCC_INTERACTION_RESPONSE_UPDATE_MESSAGE
+    if (status == DCC_OK) status = type == DCC_INTERACTION_RESPONSE_UPDATE_MESSAGE
         ? dcc_rest_interaction_response_set_update_message(&response, &message)
         : type == DCC_INTERACTION_RESPONSE_CHANNEL_MESSAGE_WITH_SOURCE
             ? dcc_rest_interaction_response_set_message(&response, &message)
@@ -144,8 +149,8 @@ dcc_status_t respond_game(
     int game_over
 ) {
     dcc_message_builder_t message;
-    dcc_component_builder_t rows[3];
-    dcc_component_builder_t buttons[GAME_BOARD_LEN];
+    dcc_component_v2_builder_t rows[3];
+    dcc_component_v2_builder_t buttons[GAME_BOARD_LEN];
     char custom_ids[GAME_BOARD_LEN][32];
     char content[256];
 
@@ -186,12 +191,12 @@ dcc_status_t respond_game(
     );
 }
 
-DCC_PUBLIC_SLASH_FN(on_game_command) {
+dcc_status_t on_game_command(dcc_ctx_t *ctx, void *user_data) {
     (void)user_data;
-    dcc_client_t *client = DCC_CTX_CLIENT(ctx);
-    const dcc_interaction_t *interaction = DCC_CTX_INTERACTION(ctx);
+    dcc_client_t *client = dcc_ctx_client(ctx);
+    const dcc_interaction_t *interaction = dcc_ctx_interaction(ctx);
     if (interaction == NULL) {
-        return;
+        return DCC_ERR_INVALID_ARG;
     }
 
     char board[GAME_BOARD_LEN + 1] = "000000000";
@@ -203,23 +208,21 @@ DCC_PUBLIC_SLASH_FN(on_game_command) {
         "Your turn. Pick a square.",
         0
     );
-    if (st != DCC_OK) {
-        fprintf(stderr, "failed to respond to /%s: %s\n", GAME_COMMAND_NAME, dcc_status_string(st));
-    }
+    return st;
 }
 
-DCC_PUBLIC_BUTTON_FN(on_game_button) {
+dcc_status_t on_game_button(dcc_ctx_t *ctx, void *user_data) {
     (void)user_data;
-    dcc_client_t *client = DCC_CTX_CLIENT(ctx);
-    const dcc_interaction_t *interaction = DCC_CTX_INTERACTION(ctx);
+    dcc_client_t *client = dcc_ctx_client(ctx);
+    const dcc_interaction_t *interaction = dcc_ctx_interaction(ctx);
     if (interaction == NULL || interaction->custom_id == NULL) {
-        return;
+        return DCC_ERR_INVALID_ARG;
     }
 
     char board[GAME_BOARD_LEN + 1];
     int pos = 0;
     if (!parse_game_custom_id(interaction->custom_id, board, &pos)) {
-        return;
+        return DCC_ERR_INVALID_ARG;
     }
 
     const char *status = "Your turn.";
@@ -261,7 +264,5 @@ DCC_PUBLIC_BUTTON_FN(on_game_button) {
         status,
         game_over
     );
-    if (st != DCC_OK) {
-        fprintf(stderr, "failed to update game message: %s\n", dcc_status_string(st));
-    }
+    return st;
 }

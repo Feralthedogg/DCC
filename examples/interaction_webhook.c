@@ -1,5 +1,5 @@
 #include <dcc/dcc.h>
-#include <dcc/sugar.h>
+#include <dcc/app/env.h>
 
 #include <errno.h>
 #include <stdatomic.h>
@@ -147,9 +147,9 @@ static void webhook_signal_stop(pthread_t thread, int thread_started) {
 
 static int env_bool(const char *name, int fallback) {
     uint8_t parsed = fallback ? 1U : 0U;
-    if (DCC_ENV_BOOL_OR(name, parsed, &parsed) != DCC_OK) {
+    if (dcc_app_env_get_bool_or(name, parsed, &parsed) != DCC_OK) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %d\n", name, value, fallback ? 1 : 0);
         return fallback;
     }
@@ -158,9 +158,9 @@ static int env_bool(const char *name, int fallback) {
 
 static uint16_t env_u16(const char *name, uint16_t fallback) {
     uint32_t parsed = fallback;
-    if (DCC_ENV_U32_RANGE_OR(name, fallback, 0U, 65535U, &parsed) != DCC_OK) {
+    if (dcc_app_env_get_u32_range_or(name, fallback, 0U, 65535U, &parsed) != DCC_OK) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %u\n", name, value, (unsigned)fallback);
         return fallback;
     }
@@ -169,11 +169,11 @@ static uint16_t env_u16(const char *name, uint16_t fallback) {
 
 static size_t env_size(const char *name, size_t fallback, size_t min_value, size_t max_value) {
     uint64_t parsed = fallback;
-    if (DCC_ENV_U64_OR(name, fallback, &parsed) != DCC_OK ||
+    if (dcc_app_env_get_u64_or(name, fallback, &parsed) != DCC_OK ||
         parsed < (uint64_t)min_value ||
         parsed > (uint64_t)max_value) {
         const char *value = NULL;
-        (void)DCC_ENV_STRING_OR(name, "", &value);
+        (void)dcc_app_env_get_string_or(name, "", &value);
         fprintf(stderr, "ignoring invalid %s=%s, using %zu\n", name, value, fallback);
         return fallback;
     }
@@ -182,7 +182,7 @@ static size_t env_size(const char *name, size_t fallback, size_t min_value, size
 
 static const char *env_string(const char *name, const char *fallback) {
     const char *value = fallback;
-    return DCC_ENV_STRING_OR(name, fallback, &value) == DCC_OK ? value : fallback;
+    return dcc_app_env_get_string_or(name, fallback, &value) == DCC_OK ? value : fallback;
 }
 
 static void webhook_usage(FILE *stream, const char *argv0) {
