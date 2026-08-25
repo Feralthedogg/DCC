@@ -1311,8 +1311,10 @@ static int test_auto_defer_claim_race_fails_fast(void) {
   state.ctx.app = state.app;
   state.ctx.client = state.client;
   state.ctx.interaction = &interaction;
-  if (dcc_flow_create(state.client, &interaction, &state.ctx.flow) != DCC_OK)
+  if (dcc_flow_create(state.client, &interaction, &state.ctx.flow) != DCC_OK) {
+    (void)dcc_app_destroy(state.app);
     return 1;
+  }
   dcc_status_t configure_status = dcc_app_auto_defer(state.app, 1U);
   dcc_status_t client_start_status = configure_status == DCC_OK
                                          ? dcc_client_start(state.client)
@@ -1328,6 +1330,7 @@ static int test_auto_defer_claim_race_fails_fast(void) {
             configure_status, client_start_status, start_status,
             (void *)state.ctx.auto_defer);
     dcc_app_auto_defer_finish(&state.ctx);
+    dcc_flow_destroy(state.ctx.flow);
     (void)dcc_app_destroy(state.app);
     return 1;
   }
@@ -1337,6 +1340,7 @@ static int test_auto_defer_claim_race_fails_fast(void) {
       0) {
     fprintf(stderr, "timer claim runtime thread start failed\n");
     dcc_app_auto_defer_finish(&state.ctx);
+    dcc_flow_destroy(state.ctx.flow);
     (void)dcc_app_destroy(state.app);
     return 1;
   }
@@ -1346,6 +1350,7 @@ static int test_auto_defer_claim_race_fails_fast(void) {
     (void)dcc_client_stop(state.client);
     (void)test_thread_join(&runtime_thread);
     dcc_app_auto_defer_finish(&state.ctx);
+    dcc_flow_destroy(state.ctx.flow);
     (void)dcc_app_destroy(state.app);
     fprintf(stderr, "auto-defer timer did not claim the initial response\n");
     return 1;
@@ -1360,6 +1365,7 @@ static int test_auto_defer_claim_race_fails_fast(void) {
     (void)dcc_client_stop(state.client);
     (void)test_thread_join(&runtime_thread);
     dcc_app_auto_defer_finish(&state.ctx);
+    dcc_flow_destroy(state.ctx.flow);
     (void)dcc_app_destroy(state.app);
     return 1;
   }
@@ -1380,6 +1386,8 @@ static int test_auto_defer_claim_race_fails_fast(void) {
   dcc_app_auto_defer_finish(&state.ctx);
   dcc_status_t stop_status = dcc_client_stop(state.client);
   int runtime_result = test_thread_join(&runtime_thread);
+  dcc_flow_destroy(state.ctx.flow);
+  state.ctx.flow = NULL;
   dcc_status_t destroy_status = dcc_app_destroy(state.app);
   unsigned request_count =
       atomic_load_explicit(&state.request_count, memory_order_acquire);

@@ -1535,20 +1535,27 @@ static int check_autocomplete_filter_stride_and_atomicity(void) {
   response_ctx.client = client;
   response_ctx.interaction = &response_interaction;
   if (dcc_flow_create(client, &response_interaction, &response_ctx.flow) !=
-      DCC_OK)
+      DCC_OK) {
+    builder_v2_runner_stop(&runner);
+    dcc_client_destroy(client);
     return 1;
+  }
   dcc_status_t reply_status = dcc_ctx_reply_autocomplete_matching(
       &response_ctx, input0, 2U, DCC_AUTOCOMPLETE_MAX_CHOICES, NULL, NULL);
   dcc_status_t drain_status = reply_status == DCC_OK
                                   ? dcc_rest_async_wait(client, 5000U)
                                   : DCC_ERR_STATE;
   builder_v2_runner_stop(&runner);
-  CHECK(reply_status == DCC_OK && drain_status == DCC_OK &&
-            intercepted.calls == 1U &&
-            json_has(intercepted.body, "\"name\":\"Alpha\"") &&
-            json_has(intercepted.body, "\"name\":\"Alpine\""),
-        "reply autocomplete matching initializes every output slot");
+  int matching_ok =
+      reply_status == DCC_OK && drain_status == DCC_OK &&
+      intercepted.calls == 1U &&
+      json_has(intercepted.body, "\"name\":\"Alpha\"") &&
+      json_has(intercepted.body, "\"name\":\"Alpine\"");
+  dcc_flow_destroy(response_ctx.flow);
+  response_ctx.flow = NULL;
   dcc_client_destroy(client);
+  CHECK(matching_ok,
+        "reply autocomplete matching initializes every output slot");
   return 0;
 }
 
