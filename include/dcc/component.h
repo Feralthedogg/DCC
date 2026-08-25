@@ -1,6 +1,7 @@
 #ifndef DCC_COMPONENT_H
 #define DCC_COMPONENT_H
 
+#include <dcc/component_types.h>
 #include <dcc/error.h>
 #include <dcc/export.h>
 #include <dcc/snowflake.h>
@@ -21,38 +22,6 @@ typedef enum dcc_component_type {
     DCC_COMPONENT_MENTIONABLE_SELECT = 7,
     DCC_COMPONENT_CHANNEL_SELECT = 8,
 } dcc_component_type_t;
-
-typedef enum dcc_button_style {
-    DCC_BUTTON_PRIMARY = 1,
-    DCC_BUTTON_SECONDARY = 2,
-    DCC_BUTTON_SUCCESS = 3,
-    DCC_BUTTON_DANGER = 4,
-    DCC_BUTTON_LINK = 5,
-    DCC_BUTTON_PREMIUM = 6,
-} dcc_button_style_t;
-
-typedef enum dcc_text_input_style {
-    DCC_TEXT_INPUT_SHORT = 1,
-    DCC_TEXT_INPUT_PARAGRAPH = 2,
-} dcc_text_input_style_t;
-
-typedef struct dcc_component_emoji {
-    const char *name;
-    dcc_snowflake_t id;
-    uint8_t animated;
-    uint8_t has_id;
-    uint8_t has_animated;
-} dcc_component_emoji_t;
-
-typedef struct dcc_select_option {
-    const char *label;
-    const char *value;
-    const char *description;
-    dcc_component_emoji_t emoji;
-    uint8_t is_default;
-    uint8_t has_default;
-    uint8_t has_emoji;
-} dcc_select_option_t;
 
 typedef struct dcc_component_builder dcc_component_builder_t;
 

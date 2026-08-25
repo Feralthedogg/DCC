@@ -1,7 +1,7 @@
 #ifndef DCC_COMPONENT_V2_H
 #define DCC_COMPONENT_V2_H
 
-#include <dcc/component.h>
+#include <dcc/component_types.h>
 #include <dcc/error.h>
 #include <dcc/export.h>
 #include <dcc/snowflake.h>
