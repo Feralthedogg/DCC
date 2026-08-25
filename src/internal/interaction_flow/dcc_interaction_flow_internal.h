@@ -29,9 +29,9 @@ struct dcc_interaction_flow {
     uint8_t registered;
 };
 
-void dcc_flow_initialize_internal(
+dcc_status_t dcc_flow_initialize_internal(
     dcc_interaction_flow_t *flow, dcc_client_t *client,
-    const dcc_interaction_t *interaction);
+    const dcc_interaction_t *interaction, size_t identity_charge);
 void dcc_flow_free_storage(dcc_interaction_flow_t *flow);
 
 uint8_t dcc_flow_initial_sent(const dcc_interaction_flow_t *flow);

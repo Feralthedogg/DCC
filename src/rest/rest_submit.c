@@ -5,6 +5,7 @@
 #include "internal/rest/dcc_rest_async_signal_internal.h"
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
 #include "internal/rest/dcc_rest_request_handle_internal.h"
+#include "internal/rest/dcc_rest_resource_internal.h"
 #include "internal/rest/dcc_rest_state_internal.h"
 #include "internal/rest/dcc_rest_submit_internal.h"
 #include "internal/rest/dcc_rest_task7_probe_internal.h"
@@ -96,6 +97,37 @@ static int dcc_rest_request_desc_valid(
     return 1;
 }
 
+static int dcc_rest_charge_add(size_t *charge, size_t value) {
+    if (charge == NULL || value > SIZE_MAX - *charge)
+        return 0;
+    *charge += value;
+    return 1;
+}
+
+static dcc_status_t dcc_rest_request_charge(
+    const char *method,
+    const char *operation,
+    const dcc_rest_request_desc_t *description,
+    const dcc_rest_call_options_t *options,
+    size_t *out_charge
+) {
+    size_t charge = sizeof(dcc_rest_async_request_t) +
+        sizeof(dcc_rest_request_t);
+    if (!dcc_rest_charge_add(&charge, strlen(method) + 1U) ||
+        !dcc_rest_charge_add(&charge, strlen(operation) + 1U) ||
+        !dcc_rest_charge_add(&charge, strlen(description->path) + 1U) ||
+        !dcc_rest_charge_add(&charge, description->body_len) ||
+        (description->content_type != NULL &&
+         !dcc_rest_charge_add(&charge, strlen(description->content_type) + 1U)) ||
+        (options->audit_log_reason != NULL &&
+         !dcc_rest_charge_add(&charge, strlen(options->audit_log_reason) + 1U)) ||
+        (options->auth_token != NULL &&
+         !dcc_rest_charge_add(&charge, strlen(options->auth_token) + 1U)))
+        return DCC_ERR_RESOURCE_LIMIT;
+    *out_charge = charge;
+    return DCC_OK;
+}
+
 static void dcc_rest_request_handle_release_unpublished(
     dcc_rest_request_t *request,
     int caller_reference,
@@ -154,6 +186,16 @@ dcc_status_t dcc_rest_submit_operation_with_post_hook(
         return DCC_ERR_STATE;
     }
 
+    size_t resource_charge = 0U;
+    status = dcc_rest_request_charge(
+        method, operation, description, &options, &resource_charge);
+    if (status == DCC_OK)
+        status = dcc_rest_resource_reserve_queued(client, resource_charge);
+    if (status != DCC_OK) {
+        dcc_rest_operation_end(client);
+        return status;
+    }
+
     const int caller_reference = out_request != NULL;
     dcc_rest_request_t *handle = NULL;
     status = dcc_rest_request_handle_create(
@@ -166,6 +208,7 @@ dcc_status_t dcc_rest_submit_operation_with_post_hook(
         &handle
     );
     if (status != DCC_OK) {
+        dcc_rest_resource_release_unpublished(client, resource_charge);
         dcc_rest_operation_end(client);
         return status;
     }
@@ -191,9 +234,13 @@ dcc_status_t dcc_rest_submit_operation_with_post_hook(
     if (request == NULL) {
         /* The failed job constructor dropped the runtime reference. */
         dcc_rest_request_handle_release_unpublished(handle, caller_reference, 0);
+        dcc_rest_resource_release_unpublished(client, resource_charge);
         dcc_rest_operation_end(client);
         return DCC_ERR_NOMEM;
     }
+    request->resource_charge = resource_charge;
+    request->resource_state = 1U;
+    request->resource_count_completion = 1U;
 
     /* Publish the caller reference before the worker can become runnable. */
     if (out_request != NULL) {
@@ -208,6 +255,7 @@ dcc_status_t dcc_rest_submit_operation_with_post_hook(
     dcc_rest_async_signal(client);
 
     if (rejected != NULL) {
+        rejected->resource_count_completion = 0U;
         dcc_rest_async_request_free(rejected);
     }
     if (status != DCC_OK && caller_reference) {

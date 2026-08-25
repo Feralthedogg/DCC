@@ -1,6 +1,7 @@
 #include "internal/rest/dcc_rest_async_drain_internal.h"
 #include "internal/rest/dcc_rest_async_worker_task_internal.h"
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
+#include "internal/rest/dcc_rest_resource_internal.h"
 
 void dcc_rest_test_fail_next_worker_spawn(dcc_client_t *client) {
     if (client == NULL) {
@@ -49,6 +50,12 @@ static dcc_status_t dcc_rest_async_drain_impl_locked(
             break;
         }
 
+        if (!dcc_rest_resource_activate(request)) {
+            dcc_rest_async_restore_locked(client, request, &position);
+            status = DCC_OK;
+            break;
+        }
+
         request->route_claimed = 0U;
         int canceled = atomic_load_explicit(
             &request->cancel_requested,
@@ -61,6 +68,7 @@ static dcc_status_t dcc_rest_async_drain_impl_locked(
             if (request == admission && out_rejected != NULL) {
                 *out_rejected = request;
             } else {
+                dcc_rest_resource_requeue(request);
                 dcc_rest_async_restore_locked(client, request, &position);
                 if (admission != NULL) {
                     status = DCC_OK;
@@ -83,6 +91,7 @@ static dcc_status_t dcc_rest_async_drain_impl_locked(
             if (request == admission && out_rejected != NULL) {
                 *out_rejected = request;
             } else {
+                dcc_rest_resource_requeue(request);
                 dcc_rest_async_restore_locked(client, request, &position);
                 if (admission != NULL) {
                     status = DCC_OK;

@@ -18,6 +18,7 @@ typedef struct dcc_rest_captured_response {
     dcc_status_t copy_error;
     char *body;
     size_t body_len;
+    size_t reserved_body_bytes;
 } dcc_rest_captured_response_t;
 
 void dcc_rest_capture_cb(

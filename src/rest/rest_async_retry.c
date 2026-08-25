@@ -6,6 +6,7 @@
 #include "internal/rest/dcc_rest_config_internal.h"
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
 #include "internal/rest/dcc_rest_runtime_internal.h"
+#include "internal/rest/dcc_rest_resource_internal.h"
 
 #include <stdlib.h>
 
@@ -79,6 +80,7 @@ int dcc_rest_async_requeue_retry(dcc_rest_async_request_t *request, uint64_t not
         return 0;
     }
     dcc_rest_async_finish_active_locked(client, request);
+    dcc_rest_resource_requeue(request);
     request->not_before_ms = not_before_ms;
     request->callback_called = 0;
     (void)atomic_exchange_explicit(&request->active_fd, LLAM_INVALID_FD, memory_order_acq_rel);

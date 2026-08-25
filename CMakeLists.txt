@@ -1446,6 +1446,7 @@ target_sources(dcc
         src/rest/rest_error_observer.c
         src/rest/rest_result.c
         src/rest/rest_runtime_stats.c
+        src/rest/rest_resource.c
         src/rest/rest_request_handle.c
         src/rest/rest_submit.c
         src/rest/rest_task8_core.c

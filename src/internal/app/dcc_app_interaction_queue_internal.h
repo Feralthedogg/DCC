@@ -7,7 +7,10 @@
 typedef struct dcc_app_interaction_queue dcc_app_interaction_queue_t;
 
 dcc_app_interaction_queue_t *
-dcc_app_interaction_queue_create(dcc_client_t *client);
+dcc_app_interaction_queue_create(dcc_client_t *client,
+                                 size_t identity_charge,
+                                 dcc_status_t *out_status);
+size_t dcc_app_interaction_queue_identity_charge(size_t token_len);
 void dcc_app_interaction_queue_attach_flow(dcc_app_interaction_queue_t *queue,
                                            dcc_interaction_flow_t *flow);
 void dcc_app_interaction_queue_release_owner(

@@ -1,5 +1,6 @@
 #include "internal/rest/dcc_rest_capture_internal.h"
 #include "internal/rest/dcc_rest_error_observer_internal.h"
+#include "internal/rest/dcc_rest_resource_internal.h"
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -25,8 +26,19 @@ void dcc_rest_capture_cb(
     captured->error = response->error;
     captured->body_len = response->body_len;
     if (response->body != NULL && response->body_len != 0) {
+        dcc_status_t reserve_status =
+            dcc_rest_resource_reserve_response(client, response->body_len);
+        if (reserve_status != DCC_OK) {
+            captured->copy_error = reserve_status;
+            captured->body_len = 0U;
+            return;
+        }
+        captured->reserved_body_bytes = response->body_len;
         captured->body = (char *)malloc(response->body_len);
         if (captured->body == NULL) {
+            dcc_rest_resource_release_response(
+                client, captured->reserved_body_bytes);
+            captured->reserved_body_bytes = 0U;
             captured->copy_error = DCC_ERR_NOMEM;
             captured->body_len = 0;
             return;
@@ -40,8 +52,11 @@ void dcc_rest_captured_response_deinit(dcc_rest_captured_response_t *captured) {
         return;
     }
     free(captured->body);
+    dcc_rest_resource_release_response(captured->expected_client,
+                                       captured->reserved_body_bytes);
     captured->body = NULL;
     captured->body_len = 0;
+    captured->reserved_body_bytes = 0U;
 }
 
 void dcc_rest_forward_captured_response(

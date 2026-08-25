@@ -33,6 +33,9 @@ struct dcc_rest_async_request {
     dcc_rest_cb cb;
     void *user_data;
     dcc_rest_request_t *request_handle;
+    size_t resource_charge;
+    uint8_t resource_state;
+    uint8_t resource_count_completion;
     int callback_called;
     uint32_t retry_attempt;
     uint64_t not_before_ms;

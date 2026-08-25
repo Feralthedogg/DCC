@@ -18,6 +18,10 @@ dcc_status_t dcc_flow_create(dcc_client_t *client,
   dcc_interaction_flow_t *flow = calloc(1U, sizeof(*flow));
   dcc_interaction_t *copy = calloc(1U, sizeof(*copy));
   size_t token_len = strlen(interaction->token);
+  size_t identity_charge =
+      dcc_app_interaction_queue_identity_charge(token_len);
+  if (identity_charge == 0U)
+    return DCC_ERR_RESOURCE_LIMIT;
   char *token = malloc(token_len + 1U);
   if (flow == NULL || copy == NULL || token == NULL) {
     free(token);
@@ -36,15 +40,16 @@ dcc_status_t dcc_flow_create(dcc_client_t *client,
   copy->context = interaction->context;
   copy->has_context = interaction->has_context;
   copy->token = token;
-  dcc_flow_initialize_internal(flow, client, copy);
-  if (flow->queue == NULL) {
+  dcc_status_t status = dcc_flow_initialize_internal(
+      flow, client, copy, identity_charge);
+  if (status != DCC_OK) {
     free(token);
     free(copy);
     free(flow);
-    return DCC_ERR_NOMEM;
+    return status;
   }
   flow->owns_interaction = 1U;
-  dcc_status_t status = dcc_app_interaction_registry_register(client, flow);
+  status = dcc_app_interaction_registry_register(client, flow);
   if (status != DCC_OK) {
     dcc_flow_destroy(flow);
     return status;
@@ -75,19 +80,26 @@ void dcc_flow_free_storage(dcc_interaction_flow_t *flow) {
   free(flow);
 }
 
-void dcc_flow_initialize_internal(dcc_interaction_flow_t *flow,
-                                  dcc_client_t *client,
-                                  const dcc_interaction_t *interaction) {
+dcc_status_t dcc_flow_initialize_internal(dcc_interaction_flow_t *flow,
+                                          dcc_client_t *client,
+                                          const dcc_interaction_t *interaction,
+                                          size_t identity_charge) {
   if (flow != NULL) {
     memset(flow, 0, sizeof(*flow));
     flow->size = sizeof(*flow);
     flow->client = client;
     flow->interaction = interaction;
     flow->state = DCC_INTERACTION_FLOW_READY;
-    flow->queue = dcc_app_interaction_queue_create(client);
+    dcc_status_t status = DCC_OK;
+    flow->queue = dcc_app_interaction_queue_create(
+        client, identity_charge, &status);
+    if (flow->queue == NULL)
+      return status;
     flow->owns_interaction = 0U;
     dcc_app_interaction_queue_attach_flow(flow->queue, flow);
+    return DCC_OK;
   }
+  return DCC_ERR_INVALID_ARG;
 }
 
 dcc_status_t dcc_flow_set_started_at(dcc_interaction_flow_t *flow,

@@ -1,4 +1,5 @@
 #include "internal/app/dcc_app_interaction_queue_internal.h"
+#include "internal/app/dcc_app_interaction_registry_internal.h"
 #include "internal/client/dcc_client_state_internal.h"
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"
 #include "internal/rest/dcc_rest_endpoint_internal.h"
@@ -28,6 +29,7 @@ typedef struct dcc_app_interaction_action {
   uint8_t terminal_original_exists;
   dcc_interaction_flow_state_t queued_state;
   dcc_interaction_flow_state_t terminal_state;
+  size_t reserved_bytes;
   dcc_rest_result_fn callback;
   void *user_data;
 } dcc_app_interaction_action_t;
@@ -48,6 +50,8 @@ struct dcc_app_interaction_queue {
   dcc_interaction_flow_state_t projected_state;
   size_t references;
   size_t action_count;
+  size_t reserved_bytes;
+  size_t identity_charge;
 };
 
 static void dcc_app_resource_lock(dcc_client_t *client) {
@@ -65,8 +69,8 @@ static void dcc_app_counter_increment(uint64_t *value) {
     ++*value;
 }
 
-static dcc_status_t
-dcc_app_interaction_action_reserve(dcc_app_interaction_queue_t *queue) {
+static dcc_status_t dcc_app_interaction_action_reserve(
+    dcc_app_interaction_queue_t *queue, size_t bytes) {
   dcc_client_t *client = queue->client;
   dcc_app_resource_lock(client);
   if (queue->action_count >= client->interaction_max_actions_per_queue) {
@@ -76,7 +80,29 @@ dcc_app_interaction_action_reserve(dcc_app_interaction_queue_t *queue) {
     dcc_app_resource_unlock(client);
     return DCC_ERR_RESOURCE_LIMIT;
   }
+  if (bytes > client->interaction_max_reserved_bytes_per_queue -
+                  queue->reserved_bytes) {
+    dcc_app_counter_increment(
+        &client->rest_runtime_stats.interaction_rejected_bytes_per_queue);
+    dcc_app_counter_increment(&client->rest_runtime_stats.admission_rejections);
+    dcc_app_resource_unlock(client);
+    return DCC_ERR_RESOURCE_LIMIT;
+  }
+  if (bytes > client->interaction_max_reserved_bytes_total -
+                  (size_t)client->rest_runtime_stats.interaction_reserved_bytes) {
+    dcc_app_counter_increment(
+        &client->rest_runtime_stats.interaction_rejected_bytes_total);
+    dcc_app_counter_increment(&client->rest_runtime_stats.admission_rejections);
+    dcc_app_resource_unlock(client);
+    return DCC_ERR_RESOURCE_LIMIT;
+  }
   ++queue->action_count;
+  queue->reserved_bytes += bytes;
+  client->rest_runtime_stats.interaction_reserved_bytes += bytes;
+  if (client->rest_runtime_stats.interaction_reserved_bytes >
+      client->rest_runtime_stats.interaction_reserved_bytes_high_water)
+    client->rest_runtime_stats.interaction_reserved_bytes_high_water =
+        client->rest_runtime_stats.interaction_reserved_bytes;
   ++client->rest_runtime_stats.interaction_actions;
   if (client->rest_runtime_stats.interaction_actions >
       client->rest_runtime_stats.interaction_actions_high_water)
@@ -86,11 +112,15 @@ dcc_app_interaction_action_reserve(dcc_app_interaction_queue_t *queue) {
   return DCC_OK;
 }
 
-static void
-dcc_app_interaction_action_release(dcc_app_interaction_queue_t *queue) {
+static void dcc_app_interaction_action_release(
+    dcc_app_interaction_queue_t *queue, size_t bytes) {
   dcc_app_resource_lock(queue->client);
   if (queue->action_count != 0U)
     --queue->action_count;
+  if (queue->reserved_bytes >= bytes)
+    queue->reserved_bytes -= bytes;
+  if (queue->client->rest_runtime_stats.interaction_reserved_bytes >= bytes)
+    queue->client->rest_runtime_stats.interaction_reserved_bytes -= bytes;
   if (queue->client->rest_runtime_stats.interaction_actions != 0U)
     --queue->client->rest_runtime_stats.interaction_actions;
   dcc_app_resource_unlock(queue->client);
@@ -107,20 +137,79 @@ dcc_app_interaction_action_free(dcc_app_interaction_action_t *action) {
   }
 }
 
+static dcc_status_t dcc_app_interaction_action_measure(
+    dcc_app_interaction_action_t *action) {
+  if (action == NULL || action->path == NULL)
+    return DCC_ERR_INVALID_ARG;
+  size_t charge = sizeof(*action);
+  size_t path_bytes = strlen(action->path) + 1U;
+  size_t body_bytes = action->body != NULL ? action->body_len + 1U : 0U;
+  if (path_bytes > SIZE_MAX - charge ||
+      body_bytes > SIZE_MAX - charge - path_bytes)
+    return DCC_ERR_RESOURCE_LIMIT;
+  action->reserved_bytes = charge + path_bytes + body_bytes;
+  return DCC_OK;
+}
+
 dcc_app_interaction_queue_t *
-dcc_app_interaction_queue_create(dcc_client_t *client) {
-  dcc_app_interaction_queue_t *queue = calloc(1U, sizeof(*queue));
-  if (queue == NULL)
+dcc_app_interaction_queue_create(dcc_client_t *client,
+                                 size_t identity_charge,
+                                 dcc_status_t *out_status) {
+  if (out_status != NULL)
+    *out_status = DCC_ERR_INVALID_ARG;
+  if (client == NULL || identity_charge == 0U || out_status == NULL)
     return NULL;
+  dcc_app_resource_lock(client);
+  if (identity_charge > client->interaction_max_reserved_bytes_per_queue ||
+      identity_charge > client->interaction_max_reserved_bytes_total -
+                            (size_t)client->rest_runtime_stats
+                                .interaction_reserved_bytes) {
+    dcc_app_counter_increment(
+        identity_charge > client->interaction_max_reserved_bytes_per_queue
+            ? &client->rest_runtime_stats.interaction_rejected_bytes_per_queue
+            : &client->rest_runtime_stats.interaction_rejected_bytes_total);
+    dcc_app_counter_increment(&client->rest_runtime_stats.admission_rejections);
+    dcc_app_resource_unlock(client);
+    *out_status = DCC_ERR_RESOURCE_LIMIT;
+    return NULL;
+  }
+  client->rest_runtime_stats.interaction_reserved_bytes += identity_charge;
+  if (client->rest_runtime_stats.interaction_reserved_bytes >
+      client->rest_runtime_stats.interaction_reserved_bytes_high_water)
+    client->rest_runtime_stats.interaction_reserved_bytes_high_water =
+        client->rest_runtime_stats.interaction_reserved_bytes;
+  dcc_app_resource_unlock(client);
+  dcc_app_interaction_queue_t *queue = calloc(1U, sizeof(*queue));
+  if (queue == NULL) {
+    dcc_app_resource_lock(client);
+    client->rest_runtime_stats.interaction_reserved_bytes -= identity_charge;
+    dcc_app_resource_unlock(client);
+    *out_status = DCC_ERR_NOMEM;
+    return NULL;
+  }
   if (pthread_mutex_init(&queue->mutex, NULL) != 0) {
+    dcc_app_resource_lock(client);
+    client->rest_runtime_stats.interaction_reserved_bytes -= identity_charge;
+    dcc_app_resource_unlock(client);
     free(queue);
+    *out_status = DCC_ERR_RUNTIME;
     return NULL;
   }
   queue->client = client;
   queue->committed_state = DCC_INTERACTION_FLOW_READY;
   queue->projected_state = DCC_INTERACTION_FLOW_READY;
   queue->references = 1U;
+  queue->identity_charge = identity_charge;
+  queue->reserved_bytes = identity_charge;
+  *out_status = DCC_OK;
   return queue;
+}
+
+size_t dcc_app_interaction_queue_identity_charge(size_t token_len) {
+  const size_t fixed = sizeof(dcc_app_interaction_queue_t) +
+                       sizeof(dcc_interaction_flow_t) +
+                       sizeof(dcc_interaction_t);
+  return token_len < SIZE_MAX - fixed ? fixed + token_len + 1U : 0U;
 }
 
 void dcc_app_interaction_queue_attach_flow(dcc_app_interaction_queue_t *queue,
@@ -213,10 +302,18 @@ dcc_app_interaction_queue_finalize(dcc_app_interaction_queue_t *queue) {
   dcc_app_interaction_action_t *action = queue->head;
   while (action != NULL) {
     dcc_app_interaction_action_t *next = action->next;
+    dcc_app_interaction_action_release(queue, action->reserved_bytes);
     dcc_app_interaction_action_free(action);
     action = next;
   }
   dcc_interaction_flow_t *flow = queue->flow;
+  dcc_app_interaction_registry_retire(queue->client, flow);
+  dcc_app_resource_lock(queue->client);
+  if (queue->client->rest_runtime_stats.interaction_reserved_bytes >=
+      queue->identity_charge)
+    queue->client->rest_runtime_stats.interaction_reserved_bytes -=
+        queue->identity_charge;
+  dcc_app_resource_unlock(queue->client);
   pthread_mutex_destroy(&queue->mutex);
   free(queue);
   dcc_flow_free_storage(flow);
@@ -314,7 +411,7 @@ static void dcc_app_interaction_queue_deliver_synthetic(
         client, "dcc_interaction_queue", &synthetic, status, NULL, NULL,
         actions->callback, actions->user_data);
     pthread_mutex_lock(&queue->mutex);
-    dcc_app_interaction_action_release(queue);
+    dcc_app_interaction_action_release(queue, actions->reserved_bytes);
     pthread_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(actions);
     actions = next;
@@ -339,7 +436,7 @@ static void dcc_app_interaction_queue_post_result(
     if (queue->head == NULL)
       queue->tail = NULL;
   }
-  dcc_app_interaction_action_release(queue);
+  dcc_app_interaction_action_release(queue, action->reserved_bytes);
   queue->active = 0U;
   if (terminal_status != DCC_OK) {
     dependent = queue->head;
@@ -498,46 +595,49 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
       is_initial != 0U ? 1U : queue->projected_original_exists;
   dcc_status_t status = dcc_app_interaction_queue_path(
       flow->interaction, kind >= 3U ? 0U : kind, &action->path);
-  char *message_json = NULL;
-  if (status == DCC_OK && kind < 3U)
-    status = dcc_message_builder_build_json(message, &message_json);
-  if (status == DCC_OK && kind == 0U) {
-    size_t length = strlen(message_json) + sizeof("{\"type\":4,\"data\":}");
-    action->body = malloc(length);
-    if (action->body == NULL)
-      status = DCC_ERR_NOMEM;
-    else
-      snprintf(action->body, length, "{\"type\":4,\"data\":%s}", message_json);
-    if (status == DCC_OK)
-      action->body_len = strlen(action->body);
-    dcc_message_builder_json_free(message_json);
-    message_json = NULL;
-  } else if (status == DCC_OK && kind < 3U) {
-    action->body = message_json;
-    action->body_len = strlen(action->body);
-    message_json = NULL;
+  dcc_endpoint_body_t built = {0};
+  if (status == DCC_OK && (kind == 1U || kind == 2U)) {
+    dcc_rest_message_payload_t payload = DCC_REST_MESSAGE_PAYLOAD_INIT;
+    dcc_rest_message_payload_init(&payload, message);
+    status = dcc_endpoint_build_message_body(&payload, &built);
   } else if (status == DCC_OK) {
-    const char *literal =
-        kind == 3U ? "{\"type\":5}"
-                   : (kind == 4U ? "{\"type\":5,\"data\":{\"flags\":64}}"
-                                 : "{\"type\":6}");
-    size_t length = strlen(literal);
-    action->body = malloc(length + 1U);
-    if (action->body == NULL)
-      status = DCC_ERR_NOMEM;
-    else
-      memcpy(action->body, literal, length + 1U);
+    dcc_rest_interaction_response_t response =
+        DCC_REST_INTERACTION_RESPONSE_INIT;
+    dcc_message_builder_t ephemeral = DCC_MESSAGE_BUILDER_INIT;
+    if (kind == 0U) {
+      status = dcc_rest_interaction_response_set_message(&response, message);
+    } else if (kind == 3U) {
+      status = dcc_rest_interaction_response_set_deferred_message(&response,
+                                                                  NULL);
+    } else if (kind == 4U) {
+      status = dcc_message_builder_set_flags(
+          &ephemeral, DCC_INTERACTION_FLOW_FLAG_EPHEMERAL);
+      if (status == DCC_OK)
+        status = dcc_rest_interaction_response_set_deferred_message(
+            &response, &ephemeral);
+    } else {
+      status = dcc_rest_interaction_response_set_deferred_update(&response);
+    }
     if (status == DCC_OK)
-      action->body_len = length;
+      status = dcc_endpoint_build_interaction_body(&response, &built);
   }
-  dcc_message_builder_json_free(message_json);
+  if (status == DCC_OK) {
+    action->body = built.data;
+    action->body_len = built.len;
+    action->content_type = built.content_type;
+    built = (dcc_endpoint_body_t){0};
+  }
+  dcc_endpoint_body_deinit(&built);
   if (status != DCC_OK) {
     pthread_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
     return status;
   }
 
-  status = dcc_app_interaction_action_reserve(queue);
+  status = dcc_app_interaction_action_measure(action);
+  if (status == DCC_OK)
+    status = dcc_app_interaction_action_reserve(queue,
+                                                action->reserved_bytes);
   if (status != DCC_OK) {
     pthread_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
@@ -561,7 +661,7 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
     queue->projected_state = previous;
     queue->projected_original_exists = previous_original_exists;
     flow->state = previous;
-    dcc_app_interaction_action_release(queue);
+    dcc_app_interaction_action_release(queue, action->reserved_bytes);
     dcc_app_interaction_action_free(action);
   } else if (is_initial != 0U) {
     queue->initial_admitted = 1U;
@@ -629,7 +729,10 @@ dcc_status_t dcc_app_interaction_queue_initial_response(
     dcc_app_interaction_action_free(action);
     return DCC_ERR_STATE;
   }
-  status = dcc_app_interaction_action_reserve(queue);
+  status = dcc_app_interaction_action_measure(action);
+  if (status == DCC_OK)
+    status = dcc_app_interaction_action_reserve(queue,
+                                                action->reserved_bytes);
   if (status == DCC_OK) {
     dcc_interaction_flow_state_t previous = queue->projected_state;
     uint8_t previous_original_exists = queue->projected_original_exists;
@@ -652,7 +755,7 @@ dcc_status_t dcc_app_interaction_queue_initial_response(
       queue->projected_state = previous;
       queue->projected_original_exists = previous_original_exists;
       flow->state = previous;
-      dcc_app_interaction_action_release(queue);
+      dcc_app_interaction_action_release(queue, action->reserved_bytes);
       dcc_app_interaction_action_free(action);
     }
   }
@@ -686,7 +789,10 @@ dcc_status_t dcc_app_interaction_queue_delete_original(
   dcc_status_t status =
       dcc_app_interaction_queue_path(flow->interaction, 1U, &action->path);
   if (status == DCC_OK)
-    status = dcc_app_interaction_action_reserve(queue);
+    status = dcc_app_interaction_action_measure(action);
+  if (status == DCC_OK)
+    status = dcc_app_interaction_action_reserve(queue,
+                                                action->reserved_bytes);
   if (status != DCC_OK) {
     pthread_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
@@ -705,7 +811,7 @@ dcc_status_t dcc_app_interaction_queue_delete_original(
     queue->head = NULL;
     queue->tail = NULL;
     queue->projected_original_exists = 1U;
-    dcc_app_interaction_action_release(queue);
+    dcc_app_interaction_action_release(queue, action->reserved_bytes);
     dcc_app_interaction_action_free(action);
   }
   pthread_mutex_unlock(&queue->mutex);

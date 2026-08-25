@@ -1,5 +1,6 @@
 #include "internal/rest/dcc_rest_async_request_internal.h"
 #include "internal/rest/dcc_rest_request_handle_internal.h"
+#include "internal/rest/dcc_rest_resource_internal.h"
 #include "internal/rest/dcc_rest_sensitive_internal.h"
 
 #include <stdlib.h>
@@ -9,6 +10,7 @@ void dcc_rest_async_request_free(dcc_rest_async_request_t *request) {
     if (request == NULL) {
         return;
     }
+    dcc_rest_resource_release_request(request);
     free(request->method);
     free(request->operation);
     dcc_rest_sensitive_free(

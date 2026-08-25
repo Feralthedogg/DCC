@@ -110,7 +110,10 @@ dcc_app_interaction_registry_register(dcc_client_t *client,
   dcc_registry_lock(client);
   dcc_registry_expire_locked(client, dcc_rest_now_ms());
   dcc_interaction_tombstone_t *tombstones = client->interaction_tombstones;
+  size_t tombstone_count = 0U;
   for (size_t i = 0U; i < client->interaction_max_tombstones; ++i) {
+    if (tombstones[i].used != 0U)
+      ++tombstone_count;
     if (tombstones[i].used != 0U &&
         tombstones[i].application_id == flow->interaction->application_id &&
         tombstones[i].interaction_id == flow->interaction->id &&
@@ -126,12 +129,14 @@ dcc_app_interaction_registry_register(dcc_client_t *client,
   }
   dcc_interaction_live_entry_t *entries = client->interaction_live_entries;
   size_t free_index = SIZE_MAX;
+  size_t live_count = 0U;
   for (size_t i = 0U; i < client->interaction_max_live_queues; ++i) {
     if (entries[i].flow == NULL) {
       if (free_index == SIZE_MAX)
         free_index = i;
       continue;
     }
+    ++live_count;
     const dcc_interaction_t *other = entries[i].flow->interaction;
     if (other->application_id == flow->interaction->application_id &&
         other->id == flow->interaction->id &&
@@ -149,6 +154,17 @@ dcc_app_interaction_registry_register(dcc_client_t *client,
     dcc_registry_resource_lock(client);
     dcc_registry_increment(
         &client->rest_runtime_stats.interaction_rejected_live_queues);
+    dcc_registry_increment(&client->rest_runtime_stats.admission_rejections);
+    dcc_registry_resource_unlock(client);
+    dcc_registry_unlock(client);
+    dcc_endpoint_secure_zero(digest, sizeof(digest));
+    return DCC_ERR_RESOURCE_LIMIT;
+  }
+  if (tombstone_count >= client->interaction_max_tombstones ||
+      live_count >= client->interaction_max_tombstones - tombstone_count) {
+    dcc_registry_resource_lock(client);
+    dcc_registry_increment(
+        &client->rest_runtime_stats.interaction_rejected_tombstones);
     dcc_registry_increment(&client->rest_runtime_stats.admission_rejections);
     dcc_registry_resource_unlock(client);
     dcc_registry_unlock(client);

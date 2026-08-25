@@ -389,6 +389,69 @@ int main(void) {
             live_limit_status, duplicate_status);
     return 1;
   }
+
+  dcc_client_options_t tiny_options = options;
+  tiny_options.rest_max_request_bytes = 64U;
+  tiny_options.rest_max_queued_bytes = 64U;
+  client = NULL;
+  if (dcc_client_create(&tiny_options, &client) != DCC_OK ||
+      dcc_client_start(client) != DCC_OK)
+    return 1;
+  runner.client = client;
+  if (pthread_create(&runtime, NULL, queue_red_runtime, &runner) != 0)
+    return 1;
+  dcc_rest_request_desc_t description = DCC_REST_REQUEST_DESC_INIT;
+  description.method = DCC_REST_GET;
+  description.path = "/resource-limit";
+  dcc_status_t rest_limit_status = dcc_rest_submit(client, &description, NULL);
+  resource_stats = (dcc_rest_runtime_stats_t)DCC_REST_RUNTIME_STATS_INIT;
+  stats_status = dcc_rest_runtime_stats(client, &resource_stats);
+  (void)dcc_client_stop(client);
+  (void)pthread_join(runtime, NULL);
+  dcc_client_destroy(client);
+  if (rest_limit_status != DCC_ERR_RESOURCE_LIMIT ||
+      stats_status != DCC_OK || resource_stats.admission_rejections != 1U ||
+      resource_stats.rest_rejected_request_bytes != 1U ||
+      resource_stats.queued_requests != 0U ||
+      resource_stats.queued_request_bytes != 0U) {
+    fprintf(stderr,
+            "REST resource limit RED: status=%d stats=%d admissions=%llu "
+            "request_bytes=%llu queued=%llu bytes=%llu\n",
+            rest_limit_status, stats_status,
+            (unsigned long long)resource_stats.admission_rejections,
+            (unsigned long long)resource_stats.rest_rejected_request_bytes,
+            (unsigned long long)resource_stats.queued_requests,
+            (unsigned long long)resource_stats.queued_request_bytes);
+    return 1;
+  }
+
+  dcc_client_options_t identity_options = options;
+  identity_options.interaction_max_reserved_bytes_per_queue = 1U;
+  identity_options.interaction_max_reserved_bytes_total = 1U;
+  client = NULL;
+  if (dcc_client_create(&identity_options, &client) != DCC_OK)
+    return 1;
+  interaction.id = 707U;
+  interaction.token = "identity-limit-token";
+  flow = NULL;
+  dcc_status_t identity_limit_status =
+      dcc_flow_create(client, &interaction, &flow);
+  resource_stats = (dcc_rest_runtime_stats_t)DCC_REST_RUNTIME_STATS_INIT;
+  stats_status = dcc_rest_runtime_stats(client, &resource_stats);
+  dcc_client_destroy(client);
+  if (identity_limit_status != DCC_ERR_RESOURCE_LIMIT || flow != NULL ||
+      stats_status != DCC_OK ||
+      resource_stats.interaction_rejected_bytes_per_queue != 1U ||
+      resource_stats.interaction_reserved_bytes != 0U) {
+    fprintf(stderr,
+            "interaction identity limit RED: status=%d flow=%p stats=%d "
+            "rejected=%llu reserved=%llu\n",
+            identity_limit_status, (void *)flow, stats_status,
+            (unsigned long long)
+                resource_stats.interaction_rejected_bytes_per_queue,
+            (unsigned long long)resource_stats.interaction_reserved_bytes);
+    return 1;
+  }
   return 0;
 }
 

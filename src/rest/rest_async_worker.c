@@ -7,6 +7,7 @@
 #include "internal/rest/dcc_rest_request_handle_internal.h"
 #include "internal/rest/dcc_rest_request_raw_internal.h"
 #include "internal/rest/dcc_rest_runtime_internal.h"
+#include "internal/rest/dcc_rest_resource_internal.h"
 
 #include <string.h>
 
@@ -60,6 +61,10 @@ void dcc_rest_async_worker_task(void *arg) {
     if (status == DCC_OK && captured.called && captured.status == 0U) {
         status = captured.error != DCC_OK ? captured.error : DCC_ERR_RUNTIME;
     }
+
+    if (status == DCC_OK && captured.called &&
+        captured.error == DCC_ERR_RATE_LIMITED)
+        dcc_rest_resource_record_rate_limit(client);
 
     if (status == DCC_OK &&
         captured.called &&
