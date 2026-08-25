@@ -1,6 +1,7 @@
 #include "internal/app/dcc_app_interaction_queue_internal.h"
 #include "internal/app/dcc_app_interaction_registry_internal.h"
 #include "internal/client/dcc_client_state_internal.h"
+#include "internal/dcc_windows_internal.h"
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"
 #include "internal/rest/dcc_rest_endpoint_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
@@ -10,7 +11,9 @@
 
 #include <dcc/rest/request.h>
 
+#if !defined(_WIN32)
 #include <pthread.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,8 +37,14 @@ typedef struct dcc_app_interaction_action {
   void *user_data;
 } dcc_app_interaction_action_t;
 
+#if defined(_WIN32)
+typedef CRITICAL_SECTION dcc_app_interaction_mutex_t;
+#else
+typedef pthread_mutex_t dcc_app_interaction_mutex_t;
+#endif
+
 struct dcc_app_interaction_queue {
-  pthread_mutex_t mutex;
+  dcc_app_interaction_mutex_t mutex;
   dcc_client_t *client;
   dcc_interaction_flow_t *flow;
   dcc_app_interaction_action_t *head;
@@ -53,6 +62,43 @@ struct dcc_app_interaction_queue {
   size_t reserved_bytes;
   size_t identity_charge;
 };
+
+static int
+dcc_app_interaction_mutex_init(dcc_app_interaction_mutex_t *mutex) {
+#if defined(_WIN32)
+  InitializeCriticalSection(mutex);
+  return 0;
+#else
+  return pthread_mutex_init(mutex, NULL);
+#endif
+}
+
+static void
+dcc_app_interaction_mutex_destroy(dcc_app_interaction_mutex_t *mutex) {
+#if defined(_WIN32)
+  DeleteCriticalSection(mutex);
+#else
+  (void)pthread_mutex_destroy(mutex);
+#endif
+}
+
+static void
+dcc_app_interaction_mutex_lock(dcc_app_interaction_mutex_t *mutex) {
+#if defined(_WIN32)
+  EnterCriticalSection(mutex);
+#else
+  (void)pthread_mutex_lock(mutex);
+#endif
+}
+
+static void
+dcc_app_interaction_mutex_unlock(dcc_app_interaction_mutex_t *mutex) {
+#if defined(_WIN32)
+  LeaveCriticalSection(mutex);
+#else
+  (void)pthread_mutex_unlock(mutex);
+#endif
+}
 
 static void dcc_app_resource_lock(dcc_client_t *client) {
   while (atomic_flag_test_and_set_explicit(&client->rest_resource_lock,
@@ -187,7 +233,7 @@ dcc_app_interaction_queue_create(dcc_client_t *client,
     *out_status = DCC_ERR_NOMEM;
     return NULL;
   }
-  if (pthread_mutex_init(&queue->mutex, NULL) != 0) {
+  if (dcc_app_interaction_mutex_init(&queue->mutex) != 0) {
     dcc_app_resource_lock(client);
     client->rest_runtime_stats.interaction_reserved_bytes -= identity_charge;
     dcc_app_resource_unlock(client);
@@ -223,7 +269,7 @@ dcc_app_interaction_queue_state(dcc_app_interaction_queue_t *queue,
                                 dcc_interaction_flow_state_t fallback) {
   if (queue == NULL)
     return fallback;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   dcc_interaction_flow_state_t state = queue->committed_state;
   if (queue->failed != 0U)
     state = DCC_INTERACTION_FLOW_FAILED;
@@ -231,7 +277,7 @@ dcc_app_interaction_queue_state(dcc_app_interaction_queue_t *queue,
            queue->head->terminal_delivered == 0U &&
            queue->head->queued_state != DCC_INTERACTION_FLOW_READY)
     state = queue->head->queued_state;
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   return state;
 }
 
@@ -239,9 +285,9 @@ uint8_t dcc_app_interaction_queue_initial_admitted(
     dcc_app_interaction_queue_t *queue) {
   if (queue == NULL)
     return 0U;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   uint8_t admitted = queue->initial_admitted;
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   return admitted;
 }
 
@@ -249,9 +295,9 @@ uint8_t dcc_app_interaction_queue_can_followup(
     dcc_app_interaction_queue_t *queue) {
   if (queue == NULL)
     return 0U;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   uint8_t allowed = queue->failed == 0U && queue->initial_admitted != 0U;
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   return allowed;
 }
 
@@ -259,10 +305,10 @@ uint8_t dcc_app_interaction_queue_can_edit_original(
     dcc_app_interaction_queue_t *queue) {
   if (queue == NULL)
     return 0U;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   uint8_t allowed = queue->failed == 0U &&
                     queue->projected_original_exists != 0U;
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   return allowed;
 }
 
@@ -273,7 +319,7 @@ void dcc_app_interaction_queue_mark(
     uint8_t initial) {
   if (queue == NULL)
     return;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   dcc_interaction_flow_state_t next =
       status == DCC_OK ? state : DCC_INTERACTION_FLOW_FAILED;
   queue->committed_state = next;
@@ -292,7 +338,7 @@ void dcc_app_interaction_queue_mark(
       queue->projected_original_exists = 1U;
     }
   }
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
 }
 
 static void
@@ -314,7 +360,7 @@ dcc_app_interaction_queue_finalize(dcc_app_interaction_queue_t *queue) {
     queue->client->rest_runtime_stats.interaction_reserved_bytes -=
         queue->identity_charge;
   dcc_app_resource_unlock(queue->client);
-  pthread_mutex_destroy(&queue->mutex);
+  dcc_app_interaction_mutex_destroy(&queue->mutex);
   free(queue);
   dcc_flow_free_storage(flow);
 }
@@ -323,7 +369,7 @@ void dcc_app_interaction_queue_release_owner(
     dcc_app_interaction_queue_t *queue) {
   if (queue == NULL)
     return;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   if (queue->owner_destroyed == 0U) {
     queue->owner_destroyed = 1U;
     if (queue->references != 0U)
@@ -331,7 +377,7 @@ void dcc_app_interaction_queue_release_owner(
   }
   int finalize = queue->references == 0U && queue->active == 0U &&
                  queue->head == NULL;
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   if (finalize)
     dcc_app_interaction_queue_finalize(queue);
 }
@@ -340,14 +386,14 @@ dcc_status_t dcc_app_interaction_queue_retain_timer(
     dcc_app_interaction_queue_t *queue) {
   if (queue == NULL)
     return DCC_ERR_INVALID_ARG;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   dcc_status_t status = DCC_OK;
   if (queue->owner_destroyed != 0U || queue->references == SIZE_MAX) {
     status = DCC_ERR_STATE;
   } else {
     ++queue->references;
   }
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   return status;
 }
 
@@ -355,12 +401,12 @@ void dcc_app_interaction_queue_release_timer(
     dcc_app_interaction_queue_t *queue) {
   if (queue == NULL)
     return;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   if (queue->references != 0U)
     --queue->references;
   int finalize = queue->references == 0U && queue->active == 0U &&
                  queue->head == NULL;
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   if (finalize)
     dcc_app_interaction_queue_finalize(queue);
 }
@@ -377,7 +423,7 @@ static void dcc_app_interaction_queue_result(dcc_client_t *client,
   dcc_app_interaction_queue_t *queue = action->queue;
   dcc_status_t status =
       result != NULL ? dcc_rest_result_status(result) : DCC_ERR_RUNTIME;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   if (status != DCC_OK) {
     queue->failed = 1U;
     queue->committed_state = DCC_INTERACTION_FLOW_FAILED;
@@ -391,7 +437,7 @@ static void dcc_app_interaction_queue_result(dcc_client_t *client,
       queue->flow->state = action->terminal_state;
   }
   action->terminal_delivered = 1U;
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   if (action->callback != NULL)
     action->callback(client, result, action->user_data);
 }
@@ -410,9 +456,9 @@ static void dcc_app_interaction_queue_deliver_synthetic(
     dcc_rest_deliver_terminal_result(
         client, "dcc_interaction_queue", &synthetic, status, NULL, NULL,
         actions->callback, actions->user_data);
-    pthread_mutex_lock(&queue->mutex);
+    dcc_app_interaction_mutex_lock(&queue->mutex);
     dcc_app_interaction_action_release(queue, actions->reserved_bytes);
-    pthread_mutex_unlock(&queue->mutex);
+    dcc_app_interaction_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(actions);
     actions = next;
     status = DCC_ERR_STATE;
@@ -430,7 +476,7 @@ static void dcc_app_interaction_queue_post_result(
   dcc_app_interaction_action_t *dependent = NULL;
   dcc_status_t dependent_status = DCC_ERR_STATE;
 
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   if (queue->head == action) {
     queue->head = action->next;
     if (queue->head == NULL)
@@ -461,17 +507,17 @@ static void dcc_app_interaction_queue_post_result(
       dependent_status = admission;
     }
   }
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
 
   dcc_app_interaction_action_free(action);
   dcc_app_interaction_queue_deliver_synthetic(
       client, queue, dependent, dependent_status);
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   if (dependent != NULL)
     queue->active = 0U;
   int finalize = queue->references == 0U && queue->active == 0U &&
                  queue->head == NULL;
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   if (finalize)
     dcc_app_interaction_queue_finalize(queue);
 }
@@ -550,9 +596,9 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
   action->callback = callback;
   action->user_data = user_data;
 
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   if (queue->failed != 0U || queue->owner_destroyed != 0U) {
-    pthread_mutex_unlock(&queue->mutex);
+    dcc_app_interaction_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
     return DCC_ERR_STATE;
   }
@@ -578,7 +624,7 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
       (kind == 1U && queue->projected_original_exists == 0U) ||
       (kind == 2U && queue->initial_admitted == 0U) ||
       (message == NULL && kind < 3U)) {
-    pthread_mutex_unlock(&queue->mutex);
+    dcc_app_interaction_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
     return message == NULL && kind < 3U ? DCC_ERR_INVALID_ARG : DCC_ERR_STATE;
   }
@@ -629,7 +675,7 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
   }
   dcc_endpoint_body_deinit(&built);
   if (status != DCC_OK) {
-    pthread_mutex_unlock(&queue->mutex);
+    dcc_app_interaction_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
     return status;
   }
@@ -639,7 +685,7 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
     status = dcc_app_interaction_action_reserve(queue,
                                                 action->reserved_bytes);
   if (status != DCC_OK) {
-    pthread_mutex_unlock(&queue->mutex);
+    dcc_app_interaction_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
     return status;
   }
@@ -667,7 +713,7 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
     queue->initial_admitted = 1U;
     flow->response_flags |= DCC_INTERACTION_FLOW_RESPONSE_INITIAL_ADMITTED;
   }
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   return status;
 }
 
@@ -722,10 +768,10 @@ dcc_status_t dcc_app_interaction_queue_initial_response(
   }
 
   dcc_app_interaction_queue_t *queue = flow->queue;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   if (queue->failed != 0U || queue->owner_destroyed != 0U ||
       queue->initial_admitted != 0U) {
-    pthread_mutex_unlock(&queue->mutex);
+    dcc_app_interaction_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
     return DCC_ERR_STATE;
   }
@@ -759,7 +805,7 @@ dcc_status_t dcc_app_interaction_queue_initial_response(
       dcc_app_interaction_action_free(action);
     }
   }
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   return status;
 }
 
@@ -779,10 +825,10 @@ dcc_status_t dcc_app_interaction_queue_delete_original(
   action->user_data = user_data;
 
   dcc_app_interaction_queue_t *queue = flow->queue;
-  pthread_mutex_lock(&queue->mutex);
+  dcc_app_interaction_mutex_lock(&queue->mutex);
   if (queue->failed != 0U || queue->owner_destroyed != 0U ||
       queue->projected_original_exists == 0U) {
-    pthread_mutex_unlock(&queue->mutex);
+    dcc_app_interaction_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
     return DCC_ERR_STATE;
   }
@@ -794,7 +840,7 @@ dcc_status_t dcc_app_interaction_queue_delete_original(
     status = dcc_app_interaction_action_reserve(queue,
                                                 action->reserved_bytes);
   if (status != DCC_OK) {
-    pthread_mutex_unlock(&queue->mutex);
+    dcc_app_interaction_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
     return status;
   }
@@ -814,7 +860,7 @@ dcc_status_t dcc_app_interaction_queue_delete_original(
     dcc_app_interaction_action_release(queue, action->reserved_bytes);
     dcc_app_interaction_action_free(action);
   }
-  pthread_mutex_unlock(&queue->mutex);
+  dcc_app_interaction_mutex_unlock(&queue->mutex);
   return status;
 }
 
