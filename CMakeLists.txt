@@ -2014,6 +2014,12 @@ if(DCC_BUILD_TESTS)
     )
 
     add_test(
+        NAME dcc_migrate_v2_tool_smoke
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_dcc_migrate_v2.py
+    )
+
+    add_test(
         NAME dcc_rest_v2_endpoint_manifest_audit
         COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_rest_v2_endpoints.py
