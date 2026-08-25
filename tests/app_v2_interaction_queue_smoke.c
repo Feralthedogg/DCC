@@ -18,9 +18,32 @@ typedef struct queue_red_state {
   atomic_uint request_count;
   atomic_uint callback_count;
   atomic_uint error_count;
+  atomic_uint observer_entered;
+  atomic_uint observer_release;
   atomic_bool release_first;
   uint16_t response_status;
 } queue_red_state_t;
+
+static void queue_red_error_observer(dcc_client_t *client,
+                                     const dcc_error_t *error,
+                                     void *user_data) {
+  (void)client;
+  (void)error;
+  queue_red_state_t *state = (queue_red_state_t *)user_data;
+  atomic_store_explicit(&state->observer_entered, 1U, memory_order_release);
+  while (atomic_load_explicit(&state->observer_release, memory_order_acquire) ==
+         0U)
+    usleep(100U);
+}
+
+static int queue_red_wait_for(const atomic_uint *value, unsigned expected) {
+  for (size_t i = 0U; i < 50000U; ++i) {
+    if (atomic_load_explicit(value, memory_order_acquire) == expected)
+      return 1;
+    usleep(100U);
+  }
+  return 0;
+}
 
 static void queue_red_callback(dcc_client_t *client,
                                const dcc_rest_result_t *response,
@@ -90,6 +113,8 @@ int main(void) {
   atomic_init(&state.request_count, 0U);
   atomic_init(&state.callback_count, 0U);
   atomic_init(&state.error_count, 0U);
+  atomic_init(&state.observer_entered, 0U);
+  atomic_init(&state.observer_release, 0U);
   atomic_init(&state.release_first, false);
   dcc_rest_set_interceptor(client, queue_red_interceptor, &state);
 
@@ -143,6 +168,8 @@ int main(void) {
   atomic_init(&state.request_count, 0U);
   atomic_init(&state.callback_count, 0U);
   atomic_init(&state.error_count, 0U);
+  atomic_init(&state.observer_entered, 0U);
+  atomic_init(&state.observer_release, 0U);
   atomic_init(&state.release_first, false);
   dcc_rest_set_interceptor(client, queue_red_interceptor, &state);
   interaction.id = 702U;
@@ -182,9 +209,13 @@ int main(void) {
   atomic_init(&state.request_count, 0U);
   atomic_init(&state.callback_count, 0U);
   atomic_init(&state.error_count, 0U);
+  atomic_init(&state.observer_entered, 0U);
+  atomic_init(&state.observer_release, 0U);
   atomic_init(&state.release_first, false);
   state.response_status = 500U;
   dcc_rest_set_interceptor(client, queue_red_interceptor, &state);
+  if (dcc_client_on_error(client, queue_red_error_observer, &state) != DCC_OK)
+    return 1;
   interaction.id = 705U;
   interaction.token = "failure-token";
   flow = NULL;
@@ -193,6 +224,10 @@ int main(void) {
   first_status = dcc_flow_reply(flow, &first, queue_red_callback, &state);
   second_status = dcc_flow_reply(flow, &second, queue_red_callback, &state);
   atomic_store_explicit(&state.release_first, true, memory_order_release);
+  int observer_entered = queue_red_wait_for(&state.observer_entered, 1U);
+  unsigned callbacks_before_observer_return =
+      atomic_load_explicit(&state.callback_count, memory_order_acquire);
+  atomic_store_explicit(&state.observer_release, 1U, memory_order_release);
   drain = dcc_rest_async_wait(client, 5000U);
   final_requests =
       atomic_load_explicit(&state.request_count, memory_order_acquire);
@@ -200,16 +235,20 @@ int main(void) {
   unsigned errors =
       atomic_load_explicit(&state.error_count, memory_order_acquire);
   final_state = dcc_flow_state(flow);
+  (void)dcc_client_on_error(client, NULL, NULL);
   dcc_rest_set_interceptor(client, NULL, NULL);
   dcc_flow_destroy(flow);
   if (first_status != DCC_OK || second_status != DCC_OK || drain != DCC_OK ||
+      !observer_entered || callbacks_before_observer_return != 1U ||
       final_requests != 1U || callbacks != 2U || errors != 2U ||
       final_state != DCC_INTERACTION_FLOW_FAILED) {
     fprintf(stderr,
             "interaction failure cascade RED: first=%d second=%d drain=%d "
-            "requests=%u callbacks=%u errors=%u state=%d\n",
+            "requests=%u callbacks=%u callbacks_before_observer=%u "
+            "observer=%d errors=%u state=%d\n",
             first_status, second_status, drain, final_requests, callbacks,
-            errors, final_state);
+            callbacks_before_observer_return, observer_entered, errors,
+            final_state);
     return 1;
   }
 
@@ -239,6 +278,8 @@ int main(void) {
   atomic_init(&state.request_count, 0U);
   atomic_init(&state.callback_count, 0U);
   atomic_init(&state.error_count, 0U);
+  atomic_init(&state.observer_entered, 0U);
+  atomic_init(&state.observer_release, 0U);
   atomic_init(&state.release_first, false);
   dcc_rest_set_interceptor(client, queue_red_interceptor, &state);
   interaction.id = 703U;
