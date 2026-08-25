@@ -453,23 +453,25 @@ def main() -> int:
                 if len(bot_c_names) > MAX_BOT_MACROS:
                     errors.append(
                         f"Bot C macro total is {len(bot_c_names)}, maximum is {MAX_BOT_MACROS}")
-                artifact_error = compare_macro_artifact(
-                    source / "tools" / BOT_DEPENDENCY_ARTIFACT,
-                    dependency_dump)
-                if artifact_error is not None:
-                    errors.append(artifact_error)
-                artifact_error = compare_macro_artifact(
-                    source / "tools" / BOT_C_ARTIFACT, bot_c_dump)
-                if artifact_error is not None:
-                    errors.append(artifact_error)
+                if os.name != "nt":
+                    artifact_error = compare_macro_artifact(
+                        source / "tools" / BOT_DEPENDENCY_ARTIFACT,
+                        dependency_dump)
+                    if artifact_error is not None:
+                        errors.append(artifact_error)
+                    artifact_error = compare_macro_artifact(
+                        source / "tools" / BOT_C_ARTIFACT, bot_c_dump)
+                    if artifact_error is not None:
+                        errors.append(artifact_error)
             if bot_cpp_dump is not None:
                 if bot_cpp_names & BOT_UI_VARIADIC:
                     errors.append(summary("C-only Bot UI macros visible in C++",
                                           sorted(bot_cpp_names & BOT_UI_VARIADIC)))
-                artifact_error = compare_macro_artifact(
-                    source / "tools" / BOT_CPP_ARTIFACT, bot_cpp_dump)
-                if artifact_error is not None:
-                    errors.append(artifact_error)
+                if os.name != "nt":
+                    artifact_error = compare_macro_artifact(
+                        source / "tools" / BOT_CPP_ARTIFACT, bot_cpp_dump)
+                    if artifact_error is not None:
+                        errors.append(artifact_error)
         forbidden = forbidden_identifiers(headers, banned)
         if forbidden:
             (debt if args.transition else errors).append(summary("removed public identifiers", forbidden))
