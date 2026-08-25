@@ -164,7 +164,8 @@ def exported_symbols(library: pathlib.Path) -> set[str] | None:
 
 def compile_headers(source: pathlib.Path, build: pathlib.Path) -> list[str]:
     compiler = os.environ.get("CC", "cc")
-    if pathlib.Path(compiler).name.lower() in {"cl", "cl.exe"}:
+    if pathlib.Path(compiler).name.lower() in {
+            "cl", "cl.exe", "clang-cl", "clang-cl.exe"}:
         return []
     include_dir = source / "include"
     include_args = [
@@ -236,7 +237,7 @@ def main() -> int:
         extra = sorted(symbols - current)
         if missing:
             errors.append("DCC_API declarations missing from library: " + ", ".join(missing))
-        if extra and args.library.resolve().suffix != ".a":
+        if extra and args.library.resolve().suffix.lower() not in {".a", ".lib"}:
             errors.append("library exports absent from DCC 2 baseline: " + ", ".join(extra))
 
     if errors:

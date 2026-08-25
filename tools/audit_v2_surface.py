@@ -68,13 +68,18 @@ def parse_args() -> argparse.Namespace:
 
 def command_parts(command: str, label: str) -> list[str]:
     parts = shlex.split(command, posix=os.name != "nt")
-    if not parts or shutil.which(parts[0]) is None:
+    if not parts:
+        raise ValueError(f"{label} compiler is not executable: {command}")
+    executable = Path(parts[0])
+    if not executable.is_file() and shutil.which(parts[0]) is None:
         raise ValueError(f"{label} compiler is not executable: {command}")
     return parts
 
 
 def is_msvc(command: list[str]) -> bool:
-    return Path(command[0]).name.lower() in {"cl", "cl.exe"}
+    return Path(command[0]).name.lower() in {
+        "cl", "cl.exe", "clang-cl", "clang-cl.exe",
+    }
 
 
 def first_diagnostic(result: subprocess.CompletedProcess[str]) -> str:

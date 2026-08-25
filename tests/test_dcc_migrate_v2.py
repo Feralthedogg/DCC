@@ -90,7 +90,8 @@ class MigrationToolTests(unittest.TestCase):
             self.assertEqual(data.count(b"\r\n"), 1)
             self.assertFalse(data.endswith(b"\n"))
             self.assertNotIn(b"DCC_RESPOND_TEXT", data)
-            self.assertEqual(stat.S_IMODE(source.stat().st_mode), 0o751)
+            if os.name != "nt":
+                self.assertEqual(stat.S_IMODE(source.stat().st_mode), 0o751)
 
     def test_missing_input_has_io_exit(self) -> None:
         result = self.run_tool("/definitely/missing/dcc-file.c")
