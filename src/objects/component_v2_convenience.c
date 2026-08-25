@@ -144,13 +144,8 @@ dcc_status_t dcc_component_v2_builder_init_checkbox(
     if (builder == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    dcc_component_v2_builder_init(builder, DCC_COMPONENT_V2_CHECKBOX);
-    dcc_status_t status = dcc_component_v2_builder_set_custom_id(builder, custom_id);
-    if (status == DCC_OK) {
-        status = dcc_component_v2_builder_set_label(builder, label);
-    }
-    if (status == DCC_OK) {
-        status = dcc_component_v2_builder_set_default(builder, default_value);
-    }
-    return status;
+    (void)label;
+    if (default_value > 1U) return DCC_ERR_INVALID_ARG;
+    *builder = dcc_component_v2_checkbox(custom_id, default_value);
+    return DCC_OK;
 }

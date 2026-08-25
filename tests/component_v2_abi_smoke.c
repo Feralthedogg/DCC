@@ -81,6 +81,15 @@ int main(void) {
     fprintf(stderr, "noncanonical boolean setter mutated builder\n");
     return 1;
   }
+  dcc_component_v2_builder_t transition_checkbox;
+  if (dcc_component_v2_builder_init_checkbox(
+          &transition_checkbox, "transition", "presentation belongs to label",
+          1U) != DCC_OK ||
+      transition_checkbox.type != DCC_COMPONENT_V2_CHECKBOX ||
+      transition_checkbox.as.modal.checkbox.default_value != 1U) {
+    fprintf(stderr, "checkbox transition initializer retained removed label\n");
+    return 1;
+  }
 
   historical_text_display_t historical[2] = {
       {sizeof(historical_text_display_t), DCC_COMPONENT_V2_BUILDER_VERSION,

@@ -1740,33 +1740,33 @@ int dcc_package_consumer_check_app_api(void) {
         (ui_message.present & DCC_MESSAGE_BUILDER_PRESENT_FLAGS) != 0U &&
         ui_message.components_v2_count == 1U &&
         ui_message.components_v2[0].type == DCC_COMPONENT_V2_CONTAINER &&
-        ui_message.components_v2[0].accent_color == 0x5865F2U &&
-        ui_message.components_v2[0].children_count == 2U &&
-        ui_message.components_v2[0].children[1].children_count == 1U &&
-        strcmp(ui_message.components_v2[0].children[1].children[0].label, "Open") == 0 &&
+        ui_message.components_v2[0].as.layout.container.accent_color == 0x5865F2U &&
+        ui_message.components_v2[0].as.layout.container.component_count == 2U &&
+        ui_message.components_v2[0].as.layout.container.components[1].as.layout.action_row.component_count == 1U &&
+        strcmp(ui_message.components_v2[0].as.layout.container.components[1].as.layout.action_row.components[0].as.button.label, "Open") == 0 &&
         strcmp(legacy_button_ns.custom_id, "package.legacy.open") == 0 &&
-        strcmp(ui_button_ns.custom_id, "package.ui.open") == 0 &&
-        strcmp(ui_select_ns.custom_id, "package.ui.select") == 0 &&
-        strcmp(ui_input_ns.custom_id, "package.ui.input") == 0 &&
+        strcmp(ui_button_ns.as.button.target.custom_id, "package.ui.open") == 0 &&
+        strcmp(ui_select_ns.as.select.custom_id, "package.ui.select") == 0 &&
+        strcmp(ui_input_ns.as.text_input.custom_id, "package.ui.input") == 0 &&
         ui_ephemeral.flags == (DCC_MESSAGE_FLAG_EPHEMERAL | DCC_MESSAGE_FLAG_IS_COMPONENTS_V2) &&
         ui_ephemeral.components_v2_count == 1U &&
-        strcmp(ui_ephemeral.components_v2[0].content, "Private") == 0 &&
+        strcmp(ui_ephemeral.components_v2[0].as.text_display.content, "Private") == 0 &&
         (confirm_message.present & DCC_MESSAGE_BUILDER_PRESENT_CONTENT) != 0U &&
         confirm_message.components_count == 1U &&
         strcmp(confirm_message.components[0].children[0].custom_id, "package.confirm") == 0 &&
         paginator_message.flags == DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 &&
         paginator_message.components_v2_count == 1U &&
-        paginator_message.components_v2[0].children[1].children[0].disabled == 1U &&
-        paginator_message.components_v2[0].children[1].children[1].disabled == 0U &&
+        paginator_message.components_v2[0].as.layout.container.components[1].as.layout.action_row.components[0].as.button.disabled == 1U &&
+        paginator_message.components_v2[0].as.layout.container.components[1].as.layout.action_row.components[1].as.button.disabled == 0U &&
         settings_panel.components_count == 1U &&
         settings_panel.components[0].children_count == 4U &&
         settings_panel.components[0].children[1].disabled == 1U &&
         settings_panel.components[0].children[2].disabled == 0U &&
         settings_panel_v2.flags == DCC_MESSAGE_FLAG_IS_COMPONENTS_V2 &&
         settings_panel_v2.components_v2_count == 1U &&
-        settings_panel_v2.components_v2[0].children[1].children_count == 4U &&
-        settings_panel_v2.components_v2[0].children[1].children[1].disabled == 0U &&
-        settings_panel_v2.components_v2[0].children[1].children[2].disabled == 1U &&
+        settings_panel_v2.components_v2[0].as.layout.container.components[1].as.layout.action_row.component_count == 4U &&
+        settings_panel_v2.components_v2[0].as.layout.container.components[1].as.layout.action_row.components[1].as.button.disabled == 0U &&
+        settings_panel_v2.components_v2[0].as.layout.container.components[1].as.layout.action_row.components[2].as.button.disabled == 1U &&
         sugar_flow.started_at_ms == 1000U &&
         sugar_flow.auto_defer_after_ms == 1500U &&
         DCC_FLOW_REPLY_TEXT(NULL, "package flow") == DCC_ERR_INVALID_ARG &&
