@@ -2438,6 +2438,17 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_interaction_flow_smoke)
     add_test(NAME dcc_interaction_flow_smoke COMMAND dcc_interaction_flow_smoke)
 
+    add_executable(dcc_app_v2_interaction_queue_smoke
+        tests/app_v2_interaction_queue_smoke.c
+    )
+    target_link_libraries(dcc_app_v2_interaction_queue_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_v2_interaction_queue_smoke)
+    dcc_target_enable_sanitizers(dcc_app_v2_interaction_queue_smoke)
+    add_test(
+        NAME dcc_app_v2_interaction_queue_smoke
+        COMMAND dcc_app_v2_interaction_queue_smoke
+    )
+
     add_executable(
         dcc_interaction_flow_layout_smoke
         tests/interaction_flow_layout_smoke.cpp
