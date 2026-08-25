@@ -265,6 +265,15 @@ DCC_API dcc_status_t dcc_ctx_followup_ephemeral_text(dcc_ctx_t *ctx,
                                                      const char *content,
                                                      dcc_rest_result_fn cb,
                                                      void *user_data);
+/** Sends an unrelated channel message; builder input is consumed synchronously. */
+DCC_API dcc_status_t dcc_ctx_send(
+    dcc_ctx_t *ctx, const dcc_message_builder_t *message,
+    dcc_rest_cb cb, void *user_data
+);
+/** Sends unrelated channel text; content is borrowed for the call. */
+DCC_API dcc_status_t dcc_ctx_send_text(
+    dcc_ctx_t *ctx, const char *content, dcc_rest_cb cb, void *user_data
+);
 DCC_API dcc_status_t dcc_ctx_reply_validation_error(dcc_ctx_t *ctx,
                                                     dcc_status_t status,
                                                     dcc_rest_result_fn cb,

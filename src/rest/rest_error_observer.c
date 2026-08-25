@@ -67,7 +67,7 @@ uint8_t dcc_rest_terminal_callback_active(const dcc_client_t *client) {
     for (dcc_rest_terminal_frame_t *frame = dcc_rest_current_terminal_frame;
          frame != NULL;
          frame = frame->previous) {
-        if (frame->client == client) {
+        if (client == NULL || frame->client == client) {
             return 1U;
         }
     }

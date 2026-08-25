@@ -445,7 +445,7 @@ void dcc_app_callback_frame_leave(dcc_app_callback_frame_t *frame) {
 uint8_t dcc_app_callback_frame_active(const dcc_app_t *app) {
   for (dcc_app_callback_frame_t *frame = dcc_app_current_callback_frame;
        frame != NULL; frame = frame->previous) {
-    if (frame->app == app) {
+    if (app == NULL || frame->app == app) {
       return 1U;
     }
   }

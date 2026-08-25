@@ -57,25 +57,19 @@ typedef void (*dcc_app_legacy_message_command_fn)(dcc_app_t *app, const dcc_mess
 typedef void (*dcc_app_legacy_task_fn)(dcc_app_t *app, void *user_data);
 
 /** Transition wrapper for `dcc_app_env_load_file()`. */
-static inline dcc_status_t dcc_app_load_env_file(
+DCC_API dcc_status_t dcc_app_load_env_file(
     const char *path,
     uint8_t overwrite
-) {
-    return dcc_app_env_load_file(path, overwrite);
-}
+);
 
 /** Transition wrapper for `dcc_app_env_load_dotenv()`. */
-static inline dcc_status_t dcc_app_load_dotenv(void) {
-    return dcc_app_env_load_dotenv();
-}
+DCC_API dcc_status_t dcc_app_load_dotenv(void);
 
 /** Transition wrapper for `dcc_app_env_validate_requirements()`. */
-static inline dcc_status_t dcc_app_validate_env_requirements(
+DCC_API dcc_status_t dcc_app_validate_env_requirements(
     const dcc_app_env_requirement_t *requirements,
     size_t count
-) {
-    return dcc_app_env_validate_requirements(requirements, count);
-}
+);
 typedef void (*dcc_app_message_id_cb)(
     dcc_app_t *app,
     const dcc_rest_response_t *response,

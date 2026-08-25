@@ -184,6 +184,14 @@ dcc_status_t dcc_app_env_load_dotenv(void) {
     return dcc_app_env_load_file(".env", 1U);
 }
 
+dcc_status_t dcc_app_load_env_file(const char *path, uint8_t overwrite) {
+    return dcc_app_env_load_file(path, overwrite);
+}
+
+dcc_status_t dcc_app_load_dotenv(void) {
+    return dcc_app_env_load_dotenv();
+}
+
 dcc_status_t dcc_app_env_validate_requirements(
     const dcc_app_env_requirement_t *requirements,
     size_t count
@@ -214,6 +222,13 @@ dcc_status_t dcc_app_env_validate_requirements(
         }
     }
     return status;
+}
+
+dcc_status_t dcc_app_validate_env_requirements(
+    const dcc_app_env_requirement_t *requirements,
+    size_t count
+) {
+    return dcc_app_env_validate_requirements(requirements, count);
 }
 
 static int dcc_app_env_missing(const char *value) {

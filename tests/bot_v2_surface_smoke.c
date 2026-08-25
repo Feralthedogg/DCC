@@ -67,11 +67,13 @@ static dcc_status_t bot_v2_message_command(
     dcc_app_t *app,
     const dcc_message_t *message,
     const char *arguments,
+    const dcc_event_t *event,
     void *user_data
 ) {
     (void)app;
     (void)message;
     (void)arguments;
+    (void)event;
     (void)user_data;
     return DCC_OK;
 }

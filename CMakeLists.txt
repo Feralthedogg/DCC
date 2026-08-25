@@ -366,6 +366,7 @@ target_sources(dcc
         src/app/app_validation.c
         src/app/app_view.c
         src/app/app_wait.c
+        src/bot/bot.c
         src/cache/cache.c
         src/cache/cache_merge_channels.c
         src/cache/cache_merge_guild_collections.c
@@ -2235,6 +2236,37 @@ if(DCC_BUILD_TESTS)
     target_link_libraries(dcc_component_v2_abi_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_component_v2_abi_smoke)
     add_test(NAME dcc_component_v2_abi_smoke COMMAND dcc_component_v2_abi_smoke)
+
+    add_executable(dcc_api_v2_surface_smoke tests/api_v2_surface_smoke.c)
+    target_link_libraries(dcc_api_v2_surface_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_api_v2_surface_smoke)
+    add_test(NAME dcc_api_v2_surface_smoke COMMAND dcc_api_v2_surface_smoke)
+
+    add_executable(dcc_bot_v2_surface_smoke tests/bot_v2_surface_smoke.c)
+    target_link_libraries(dcc_bot_v2_surface_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_bot_v2_surface_smoke)
+    add_test(NAME dcc_bot_v2_surface_smoke COMMAND dcc_bot_v2_surface_smoke)
+
+    add_executable(dcc_bot_v2_runner_smoke tests/bot_v2_runner_smoke.c)
+    target_link_libraries(dcc_bot_v2_runner_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_bot_v2_runner_smoke)
+    add_test(NAME dcc_bot_v2_runner_smoke COMMAND dcc_bot_v2_runner_smoke)
+
+    foreach(DCC_BOT_MAIN_MODE IN ITEMS
+        DEV_DEFAULT PROD_DEFAULT DEV_CONFIG PROD_CONFIG
+    )
+        string(TOLOWER "${DCC_BOT_MAIN_MODE}" DCC_BOT_MAIN_MODE_LOWER)
+        add_library(dcc_bot_v2_main_${DCC_BOT_MAIN_MODE_LOWER} OBJECT
+            tests/bot_v2_main_compile.c
+        )
+        target_link_libraries(
+            dcc_bot_v2_main_${DCC_BOT_MAIN_MODE_LOWER} PRIVATE dcc::dcc
+        )
+        target_compile_definitions(
+            dcc_bot_v2_main_${DCC_BOT_MAIN_MODE_LOWER}
+            PRIVATE DCC_TEST_${DCC_BOT_MAIN_MODE}_MAIN=1
+        )
+    endforeach()
 
     add_executable(dcc_sugar_smoke tests/sugar_smoke.c)
     target_link_libraries(dcc_sugar_smoke PRIVATE dcc::dcc)

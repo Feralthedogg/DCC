@@ -23,7 +23,8 @@ REQUIRED_BANNED_PATTERNS = frozenset({
 })
 APP_API_ALLOWLIST = frozenset({
     "dcc_app_create", "dcc_app_destroy", "dcc_app_start", "dcc_app_stop",
-    "dcc_app_wait", "dcc_app_run", "dcc_app_client", "dcc_app_store",
+    "dcc_app_wait", "dcc_app_run", "dcc_app_run_with_signals",
+    "dcc_app_client", "dcc_app_store",
     "dcc_app_store_open_file", "dcc_app_store_close", "dcc_app_options_init",
     "dcc_app_command_sync_options_init", "dcc_app_on_error",
     "dcc_app_use_default_error_responses", "dcc_app_listen", "dcc_app_unlisten",
@@ -35,6 +36,23 @@ MACRO_DUMP = re.compile(r"^\s*#\s*define\s+(DCC_[A-Za-z0-9_]*)\b", re.MULTILINE)
 API = re.compile(r"\bDCC_API\b")
 APP_API = re.compile(r"\bDCC_API\b[\s\S]*?\b(dcc_app_[A-Za-z0-9_]+)\s*\(")
 SENTINEL = "DCC_V2_AUDIT_MACRO_SENTINEL"
+BOT_C_ARTIFACT = "bot_v2_macros_posix_clang_c_static.txt"
+BOT_CPP_ARTIFACT = "bot_v2_macros_posix_clang_cpp_static.txt"
+BOT_DEPENDENCY_ARTIFACT = "bot_v2_dependency_macros_posix_clang_c_static.txt"
+BOT_UI_VARIADIC = frozenset({
+    "DCC_UI_ROW", "DCC_UI_SECTION", "DCC_UI_CARD", "DCC_UI_CARD_ACCENT",
+    "DCC_UI_GALLERY", "DCC_UI_STRING_SELECT", "DCC_UI_RADIO_GROUP",
+    "DCC_UI_CHECKBOX_GROUP", "DCC_UI_MODAL",
+})
+BOT_OWNED_C = frozenset({
+    "DCC_BOT_H", "DCC_BOT_HANDLERS_H", "DCC_BOT_LISTENERS_H",
+    "DCC_BOT_REPLIES_H", "DCC_BOT_UI_H", "DCC_BOT_MAIN_H",
+    "DCC_SLASH_FN", "DCC_AUTOCOMPLETE_FN", "DCC_BUTTON_FN",
+    "DCC_SELECT_FN", "DCC_MODAL_FN", "DCC_EVENT_FN", "DCC_READY_FN",
+    "DCC_MESSAGE_FN", "DCC_TASK_FN", "DCC_LISTENER_CONFIG_INIT",
+    "DCC_BOT_CONFIG_INIT", "DCC_DEV_BOT_MAIN", "DCC_BOT_MAIN",
+    "DCC_DEV_BOT_MAIN_WITH", "DCC_BOT_MAIN_WITH",
+}) | BOT_UI_VARIADIC
 
 
 def parse_args() -> argparse.Namespace:
@@ -188,9 +206,41 @@ def undocumented_api_declarations(headers: list[Path]) -> list[str]:
     return missing
 
 
-def undocumented_bot_macros(bot_header: Path) -> list[str]:
-    lines = bot_header.read_text(encoding="utf-8").splitlines()
-    return [f"{bot_header.name}:{index + 1}" for index, line in enumerate(lines) if MACRO_DUMP.match(line) and not documented_before(lines, index)]
+def undocumented_bot_macros(bot_headers: list[Path]) -> list[str]:
+    missing: list[str] = []
+    guards = {
+        "DCC_BOT_H", "DCC_BOT_HANDLERS_H", "DCC_BOT_LISTENERS_H",
+        "DCC_BOT_REPLIES_H", "DCC_BOT_UI_H", "DCC_BOT_MAIN_H",
+    }
+    for bot_header in bot_headers:
+        lines = bot_header.read_text(encoding="utf-8").splitlines()
+        for index, line in enumerate(lines):
+            match = MACRO_DUMP.match(line)
+            if match and match.group(1) not in guards and not documented_before(lines, index):
+                missing.append(f"{bot_header.name}:{index + 1}")
+    return missing
+
+
+def bot_topology_errors(source: Path) -> list[str]:
+    errors: list[str] = []
+    umbrella = source / "include/dcc/bot.h"
+    leaves = ["handlers.h", "listeners.h", "replies.h", "ui.h", "main.h"]
+    expected = [f"dcc/bot/{leaf}" for leaf in leaves]
+    include_pattern = re.compile(r'^\s*#\s*include\s*[<"]([^>"]+)[>"]', re.MULTILINE)
+    if umbrella.is_file():
+        actual = include_pattern.findall(umbrella.read_text(encoding="utf-8"))
+        if actual != expected:
+            errors.append(f"<dcc/bot.h> include topology differs: {actual}")
+    forbidden_prefixes = ("dcc/app.h", "dcc/dcc.h", "dcc/sugar.h", "dcc/sugar/", "dcc/app/legacy.h")
+    for leaf in leaves:
+        path = source / "include/dcc/bot" / leaf
+        if not path.is_file():
+            errors.append(f"missing Bot leaf: {leaf}")
+            continue
+        for dependency in include_pattern.findall(path.read_text(encoding="utf-8")):
+            if dependency in forbidden_prefixes or dependency.startswith("dcc/sugar/"):
+                errors.append(f"forbidden Bot include edge: {leaf} -> {dependency}")
+    return errors
 
 
 def forbidden_identifiers(headers: list[Path], banned: list[str]) -> list[str]:
@@ -231,6 +281,62 @@ def bot_macro_count(bot_header: Path, compiler: list[str], includes: list[Path],
         return None, "compiler did not provide a complete DCC_ macro dump (sentinel missing)"
     names.remove(SENTINEL)
     return len(names), None
+
+
+def normalize_macro_dump(output: str) -> tuple[str, set[str]]:
+    records: list[str] = []
+    names: set[str] = set()
+    pattern = re.compile(r"^#define\s+(DCC_[A-Za-z0-9_]*)(\(([^)]*)\))?\s*(.*)$")
+    for line in output.splitlines():
+        match = pattern.match(line.strip())
+        if match is None:
+            continue
+        name, invocation, parameters, expansion = match.groups()
+        names.add(name)
+        expansion = " ".join(expansion.split())
+        if not expansion:
+            expansion = "<empty>"
+        if invocation is None:
+            kind, arity = "object", "-"
+        else:
+            kind = "function"
+            args = [] if parameters == "" else [item.strip() for item in parameters.split(",")]
+            arity = str(len(args)) + ("+" if args and args[-1] == "..." else "")
+        records.append(f"{name}\t{kind}\t{arity}\t{expansion}")
+    return "\n".join(sorted(records, key=lambda item: item.encode("utf-8"))) + "\n", names
+
+
+def full_macro_dump(
+    compiler: list[str], language: str, includes: list[Path], unit: Path
+) -> tuple[str | None, set[str], str | None]:
+    if is_msvc(compiler):
+        command = [*compiler, "/nologo", "/EP", "/d1PP", f"/D{SENTINEL}=1",
+                   *(f"/I{item}" for item in includes), str(unit)]
+    else:
+        standard = "-std=c11" if language == "c" else "-std=c++17"
+        command = [*compiler, standard, "-dM", "-E", f"-D{SENTINEL}=1",
+                   *(f"-I{item}" for item in includes), str(unit)]
+    result = run(command)
+    if isinstance(result, str):
+        return None, set(), result
+    if result.returncode != 0:
+        return None, set(), first_diagnostic(result)
+    normalized, names = normalize_macro_dump(result.stdout)
+    if SENTINEL not in names:
+        return None, names, "compiler did not provide a complete DCC_ macro dump (sentinel missing)"
+    sentinel_prefix = f"{SENTINEL}\t"
+    normalized = "\n".join(
+        line for line in normalized.splitlines() if not line.startswith(sentinel_prefix)
+    ) + "\n"
+    names.remove(SENTINEL)
+    return normalized, names, None
+
+
+def compare_macro_artifact(path: Path, actual: str) -> str | None:
+    if not path.is_file():
+        return f"missing macro artifact: {path.name}"
+    expected = path.read_text(encoding="utf-8")
+    return None if expected == actual else f"macro artifact changed: {path.name}"
 
 
 def summary(label: str, values: list[str], limit: int = 5) -> str:
@@ -276,11 +382,73 @@ def main() -> int:
         if fragment_failures:
             (debt if args.transition else errors).append(summary("declaration-fragment standalone compile failures", fragment_failures))
         bot_header = source / "include/dcc/bot.h"
+        errors.extend(bot_topology_errors(source))
         macro_count, macro_error = bot_macro_count(bot_header, c_compiler, includes, temp)
         if macro_error:
             (debt if args.transition else errors).append(macro_error)
         elif macro_count is not None and macro_count > MAX_BOT_MACROS:
             (debt if args.transition else errors).append(f"<dcc/bot.h> exports {macro_count} DCC_ macros; maximum is {MAX_BOT_MACROS}")
+        if bot_header.is_file():
+            dependency_unit = temp / "bot_dependencies.c"
+            dependency_unit.write_text(
+                "#include <dcc/app/base.h>\n"
+                "#include <dcc/app/listeners.h>\n"
+                "#include <dcc/app/context.h>\n"
+                "#include <dcc/message.h>\n"
+                "#include <dcc/modal.h>\n"
+                "#include <dcc/autocomplete.h>\n"
+                "#include <dcc/component_v2.h>\n"
+                "#include <dcc/app/options.h>\n"
+                "#include <dcc/app/lifecycle.h>\n"
+                "#include <dcc/app/env.h>\n",
+                encoding="utf-8",
+            )
+            bot_c_unit = temp / "bot.c"
+            bot_cpp_unit = temp / "bot.cpp"
+            bot_c_unit.write_text("#include <dcc/bot.h>\n", encoding="utf-8")
+            bot_cpp_unit.write_text("#include <dcc/bot.h>\n", encoding="utf-8")
+            dependency_dump, dependency_names, dependency_error = full_macro_dump(
+                c_compiler, "c", includes, dependency_unit)
+            bot_c_dump, bot_c_names, bot_c_error = full_macro_dump(
+                c_compiler, "c", includes, bot_c_unit)
+            bot_cpp_dump, bot_cpp_names, bot_cpp_error = full_macro_dump(
+                cxx_compiler, "c++", includes, bot_cpp_unit)
+            for label, detail in (
+                ("Bot dependency macro dump", dependency_error),
+                ("Bot C macro dump", bot_c_error),
+                ("Bot C++ macro dump", bot_cpp_error),
+            ):
+                if detail is not None:
+                    errors.append(f"{label}: {detail}")
+            if dependency_dump is not None and bot_c_dump is not None:
+                owned = bot_c_names - dependency_names
+                if owned != BOT_OWNED_C:
+                    errors.append(summary("unexpected Bot-owned C macros",
+                                          sorted(owned ^ BOT_OWNED_C)))
+                if len(bot_c_names) != len(dependency_names) + 30:
+                    errors.append(
+                        f"Bot C macro arithmetic is {len(dependency_names)} + "
+                        f"{len(bot_c_names) - len(dependency_names)}, expected +30")
+                if len(bot_c_names) > MAX_BOT_MACROS:
+                    errors.append(
+                        f"Bot C macro total is {len(bot_c_names)}, maximum is {MAX_BOT_MACROS}")
+                artifact_error = compare_macro_artifact(
+                    source / "tools" / BOT_DEPENDENCY_ARTIFACT,
+                    dependency_dump)
+                if artifact_error is not None:
+                    errors.append(artifact_error)
+                artifact_error = compare_macro_artifact(
+                    source / "tools" / BOT_C_ARTIFACT, bot_c_dump)
+                if artifact_error is not None:
+                    errors.append(artifact_error)
+            if bot_cpp_dump is not None:
+                if bot_cpp_names & BOT_UI_VARIADIC:
+                    errors.append(summary("C-only Bot UI macros visible in C++",
+                                          sorted(bot_cpp_names & BOT_UI_VARIADIC)))
+                artifact_error = compare_macro_artifact(
+                    source / "tools" / BOT_CPP_ARTIFACT, bot_cpp_dump)
+                if artifact_error is not None:
+                    errors.append(artifact_error)
         forbidden = forbidden_identifiers(headers, banned)
         if forbidden:
             (debt if args.transition else errors).append(summary("removed public identifiers", forbidden))
@@ -299,7 +467,8 @@ def main() -> int:
         if undocumented:
             (debt if args.transition else errors).append(summary("undocumented DCC_API declarations", undocumented))
         if bot_header.is_file():
-            undocumented_macros = undocumented_bot_macros(bot_header)
+            bot_headers = [bot_header, *sorted((source / "include/dcc/bot").glob("*.h"))]
+            undocumented_macros = undocumented_bot_macros(bot_headers)
             if undocumented_macros:
                 (debt if args.transition else errors).append(summary("undocumented Bot macros", undocumented_macros))
     if debt:
