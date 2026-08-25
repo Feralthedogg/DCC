@@ -21,7 +21,7 @@ static void dcc_app_auto_defer_release(dcc_app_auto_defer_t *state) {
 
 static void dcc_app_auto_defer_complete(
     dcc_client_t *client,
-    const dcc_rest_response_t *response,
+    const dcc_rest_result_t *response,
     void *user_data
 ) {
     (void)client;
@@ -31,7 +31,7 @@ static void dcc_app_auto_defer_complete(
     }
 
     const dcc_status_t status = response != NULL
-        ? response->error
+        ? dcc_rest_result_status(response)
         : DCC_ERR_RUNTIME;
     atomic_store_explicit(
         &state->initial_response_admitted,
@@ -103,9 +103,12 @@ static void dcc_app_auto_defer_task(void *arg) {
 }
 
 dcc_status_t dcc_app_auto_defer_start(dcc_ctx_t *ctx) {
-    if (ctx == NULL || ctx->app == NULL || ctx->app->auto_defer_after_ms == 0U) {
+  if (ctx == NULL || ctx->app == NULL || ctx->app->auto_defer_after_ms == 0U) {
         return DCC_OK;
-    }
+  }
+  if (ctx->app->auto_defer_after_ms > UINT64_MAX / UINT64_C(1000000)) {
+    return DCC_ERR_INVALID_ARG;
+  }
     if (ctx->client == NULL || ctx->interaction == NULL ||
         ctx->interaction->id == 0U || ctx->interaction->token == NULL) {
         return DCC_OK;

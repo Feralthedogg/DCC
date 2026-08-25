@@ -2,6 +2,7 @@
 #define DCC_REST_ROLE_CONNECTIONS_H
 
 #include <dcc/rest/types.h>
+#include <dcc/rest/request.h>
 
 #ifdef __cplusplus
 extern "C" {

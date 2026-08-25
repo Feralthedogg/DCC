@@ -3,222 +3,175 @@
 
 #include "internal/rest/dcc_rest_endpoint_internal.h"
 
-static dcc_status_t dcc_interaction_submit_response(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    const dcc_rest_interaction_response_t *response,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    if (client == NULL || interaction == NULL) {
-        return DCC_ERR_INVALID_ARG;
-    }
-    dcc_rest_call_options_t options;
-    void *bridge = NULL;
-    dcc_status_t status = dcc_endpoint_legacy_options(
-        cb, user_data, &options, &bridge
-    );
-    if (status == DCC_OK) {
-        status = dcc_rest_interaction_response_create(
-            client, interaction->id, interaction->token, response,
-            &options, NULL
-        );
-    }
-    if (status != DCC_OK) {
-        dcc_endpoint_legacy_bridge_release(bridge);
-    }
-    return status;
+static dcc_status_t
+dcc_interaction_submit_response(dcc_client_t *client,
+                                const dcc_interaction_t *interaction,
+                                const dcc_rest_interaction_response_t *response,
+                                dcc_rest_result_fn cb, void *user_data) {
+  if (client == NULL || interaction == NULL) {
+    return DCC_ERR_INVALID_ARG;
+  }
+  dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+  options.callback = cb;
+  options.user_data = user_data;
+  dcc_status_t status = DCC_OK;
+  if (status == DCC_OK) {
+    status = dcc_rest_interaction_response_create(
+        client, interaction->id, interaction->token, response, &options, NULL);
+  }
+  return status;
 }
 
-dcc_status_t dcc_interaction_reply_message(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    const dcc_message_builder_t *message,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
-    dcc_status_t status = dcc_rest_interaction_response_set_message(
-        &response, message
-    );
-    return status == DCC_OK
-        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
-        : status;
+dcc_status_t dcc_interaction_reply_message(dcc_client_t *client,
+                                           const dcc_interaction_t *interaction,
+                                           const dcc_message_builder_t *message,
+                                           dcc_rest_result_fn cb,
+                                           void *user_data) {
+  dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+  dcc_status_t status =
+      dcc_rest_interaction_response_set_message(&response, message);
+  return status == DCC_OK ? dcc_interaction_submit_response(
+                                client, interaction, &response, cb, user_data)
+                          : status;
 }
 
-dcc_status_t dcc_interaction_reply_text(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    const char *content,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_message_builder_t message = {
-        .size = sizeof(message),
-        .version = DCC_MESSAGE_BUILDER_VERSION,
-        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
-        .content = content,
-    };
-    return dcc_interaction_reply_message(client, interaction, &message, cb, user_data);
+dcc_status_t dcc_interaction_reply_text(dcc_client_t *client,
+                                        const dcc_interaction_t *interaction,
+                                        const char *content,
+                                        dcc_rest_result_fn cb,
+                                        void *user_data) {
+  dcc_message_builder_t message = {
+      .size = sizeof(message),
+      .version = DCC_MESSAGE_BUILDER_VERSION,
+      .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT,
+      .content = content,
+  };
+  return dcc_interaction_reply_message(client, interaction, &message, cb,
+                                       user_data);
 }
 
 dcc_status_t dcc_interaction_reply_ephemeral_text(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    const char *content,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_message_builder_t message = {
-        .size = sizeof(message),
-        .version = DCC_MESSAGE_BUILDER_VERSION,
-        .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT | DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
-        .content = content,
-        .flags = DCC_MESSAGE_FLAG_EPHEMERAL,
-    };
-    return dcc_interaction_reply_message(client, interaction, &message, cb, user_data);
+    dcc_client_t *client, const dcc_interaction_t *interaction,
+    const char *content, dcc_rest_result_fn cb, void *user_data) {
+  dcc_message_builder_t message = {
+      .size = sizeof(message),
+      .version = DCC_MESSAGE_BUILDER_VERSION,
+      .present = DCC_MESSAGE_BUILDER_PRESENT_CONTENT |
+                 DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
+      .content = content,
+      .flags = DCC_MESSAGE_FLAG_EPHEMERAL,
+  };
+  return dcc_interaction_reply_message(client, interaction, &message, cb,
+                                       user_data);
 }
 
 dcc_status_t dcc_interaction_reply_embed(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    const char *title,
-    const char *description,
-    uint32_t color,
-    uint8_t ephemeral,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    if (title == NULL && description == NULL) {
-        return DCC_ERR_INVALID_ARG;
-    }
+    dcc_client_t *client, const dcc_interaction_t *interaction,
+    const char *title, const char *description, uint32_t color,
+    uint8_t ephemeral, dcc_rest_result_fn cb, void *user_data) {
+  if (title == NULL && description == NULL) {
+    return DCC_ERR_INVALID_ARG;
+  }
 
-    dcc_embed_builder_t embed = {
-        .size = sizeof(embed),
-        .version = DCC_EMBED_BUILDER_VERSION,
-        .present = (title != NULL ? DCC_EMBED_BUILDER_PRESENT_TITLE : 0U) |
-            (description != NULL ? DCC_EMBED_BUILDER_PRESENT_DESCRIPTION : 0U) |
-            DCC_EMBED_BUILDER_PRESENT_COLOR,
-        .title = title,
-        .description = description,
-        .color = color,
-    };
-    dcc_message_builder_t message = {
-        .size = sizeof(message),
-        .version = DCC_MESSAGE_BUILDER_VERSION,
-        .present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS,
-        .embeds = &embed,
-        .embeds_count = 1U,
-    };
-    if (ephemeral) {
-        message.flags = DCC_MESSAGE_FLAG_EPHEMERAL;
-        message.present |= DCC_MESSAGE_BUILDER_PRESENT_FLAGS;
-    }
-    return dcc_interaction_reply_message(client, interaction, &message, cb, user_data);
+  dcc_embed_builder_t embed = {
+      .size = sizeof(embed),
+      .version = DCC_EMBED_BUILDER_VERSION,
+      .present =
+          (title != NULL ? DCC_EMBED_BUILDER_PRESENT_TITLE : 0U) |
+          (description != NULL ? DCC_EMBED_BUILDER_PRESENT_DESCRIPTION : 0U) |
+          DCC_EMBED_BUILDER_PRESENT_COLOR,
+      .title = title,
+      .description = description,
+      .color = color,
+  };
+  dcc_message_builder_t message = {
+      .size = sizeof(message),
+      .version = DCC_MESSAGE_BUILDER_VERSION,
+      .present = DCC_MESSAGE_BUILDER_PRESENT_EMBEDS,
+      .embeds = &embed,
+      .embeds_count = 1U,
+  };
+  if (ephemeral) {
+    message.flags = DCC_MESSAGE_FLAG_EPHEMERAL;
+    message.present |= DCC_MESSAGE_BUILDER_PRESENT_FLAGS;
+  }
+  return dcc_interaction_reply_message(client, interaction, &message, cb,
+                                       user_data);
 }
 
-dcc_status_t dcc_interaction_reply_error(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    const char *title,
-    const char *description,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    return dcc_interaction_reply_embed(
-        client,
-        interaction,
-        title != NULL ? title : "Error",
-        description,
-        0xED4245U,
-        1U,
-        cb,
-        user_data
-    );
+dcc_status_t dcc_interaction_reply_error(dcc_client_t *client,
+                                         const dcc_interaction_t *interaction,
+                                         const char *title,
+                                         const char *description,
+                                         dcc_rest_result_fn cb,
+                                         void *user_data) {
+  return dcc_interaction_reply_embed(client, interaction,
+                                     title != NULL ? title : "Error",
+                                     description, 0xED4245U, 1U, cb, user_data);
 }
 
-dcc_status_t dcc_interaction_reply_success(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    const char *title,
-    const char *description,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    return dcc_interaction_reply_embed(
-        client,
-        interaction,
-        title != NULL ? title : "Done",
-        description,
-        0x57F287U,
-        1U,
-        cb,
-        user_data
-    );
+dcc_status_t dcc_interaction_reply_success(dcc_client_t *client,
+                                           const dcc_interaction_t *interaction,
+                                           const char *title,
+                                           const char *description,
+                                           dcc_rest_result_fn cb,
+                                           void *user_data) {
+  return dcc_interaction_reply_embed(client, interaction,
+                                     title != NULL ? title : "Done",
+                                     description, 0x57F287U, 1U, cb, user_data);
 }
 
-dcc_status_t dcc_interaction_defer(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
-    dcc_status_t status = dcc_rest_interaction_response_set_deferred_message(
-        &response, NULL
-    );
-    return status == DCC_OK
-        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
-        : status;
+dcc_status_t dcc_interaction_defer(dcc_client_t *client,
+                                   const dcc_interaction_t *interaction,
+                                   dcc_rest_result_fn cb, void *user_data) {
+  dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+  dcc_status_t status =
+      dcc_rest_interaction_response_set_deferred_message(&response, NULL);
+  return status == DCC_OK ? dcc_interaction_submit_response(
+                                client, interaction, &response, cb, user_data)
+                          : status;
 }
 
-dcc_status_t dcc_interaction_defer_ephemeral(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_message_builder_t message = {
-        .size = sizeof(message),
-        .version = DCC_MESSAGE_BUILDER_VERSION,
-        .present = DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
-        .flags = DCC_MESSAGE_FLAG_EPHEMERAL,
-    };
-    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
-    dcc_status_t status = dcc_rest_interaction_response_set_deferred_message(
-        &response, &message
-    );
-    return status == DCC_OK
-        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
-        : status;
+dcc_status_t
+dcc_interaction_defer_ephemeral(dcc_client_t *client,
+                                const dcc_interaction_t *interaction,
+                                dcc_rest_result_fn cb, void *user_data) {
+  dcc_message_builder_t message = {
+      .size = sizeof(message),
+      .version = DCC_MESSAGE_BUILDER_VERSION,
+      .present = DCC_MESSAGE_BUILDER_PRESENT_FLAGS,
+      .flags = DCC_MESSAGE_FLAG_EPHEMERAL,
+  };
+  dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+  dcc_status_t status =
+      dcc_rest_interaction_response_set_deferred_message(&response, &message);
+  return status == DCC_OK ? dcc_interaction_submit_response(
+                                client, interaction, &response, cb, user_data)
+                          : status;
 }
 
-dcc_status_t dcc_interaction_update_message(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    const dcc_message_builder_t *message,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
-    dcc_status_t status = dcc_rest_interaction_response_set_update_message(
-        &response, message
-    );
-    return status == DCC_OK
-        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
-        : status;
+dcc_status_t
+dcc_interaction_update_message(dcc_client_t *client,
+                               const dcc_interaction_t *interaction,
+                               const dcc_message_builder_t *message,
+                               dcc_rest_result_fn cb, void *user_data) {
+  dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+  dcc_status_t status =
+      dcc_rest_interaction_response_set_update_message(&response, message);
+  return status == DCC_OK ? dcc_interaction_submit_response(
+                                client, interaction, &response, cb, user_data)
+                          : status;
 }
 
-dcc_status_t dcc_interaction_show_modal(
-    dcc_client_t *client,
-    const dcc_interaction_t *interaction,
-    const dcc_modal_builder_t *modal,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
-    dcc_status_t status = dcc_rest_interaction_response_set_modal(&response, modal);
-    return status == DCC_OK
-        ? dcc_interaction_submit_response(client, interaction, &response, cb, user_data)
-        : status;
+dcc_status_t dcc_interaction_show_modal(dcc_client_t *client,
+                                        const dcc_interaction_t *interaction,
+                                        const dcc_modal_builder_t *modal,
+                                        dcc_rest_result_fn cb,
+                                        void *user_data) {
+  dcc_rest_interaction_response_t response = DCC_REST_INTERACTION_RESPONSE_INIT;
+  dcc_status_t status =
+      dcc_rest_interaction_response_set_modal(&response, modal);
+  return status == DCC_OK ? dcc_interaction_submit_response(
+                                client, interaction, &response, cb, user_data)
+                          : status;
 }

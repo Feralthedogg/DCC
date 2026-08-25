@@ -2200,6 +2200,7 @@ DCC_API uint8_t dcc_ctx_response_failed(const dcc_ctx_t *ctx);
 DCC_API uint8_t dcc_ctx_can_followup(const dcc_ctx_t *ctx);
 DCC_API uint8_t dcc_ctx_can_edit_original(const dcc_ctx_t *ctx);
 
+#if 0 /* Task 11 moved canonical interaction actions to app/context.h. */
 DCC_API dcc_status_t dcc_ctx_reply(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,
@@ -2313,6 +2314,7 @@ DCC_API dcc_status_t dcc_ctx_followup_ephemeral_text(
     dcc_rest_cb cb,
     void *user_data
 );
+#endif
 DCC_API dcc_status_t dcc_ctx_send(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,

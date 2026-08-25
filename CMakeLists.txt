@@ -344,6 +344,8 @@ target_sources(dcc
         src/app/app_extensions.c
         src/app/app_form_bind.c
         src/app/app_guards.c
+        src/app/app_interaction_queue.c
+        src/app/app_interaction_registry.c
         src/app/app_listener.c
         src/app/app_message_commands.c
         src/app/app_messages.c
@@ -1443,6 +1445,7 @@ target_sources(dcc
         src/rest/rest_rate_limit_update.c
         src/rest/rest_error_observer.c
         src/rest/rest_result.c
+        src/rest/rest_runtime_stats.c
         src/rest/rest_request_handle.c
         src/rest/rest_submit.c
         src/rest/rest_task8_core.c
@@ -2447,6 +2450,16 @@ if(DCC_BUILD_TESTS)
     add_test(
         NAME dcc_app_v2_interaction_queue_smoke
         COMMAND dcc_app_v2_interaction_queue_smoke
+    )
+
+    add_test(
+        NAME dcc_task11_flow_opaque_contract
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/task11_flow_opaque_contract.py
+            --compiler ${CMAKE_C_COMPILER}
+            --source ${CMAKE_CURRENT_SOURCE_DIR}
+            --binary ${CMAKE_CURRENT_BINARY_DIR}
+            --llam-include ${DCC_V2_SURFACE_LLAM_INCLUDE}
     )
 
     add_executable(

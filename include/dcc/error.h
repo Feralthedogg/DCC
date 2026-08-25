@@ -20,7 +20,8 @@ typedef enum dcc_status {
     DCC_ERR_CANCELED,
     DCC_ERR_STATE,
     DCC_ERR_TIMEOUT,
-    DCC_ERR_NOT_FOUND
+    DCC_ERR_NOT_FOUND,
+    DCC_ERR_RESOURCE_LIMIT
 } dcc_status_t;
 
 DCC_API const char *dcc_status_string(dcc_status_t status);

@@ -2157,7 +2157,7 @@ static int run_sugar_options_smoke(void) {
       "READY", 1000U, "{\"op\":0}", strlen("{\"op\":0}"));
   dcc_replay_record_t interaction_replay = DCC_REPLAY_INTERACTION_RECORD(
       1001U, "{\"type\":2}", strlen("{\"type\":2}"));
-  dcc_interaction_flow_t flow =
+  dcc_interaction_flow_t *flow =
       DCC_FLOW_AUTO_DEFER_EPHEMERAL(NULL, NULL, 1500U);
   dcc_message_builder_t stickers = DCC_MESSAGE_STICKERS(111ULL, 222ULL);
   dcc_poll_builder_t poll = DCC_POLL("Deploy?", 24U, DCC_POLL_ANSWER("Now"),
@@ -3213,7 +3213,7 @@ static int run_sugar_options_smoke(void) {
           DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_HARD_LIMIT ||
       firewall_request.critical != 1U || replay.kind != DCC_REPLAY_GATEWAY ||
       interaction_replay.kind != DCC_REPLAY_INTERACTION ||
-      flow.auto_defer_ephemeral != 1U || stickers.sticker_ids_count != 2U ||
+      flow != NULL || stickers.sticker_ids_count != 2U ||
       stickers.sticker_ids[1] != 222ULL || poll.answer_count != 2U ||
       poll.duration_hours != 24U || legacy_select.options_count != 2U ||
       legacy_select.options[1].has_default != 1U ||

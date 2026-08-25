@@ -232,6 +232,7 @@ GENERIC_OPERATIONS = (
     "dcc_rest_result_free",
     "dcc_rest_result_ok",
     "dcc_rest_result_status",
+    "dcc_rest_runtime_stats",
     "dcc_rest_submit",
 )
 TRANSITION_HELPER = {
@@ -2145,7 +2146,7 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
         if isinstance(candidate, dict)
     )
     if (
-        len(generic) != 60
+        len(generic) != 61
         or len(helpers) != 1
         or sum(task_symbol_counts.values()) != 397
         or removed_symbol_count != 10
@@ -2163,9 +2164,9 @@ def validate_manifest(data: dict[str, Any], root: Path, *, check_files: bool = T
         + sum(current_symbol_counts.values())
         + removed_symbol_count
         + composite_symbol_count
-        != 473
+        != 474
     ):
-        errors.append("baseline 473-public-symbol classification invariant failed")
+        errors.append("baseline 474-public-symbol classification invariant failed")
 
     body_builder_owners: dict[str, str] = {}
     unexpected_builders: list[str] = []

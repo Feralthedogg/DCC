@@ -61,6 +61,8 @@ const char *dcc_status_string(dcc_status_t status) {
             return "timeout";
         case DCC_ERR_NOT_FOUND:
             return "not found";
+        case DCC_ERR_RESOURCE_LIMIT:
+            return "resource limit";
         default:
             return "unknown error";
     }

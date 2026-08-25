@@ -5,6 +5,7 @@
 #include "internal/rest/dcc_rest_state_internal.h"
 
 #include <dcc/client.h>
+#include <dcc/rest/runtime.h>
 
 #include <stdatomic.h>
 #include <stdint.h>
@@ -25,6 +26,11 @@ struct dcc_rest_firewall_state;
 
 #define DCC_CLIENT_REST_STATE_FIELDS \
     atomic_flag rest_lock; \
+    atomic_flag rest_resource_lock; \
+    dcc_rest_runtime_stats_t rest_runtime_stats; \
+    atomic_flag interaction_registry_lock; \
+    void *interaction_live_entries; \
+    void *interaction_tombstones; \
     atomic_flag rest_error_observer_lock; \
     dcc_client_error_fn rest_error_observer; \
     void *rest_error_observer_user_data; \

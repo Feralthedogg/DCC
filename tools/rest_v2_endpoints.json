@@ -60,6 +60,7 @@
     "dcc_rest_result_free",
     "dcc_rest_result_ok",
     "dcc_rest_result_status",
+    "dcc_rest_runtime_stats",
     "dcc_rest_submit"
   ],
   "transition_helpers": [

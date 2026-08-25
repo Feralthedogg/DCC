@@ -314,7 +314,7 @@ typedef struct dcc_group_dm_recipient_params {
     uint64_t present;
     const char *access_token;
     const char *nick;
-    dcc_snowflake_t channel_id; /* frozen App compatibility route suffix */
+    dcc_snowflake_t channel_id;
     dcc_snowflake_t user_id;
 } dcc_group_dm_recipient_params_t;
 

@@ -14,7 +14,7 @@ typedef struct dcc_test_entitlement_params {
   dcc_snowflake_t sku_id;
   dcc_snowflake_t owner_id;
   uint32_t owner_type;
-  dcc_snowflake_t application_id; /* frozen App compatibility route suffix */
+  dcc_snowflake_t application_id;
 } dcc_test_entitlement_params_t;
 
 typedef enum dcc_test_entitlement_owner_type {

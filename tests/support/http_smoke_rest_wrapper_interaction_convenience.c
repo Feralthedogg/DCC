@@ -266,7 +266,7 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
             client,
             &interaction,
             "Saved",
-            rest_cb,
+            rest_result_cb,
             &seen
         )
     );
@@ -282,7 +282,7 @@ int run_public_rest_wrapper_interaction_convenience_smoke(dcc_client_t *client) 
             &interaction,
             "Invalid",
             "Use YYYYMMDD",
-            rest_cb,
+            rest_result_cb,
             &seen
         )
     );

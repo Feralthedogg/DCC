@@ -88,6 +88,9 @@ static void app_smoke_init_base_command(dcc_interaction_t *interaction) {
 
 static void app_smoke_init_base_button(dcc_interaction_t *interaction) {
     memset(interaction, 0, sizeof(*interaction));
+    interaction->id = 101U;
+    interaction->application_id = 200U;
+    interaction->token = "button-token";
     interaction->type = 3U;
     interaction->component_type = 2U;
     interaction->guild_id = 300U;
@@ -391,6 +394,9 @@ static int app_smoke_interactions_init(
     fx->fields[2].values = fx->tag_values;
     fx->fields[2].values_count = DCC_ARRAY_LEN(fx->tag_values);
     memset(&fx->modal, 0, sizeof(fx->modal));
+    fx->modal.id = 102U;
+    fx->modal.application_id = 200U;
+    fx->modal.token = "modal-token";
     fx->modal.type = 5U;
     fx->modal.guild_id = 300U;
     fx->modal.user_id = 803U;
