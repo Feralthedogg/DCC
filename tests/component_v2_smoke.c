@@ -207,15 +207,20 @@ static int run_component_v2_message_smoke(void) {
             &string_select,
             (const dcc_select_option_t[]){{ .label = "One", .value = "one" }},
             1U
-        ) != DCC_OK ||
-        dcc_component_v2_builder_set_default_values(
+        ) != DCC_OK) {
+        fprintf(stderr, "component v2 string select setup failed\n");
+        return 1;
+    }
+    dcc_component_v2_builder_t before_string_select = string_select;
+    if (dcc_component_v2_builder_set_default_values(
             &string_select,
             default_channels,
             sizeof(default_channels) / sizeof(default_channels[0])
-        ) != DCC_OK ||
-        dcc_component_v2_builder_build_json(&string_select, &component_json) != DCC_ERR_INVALID_ARG) {
+        ) != DCC_ERR_INVALID_ARG ||
+        memcmp(&string_select, &before_string_select,
+               sizeof(string_select)) != 0 || component_json != NULL) {
         dcc_component_v2_builder_json_free(component_json);
-        fprintf(stderr, "component v2 validator allowed default_values on string select\n");
+        fprintf(stderr, "component v2 setter allowed default_values on string select\n");
         return 1;
     }
 
@@ -289,9 +294,9 @@ static int run_component_v2_modal_smoke(void) {
     dcc_component_v2_builder_t checkbox_group;
     dcc_component_v2_builder_init(&checkbox_group, DCC_COMPONENT_V2_CHECKBOX_GROUP);
     if (dcc_component_v2_builder_set_custom_id(&checkbox_group, "check.group") != DCC_OK ||
-        dcc_component_v2_builder_set_options(
+        dcc_component_v2_builder_set_choice_options(
             &checkbox_group,
-            (const dcc_select_option_t[]){{ .label = "Only", .value = "only" }},
+            (const dcc_component_v2_choice_option_t[]){{ .label = "Only", .value = "only" }},
             1U
         ) != DCC_OK ||
         dcc_component_v2_builder_set_min_values(&checkbox_group, 1U) != DCC_OK ||
@@ -311,7 +316,7 @@ static int run_component_v2_modal_smoke(void) {
     dcc_component_v2_builder_t checkbox;
     dcc_component_v2_builder_init(&checkbox, DCC_COMPONENT_V2_CHECKBOX);
     if (dcc_component_v2_builder_set_custom_id(&checkbox, "check.one") != DCC_OK ||
-        dcc_component_v2_builder_set_label(&checkbox, "Accept") != DCC_OK ||
+        dcc_component_v2_builder_set_label(&checkbox, "Accept") != DCC_ERR_INVALID_ARG ||
         dcc_component_v2_builder_set_default(&checkbox, 1U) != DCC_OK ||
         dcc_component_v2_builder_build_json(&checkbox, &json) != DCC_OK ||
         require_contains(json, "\"default\":true") ||

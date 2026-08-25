@@ -33,13 +33,10 @@
 
 #define DCC_V2_BUTTON_DISABLED(style_, label_, custom_id_, disabled_) \
     ((dcc_component_v2_builder_t){ \
+        .size=sizeof(dcc_component_v2_builder_t), .version=DCC_COMPONENT_V2_BUILDER_VERSION, \
+        .present=(UINT64_C(1)<<DCC_COMPONENT_V2_FIELD_STYLE) | (UINT64_C(1)<<DCC_COMPONENT_V2_FIELD_LABEL) | (UINT64_C(1)<<DCC_COMPONENT_V2_FIELD_CUSTOM_ID) | (UINT64_C(1)<<DCC_COMPONENT_V2_FIELD_DISABLED), \
         .type = DCC_COMPONENT_V2_BUTTON, \
-        .button_style = (style_), \
-        .custom_id = (custom_id_), \
-        .label = (label_), \
-        .disabled = (disabled_), \
-        .has_button_style = 1U, \
-        .has_disabled = 1U \
+        .as.button = {(style_), (label_), {0}, (disabled_), {.custom_id=(custom_id_)}} \
     })
 
 #define DCC_V2_BUTTON_PRIMARY_DISABLED(label_, custom_id_, disabled_) \
@@ -52,24 +49,17 @@
     DCC_V2_BUTTON_DISABLED(DCC_BUTTON_DANGER, (label_), (custom_id_), (disabled_))
 
 #define DCC_SUGAR_PRESET_V2_TEXT(content_) \
-    ((dcc_component_v2_builder_t){ \
-        .type = DCC_COMPONENT_V2_TEXT_DISPLAY, \
-        .content = (content_) \
-    })
+    dcc_component_v2_text_display((content_))
 
 #define DCC_SUGAR_PRESET_V2_ACTION_ROW(...) \
-    ((dcc_component_v2_builder_t){ \
-        .type = DCC_COMPONENT_V2_ACTION_ROW, \
-        .children = DCC_SUGAR_PRESET_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
-        .children_count = DCC_SUGAR_PRESET_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__) \
-    })
+    dcc_component_v2_action_row( \
+        DCC_SUGAR_PRESET_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
+        DCC_SUGAR_PRESET_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__))
 
 #define DCC_SUGAR_PRESET_V2_CONTAINER(...) \
-    ((dcc_component_v2_builder_t){ \
-        .type = DCC_COMPONENT_V2_CONTAINER, \
-        .children = DCC_SUGAR_PRESET_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
-        .children_count = DCC_SUGAR_PRESET_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__) \
-    })
+    dcc_component_v2_container( \
+        DCC_SUGAR_PRESET_ARRAY(dcc_component_v2_builder_t, __VA_ARGS__), \
+        DCC_SUGAR_PRESET_ARRAY_LEN(dcc_component_v2_builder_t, __VA_ARGS__))
 
 #define DCC_SUGAR_PRESET_MESSAGE_COMPONENTS_V2(...) \
     ((dcc_message_builder_t){ \

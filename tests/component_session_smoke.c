@@ -110,8 +110,9 @@ int main(void) {
             DCC_OK ||
         button.custom_id == NULL ||
         strncmp(button.custom_id, "dcc:v1:sess123:next:nonce123:", 29U) != 0 ||
-        button_v2.custom_id == NULL ||
-        strncmp(button_v2.custom_id, "dcc:v1:sess123:prev:nonce123:", 29U) != 0 ||
+        button_v2.as.button.target.custom_id == NULL ||
+        strncmp(button_v2.as.button.target.custom_id,
+                "dcc:v1:sess123:prev:nonce123:", 29U) != 0 ||
         strlen(button.custom_id) > DCC_COMPONENT_SESSION_CUSTOM_ID_MAX) {
         fprintf(stderr, "failed to build component session button\n");
         dcc_component_session_deinit(&session);

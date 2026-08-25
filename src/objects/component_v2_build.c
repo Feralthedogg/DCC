@@ -9,7 +9,8 @@ dcc_status_t dcc_component_v2_builder_build_json(
     }
     *out_json = NULL;
 
-    dcc_status_t status = dcc_component_v2_validate_array(builder, 1U);
+    dcc_status_t status = dcc_component_v2_validate(
+        builder, 1U, DCC_COMPONENT_V2_CONTEXT_ANY, NULL);
     if (status != DCC_OK) {
         return status;
     }
@@ -35,7 +36,8 @@ dcc_status_t dcc_component_v2_builder_build_array_json(
     }
     *out_json = NULL;
 
-    dcc_status_t status = dcc_component_v2_validate_array(builders, builder_count);
+    dcc_status_t status = dcc_component_v2_validate(
+        builders, builder_count, DCC_COMPONENT_V2_CONTEXT_ANY, NULL);
     if (status != DCC_OK) {
         return status;
     }
@@ -61,9 +63,8 @@ dcc_status_t dcc_component_v2_builder_measure_array_json(
     }
     *out_json_len = 0U;
 
-    dcc_status_t status = dcc_component_v2_validate_array(
-        builders, builder_count
-    );
+    dcc_status_t status = dcc_component_v2_validate(
+        builders, builder_count, DCC_COMPONENT_V2_CONTEXT_ANY, NULL);
     if (status != DCC_OK) {
         return status;
     }

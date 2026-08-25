@@ -151,23 +151,15 @@
     )
 
 #define DCC_SUGAR_MODAL_V2_LABEL(label_, child_) \
-    ((dcc_component_v2_builder_t){ \
-        .type = DCC_COMPONENT_V2_LABEL, \
-        .label = (label_), \
-        .children = (dcc_component_v2_builder_t[]){ (child_) }, \
-        .children_count = 1U \
-    })
+    dcc_component_v2_label((label_), \
+        (dcc_component_v2_builder_t[]){ (child_) })
 
 #define DCC_SUGAR_MODAL_V2_TEXT_INPUT(custom_id_, label_, style_, placeholder_, required_) \
     ((dcc_component_v2_builder_t){ \
+        .size = sizeof(dcc_component_v2_builder_t), .version = DCC_COMPONENT_V2_BUILDER_VERSION, \
+        .present = (UINT64_C(1)<<DCC_COMPONENT_V2_FIELD_CUSTOM_ID) | (UINT64_C(1)<<DCC_COMPONENT_V2_FIELD_STYLE) | (UINT64_C(1)<<DCC_COMPONENT_V2_FIELD_PLACEHOLDER) | (UINT64_C(1)<<DCC_COMPONENT_V2_FIELD_REQUIRED), \
         .type = DCC_COMPONENT_V2_TEXT_INPUT, \
-        .custom_id = (custom_id_), \
-        .label = (label_), \
-        .text_input_style = (style_), \
-        .placeholder = (placeholder_), \
-        .required = (required_), \
-        .has_text_input_style = 1U, \
-        .has_required = 1U \
+        .as.text_input = {(custom_id_), (style_), (placeholder_), 0U, 0U, NULL, (required_)} \
     })
 
 #define DCC_MODAL_V2_FIELD_TEXT_REQUIRED(custom_id_, label_, required_) \
@@ -213,22 +205,13 @@
 #define DCC_MODAL_V2_FIELD_CHECKBOX(custom_id_, label_, checked_) \
     DCC_SUGAR_MODAL_V2_LABEL( \
         (label_), \
-        ((dcc_component_v2_builder_t){ \
-            .type = DCC_COMPONENT_V2_CHECKBOX, \
-            .custom_id = (custom_id_), \
-            .label = (label_), \
-            .checked = (checked_), \
-            .has_checked = 1U \
-        }) \
+        dcc_component_v2_checkbox((custom_id_), (checked_)) \
     )
 
 #define DCC_MODAL_V2_FIELD_FILE(custom_id_, label_) \
     DCC_SUGAR_MODAL_V2_LABEL( \
         (label_), \
-        ((dcc_component_v2_builder_t){ \
-            .type = DCC_COMPONENT_V2_FILE_UPLOAD, \
-            .custom_id = (custom_id_) \
-        }) \
+        dcc_component_v2_file_upload((custom_id_)) \
     )
 
 #endif

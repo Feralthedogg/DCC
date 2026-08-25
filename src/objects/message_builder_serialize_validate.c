@@ -90,10 +90,11 @@ dcc_status_t dcc_message_builder_validate_for_json(const dcc_message_builder_t *
         return DCC_ERR_INVALID_ARG;
     }
     if (HAS(DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2) &&
-        dcc_component_v2_validate_array_context(
+        dcc_component_v2_validate(
             builder->components_v2,
             builder->components_v2_count,
-            DCC_COMPONENT_V2_CONTEXT_MESSAGE
+            DCC_COMPONENT_V2_CONTEXT_MESSAGE_V2,
+            NULL
         ) != DCC_OK) {
         return DCC_ERR_INVALID_ARG;
     }

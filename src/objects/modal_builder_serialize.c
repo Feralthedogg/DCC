@@ -55,10 +55,11 @@ dcc_status_t dcc_modal_builder_validate_for_json(
         }
     }
     if (HAS(DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2) &&
-        dcc_component_v2_validate_array_context(
+        dcc_component_v2_validate(
             builder->components_v2,
             builder->components_v2_count,
-            DCC_COMPONENT_V2_CONTEXT_MODAL
+            DCC_COMPONENT_V2_CONTEXT_MODAL,
+            NULL
         ) != DCC_OK) {
         return DCC_ERR_INVALID_ARG;
     }
@@ -97,10 +98,11 @@ dcc_status_t dcc_modal_builder_build_json(const dcc_modal_builder_t *builder, ch
 
     if (HAS(DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2) && builder->components_v2_count != 0U) {
         char *components_json = NULL;
-        status = dcc_component_v2_validate_array_context(
+        status = dcc_component_v2_validate(
             builder->components_v2,
             builder->components_v2_count,
-            DCC_COMPONENT_V2_CONTEXT_MODAL
+            DCC_COMPONENT_V2_CONTEXT_MODAL,
+            NULL
         );
         if (status == DCC_OK) {
             status = dcc_component_v2_builder_build_array_json(

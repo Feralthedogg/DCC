@@ -4,10 +4,7 @@
 #include <stdio.h>
 
 static dcc_component_v2_builder_t focused_text_component(void) {
-    return (dcc_component_v2_builder_t){
-        .type = DCC_COMPONENT_V2_TEXT_DISPLAY,
-        .content = "hello"
-    };
+    return dcc_component_v2_text_display("hello");
 }
 
 static void focused_message_id_cb(

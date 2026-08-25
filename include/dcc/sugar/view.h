@@ -84,22 +84,29 @@ static inline dcc_component_v2_builder_t dcc_sugar_view_button_action_row(
     }
 
     for (size_t i = 0U; i < count; ++i) {
-        button_buffer[i] = (dcc_component_v2_builder_t){
-            .type = DCC_COMPONENT_V2_BUTTON,
-            .button_style = actions[i].style,
-            .custom_id = actions[i].custom_id,
-            .label = actions[i].label,
-            .disabled = actions[i].disabled,
-            .has_button_style = 1U,
-            .has_disabled = (uint8_t)(actions[i].disabled ? 1U : 0U)
-        };
+        button_buffer[i] = (dcc_component_v2_builder_t)
+            DCC_COMPONENT_V2_BUILDER_INIT(DCC_COMPONENT_V2_BUTTON);
+        button_buffer[i].present =
+            dcc_component_v2_field_mask(DCC_COMPONENT_V2_FIELD_STYLE) |
+            dcc_component_v2_field_mask(DCC_COMPONENT_V2_FIELD_CUSTOM_ID) |
+            dcc_component_v2_field_mask(DCC_COMPONENT_V2_FIELD_LABEL);
+        button_buffer[i].as.button.style = actions[i].style;
+        button_buffer[i].as.button.target.custom_id = actions[i].custom_id;
+        button_buffer[i].as.button.label = actions[i].label;
+        if (actions[i].disabled) {
+            button_buffer[i].present |=
+                dcc_component_v2_field_mask(DCC_COMPONENT_V2_FIELD_DISABLED);
+            button_buffer[i].as.button.disabled = 1U;
+        }
     }
 
-    return (dcc_component_v2_builder_t){
-        .type = DCC_COMPONENT_V2_ACTION_ROW,
-        .children = button_buffer,
-        .children_count = count
-    };
+    dcc_component_v2_builder_t row =
+        DCC_COMPONENT_V2_BUILDER_INIT(DCC_COMPONENT_V2_ACTION_ROW);
+    row.present =
+        dcc_component_v2_field_mask(DCC_COMPONENT_V2_FIELD_COMPONENTS);
+    row.as.layout.action_row.components = button_buffer;
+    row.as.layout.action_row.component_count = count;
+    return row;
 }
 
 static inline dcc_app_view_t dcc_sugar_view_button_action_routes(

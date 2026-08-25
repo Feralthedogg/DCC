@@ -2231,6 +2231,11 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_component_v2_smoke)
     add_test(NAME dcc_component_v2_smoke COMMAND dcc_component_v2_smoke)
 
+    add_executable(dcc_component_v2_abi_smoke tests/component_v2_abi_smoke.c)
+    target_link_libraries(dcc_component_v2_abi_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_component_v2_abi_smoke)
+    add_test(NAME dcc_component_v2_abi_smoke COMMAND dcc_component_v2_abi_smoke)
+
     add_executable(dcc_sugar_smoke tests/sugar_smoke.c)
     target_link_libraries(dcc_sugar_smoke PRIVATE dcc::dcc)
     target_include_directories(dcc_sugar_smoke PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)

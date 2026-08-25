@@ -23,59 +23,38 @@
 #define DCC_V2_CHANNEL_TYPES(...) \
     DCC_SUGAR_ARRAY(uint32_t, __VA_ARGS__)
 #define DCC_V2_STRING_SELECT_ARRAY(custom_id_, options_, option_count_) \
-    ((dcc_component_v2_builder_t){ \
-        .type = DCC_COMPONENT_V2_STRING_SELECT, \
-        .custom_id = (custom_id_), \
-        .options = (options_), \
-        .options_count = (option_count_) \
-    })
+    dcc_component_v2_string_select((custom_id_), (options_), (option_count_))
 #define DCC_V2_STRING_SELECT(custom_id_, ...) \
-    ((dcc_component_v2_builder_t){ \
-        .type = DCC_COMPONENT_V2_STRING_SELECT, \
-        .custom_id = (custom_id_), \
-        .options = DCC_SUGAR_ARRAY(dcc_select_option_t, __VA_ARGS__), \
-        .options_count = DCC_SUGAR_ARRAY_LEN(dcc_select_option_t, __VA_ARGS__) \
-    })
+    dcc_component_v2_string_select((custom_id_), \
+        DCC_SUGAR_ARRAY(dcc_select_option_t, __VA_ARGS__), \
+        DCC_SUGAR_ARRAY_LEN(dcc_select_option_t, __VA_ARGS__))
 #define DCC_V2_STRING_SELECT_NS(namespace_, action_, ...) \
     DCC_V2_STRING_SELECT(DCC_COMPONENT_ID(namespace_, action_), __VA_ARGS__)
 #define DCC_V2_USER_SELECT(custom_id_) \
-    ((dcc_component_v2_builder_t){ \
-        .type = DCC_COMPONENT_V2_USER_SELECT, \
-        .custom_id = (custom_id_) \
-    })
+    dcc_component_v2_user_select((custom_id_))
 #define DCC_V2_USER_SELECT_NS(namespace_, action_) \
     DCC_V2_USER_SELECT(DCC_COMPONENT_ID(namespace_, action_))
 #define DCC_V2_ROLE_SELECT(custom_id_) \
-    ((dcc_component_v2_builder_t){ \
-        .type = DCC_COMPONENT_V2_ROLE_SELECT, \
-        .custom_id = (custom_id_) \
-    })
+    dcc_component_v2_role_select((custom_id_))
 #define DCC_V2_ROLE_SELECT_NS(namespace_, action_) \
     DCC_V2_ROLE_SELECT(DCC_COMPONENT_ID(namespace_, action_))
 #define DCC_V2_MENTIONABLE_SELECT(custom_id_) \
-    ((dcc_component_v2_builder_t){ \
-        .type = DCC_COMPONENT_V2_MENTIONABLE_SELECT, \
-        .custom_id = (custom_id_) \
-    })
+    dcc_component_v2_mentionable_select((custom_id_))
 #define DCC_V2_MENTIONABLE_SELECT_NS(namespace_, action_) \
     DCC_V2_MENTIONABLE_SELECT(DCC_COMPONENT_ID(namespace_, action_))
 #define DCC_V2_CHANNEL_SELECT_ARRAY(custom_id_, default_values_, default_value_count_, channel_types_, channel_type_count_) \
     ((dcc_component_v2_builder_t){ \
+        .size = sizeof(dcc_component_v2_builder_t), .version = DCC_COMPONENT_V2_BUILDER_VERSION, \
+        .present = (UINT64_C(1) << DCC_COMPONENT_V2_FIELD_CUSTOM_ID) | (UINT64_C(1) << DCC_COMPONENT_V2_FIELD_DEFAULT_VALUES) | (UINT64_C(1) << DCC_COMPONENT_V2_FIELD_CHANNEL_TYPES), \
         .type = DCC_COMPONENT_V2_CHANNEL_SELECT, \
-        .custom_id = (custom_id_), \
-        .default_values = (default_values_), \
-        .default_value_count = (default_value_count_), \
-        .channel_types = (channel_types_), \
-        .channel_type_count = (channel_type_count_) \
+        .as.select = {(custom_id_), NULL, 0U, 0U, 0U, 0U, {.channel_select = {(default_values_), (default_value_count_), (channel_types_), (channel_type_count_)}}} \
     })
 #define DCC_V2_CHANNEL_SELECT(custom_id_, default_values_, channel_types_) \
     ((dcc_component_v2_builder_t){ \
+        .size = sizeof(dcc_component_v2_builder_t), .version = DCC_COMPONENT_V2_BUILDER_VERSION, \
+        .present = (UINT64_C(1) << DCC_COMPONENT_V2_FIELD_CUSTOM_ID) | (UINT64_C(1) << DCC_COMPONENT_V2_FIELD_DEFAULT_VALUES) | (UINT64_C(1) << DCC_COMPONENT_V2_FIELD_CHANNEL_TYPES), \
         .type = DCC_COMPONENT_V2_CHANNEL_SELECT, \
-        .custom_id = (custom_id_), \
-        .default_values = (default_values_), \
-        .default_value_count = DCC_ARRAY_LEN(default_values_), \
-        .channel_types = (channel_types_), \
-        .channel_type_count = DCC_ARRAY_LEN(channel_types_) \
+        .as.select = {(custom_id_), NULL, 0U, 0U, 0U, 0U, {.channel_select = {(default_values_), DCC_ARRAY_LEN(default_values_), (channel_types_), DCC_ARRAY_LEN(channel_types_)}}} \
     })
 #define DCC_V2_CHANNEL_SELECT_NS(namespace_, action_, default_values_, channel_types_) \
     DCC_V2_CHANNEL_SELECT(DCC_COMPONENT_ID(namespace_, action_), (default_values_), (channel_types_))

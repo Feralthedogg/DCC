@@ -1260,12 +1260,11 @@ static int run_sugar_modal_smoke(void) {
   }
 
   dcc_component_v2_builder_t upload = DCC_V2_FILE_UPLOAD("upload.config");
-  upload.min_values = 1U;
-  upload.max_values = 2U;
-  upload.required = 1U;
-  upload.has_min_values = 1U;
-  upload.has_max_values = 1U;
-  upload.has_required = 1U;
+  if (dcc_component_v2_builder_set_min_values(&upload, 1U) != DCC_OK ||
+      dcc_component_v2_builder_set_max_values(&upload, 2U) != DCC_OK ||
+      dcc_component_v2_builder_set_required(&upload, 1U) != DCC_OK) {
+    return 1;
+  }
 
   dcc_component_v2_builder_t label = DCC_V2_LABEL("Config files", upload);
   dcc_component_v2_builder_t birthday =
@@ -3223,34 +3222,37 @@ static int run_sugar_options_smoke(void) {
       strcmp(legacy_select_ns.custom_id, "birthday.schedule") != 0 ||
       legacy_input_ns.type != DCC_COMPONENT_TEXT_INPUT ||
       strcmp(legacy_input_ns.custom_id, "birthday.date") != 0 ||
-      gallery.media_count != 2U || gallery.media[1].has_spoiler != 1U ||
-      thumbnail.media_count != 1U || file.media_count != 1U ||
-      string_select.options_count != 2U ||
+      gallery.as.media.gallery.item_count != 2U ||
+      gallery.as.media.gallery.items[1].has_spoiler != 1U ||
+      thumbnail.as.media.thumbnail.media.url == NULL ||
+      file.as.media.file.file.url == NULL ||
+      string_select.as.select.data.string_select.option_count != 2U ||
       v2_button_ns.type != DCC_COMPONENT_V2_BUTTON ||
-      strcmp(v2_button_ns.custom_id, "birthday.register") != 0 ||
+      strcmp(v2_button_ns.as.button.target.custom_id, "birthday.register") != 0 ||
       string_select_ns.type != DCC_COMPONENT_V2_STRING_SELECT ||
-      strcmp(string_select_ns.custom_id, "birthday.schedule") != 0 ||
+      strcmp(string_select_ns.as.select.custom_id, "birthday.schedule") != 0 ||
       user_select_ns.type != DCC_COMPONENT_V2_USER_SELECT ||
-      strcmp(user_select_ns.custom_id, "birthday.user") != 0 ||
-      channel_select.default_value_count != 1U ||
-      channel_select.channel_type_count != 2U ||
+      strcmp(user_select_ns.as.select.custom_id, "birthday.user") != 0 ||
+      channel_select.as.select.data.channel_select.default_value_count != 1U ||
+      channel_select.as.select.data.channel_select.channel_type_count != 2U ||
       channel_select_ns.type != DCC_COMPONENT_V2_CHANNEL_SELECT ||
-      strcmp(channel_select_ns.custom_id, "birthday.channel") != 0 ||
-      radio.options_count != 2U || checkbox_group.options_count != 2U ||
+      strcmp(channel_select_ns.as.select.custom_id, "birthday.channel") != 0 ||
+      radio.as.modal.radio_group.option_count != 2U ||
+      checkbox_group.as.modal.checkbox_group.option_count != 2U ||
       text_input_ns.type != DCC_COMPONENT_V2_TEXT_INPUT ||
-      strcmp(text_input_ns.custom_id, "birthday.date") != 0 ||
+      strcmp(text_input_ns.as.text_input.custom_id, "birthday.date") != 0 ||
       file_upload_ns.type != DCC_COMPONENT_V2_FILE_UPLOAD ||
-      strcmp(file_upload_ns.custom_id, "birthday.proof") != 0 ||
+      strcmp(file_upload_ns.as.modal.file_upload.custom_id, "birthday.proof") != 0 ||
       radio_ns.type != DCC_COMPONENT_V2_RADIO_GROUP ||
-      strcmp(radio_ns.custom_id, "birthday.visibility") != 0 ||
+      strcmp(radio_ns.as.modal.radio_group.custom_id, "birthday.visibility") != 0 ||
       checkbox_ns.type != DCC_COMPONENT_V2_CHECKBOX ||
-      strcmp(checkbox_ns.custom_id, "birthday.public_age") != 0 ||
+      strcmp(checkbox_ns.as.modal.checkbox.custom_id, "birthday.public_age") != 0 ||
       ui_button_ns.type != DCC_COMPONENT_V2_BUTTON ||
-      strcmp(ui_button_ns.custom_id, "birthday.schedule") != 0 ||
+      strcmp(ui_button_ns.as.button.target.custom_id, "birthday.schedule") != 0 ||
       ui_select_ns.type != DCC_COMPONENT_V2_STRING_SELECT ||
-      strcmp(ui_select_ns.custom_id, "birthday.month") != 0 ||
+      strcmp(ui_select_ns.as.select.custom_id, "birthday.month") != 0 ||
       ui_input_ns.type != DCC_COMPONENT_V2_TEXT_INPUT ||
-      strcmp(ui_input_ns.custom_id, "birthday.date") != 0 ||
+      strcmp(ui_input_ns.as.text_input.custom_id, "birthday.date") != 0 ||
       managed.channel_id != 333ULL || managed.message != &managed_message ||
       managed_keep.keep_previous != 1U ||
       DCC_APP_PUBLISH_LATEST(NULL, &managed, NULL, NULL) !=

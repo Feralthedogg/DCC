@@ -39,16 +39,11 @@ int contract(void) {
              f"-I{args.source / 'include'}",
              f"-I{args.binary / 'generated/include'}", str(unit)],
             capture_output=True, text=True, check=False)
-    if result.returncode == 0:
-        print("Task 12 RED unexpectedly compiled: tagged ABI already present")
+    if result.returncode != 0:
+        print("Task 12 tagged ABI compile contract is missing")
+        print((result.stdout + result.stderr)[:12000])
         return 1
-    output = result.stdout + result.stderr
-    required = ("DCC_COMPONENT_V2_BUILDER_INIT", "no member named 'size'")
-    if not any(marker in output for marker in required):
-        print("Task 12 RED failed for an unrelated reason")
-        print(output[:12000])
-        return 1
-    print("Task 12 RED confirmed: flat builder lacks tagged size/version/presence ABI")
+    print("Task 12 tagged size/version/presence ABI compile contract confirmed")
     return 0
 
 

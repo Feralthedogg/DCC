@@ -62,10 +62,11 @@ dcc_status_t dcc_message_builder_append_rich_json(
     }
     if (status == DCC_OK && HAS(DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2) &&
         builder->components_v2_count != 0U) {
-        status = dcc_component_v2_validate_array_context(
+        status = dcc_component_v2_validate(
             builder->components_v2,
             builder->components_v2_count,
-            DCC_COMPONENT_V2_CONTEXT_MESSAGE
+            DCC_COMPONENT_V2_CONTEXT_MESSAGE_V2,
+            NULL
         );
         if (status == DCC_OK && buffer->count_only != 0U) {
             size_t components_len = 0U;
