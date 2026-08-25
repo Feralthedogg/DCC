@@ -212,6 +212,63 @@ int main(void) {
   atomic_init(&state.observer_entered, 0U);
   atomic_init(&state.observer_release, 0U);
   atomic_init(&state.release_first, false);
+  dcc_rest_set_interceptor(client, queue_red_interceptor, &state);
+  interaction.id = 706U;
+  interaction.token = "modal-token";
+  flow = NULL;
+  if (dcc_flow_create(client, &interaction, &flow) != DCC_OK)
+    return 1;
+  dcc_component_builder_t text_input;
+  dcc_component_builder_t row;
+  dcc_modal_builder_t modal = DCC_MODAL_BUILDER_INIT;
+  dcc_component_builder_init(&text_input, DCC_COMPONENT_TEXT_INPUT);
+  dcc_component_builder_init(&row, DCC_COMPONENT_ACTION_ROW);
+  dcc_modal_builder_init(&modal);
+  if (dcc_component_builder_set_custom_id(&text_input, "field") != DCC_OK ||
+      dcc_component_builder_set_text_input_style(
+          &text_input, DCC_TEXT_INPUT_SHORT) != DCC_OK ||
+      dcc_component_builder_set_label(&text_input, "Field") != DCC_OK ||
+      dcc_component_builder_set_children(&row, &text_input, 1U) != DCC_OK ||
+      dcc_modal_builder_set_custom_id(&modal, "ordered-modal") != DCC_OK ||
+      dcc_modal_builder_set_title(&modal, "Ordered") != DCC_OK ||
+      dcc_modal_builder_set_components(&modal, &row, 1U) != DCC_OK)
+    return 1;
+  dcc_status_t modal_status =
+      dcc_flow_show_modal(flow, &modal, queue_red_callback, &state);
+  dcc_status_t modal_followup_status =
+      dcc_flow_reply(flow, &second, queue_red_callback, &state);
+  usleep(50000U);
+  before_release =
+      atomic_load_explicit(&state.request_count, memory_order_acquire);
+  queued_state = dcc_flow_state(flow);
+  atomic_store_explicit(&state.release_first, true, memory_order_release);
+  drain = dcc_rest_async_wait(client, 5000U);
+  final_requests =
+      atomic_load_explicit(&state.request_count, memory_order_acquire);
+  callbacks = atomic_load_explicit(&state.callback_count, memory_order_acquire);
+  final_state = dcc_flow_state(flow);
+  dcc_rest_set_interceptor(client, NULL, NULL);
+  dcc_flow_destroy(flow);
+  if (modal_status != DCC_OK || modal_followup_status != DCC_OK ||
+      before_release != 1U ||
+      queued_state != DCC_INTERACTION_FLOW_INITIAL_QUEUED ||
+      final_requests != 2U || callbacks != 2U || drain != DCC_OK ||
+      final_state != DCC_INTERACTION_FLOW_FOLLOWED_UP) {
+    fprintf(stderr,
+            "modal FIFO RED: modal=%d followup=%d before=%u final=%u "
+            "callbacks=%u drain=%d queued=%d final_state=%d\n",
+            modal_status, modal_followup_status, before_release, final_requests,
+            callbacks, drain, queued_state, final_state);
+    return 1;
+  }
+
+  memset(&state, 0, sizeof(state));
+  atomic_init(&state.request_count, 0U);
+  atomic_init(&state.callback_count, 0U);
+  atomic_init(&state.error_count, 0U);
+  atomic_init(&state.observer_entered, 0U);
+  atomic_init(&state.observer_release, 0U);
+  atomic_init(&state.release_first, false);
   state.response_status = 500U;
   dcc_rest_set_interceptor(client, queue_red_interceptor, &state);
   if (dcc_client_on_error(client, queue_red_error_observer, &state) != DCC_OK)
