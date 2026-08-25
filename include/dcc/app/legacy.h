@@ -45,6 +45,12 @@
 extern "C" {
 #endif
 
+#if defined(DCC_LEGACY_INTERNAL)
+#define DCC_LEGACY_API
+#else
+#define DCC_LEGACY_API DCC_API
+#endif
+
 /* Transition-only DCC 1 callback surface. */
 typedef uint64_t dcc_app_route_id_t;
 #define DCC_APP_ROUTE_INVALID UINT64_C(0)
@@ -57,16 +63,16 @@ typedef void (*dcc_app_legacy_message_command_fn)(dcc_app_t *app, const dcc_mess
 typedef void (*dcc_app_legacy_task_fn)(dcc_app_t *app, void *user_data);
 
 /** Transition wrapper for `dcc_app_env_load_file()`. */
-DCC_API dcc_status_t dcc_app_load_env_file(
+DCC_LEGACY_API dcc_status_t dcc_app_load_env_file(
     const char *path,
     uint8_t overwrite
 );
 
 /** Transition wrapper for `dcc_app_env_load_dotenv()`. */
-DCC_API dcc_status_t dcc_app_load_dotenv(void);
+DCC_LEGACY_API dcc_status_t dcc_app_load_dotenv(void);
 
 /** Transition wrapper for `dcc_app_env_validate_requirements()`. */
-DCC_API dcc_status_t dcc_app_validate_env_requirements(
+DCC_LEGACY_API dcc_status_t dcc_app_validate_env_requirements(
     const dcc_app_env_requirement_t *requirements,
     size_t count
 );
@@ -516,149 +522,149 @@ typedef struct dcc_app_definition {
     size_t listener_count;
 } dcc_app_definition_t;
 
-DCC_API dcc_status_t dcc_app_validate_definition_env(const dcc_app_definition_t *definition);
-DCC_API dcc_status_t dcc_app_options_from_env(dcc_app_options_t *options, const char *token_env);
-DCC_API dcc_status_t dcc_app_create_from_env(const char *token_env, dcc_app_t **out);
-DCC_API dcc_command_registry_t *dcc_app_command_registry(dcc_app_t *app);
-DCC_API dcc_status_t dcc_app_set_state(
+DCC_LEGACY_API dcc_status_t dcc_app_validate_definition_env(const dcc_app_definition_t *definition);
+DCC_LEGACY_API dcc_status_t dcc_app_options_from_env(dcc_app_options_t *options, const char *token_env);
+DCC_LEGACY_API dcc_status_t dcc_app_create_from_env(const char *token_env, dcc_app_t **out);
+DCC_LEGACY_API dcc_command_registry_t *dcc_app_command_registry(dcc_app_t *app);
+DCC_LEGACY_API dcc_status_t dcc_app_set_state(
     dcc_app_t *app,
     void *state,
     dcc_app_cleanup_fn cleanup
 );
-DCC_API void *dcc_app_state(const dcc_app_t *app);
-DCC_API void dcc_app_clear_state(dcc_app_t *app);
-DCC_API dcc_status_t dcc_app_extension_register(
+DCC_LEGACY_API void *dcc_app_state(const dcc_app_t *app);
+DCC_LEGACY_API void dcc_app_clear_state(dcc_app_t *app);
+DCC_LEGACY_API dcc_status_t dcc_app_extension_register(
     dcc_app_t *app,
     const dcc_app_extension_t *extension
 );
-DCC_API dcc_status_t dcc_app_apply(
+DCC_LEGACY_API dcc_status_t dcc_app_apply(
     dcc_app_t *app,
     const dcc_app_definition_t *definition
 );
-DCC_API dcc_status_t dcc_app_create_defined(
+DCC_LEGACY_API dcc_status_t dcc_app_create_defined(
     const dcc_app_options_t *options,
     const dcc_app_definition_t *definition,
     dcc_app_t **out
 );
-DCC_API dcc_status_t dcc_app_create_from_env_defined(
+DCC_LEGACY_API dcc_status_t dcc_app_create_from_env_defined(
     const char *token_env,
     const dcc_app_definition_t *definition,
     dcc_app_t **out
 );
-DCC_API dcc_status_t dcc_app_run_defined(
+DCC_LEGACY_API dcc_status_t dcc_app_run_defined(
     const dcc_app_options_t *options,
     const dcc_app_definition_t *definition
 );
-DCC_API dcc_status_t dcc_app_run_defined_with_signals(
+DCC_LEGACY_API dcc_status_t dcc_app_run_defined_with_signals(
     const dcc_app_options_t *options,
     const dcc_app_definition_t *definition
 );
-DCC_API dcc_status_t dcc_app_run_from_env_defined(
+DCC_LEGACY_API dcc_status_t dcc_app_run_from_env_defined(
     const char *token_env,
     const dcc_app_definition_t *definition
 );
-DCC_API dcc_status_t dcc_app_run_from_env_defined_with_signals(
+DCC_LEGACY_API dcc_status_t dcc_app_run_from_env_defined_with_signals(
     const char *token_env,
     const dcc_app_definition_t *definition
 );
-DCC_API dcc_status_t dcc_app_run_dotenv_defined(
+DCC_LEGACY_API dcc_status_t dcc_app_run_dotenv_defined(
     const char *token_env,
     const dcc_app_definition_t *definition
 );
-DCC_API dcc_status_t dcc_app_run_dotenv_defined_with_signals(
+DCC_LEGACY_API dcc_status_t dcc_app_run_dotenv_defined_with_signals(
     const char *token_env,
     const dcc_app_definition_t *definition
 );
-DCC_API dcc_status_t dcc_app_slash_typed(
+DCC_LEGACY_API dcc_status_t dcc_app_slash_typed(
     dcc_app_t *app,
     const dcc_app_typed_slash_command_t *command
 );
-DCC_API dcc_status_t dcc_app_subcommand_typed(
+DCC_LEGACY_API dcc_status_t dcc_app_subcommand_typed(
     dcc_app_t *app,
     const dcc_app_typed_subcommand_t *subcommand
 );
-DCC_API dcc_status_t dcc_app_autocomplete_typed(
+DCC_LEGACY_API dcc_status_t dcc_app_autocomplete_typed(
     dcc_app_t *app,
     const dcc_app_typed_autocomplete_t *autocomplete
 );
-DCC_API dcc_status_t dcc_app_modal_typed(
+DCC_LEGACY_API dcc_status_t dcc_app_modal_typed(
     dcc_app_t *app,
     const dcc_app_typed_modal_t *modal
 );
-DCC_API dcc_status_t dcc_app_modal_flow_register(
+DCC_LEGACY_API dcc_status_t dcc_app_modal_flow_register(
     dcc_app_t *app,
     const dcc_app_modal_flow_t *flow
 );
-DCC_API dcc_status_t dcc_app_button_typed(
+DCC_LEGACY_API dcc_status_t dcc_app_button_typed(
     dcc_app_t *app,
     const dcc_app_typed_component_t *component
 );
-DCC_API dcc_status_t dcc_app_select_typed(
+DCC_LEGACY_API dcc_status_t dcc_app_select_typed(
     dcc_app_t *app,
     const dcc_app_typed_component_t *component
 );
-DCC_API dcc_status_t dcc_app_auto_defer(dcc_app_t *app, uint64_t after_ms);
-DCC_API dcc_status_t dcc_app_auto_defer_ephemeral(dcc_app_t *app, uint64_t after_ms);
-DCC_API dcc_status_t dcc_app_disable_auto_defer(dcc_app_t *app);
-DCC_API dcc_status_t dcc_app_sync_commands_on_ready(
+DCC_LEGACY_API dcc_status_t dcc_app_auto_defer(dcc_app_t *app, uint64_t after_ms);
+DCC_LEGACY_API dcc_status_t dcc_app_auto_defer_ephemeral(dcc_app_t *app, uint64_t after_ms);
+DCC_LEGACY_API dcc_status_t dcc_app_disable_auto_defer(dcc_app_t *app);
+DCC_LEGACY_API dcc_status_t dcc_app_sync_commands_on_ready(
     dcc_app_t *app,
     const dcc_app_command_sync_options_t *options
 );
-DCC_API dcc_status_t dcc_app_disable_command_sync_on_ready(dcc_app_t *app);
-DCC_API void dcc_app_cooldown_options_init(dcc_app_cooldown_options_t *options);
-DCC_API dcc_status_t dcc_app_on(
+DCC_LEGACY_API dcc_status_t dcc_app_disable_command_sync_on_ready(dcc_app_t *app);
+DCC_LEGACY_API void dcc_app_cooldown_options_init(dcc_app_cooldown_options_t *options);
+DCC_LEGACY_API dcc_status_t dcc_app_on(
     dcc_app_t *app,
     dcc_event_type_t type,
     dcc_app_legacy_event_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_on_ready(
+DCC_LEGACY_API dcc_status_t dcc_app_on_ready(
     dcc_app_t *app,
     dcc_app_legacy_ready_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_on_ready_once(
+DCC_LEGACY_API dcc_status_t dcc_app_on_ready_once(
     dcc_app_t *app,
     dcc_app_legacy_ready_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_on_message_create(
+DCC_LEGACY_API dcc_status_t dcc_app_on_message_create(
     dcc_app_t *app,
     dcc_app_legacy_message_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_on_message_command(
+DCC_LEGACY_API dcc_status_t dcc_app_on_message_command(
     dcc_app_t *app,
     const char *prefix,
     const char *name,
     dcc_app_legacy_message_command_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_on_message_update(
+DCC_LEGACY_API dcc_status_t dcc_app_on_message_update(
     dcc_app_t *app,
     dcc_app_legacy_message_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_on_message_delete(
+DCC_LEGACY_API dcc_status_t dcc_app_on_message_delete(
     dcc_app_t *app,
     dcc_app_legacy_message_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_send(
+DCC_LEGACY_API dcc_status_t dcc_app_send(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const dcc_message_builder_t *message,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_send_with_id(
+DCC_LEGACY_API dcc_status_t dcc_app_send_with_id(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const dcc_message_builder_t *message,
     dcc_app_message_id_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_send_with_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_send_with_thread(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const dcc_message_builder_t *message,
@@ -666,7 +672,7 @@ DCC_API dcc_status_t dcc_app_send_with_thread(
     dcc_app_message_thread_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_send_with_thread_name(
+DCC_LEGACY_API dcc_status_t dcc_app_send_with_thread_name(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const dcc_message_builder_t *message,
@@ -674,21 +680,21 @@ DCC_API dcc_status_t dcc_app_send_with_thread_name(
     dcc_app_message_thread_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_send_text(
+DCC_LEGACY_API dcc_status_t dcc_app_send_text(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const char *content,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_send_text_with_id(
+DCC_LEGACY_API dcc_status_t dcc_app_send_text_with_id(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const char *content,
     dcc_app_message_id_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_send_text_with_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_send_text_with_thread(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const char *content,
@@ -696,112 +702,112 @@ DCC_API dcc_status_t dcc_app_send_text_with_thread(
     dcc_app_message_thread_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_send_json(
+DCC_LEGACY_API dcc_status_t dcc_app_send_json(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_channel(
+DCC_LEGACY_API dcc_status_t dcc_app_get_channel(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_infer_guild_id_from_channel(
+DCC_LEGACY_API dcc_status_t dcc_app_infer_guild_id_from_channel(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_app_infer_guild_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_channels(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_channels(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_channel(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_channel(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_channel_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_channel_params(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_channel_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_channel(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_channel(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_channel_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_channel_params(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const dcc_channel_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_channel(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_channel(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_trigger_channel_typing(
+DCC_LEGACY_API dcc_status_t dcc_app_trigger_channel_typing(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_follow_news_channel(
+DCC_LEGACY_API dcc_status_t dcc_app_follow_news_channel(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t webhook_channel_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_set_channel_voice_status(
+DCC_LEGACY_API dcc_status_t dcc_app_set_channel_voice_status(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const char *status,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_current_user_voice_state(
+DCC_LEGACY_API dcc_status_t dcc_app_get_current_user_voice_state(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_current_user_voice_state(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_current_user_voice_state(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_current_user_voice_state_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_current_user_voice_state_params(
     dcc_app_t *app,
     const dcc_voice_state_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_user_voice_state(
+DCC_LEGACY_API dcc_status_t dcc_app_get_user_voice_state(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_user_voice_state(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_user_voice_state(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
@@ -809,58 +815,58 @@ DCC_API dcc_status_t dcc_app_modify_user_voice_state(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_user_voice_state_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_user_voice_state_params(
     dcc_app_t *app,
     const dcc_voice_state_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_voice_regions(
+DCC_LEGACY_API dcc_status_t dcc_app_get_voice_regions(
     dcc_app_t *app,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_voice_regions(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_voice_regions(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_channel_positions(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_channel_positions(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_channel_positions_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_channel_positions_params(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_channel_positions_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_channel_invites(
+DCC_LEGACY_API dcc_status_t dcc_app_get_channel_invites(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_channel_invite(
+DCC_LEGACY_API dcc_status_t dcc_app_create_channel_invite(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_channel_invite_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_channel_invite_params(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const dcc_invite_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_channel_permission(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_channel_permission(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t overwrite_id,
@@ -868,40 +874,40 @@ DCC_API dcc_status_t dcc_app_modify_channel_permission(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_channel_permission_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_channel_permission_params(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const dcc_channel_permission_overwrite_t *overwrite,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_channel_permission(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_channel_permission(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t overwrite_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_roles(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_roles(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_role(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_role(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_role_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_role_params(
     dcc_app_t *app,
     const dcc_role_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_role(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_role(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t role_id,
@@ -909,13 +915,13 @@ DCC_API dcc_status_t dcc_app_modify_guild_role(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_role_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_role_params(
     dcc_app_t *app,
     const dcc_role_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_role_positions(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_role_positions(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_role_position_t *positions,
@@ -923,14 +929,14 @@ DCC_API dcc_status_t dcc_app_modify_guild_role_positions(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_guild_role(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_guild_role(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t role_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_edit_message(
+DCC_LEGACY_API dcc_status_t dcc_app_edit_message(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
@@ -938,7 +944,7 @@ DCC_API dcc_status_t dcc_app_edit_message(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_edit_message_text(
+DCC_LEGACY_API dcc_status_t dcc_app_edit_message_text(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
@@ -946,43 +952,35 @@ DCC_API dcc_status_t dcc_app_edit_message_text(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_message(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_message(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_crosspost_message(
+DCC_LEGACY_API dcc_status_t dcc_app_crosspost_message(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_pin_message(
+DCC_LEGACY_API dcc_status_t dcc_app_pin_message(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_unpin_message(
+DCC_LEGACY_API dcc_status_t dcc_app_unpin_message(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_add_message_reaction(
-    dcc_app_t *app,
-    dcc_snowflake_t channel_id,
-    dcc_snowflake_t message_id,
-    const char *reaction,
-    dcc_rest_cb cb,
-    void *user_data
-);
-DCC_API dcc_status_t dcc_app_delete_own_message_reaction(
+DCC_LEGACY_API dcc_status_t dcc_app_add_message_reaction(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
@@ -990,7 +988,15 @@ DCC_API dcc_status_t dcc_app_delete_own_message_reaction(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_user_message_reaction(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_own_message_reaction(
+    dcc_app_t *app,
+    dcc_snowflake_t channel_id,
+    dcc_snowflake_t message_id,
+    const char *reaction,
+    dcc_rest_cb cb,
+    void *user_data
+);
+DCC_LEGACY_API dcc_status_t dcc_app_delete_user_message_reaction(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
@@ -999,14 +1005,14 @@ DCC_API dcc_status_t dcc_app_delete_user_message_reaction(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_all_message_reactions(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_all_message_reactions(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_all_message_reactions_for_emoji(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_all_message_reactions_for_emoji(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
@@ -1014,7 +1020,7 @@ DCC_API dcc_status_t dcc_app_delete_all_message_reactions_for_emoji(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_thread_from_message(
+DCC_LEGACY_API dcc_status_t dcc_app_create_thread_from_message(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
@@ -1022,7 +1028,7 @@ DCC_API dcc_status_t dcc_app_create_thread_from_message(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_thread_from_message_name(
+DCC_LEGACY_API dcc_status_t dcc_app_create_thread_from_message_name(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t message_id,
@@ -1030,47 +1036,39 @@ DCC_API dcc_status_t dcc_app_create_thread_from_message_name(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_thread(
     dcc_app_t *app,
     dcc_snowflake_t thread_id,
     const dcc_thread_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_archive_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_archive_thread(
     dcc_app_t *app,
     dcc_snowflake_t thread_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_lock_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_lock_thread(
     dcc_app_t *app,
     dcc_snowflake_t thread_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_unlock_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_unlock_thread(
     dcc_app_t *app,
     dcc_snowflake_t thread_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_member(
+DCC_LEGACY_API dcc_status_t dcc_app_get_member(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_add_member_role(
-    dcc_app_t *app,
-    dcc_snowflake_t guild_id,
-    dcc_snowflake_t user_id,
-    dcc_snowflake_t role_id,
-    dcc_rest_cb cb,
-    void *user_data
-);
-DCC_API dcc_status_t dcc_app_remove_member_role(
+DCC_LEGACY_API dcc_status_t dcc_app_add_member_role(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
@@ -1078,7 +1076,15 @@ DCC_API dcc_status_t dcc_app_remove_member_role(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_set_member_timeout(
+DCC_LEGACY_API dcc_status_t dcc_app_remove_member_role(
+    dcc_app_t *app,
+    dcc_snowflake_t guild_id,
+    dcc_snowflake_t user_id,
+    dcc_snowflake_t role_id,
+    dcc_rest_cb cb,
+    void *user_data
+);
+DCC_LEGACY_API dcc_status_t dcc_app_set_member_timeout(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
@@ -1086,14 +1092,14 @@ DCC_API dcc_status_t dcc_app_set_member_timeout(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_clear_member_timeout(
+DCC_LEGACY_API dcc_status_t dcc_app_clear_member_timeout(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_move_member(
+DCC_LEGACY_API dcc_status_t dcc_app_move_member(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
@@ -1101,21 +1107,21 @@ DCC_API dcc_status_t dcc_app_move_member(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_remove_member(
+DCC_LEGACY_API dcc_status_t dcc_app_remove_member(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_bans(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_bans(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *query,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_bans_page(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_bans_page(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t before,
@@ -1124,14 +1130,14 @@ DCC_API dcc_status_t dcc_app_get_guild_bans_page(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_ban(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_ban(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_ban(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_ban(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
@@ -1139,7 +1145,7 @@ DCC_API dcc_status_t dcc_app_create_guild_ban(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_ban_seconds(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_ban_seconds(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
@@ -1147,27 +1153,27 @@ DCC_API dcc_status_t dcc_app_create_guild_ban_seconds(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_ban_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_ban_params(
     dcc_app_t *app,
     const dcc_guild_ban_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_guild_ban(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_guild_ban(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_audit_log(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_audit_log(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *query,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_audit_log_page(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_audit_log_page(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t user_id,
@@ -1178,33 +1184,33 @@ DCC_API dcc_status_t dcc_app_get_guild_audit_log_page(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_current_guild_member(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_current_guild_member(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_current_guild_member_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_current_guild_member_params(
     dcc_app_t *app,
     const dcc_current_guild_member_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_set_current_guild_member_nickname(
+DCC_LEGACY_API dcc_status_t dcc_app_set_current_guild_member_nickname(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_set_current_guild_member_nickname_params(
+DCC_LEGACY_API dcc_status_t dcc_app_set_current_guild_member_nickname_params(
     dcc_app_t *app,
     const dcc_guild_member_nickname_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_prune_count_options(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_prune_count_options(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     uint32_t days,
@@ -1213,7 +1219,7 @@ DCC_API dcc_status_t dcc_app_get_guild_prune_count_options(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_begin_guild_prune_options(
+DCC_LEGACY_API dcc_status_t dcc_app_begin_guild_prune_options(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     uint32_t days,
@@ -1223,19 +1229,19 @@ DCC_API dcc_status_t dcc_app_begin_guild_prune_options(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_begin_guild_prune_params(
+DCC_LEGACY_API dcc_status_t dcc_app_begin_guild_prune_params(
     dcc_app_t *app,
     const dcc_guild_prune_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_integrations(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_integrations(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_integration(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_integration(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t integration_id,
@@ -1243,113 +1249,113 @@ DCC_API dcc_status_t dcc_app_modify_guild_integration(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_guild_integration(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_guild_integration(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t integration_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_sync_guild_integration(
+DCC_LEGACY_API dcc_status_t dcc_app_sync_guild_integration(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t integration_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_widget(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_widget(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_widget(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_widget(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_widget_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_widget_params(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_guild_widget_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_vanity_url(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_vanity_url(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_onboarding(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_onboarding(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_onboarding(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_onboarding(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_onboarding_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_onboarding_params(
     dcc_app_t *app,
     const dcc_onboarding_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_welcome_screen(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_welcome_screen(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_welcome_screen(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_welcome_screen(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_welcome_screen_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_welcome_screen_params(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_welcome_screen_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_auto_moderation_rules(
+DCC_LEGACY_API dcc_status_t dcc_app_get_auto_moderation_rules(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_auto_moderation_rule(
+DCC_LEGACY_API dcc_status_t dcc_app_get_auto_moderation_rule(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t rule_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_auto_moderation_rule(
+DCC_LEGACY_API dcc_status_t dcc_app_create_auto_moderation_rule(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_auto_moderation_rule_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_auto_moderation_rule_params(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_auto_moderation_rule_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_auto_moderation_rule(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_auto_moderation_rule(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t rule_id,
@@ -1357,48 +1363,48 @@ DCC_API dcc_status_t dcc_app_modify_auto_moderation_rule(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_auto_moderation_rule_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_auto_moderation_rule_params(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_auto_moderation_rule_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_auto_moderation_rule(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_auto_moderation_rule(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t rule_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_emojis(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_emojis(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_emoji(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_emoji(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t emoji_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_emoji(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_emoji(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_emoji_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_emoji_params(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_emoji_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_emoji(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_emoji(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t emoji_id,
@@ -1406,34 +1412,34 @@ DCC_API dcc_status_t dcc_app_modify_guild_emoji(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_emoji_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_emoji_params(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_emoji_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_guild_emoji(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_guild_emoji(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t emoji_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_stickers(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_stickers(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_sticker(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_sticker(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t sticker_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_sticker_multipart(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_sticker_multipart(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_rest_multipart_field_t *fields,
@@ -1442,13 +1448,13 @@ DCC_API dcc_status_t dcc_app_create_guild_sticker_multipart(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_sticker_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_sticker_params(
     dcc_app_t *app,
     const dcc_guild_sticker_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_sticker(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_sticker(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t sticker_id,
@@ -1456,52 +1462,52 @@ DCC_API dcc_status_t dcc_app_modify_guild_sticker(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_guild_sticker(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_guild_sticker(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t sticker_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_sticker(
+DCC_LEGACY_API dcc_status_t dcc_app_get_sticker(
     dcc_app_t *app,
     dcc_snowflake_t sticker_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_sticker_packs(
+DCC_LEGACY_API dcc_status_t dcc_app_get_sticker_packs(
     dcc_app_t *app,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_guild_message_search(
+DCC_LEGACY_API dcc_status_t dcc_app_guild_message_search(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *query,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_guild_message_search_params(
+DCC_LEGACY_API dcc_status_t dcc_app_guild_message_search_params(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const dcc_message_search_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_scheduled_events(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_scheduled_events(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *query,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_scheduled_events_with_user_count(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_scheduled_events_with_user_count(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_scheduled_event(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_scheduled_event(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t event_id,
@@ -1509,27 +1515,27 @@ DCC_API dcc_status_t dcc_app_get_guild_scheduled_event(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_scheduled_event_with_user_count(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_scheduled_event_with_user_count(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t event_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_scheduled_event(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_scheduled_event(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_scheduled_event_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_scheduled_event_params(
     dcc_app_t *app,
     const dcc_scheduled_event_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_scheduled_event(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_scheduled_event(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t event_id,
@@ -1537,20 +1543,20 @@ DCC_API dcc_status_t dcc_app_modify_guild_scheduled_event(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_scheduled_event_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_scheduled_event_params(
     dcc_app_t *app,
     const dcc_scheduled_event_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_guild_scheduled_event(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_guild_scheduled_event(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t event_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_scheduled_event_users(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_scheduled_event_users(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t event_id,
@@ -1558,7 +1564,7 @@ DCC_API dcc_status_t dcc_app_get_guild_scheduled_event_users(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_scheduled_event_users_page(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_scheduled_event_users_page(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_snowflake_t event_id,
@@ -1568,13 +1574,13 @@ DCC_API dcc_status_t dcc_app_get_guild_scheduled_event_users_page(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_managed_message_publish_latest(
+DCC_LEGACY_API dcc_status_t dcc_app_managed_message_publish_latest(
     dcc_app_t *app,
     const dcc_managed_message_options_t *options,
     dcc_managed_message_publish_fn cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_managed_message_publish_latest_store(
+DCC_LEGACY_API dcc_status_t dcc_app_managed_message_publish_latest_store(
     dcc_app_t *app,
     const char *key,
     dcc_snowflake_t channel_id,
@@ -1582,210 +1588,210 @@ DCC_API dcc_status_t dcc_app_managed_message_publish_latest_store(
     dcc_managed_message_publish_fn cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_wait_for_interaction(
+DCC_LEGACY_API dcc_status_t dcc_app_wait_for_interaction(
     dcc_app_t *app,
     dcc_event_type_t type,
     uint32_t timeout_ms,
     dcc_app_wait_result_t *out
 );
-DCC_API void dcc_app_wait_filter_init(dcc_app_wait_filter_t *filter);
-DCC_API dcc_status_t dcc_app_wait_filter_from_ctx(
+DCC_LEGACY_API void dcc_app_wait_filter_init(dcc_app_wait_filter_t *filter);
+DCC_LEGACY_API dcc_status_t dcc_app_wait_filter_from_ctx(
     const dcc_ctx_t *ctx,
     dcc_app_wait_filter_t *out
 );
-DCC_API dcc_status_t dcc_app_wait_for_interaction_filtered(
+DCC_LEGACY_API dcc_status_t dcc_app_wait_for_interaction_filtered(
     dcc_app_t *app,
     dcc_event_type_t type,
     const dcc_app_wait_filter_t *filter,
     uint32_t timeout_ms,
     dcc_app_wait_result_t *out
 );
-DCC_API dcc_status_t dcc_app_wait_for_component(
+DCC_LEGACY_API dcc_status_t dcc_app_wait_for_component(
     dcc_app_t *app,
     uint32_t timeout_ms,
     dcc_app_wait_result_t *out
 );
-DCC_API dcc_status_t dcc_app_wait_for_component_filtered(
+DCC_LEGACY_API dcc_status_t dcc_app_wait_for_component_filtered(
     dcc_app_t *app,
     const dcc_app_wait_filter_t *filter,
     uint32_t timeout_ms,
     dcc_app_wait_result_t *out
 );
-DCC_API dcc_status_t dcc_app_wait_for_button(
+DCC_LEGACY_API dcc_status_t dcc_app_wait_for_button(
     dcc_app_t *app,
     uint32_t timeout_ms,
     dcc_app_wait_result_t *out
 );
-DCC_API dcc_status_t dcc_app_wait_for_select(
+DCC_LEGACY_API dcc_status_t dcc_app_wait_for_select(
     dcc_app_t *app,
     uint32_t timeout_ms,
     dcc_app_wait_result_t *out
 );
-DCC_API dcc_status_t dcc_app_wait_for_modal(
+DCC_LEGACY_API dcc_status_t dcc_app_wait_for_modal(
     dcc_app_t *app,
     uint32_t timeout_ms,
     dcc_app_wait_result_t *out
 );
-DCC_API dcc_status_t dcc_app_wait_for_message(
+DCC_LEGACY_API dcc_status_t dcc_app_wait_for_message(
     dcc_app_t *app,
     dcc_event_type_t type,
     uint32_t timeout_ms,
     dcc_app_wait_result_t *out
 );
-DCC_API dcc_status_t dcc_app_wait_for_message_filtered(
+DCC_LEGACY_API dcc_status_t dcc_app_wait_for_message_filtered(
     dcc_app_t *app,
     dcc_event_type_t type,
     const dcc_app_wait_filter_t *filter,
     uint32_t timeout_ms,
     dcc_app_wait_result_t *out
 );
-DCC_API dcc_event_type_t dcc_app_wait_result_type(const dcc_app_wait_result_t *result);
-DCC_API const dcc_interaction_t *dcc_app_wait_result_interaction(
+DCC_LEGACY_API dcc_event_type_t dcc_app_wait_result_type(const dcc_app_wait_result_t *result);
+DCC_LEGACY_API const dcc_interaction_t *dcc_app_wait_result_interaction(
     const dcc_app_wait_result_t *result
 );
-DCC_API const dcc_message_t *dcc_app_wait_result_message(const dcc_app_wait_result_t *result);
-DCC_API dcc_snowflake_t dcc_app_wait_result_id(const dcc_app_wait_result_t *result);
-DCC_API dcc_snowflake_t dcc_app_wait_result_user_id(const dcc_app_wait_result_t *result);
-DCC_API dcc_snowflake_t dcc_app_wait_result_channel_id(const dcc_app_wait_result_t *result);
-DCC_API dcc_snowflake_t dcc_app_wait_result_guild_id(const dcc_app_wait_result_t *result);
-DCC_API const char *dcc_app_wait_result_custom_id(const dcc_app_wait_result_t *result);
-DCC_API const char *dcc_app_wait_result_message_content(
+DCC_LEGACY_API const dcc_message_t *dcc_app_wait_result_message(const dcc_app_wait_result_t *result);
+DCC_LEGACY_API dcc_snowflake_t dcc_app_wait_result_id(const dcc_app_wait_result_t *result);
+DCC_LEGACY_API dcc_snowflake_t dcc_app_wait_result_user_id(const dcc_app_wait_result_t *result);
+DCC_LEGACY_API dcc_snowflake_t dcc_app_wait_result_channel_id(const dcc_app_wait_result_t *result);
+DCC_LEGACY_API dcc_snowflake_t dcc_app_wait_result_guild_id(const dcc_app_wait_result_t *result);
+DCC_LEGACY_API const char *dcc_app_wait_result_custom_id(const dcc_app_wait_result_t *result);
+DCC_LEGACY_API const char *dcc_app_wait_result_message_content(
     const dcc_app_wait_result_t *result,
     const char *fallback
 );
-DCC_API size_t dcc_app_wait_result_value_count(const dcc_app_wait_result_t *result);
-DCC_API const char *dcc_app_wait_result_value(
+DCC_LEGACY_API size_t dcc_app_wait_result_value_count(const dcc_app_wait_result_t *result);
+DCC_LEGACY_API const char *dcc_app_wait_result_value(
     const dcc_app_wait_result_t *result,
     size_t index
 );
-DCC_API const dcc_interaction_form_field_t *dcc_app_wait_result_form_field(
+DCC_LEGACY_API const dcc_interaction_form_field_t *dcc_app_wait_result_form_field(
     const dcc_app_wait_result_t *result,
     const char *custom_id
 );
-DCC_API const char *dcc_app_wait_result_form_string(
+DCC_LEGACY_API const char *dcc_app_wait_result_form_string(
     const dcc_app_wait_result_t *result,
     const char *custom_id,
     const char *fallback
 );
-DCC_API uint8_t dcc_app_wait_result_form_bool(
+DCC_LEGACY_API uint8_t dcc_app_wait_result_form_bool(
     const dcc_app_wait_result_t *result,
     const char *custom_id,
     uint8_t fallback
 );
-DCC_API size_t dcc_app_wait_result_form_value_count(
+DCC_LEGACY_API size_t dcc_app_wait_result_form_value_count(
     const dcc_app_wait_result_t *result,
     const char *custom_id
 );
-DCC_API const char *dcc_app_wait_result_form_value(
+DCC_LEGACY_API const char *dcc_app_wait_result_form_value(
     const dcc_app_wait_result_t *result,
     const char *custom_id,
     size_t index
 );
-DCC_API void dcc_app_wait_result_deinit(dcc_app_wait_result_t *result);
-DCC_API dcc_status_t dcc_app_use(
+DCC_LEGACY_API void dcc_app_wait_result_deinit(dcc_app_wait_result_t *result);
+DCC_LEGACY_API dcc_status_t dcc_app_use(
     dcc_app_t *app,
     dcc_app_middleware_fn middleware,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_use_guild_only(dcc_app_t *app);
-DCC_API dcc_status_t dcc_app_use_dm_only(dcc_app_t *app);
-DCC_API dcc_status_t dcc_app_use_nsfw_only(dcc_app_t *app);
-DCC_API dcc_status_t dcc_app_use_channel_types(
+DCC_LEGACY_API dcc_status_t dcc_app_use_guild_only(dcc_app_t *app);
+DCC_LEGACY_API dcc_status_t dcc_app_use_dm_only(dcc_app_t *app);
+DCC_LEGACY_API dcc_status_t dcc_app_use_nsfw_only(dcc_app_t *app);
+DCC_LEGACY_API dcc_status_t dcc_app_use_channel_types(
     dcc_app_t *app,
     const uint32_t *channel_types,
     size_t channel_type_count
 );
-DCC_API dcc_status_t dcc_app_use_owner(dcc_app_t *app, dcc_snowflake_t user_id);
-DCC_API dcc_status_t dcc_app_use_user_allowlist(
+DCC_LEGACY_API dcc_status_t dcc_app_use_owner(dcc_app_t *app, dcc_snowflake_t user_id);
+DCC_LEGACY_API dcc_status_t dcc_app_use_user_allowlist(
     dcc_app_t *app,
     const dcc_snowflake_t *user_ids,
     size_t user_id_count
 );
-DCC_API dcc_status_t dcc_app_use_required_permissions(dcc_app_t *app, dcc_permission_t permissions);
-DCC_API dcc_status_t dcc_app_use_required_roles(
+DCC_LEGACY_API dcc_status_t dcc_app_use_required_permissions(dcc_app_t *app, dcc_permission_t permissions);
+DCC_LEGACY_API dcc_status_t dcc_app_use_required_roles(
     dcc_app_t *app,
     const dcc_snowflake_t *role_ids,
     size_t role_id_count
 );
-DCC_API dcc_status_t dcc_app_use_any_role(
+DCC_LEGACY_API dcc_status_t dcc_app_use_any_role(
     dcc_app_t *app,
     const dcc_snowflake_t *role_ids,
     size_t role_id_count
 );
-DCC_API dcc_status_t dcc_app_use_check(
+DCC_LEGACY_API dcc_status_t dcc_app_use_check(
     dcc_app_t *app,
     const dcc_app_check_t *check
 );
-DCC_API dcc_status_t dcc_app_use_cooldown(
+DCC_LEGACY_API dcc_status_t dcc_app_use_cooldown(
     dcc_app_t *app,
     const dcc_app_cooldown_options_t *options
 );
-DCC_API dcc_status_t dcc_app_route_use(
+DCC_LEGACY_API dcc_status_t dcc_app_route_use(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     dcc_app_middleware_fn middleware,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_route_use_guild_only(dcc_app_t *app, dcc_app_route_id_t route_id);
-DCC_API dcc_status_t dcc_app_route_use_dm_only(dcc_app_t *app, dcc_app_route_id_t route_id);
-DCC_API dcc_status_t dcc_app_route_use_nsfw_only(dcc_app_t *app, dcc_app_route_id_t route_id);
-DCC_API dcc_status_t dcc_app_route_use_channel_types(
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_guild_only(dcc_app_t *app, dcc_app_route_id_t route_id);
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_dm_only(dcc_app_t *app, dcc_app_route_id_t route_id);
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_nsfw_only(dcc_app_t *app, dcc_app_route_id_t route_id);
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_channel_types(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     const uint32_t *channel_types,
     size_t channel_type_count
 );
-DCC_API dcc_status_t dcc_app_route_use_owner(
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_owner(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     dcc_snowflake_t user_id
 );
-DCC_API dcc_status_t dcc_app_route_use_user_allowlist(
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_user_allowlist(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     const dcc_snowflake_t *user_ids,
     size_t user_id_count
 );
-DCC_API dcc_status_t dcc_app_route_use_required_permissions(
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_required_permissions(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     dcc_permission_t permissions
 );
-DCC_API dcc_status_t dcc_app_route_use_required_roles(
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_required_roles(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     const dcc_snowflake_t *role_ids,
     size_t role_id_count
 );
-DCC_API dcc_status_t dcc_app_route_use_any_role(
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_any_role(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     const dcc_snowflake_t *role_ids,
     size_t role_id_count
 );
-DCC_API dcc_status_t dcc_app_route_use_check(
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_check(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     const dcc_app_check_t *check
 );
-DCC_API dcc_status_t dcc_app_route_use_cooldown(
+DCC_LEGACY_API dcc_status_t dcc_app_route_use_cooldown(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     const dcc_app_cooldown_options_t *options
 );
-DCC_API dcc_status_t dcc_app_route_apply_policy(
+DCC_LEGACY_API dcc_status_t dcc_app_route_apply_policy(
     dcc_app_t *app,
     dcc_app_route_id_t route_id,
     const dcc_app_route_policy_t *policy
 );
-DCC_API dcc_status_t dcc_app_slash(
+DCC_LEGACY_API dcc_status_t dcc_app_slash(
     dcc_app_t *app,
     const char *name,
     const char *description,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_slash_route(
+DCC_LEGACY_API dcc_status_t dcc_app_slash_route(
     dcc_app_t *app,
     const char *name,
     const char *description,
@@ -1793,53 +1799,53 @@ DCC_API dcc_status_t dcc_app_slash_route(
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_slash_builder(
+DCC_LEGACY_API dcc_status_t dcc_app_slash_builder(
     dcc_app_t *app,
     const dcc_application_command_builder_t *command,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_slash_builder_route(
+DCC_LEGACY_API dcc_status_t dcc_app_slash_builder_route(
     dcc_app_t *app,
     const dcc_application_command_builder_t *command,
     dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_user_context_menu(
+DCC_LEGACY_API dcc_status_t dcc_app_user_context_menu(
     dcc_app_t *app,
     const char *name,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_user_context_menu_route(
+DCC_LEGACY_API dcc_status_t dcc_app_user_context_menu_route(
     dcc_app_t *app,
     const char *name,
     dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_message_context_menu(
+DCC_LEGACY_API dcc_status_t dcc_app_message_context_menu(
     dcc_app_t *app,
     const char *name,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_message_context_menu_route(
+DCC_LEGACY_API dcc_status_t dcc_app_message_context_menu_route(
     dcc_app_t *app,
     const char *name,
     dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_subcommand(
+DCC_LEGACY_API dcc_status_t dcc_app_subcommand(
     dcc_app_t *app,
     const char *command_name,
     const char *subcommand_path,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_subcommand_route(
+DCC_LEGACY_API dcc_status_t dcc_app_subcommand_route(
     dcc_app_t *app,
     const char *command_name,
     const char *subcommand_path,
@@ -1847,268 +1853,268 @@ DCC_API dcc_status_t dcc_app_subcommand_route(
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_autocomplete(
+DCC_LEGACY_API dcc_status_t dcc_app_autocomplete(
     dcc_app_t *app,
     const char *name,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_autocomplete_route(
+DCC_LEGACY_API dcc_status_t dcc_app_autocomplete_route(
     dcc_app_t *app,
     const char *name,
     dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_button(
+DCC_LEGACY_API dcc_status_t dcc_app_button(
     dcc_app_t *app,
     const char *custom_id,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_button_route(
-    dcc_app_t *app,
-    const char *custom_id,
-    dcc_app_legacy_handler_fn handler,
-    void *user_data,
-    dcc_app_route_id_t *out_route
-);
-DCC_API dcc_status_t dcc_app_button_prefix(
-    dcc_app_t *app,
-    const char *custom_id_prefix,
-    dcc_app_legacy_handler_fn handler,
-    void *user_data
-);
-DCC_API dcc_status_t dcc_app_button_prefix_route(
-    dcc_app_t *app,
-    const char *custom_id_prefix,
-    dcc_app_legacy_handler_fn handler,
-    void *user_data,
-    dcc_app_route_id_t *out_route
-);
-DCC_API dcc_status_t dcc_app_select(
-    dcc_app_t *app,
-    const char *custom_id,
-    dcc_app_legacy_handler_fn handler,
-    void *user_data
-);
-DCC_API dcc_status_t dcc_app_select_route(
+DCC_LEGACY_API dcc_status_t dcc_app_button_route(
     dcc_app_t *app,
     const char *custom_id,
     dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_select_prefix(
+DCC_LEGACY_API dcc_status_t dcc_app_button_prefix(
     dcc_app_t *app,
     const char *custom_id_prefix,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_select_prefix_route(
+DCC_LEGACY_API dcc_status_t dcc_app_button_prefix_route(
     dcc_app_t *app,
     const char *custom_id_prefix,
     dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_modal(
+DCC_LEGACY_API dcc_status_t dcc_app_select(
     dcc_app_t *app,
     const char *custom_id,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modal_route(
+DCC_LEGACY_API dcc_status_t dcc_app_select_route(
     dcc_app_t *app,
     const char *custom_id,
     dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_modal_prefix(
+DCC_LEGACY_API dcc_status_t dcc_app_select_prefix(
     dcc_app_t *app,
     const char *custom_id_prefix,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modal_prefix_route(
+DCC_LEGACY_API dcc_status_t dcc_app_select_prefix_route(
     dcc_app_t *app,
     const char *custom_id_prefix,
     dcc_app_legacy_handler_fn handler,
     void *user_data,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_component_session(
+DCC_LEGACY_API dcc_status_t dcc_app_modal(
+    dcc_app_t *app,
+    const char *custom_id,
+    dcc_app_legacy_handler_fn handler,
+    void *user_data
+);
+DCC_LEGACY_API dcc_status_t dcc_app_modal_route(
+    dcc_app_t *app,
+    const char *custom_id,
+    dcc_app_legacy_handler_fn handler,
+    void *user_data,
+    dcc_app_route_id_t *out_route
+);
+DCC_LEGACY_API dcc_status_t dcc_app_modal_prefix(
+    dcc_app_t *app,
+    const char *custom_id_prefix,
+    dcc_app_legacy_handler_fn handler,
+    void *user_data
+);
+DCC_LEGACY_API dcc_status_t dcc_app_modal_prefix_route(
+    dcc_app_t *app,
+    const char *custom_id_prefix,
+    dcc_app_legacy_handler_fn handler,
+    void *user_data,
+    dcc_app_route_id_t *out_route
+);
+DCC_LEGACY_API dcc_status_t dcc_app_component_session(
     dcc_app_t *app,
     const dcc_component_session_t *session,
     const dcc_component_session_listener_options_t *options,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_component_session_store(
+DCC_LEGACY_API dcc_status_t dcc_app_component_session_store(
     dcc_app_t *app,
     const dcc_component_session_store_t *store,
     const dcc_component_session_listener_options_t *options,
     dcc_app_legacy_handler_fn handler,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_view_register(dcc_app_t *app, const dcc_app_view_t *view);
-DCC_API dcc_status_t dcc_app_route_group_init(
+DCC_LEGACY_API dcc_status_t dcc_app_view_register(dcc_app_t *app, const dcc_app_view_t *view);
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_init(
     dcc_app_route_group_t *group,
     dcc_app_t *app,
     const char *custom_id_prefix,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_route_group_button(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_button(
     const dcc_app_route_group_t *group,
     const char *action,
     dcc_app_legacy_handler_fn handler
 );
-DCC_API dcc_status_t dcc_app_route_group_button_route(
-    const dcc_app_route_group_t *group,
-    const char *action,
-    dcc_app_legacy_handler_fn handler,
-    dcc_app_route_id_t *out_route
-);
-DCC_API dcc_status_t dcc_app_route_group_button_prefix(
-    const dcc_app_route_group_t *group,
-    const char *action_prefix,
-    dcc_app_legacy_handler_fn handler
-);
-DCC_API dcc_status_t dcc_app_route_group_button_prefix_route(
-    const dcc_app_route_group_t *group,
-    const char *action_prefix,
-    dcc_app_legacy_handler_fn handler,
-    dcc_app_route_id_t *out_route
-);
-DCC_API dcc_status_t dcc_app_route_group_select(
-    const dcc_app_route_group_t *group,
-    const char *action,
-    dcc_app_legacy_handler_fn handler
-);
-DCC_API dcc_status_t dcc_app_route_group_select_route(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_button_route(
     const dcc_app_route_group_t *group,
     const char *action,
     dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_route_group_select_prefix(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_button_prefix(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
     dcc_app_legacy_handler_fn handler
 );
-DCC_API dcc_status_t dcc_app_route_group_select_prefix_route(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_button_prefix_route(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
     dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_route_group_modal(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_select(
     const dcc_app_route_group_t *group,
     const char *action,
     dcc_app_legacy_handler_fn handler
 );
-DCC_API dcc_status_t dcc_app_route_group_modal_route(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_select_route(
     const dcc_app_route_group_t *group,
     const char *action,
     dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_route_group_modal_prefix(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_select_prefix(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
     dcc_app_legacy_handler_fn handler
 );
-DCC_API dcc_status_t dcc_app_route_group_modal_prefix_route(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_select_prefix_route(
     const dcc_app_route_group_t *group,
     const char *action_prefix,
     dcc_app_legacy_handler_fn handler,
     dcc_app_route_id_t *out_route
 );
-DCC_API dcc_status_t dcc_app_route_group_view_register(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_modal(
+    const dcc_app_route_group_t *group,
+    const char *action,
+    dcc_app_legacy_handler_fn handler
+);
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_modal_route(
+    const dcc_app_route_group_t *group,
+    const char *action,
+    dcc_app_legacy_handler_fn handler,
+    dcc_app_route_id_t *out_route
+);
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_modal_prefix(
+    const dcc_app_route_group_t *group,
+    const char *action_prefix,
+    dcc_app_legacy_handler_fn handler
+);
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_modal_prefix_route(
+    const dcc_app_route_group_t *group,
+    const char *action_prefix,
+    dcc_app_legacy_handler_fn handler,
+    dcc_app_route_id_t *out_route
+);
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_view_register(
     const dcc_app_route_group_t *group,
     const dcc_app_view_t *view
 );
-DCC_API dcc_status_t dcc_app_route_group_use(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use(
     const dcc_app_route_group_t *group,
     dcc_app_middleware_fn middleware,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_route_group_use_guild_only(const dcc_app_route_group_t *group);
-DCC_API dcc_status_t dcc_app_route_group_use_dm_only(const dcc_app_route_group_t *group);
-DCC_API dcc_status_t dcc_app_route_group_use_nsfw_only(const dcc_app_route_group_t *group);
-DCC_API dcc_status_t dcc_app_route_group_use_channel_types(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_guild_only(const dcc_app_route_group_t *group);
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_dm_only(const dcc_app_route_group_t *group);
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_nsfw_only(const dcc_app_route_group_t *group);
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_channel_types(
     const dcc_app_route_group_t *group,
     const uint32_t *channel_types,
     size_t channel_type_count
 );
-DCC_API dcc_status_t dcc_app_route_group_use_owner(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_owner(
     const dcc_app_route_group_t *group,
     dcc_snowflake_t user_id
 );
-DCC_API dcc_status_t dcc_app_route_group_use_user_allowlist(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_user_allowlist(
     const dcc_app_route_group_t *group,
     const dcc_snowflake_t *user_ids,
     size_t user_id_count
 );
-DCC_API dcc_status_t dcc_app_route_group_use_required_permissions(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_required_permissions(
     const dcc_app_route_group_t *group,
     dcc_permission_t permissions
 );
-DCC_API dcc_status_t dcc_app_route_group_use_required_roles(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_required_roles(
     const dcc_app_route_group_t *group,
     const dcc_snowflake_t *role_ids,
     size_t role_id_count
 );
-DCC_API dcc_status_t dcc_app_route_group_use_any_role(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_any_role(
     const dcc_app_route_group_t *group,
     const dcc_snowflake_t *role_ids,
     size_t role_id_count
 );
-DCC_API dcc_status_t dcc_app_route_group_use_check(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_check(
     const dcc_app_route_group_t *group,
     const dcc_app_check_t *check
 );
-DCC_API dcc_status_t dcc_app_route_group_use_cooldown(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_use_cooldown(
     const dcc_app_route_group_t *group,
     const dcc_app_cooldown_options_t *options
 );
-DCC_API dcc_status_t dcc_app_route_group_apply_policy(
+DCC_LEGACY_API dcc_status_t dcc_app_route_group_apply_policy(
     const dcc_app_route_group_t *group,
     const dcc_app_route_policy_t *policy
 );
 
-DCC_API dcc_status_t dcc_app_every_ms(
+DCC_LEGACY_API dcc_status_t dcc_app_every_ms(
     dcc_app_t *app,
     uint64_t interval_ms,
     dcc_app_legacy_task_fn fn,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_every_seconds(
+DCC_LEGACY_API dcc_status_t dcc_app_every_seconds(
     dcc_app_t *app,
     uint64_t interval_seconds,
     dcc_app_legacy_task_fn fn,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_every_minutes(
+DCC_LEGACY_API dcc_status_t dcc_app_every_minutes(
     dcc_app_t *app,
     uint64_t interval_minutes,
     dcc_app_legacy_task_fn fn,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_every_hours(
+DCC_LEGACY_API dcc_status_t dcc_app_every_hours(
     dcc_app_t *app,
     uint64_t interval_hours,
     dcc_app_legacy_task_fn fn,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_every_kst(
+DCC_LEGACY_API dcc_status_t dcc_app_every_kst(
     dcc_app_t *app,
     const char *hhmm,
     dcc_app_legacy_task_fn fn,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_every_day_at_kst(
+DCC_LEGACY_API dcc_status_t dcc_app_every_day_at_kst(
     dcc_app_t *app,
     uint8_t hour,
     uint8_t minute,
@@ -2116,14 +2122,14 @@ DCC_API dcc_status_t dcc_app_every_day_at_kst(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_app_build_command_plan(
+DCC_LEGACY_API dcc_status_t dcc_app_build_command_plan(
     dcc_app_t *app,
     const dcc_command_registry_options_t *options,
     const dcc_command_registry_remote_entry_t *remote,
     size_t remote_count,
     dcc_command_registry_plan_t *out
 );
-DCC_API dcc_status_t dcc_app_sync_commands_from_json(
+DCC_LEGACY_API dcc_status_t dcc_app_sync_commands_from_json(
     dcc_app_t *app,
     dcc_snowflake_t application_id,
     const dcc_command_registry_options_t *options,
@@ -2133,7 +2139,7 @@ DCC_API dcc_status_t dcc_app_sync_commands_from_json(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_apply_command_plan(
+DCC_LEGACY_API dcc_status_t dcc_app_apply_command_plan(
     dcc_app_t *app,
     dcc_snowflake_t application_id,
     const dcc_command_registry_options_t *options,
@@ -2142,94 +2148,94 @@ DCC_API dcc_status_t dcc_app_apply_command_plan(
     void *user_data
 );
 
-DCC_API dcc_app_t *dcc_ctx_app(const dcc_ctx_t *ctx);
-DCC_API const dcc_event_t *dcc_ctx_event(const dcc_ctx_t *ctx);
-DCC_API dcc_interaction_flow_t *dcc_ctx_flow(dcc_ctx_t *ctx);
-DCC_API void *dcc_ctx_user_data(const dcc_ctx_t *ctx);
-DCC_API void *dcc_ctx_state(const dcc_ctx_t *ctx);
-DCC_API dcc_event_type_t dcc_ctx_event_type(const dcc_ctx_t *ctx);
-DCC_API dcc_snowflake_t dcc_ctx_application_id(const dcc_ctx_t *ctx);
-DCC_API dcc_snowflake_t dcc_ctx_guild_id(const dcc_ctx_t *ctx);
-DCC_API dcc_snowflake_t dcc_ctx_channel_id(const dcc_ctx_t *ctx);
-DCC_API dcc_status_t dcc_ctx_channel_type(const dcc_ctx_t *ctx, uint32_t *out_type);
-DCC_API uint8_t dcc_ctx_channel_is_type(const dcc_ctx_t *ctx, uint32_t channel_type);
-DCC_API uint8_t dcc_ctx_channel_is_nsfw(const dcc_ctx_t *ctx);
-DCC_API dcc_snowflake_t dcc_ctx_command_id(const dcc_ctx_t *ctx);
-DCC_API dcc_snowflake_t dcc_ctx_message_id(const dcc_ctx_t *ctx);
-DCC_API dcc_snowflake_t dcc_ctx_target_id(const dcc_ctx_t *ctx);
-DCC_API dcc_snowflake_t dcc_ctx_user_id(const dcc_ctx_t *ctx);
-DCC_API const dcc_guild_t *dcc_ctx_guild(const dcc_ctx_t *ctx);
-DCC_API const dcc_channel_t *dcc_ctx_channel(const dcc_ctx_t *ctx);
-DCC_API const dcc_user_t *dcc_ctx_user(const dcc_ctx_t *ctx);
-DCC_API const dcc_member_t *dcc_ctx_member(const dcc_ctx_t *ctx);
-DCC_API const dcc_user_t *dcc_ctx_resolved_user(const dcc_ctx_t *ctx, dcc_snowflake_t id);
-DCC_API const dcc_member_t *dcc_ctx_resolved_member(const dcc_ctx_t *ctx, dcc_snowflake_t user_id);
-DCC_API const dcc_role_t *dcc_ctx_resolved_role(const dcc_ctx_t *ctx, dcc_snowflake_t id);
-DCC_API const dcc_channel_t *dcc_ctx_resolved_channel(const dcc_ctx_t *ctx, dcc_snowflake_t id);
-DCC_API const dcc_message_t *dcc_ctx_resolved_message(const dcc_ctx_t *ctx, dcc_snowflake_t id);
-DCC_API const dcc_attachment_t *dcc_ctx_resolved_attachment(const dcc_ctx_t *ctx, dcc_snowflake_t id);
-DCC_API const dcc_user_t *dcc_ctx_target_user(const dcc_ctx_t *ctx);
-DCC_API const dcc_member_t *dcc_ctx_target_member(const dcc_ctx_t *ctx);
-DCC_API const dcc_role_t *dcc_ctx_target_role(const dcc_ctx_t *ctx);
-DCC_API const dcc_channel_t *dcc_ctx_target_channel(const dcc_ctx_t *ctx);
-DCC_API const dcc_message_t *dcc_ctx_target_message(const dcc_ctx_t *ctx);
-DCC_API uint8_t dcc_ctx_has_member_permissions(const dcc_ctx_t *ctx);
-DCC_API dcc_permission_t dcc_ctx_member_permissions(const dcc_ctx_t *ctx);
-DCC_API uint8_t dcc_ctx_member_has_permissions(const dcc_ctx_t *ctx, dcc_permission_t permissions);
-DCC_API uint8_t dcc_ctx_member_has_role(const dcc_ctx_t *ctx, dcc_snowflake_t role_id);
-DCC_API uint8_t dcc_ctx_member_has_any_role(
+DCC_LEGACY_API dcc_app_t *dcc_ctx_app(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_event_t *dcc_ctx_event(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_interaction_flow_t *dcc_ctx_flow(dcc_ctx_t *ctx);
+DCC_LEGACY_API void *dcc_ctx_user_data(const dcc_ctx_t *ctx);
+DCC_LEGACY_API void *dcc_ctx_state(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_event_type_t dcc_ctx_event_type(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_snowflake_t dcc_ctx_application_id(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_snowflake_t dcc_ctx_guild_id(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_snowflake_t dcc_ctx_channel_id(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_status_t dcc_ctx_channel_type(const dcc_ctx_t *ctx, uint32_t *out_type);
+DCC_LEGACY_API uint8_t dcc_ctx_channel_is_type(const dcc_ctx_t *ctx, uint32_t channel_type);
+DCC_LEGACY_API uint8_t dcc_ctx_channel_is_nsfw(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_snowflake_t dcc_ctx_command_id(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_snowflake_t dcc_ctx_message_id(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_snowflake_t dcc_ctx_target_id(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_snowflake_t dcc_ctx_user_id(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_guild_t *dcc_ctx_guild(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_channel_t *dcc_ctx_channel(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_user_t *dcc_ctx_user(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_member_t *dcc_ctx_member(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_user_t *dcc_ctx_resolved_user(const dcc_ctx_t *ctx, dcc_snowflake_t id);
+DCC_LEGACY_API const dcc_member_t *dcc_ctx_resolved_member(const dcc_ctx_t *ctx, dcc_snowflake_t user_id);
+DCC_LEGACY_API const dcc_role_t *dcc_ctx_resolved_role(const dcc_ctx_t *ctx, dcc_snowflake_t id);
+DCC_LEGACY_API const dcc_channel_t *dcc_ctx_resolved_channel(const dcc_ctx_t *ctx, dcc_snowflake_t id);
+DCC_LEGACY_API const dcc_message_t *dcc_ctx_resolved_message(const dcc_ctx_t *ctx, dcc_snowflake_t id);
+DCC_LEGACY_API const dcc_attachment_t *dcc_ctx_resolved_attachment(const dcc_ctx_t *ctx, dcc_snowflake_t id);
+DCC_LEGACY_API const dcc_user_t *dcc_ctx_target_user(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_member_t *dcc_ctx_target_member(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_role_t *dcc_ctx_target_role(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_channel_t *dcc_ctx_target_channel(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const dcc_message_t *dcc_ctx_target_message(const dcc_ctx_t *ctx);
+DCC_LEGACY_API uint8_t dcc_ctx_has_member_permissions(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_permission_t dcc_ctx_member_permissions(const dcc_ctx_t *ctx);
+DCC_LEGACY_API uint8_t dcc_ctx_member_has_permissions(const dcc_ctx_t *ctx, dcc_permission_t permissions);
+DCC_LEGACY_API uint8_t dcc_ctx_member_has_role(const dcc_ctx_t *ctx, dcc_snowflake_t role_id);
+DCC_LEGACY_API uint8_t dcc_ctx_member_has_any_role(
     const dcc_ctx_t *ctx,
     const dcc_snowflake_t *role_ids,
     size_t role_id_count
 );
-DCC_API uint8_t dcc_ctx_member_has_all_roles(
+DCC_LEGACY_API uint8_t dcc_ctx_member_has_all_roles(
     const dcc_ctx_t *ctx,
     const dcc_snowflake_t *role_ids,
     size_t role_id_count
 );
-DCC_API const dcc_component_session_result_t *dcc_ctx_component_session_result(const dcc_ctx_t *ctx);
-DCC_API dcc_component_session_verify_status_t dcc_ctx_component_session_status(const dcc_ctx_t *ctx);
-DCC_API const char *dcc_ctx_component_session_action(const dcc_ctx_t *ctx);
-DCC_API const char *dcc_ctx_token(const dcc_ctx_t *ctx);
-DCC_API const char *dcc_ctx_name(const dcc_ctx_t *ctx);
-DCC_API const char *dcc_ctx_subcommand(const dcc_ctx_t *ctx);
-DCC_API const char *dcc_ctx_subcommand_group(const dcc_ctx_t *ctx);
-DCC_API dcc_status_t dcc_ctx_subcommand_path(
+DCC_LEGACY_API const dcc_component_session_result_t *dcc_ctx_component_session_result(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_component_session_verify_status_t dcc_ctx_component_session_status(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const char *dcc_ctx_component_session_action(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const char *dcc_ctx_token(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const char *dcc_ctx_name(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const char *dcc_ctx_subcommand(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const char *dcc_ctx_subcommand_group(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_status_t dcc_ctx_subcommand_path(
     const dcc_ctx_t *ctx,
     char *buffer,
     size_t buffer_len
 );
-DCC_API const char *dcc_ctx_custom_id(const dcc_ctx_t *ctx);
-DCC_API dcc_interaction_flow_state_t dcc_ctx_response_state(const dcc_ctx_t *ctx);
-DCC_API const char *dcc_ctx_response_state_string(const dcc_ctx_t *ctx);
-DCC_API uint8_t dcc_ctx_response_sent(const dcc_ctx_t *ctx);
-DCC_API uint8_t dcc_ctx_deferred(const dcc_ctx_t *ctx);
-DCC_API uint8_t dcc_ctx_replied(const dcc_ctx_t *ctx);
-DCC_API uint8_t dcc_ctx_followed_up(const dcc_ctx_t *ctx);
-DCC_API uint8_t dcc_ctx_response_failed(const dcc_ctx_t *ctx);
-DCC_API uint8_t dcc_ctx_can_followup(const dcc_ctx_t *ctx);
-DCC_API uint8_t dcc_ctx_can_edit_original(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const char *dcc_ctx_custom_id(const dcc_ctx_t *ctx);
+DCC_LEGACY_API dcc_interaction_flow_state_t dcc_ctx_response_state(const dcc_ctx_t *ctx);
+DCC_LEGACY_API const char *dcc_ctx_response_state_string(const dcc_ctx_t *ctx);
+DCC_LEGACY_API uint8_t dcc_ctx_response_sent(const dcc_ctx_t *ctx);
+DCC_LEGACY_API uint8_t dcc_ctx_deferred(const dcc_ctx_t *ctx);
+DCC_LEGACY_API uint8_t dcc_ctx_replied(const dcc_ctx_t *ctx);
+DCC_LEGACY_API uint8_t dcc_ctx_followed_up(const dcc_ctx_t *ctx);
+DCC_LEGACY_API uint8_t dcc_ctx_response_failed(const dcc_ctx_t *ctx);
+DCC_LEGACY_API uint8_t dcc_ctx_can_followup(const dcc_ctx_t *ctx);
+DCC_LEGACY_API uint8_t dcc_ctx_can_edit_original(const dcc_ctx_t *ctx);
 
 #if 0 /* Task 11 moved canonical interaction actions to app/context.h. */
-DCC_API dcc_status_t dcc_ctx_reply(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_reply_text(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply_text(
     dcc_ctx_t *ctx,
     const char *content,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_reply_ephemeral_text(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply_ephemeral_text(
     dcc_ctx_t *ctx,
     const char *content,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_reply_embed(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply_embed(
     dcc_ctx_t *ctx,
     const char *title,
     const char *description,
@@ -2238,60 +2244,60 @@ DCC_API dcc_status_t dcc_ctx_reply_embed(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_reply_error(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply_error(
     dcc_ctx_t *ctx,
     const char *title,
     const char *description,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_reply_validation_error(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply_validation_error(
     dcc_ctx_t *ctx,
     dcc_status_t status,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_reply_validation_result(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply_validation_result(
     dcc_ctx_t *ctx,
     dcc_status_t status,
     const dcc_ctx_validation_error_t *error,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_reply_success(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply_success(
     dcc_ctx_t *ctx,
     const char *title,
     const char *description,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_defer(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_data);
-DCC_API dcc_status_t dcc_ctx_defer_ephemeral(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_data);
-DCC_API dcc_status_t dcc_ctx_update_message(
+DCC_LEGACY_API dcc_status_t dcc_ctx_defer(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_data);
+DCC_LEGACY_API dcc_status_t dcc_ctx_defer_ephemeral(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_data);
+DCC_LEGACY_API dcc_status_t dcc_ctx_update_message(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_show_modal(
+DCC_LEGACY_API dcc_status_t dcc_ctx_show_modal(
     dcc_ctx_t *ctx,
     const dcc_modal_builder_t *modal,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_show_modal_flow(
+DCC_LEGACY_API dcc_status_t dcc_ctx_show_modal_flow(
     dcc_ctx_t *ctx,
     const dcc_app_modal_flow_t *flow,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_reply_autocomplete(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply_autocomplete(
     dcc_ctx_t *ctx,
     const dcc_autocomplete_builder_t *autocomplete,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_reply_autocomplete_matching(
+DCC_LEGACY_API dcc_status_t dcc_ctx_reply_autocomplete_matching(
     dcc_ctx_t *ctx,
     const dcc_autocomplete_choice_t *choices,
     size_t choices_count,
@@ -2299,131 +2305,131 @@ DCC_API dcc_status_t dcc_ctx_reply_autocomplete_matching(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_edit_original(
+DCC_LEGACY_API dcc_status_t dcc_ctx_edit_original(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_delete_original(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_data);
-DCC_API dcc_status_t dcc_ctx_followup(
+DCC_LEGACY_API dcc_status_t dcc_ctx_delete_original(dcc_ctx_t *ctx, dcc_rest_cb cb, void *user_data);
+DCC_LEGACY_API dcc_status_t dcc_ctx_followup(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_followup_text(
+DCC_LEGACY_API dcc_status_t dcc_ctx_followup_text(
     dcc_ctx_t *ctx,
     const char *content,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_followup_ephemeral_text(
+DCC_LEGACY_API dcc_status_t dcc_ctx_followup_ephemeral_text(
     dcc_ctx_t *ctx,
     const char *content,
     dcc_rest_cb cb,
     void *user_data
 );
 #endif
-DCC_API dcc_status_t dcc_ctx_send(
+DCC_LEGACY_API dcc_status_t dcc_ctx_send(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_send_with_id(
+DCC_LEGACY_API dcc_status_t dcc_ctx_send_with_id(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,
     dcc_app_message_id_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_send_with_thread(
+DCC_LEGACY_API dcc_status_t dcc_ctx_send_with_thread(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,
     const dcc_thread_params_t *thread,
     dcc_app_message_thread_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_send_with_thread_name(
+DCC_LEGACY_API dcc_status_t dcc_ctx_send_with_thread_name(
     dcc_ctx_t *ctx,
     const dcc_message_builder_t *message,
     const char *thread_name,
     dcc_app_message_thread_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_send_text(
+DCC_LEGACY_API dcc_status_t dcc_ctx_send_text(
     dcc_ctx_t *ctx,
     const char *content,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_send_text_with_id(
+DCC_LEGACY_API dcc_status_t dcc_ctx_send_text_with_id(
     dcc_ctx_t *ctx,
     const char *content,
     dcc_app_message_id_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_ctx_send_text_with_thread(
+DCC_LEGACY_API dcc_status_t dcc_ctx_send_text_with_thread(
     dcc_ctx_t *ctx,
     const char *content,
     const char *thread_name,
     dcc_app_message_thread_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_channel_webhooks(
+DCC_LEGACY_API dcc_status_t dcc_app_get_channel_webhooks(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_webhooks(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_webhooks(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_webhook(
+DCC_LEGACY_API dcc_status_t dcc_app_get_webhook(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_webhook_with_token(
+DCC_LEGACY_API dcc_status_t dcc_app_get_webhook_with_token(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_webhook(
+DCC_LEGACY_API dcc_status_t dcc_app_create_webhook(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_webhook_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_webhook_params(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const dcc_rest_webhook_builder_t *builder,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook_params(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const dcc_rest_webhook_builder_t *builder,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook_with_token(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook_with_token(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2431,7 +2437,7 @@ DCC_API dcc_status_t dcc_app_modify_webhook_with_token(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook_with_token_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook_with_token_params(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2439,20 +2445,20 @@ DCC_API dcc_status_t dcc_app_modify_webhook_with_token_params(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_webhook(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_webhook(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_webhook_with_token(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_webhook_with_token(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_execute_webhook(
+DCC_LEGACY_API dcc_status_t dcc_app_execute_webhook(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2461,7 +2467,7 @@ DCC_API dcc_status_t dcc_app_execute_webhook(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_execute_webhook_options(
+DCC_LEGACY_API dcc_status_t dcc_app_execute_webhook_options(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2472,7 +2478,7 @@ DCC_API dcc_status_t dcc_app_execute_webhook_options(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_execute_webhook_message(
+DCC_LEGACY_API dcc_status_t dcc_app_execute_webhook_message(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2483,7 +2489,7 @@ DCC_API dcc_status_t dcc_app_execute_webhook_message(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_execute_webhook_text(
+DCC_LEGACY_API dcc_status_t dcc_app_execute_webhook_text(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2493,7 +2499,7 @@ DCC_API dcc_status_t dcc_app_execute_webhook_text(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_execute_webhook_multipart(
+DCC_LEGACY_API dcc_status_t dcc_app_execute_webhook_multipart(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2504,7 +2510,7 @@ DCC_API dcc_status_t dcc_app_execute_webhook_multipart(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_execute_webhook_multipart_options(
+DCC_LEGACY_API dcc_status_t dcc_app_execute_webhook_multipart_options(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2517,7 +2523,7 @@ DCC_API dcc_status_t dcc_app_execute_webhook_multipart_options(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_webhook_message(
+DCC_LEGACY_API dcc_status_t dcc_app_get_webhook_message(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2526,7 +2532,7 @@ DCC_API dcc_status_t dcc_app_get_webhook_message(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_webhook_message_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_get_webhook_message_thread(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2535,7 +2541,7 @@ DCC_API dcc_status_t dcc_app_get_webhook_message_thread(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook_message(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook_message(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2545,7 +2551,7 @@ DCC_API dcc_status_t dcc_app_modify_webhook_message(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook_message_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook_message_thread(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2555,7 +2561,7 @@ DCC_API dcc_status_t dcc_app_modify_webhook_message_thread(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook_message_builder(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook_message_builder(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2565,7 +2571,7 @@ DCC_API dcc_status_t dcc_app_modify_webhook_message_builder(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook_message_builder_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook_message_builder_thread(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2575,7 +2581,7 @@ DCC_API dcc_status_t dcc_app_modify_webhook_message_builder_thread(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook_message_multipart(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook_message_multipart(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2587,7 +2593,7 @@ DCC_API dcc_status_t dcc_app_modify_webhook_message_multipart(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_webhook_message_multipart_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_webhook_message_multipart_thread(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2599,7 +2605,7 @@ DCC_API dcc_status_t dcc_app_modify_webhook_message_multipart_thread(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_webhook_message(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_webhook_message(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2608,7 +2614,7 @@ DCC_API dcc_status_t dcc_app_delete_webhook_message(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_webhook_message_thread(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_webhook_message_thread(
     dcc_app_t *app,
     dcc_snowflake_t webhook_id,
     const char *webhook_token,
@@ -2617,30 +2623,30 @@ DCC_API dcc_status_t dcc_app_delete_webhook_message_thread(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_current_application(
+DCC_LEGACY_API dcc_status_t dcc_app_get_current_application(
     dcc_app_t *app,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_gateway_bot(
+DCC_LEGACY_API dcc_status_t dcc_app_get_gateway_bot(
     dcc_app_t *app,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_skus(
+DCC_LEGACY_API dcc_status_t dcc_app_get_skus(
     dcc_app_t *app,
     dcc_snowflake_t application_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_entitlements(
+DCC_LEGACY_API dcc_status_t dcc_app_get_entitlements(
     dcc_app_t *app,
     dcc_snowflake_t application_id,
     const char *query,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_entitlements_page(
+DCC_LEGACY_API dcc_status_t dcc_app_get_entitlements_page(
     dcc_app_t *app,
     dcc_snowflake_t application_id,
     dcc_snowflake_t user_id,
@@ -2654,85 +2660,85 @@ DCC_API dcc_status_t dcc_app_get_entitlements_page(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_test_entitlement(
+DCC_LEGACY_API dcc_status_t dcc_app_create_test_entitlement(
     dcc_app_t *app,
     dcc_snowflake_t application_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_test_entitlement_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_test_entitlement_params(
     dcc_app_t *app,
     const dcc_test_entitlement_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_test_entitlement(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_test_entitlement(
     dcc_app_t *app,
     dcc_snowflake_t application_id,
     dcc_snowflake_t entitlement_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_consume_entitlement(
+DCC_LEGACY_API dcc_status_t dcc_app_consume_entitlement(
     dcc_app_t *app,
     dcc_snowflake_t application_id,
     dcc_snowflake_t entitlement_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_current_user(
+DCC_LEGACY_API dcc_status_t dcc_app_get_current_user(
     dcc_app_t *app,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_current_user(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_current_user(
     dcc_app_t *app,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_current_user_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_current_user_params(
     dcc_app_t *app,
     const dcc_current_user_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_user(
+DCC_LEGACY_API dcc_status_t dcc_app_get_user(
     dcc_app_t *app,
     dcc_snowflake_t user_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_current_user_connections(
+DCC_LEGACY_API dcc_status_t dcc_app_get_current_user_connections(
     dcc_app_t *app,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_current_user_guilds(
+DCC_LEGACY_API dcc_status_t dcc_app_get_current_user_guilds(
     dcc_app_t *app,
     const char *query,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_current_user_dms(
+DCC_LEGACY_API dcc_status_t dcc_app_get_current_user_dms(
     dcc_app_t *app,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_dm_channel(
+DCC_LEGACY_API dcc_status_t dcc_app_create_dm_channel(
     dcc_app_t *app,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_dm_channel_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_dm_channel_params(
     dcc_app_t *app,
     const dcc_dm_channel_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_add_group_dm_recipient(
+DCC_LEGACY_API dcc_status_t dcc_app_add_group_dm_recipient(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t user_id,
@@ -2740,168 +2746,168 @@ DCC_API dcc_status_t dcc_app_add_group_dm_recipient(
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_add_group_dm_recipient_params(
+DCC_LEGACY_API dcc_status_t dcc_app_add_group_dm_recipient_params(
     dcc_app_t *app,
     const dcc_group_dm_recipient_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_remove_group_dm_recipient(
+DCC_LEGACY_API dcc_status_t dcc_app_remove_group_dm_recipient(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t user_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_direct_message(
+DCC_LEGACY_API dcc_status_t dcc_app_create_direct_message(
     dcc_app_t *app,
     dcc_snowflake_t user_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_direct_message_builder(
+DCC_LEGACY_API dcc_status_t dcc_app_create_direct_message_builder(
     dcc_app_t *app,
     dcc_snowflake_t user_id,
     const dcc_message_builder_t *message,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_direct_message_text(
+DCC_LEGACY_API dcc_status_t dcc_app_create_direct_message_text(
     dcc_app_t *app,
     dcc_snowflake_t user_id,
     const char *content,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_leave_guild(
+DCC_LEGACY_API dcc_status_t dcc_app_leave_guild(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_guild_invites(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_invites(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_invite(
+DCC_LEGACY_API dcc_status_t dcc_app_get_invite(
     dcc_app_t *app,
     const char *invite_code,
     const char *query,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_invite_full(
+DCC_LEGACY_API dcc_status_t dcc_app_get_invite_full(
     dcc_app_t *app,
     const char *invite_code,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_invite(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_invite(
     dcc_app_t *app,
     const char *invite_code,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_stage_instance(
+DCC_LEGACY_API dcc_status_t dcc_app_create_stage_instance(
     dcc_app_t *app,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_stage_instance_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_stage_instance_params(
     dcc_app_t *app,
     const dcc_stage_instance_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_stage_instance(
+DCC_LEGACY_API dcc_status_t dcc_app_get_stage_instance(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_stage_instance(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_stage_instance(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_stage_instance_params(
+DCC_LEGACY_API dcc_status_t dcc_app_modify_stage_instance_params(
     dcc_app_t *app,
     const dcc_stage_instance_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_stage_instance(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_stage_instance(
     dcc_app_t *app,
     dcc_snowflake_t channel_id,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_get_template(
+DCC_LEGACY_API dcc_status_t dcc_app_get_template(
     dcc_app_t *app,
     const char *code,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_create_guild_from_template(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_from_template(
     dcc_app_t *app,
-    const char *code,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-DCC_API dcc_status_t dcc_app_create_guild_from_template_params(
-    dcc_app_t *app,
-    const dcc_template_params_t *params,
-    dcc_rest_cb cb,
-    void *user_data
-);
-DCC_API dcc_status_t dcc_app_get_guild_templates(
-    dcc_app_t *app,
-    dcc_snowflake_t guild_id,
-    dcc_rest_cb cb,
-    void *user_data
-);
-DCC_API dcc_status_t dcc_app_create_guild_template(
-    dcc_app_t *app,
-    dcc_snowflake_t guild_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-DCC_API dcc_status_t dcc_app_create_guild_template_params(
-    dcc_app_t *app,
-    const dcc_template_params_t *params,
-    dcc_rest_cb cb,
-    void *user_data
-);
-DCC_API dcc_status_t dcc_app_modify_guild_template(
-    dcc_app_t *app,
-    dcc_snowflake_t guild_id,
     const char *code,
     const char *json_body,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_modify_guild_template_params(
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_from_template_params(
     dcc_app_t *app,
     const dcc_template_params_t *params,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_sync_guild_template(
+DCC_LEGACY_API dcc_status_t dcc_app_get_guild_templates(
+    dcc_app_t *app,
+    dcc_snowflake_t guild_id,
+    dcc_rest_cb cb,
+    void *user_data
+);
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_template(
+    dcc_app_t *app,
+    dcc_snowflake_t guild_id,
+    const char *json_body,
+    dcc_rest_cb cb,
+    void *user_data
+);
+DCC_LEGACY_API dcc_status_t dcc_app_create_guild_template_params(
+    dcc_app_t *app,
+    const dcc_template_params_t *params,
+    dcc_rest_cb cb,
+    void *user_data
+);
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_template(
+    dcc_app_t *app,
+    dcc_snowflake_t guild_id,
+    const char *code,
+    const char *json_body,
+    dcc_rest_cb cb,
+    void *user_data
+);
+DCC_LEGACY_API dcc_status_t dcc_app_modify_guild_template_params(
+    dcc_app_t *app,
+    const dcc_template_params_t *params,
+    dcc_rest_cb cb,
+    void *user_data
+);
+DCC_LEGACY_API dcc_status_t dcc_app_sync_guild_template(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *code,
     dcc_rest_cb cb,
     void *user_data
 );
-DCC_API dcc_status_t dcc_app_delete_guild_template(
+DCC_LEGACY_API dcc_status_t dcc_app_delete_guild_template(
     dcc_app_t *app,
     dcc_snowflake_t guild_id,
     const char *code,
@@ -2912,5 +2918,7 @@ DCC_API dcc_status_t dcc_app_delete_guild_template(
 #ifdef __cplusplus
 }
 #endif
+
+#undef DCC_LEGACY_API
 
 #endif

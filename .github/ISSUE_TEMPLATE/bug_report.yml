@@ -14,7 +14,7 @@ body:
     id: versions
     attributes:
       label: DCC / LLAM versions
-      placeholder: DCC 1.5.0, LLAM 2.2.0
+      placeholder: DCC 2.0.0, LLAM 2.2.0
     validations:
       required: true
   - type: input

@@ -1,5 +1,4 @@
 #include <dcc/message_link.h>
-#include <dcc/sugar/links.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -50,13 +49,12 @@ static int check_format(void) {
         .is_dm = 1U
     };
 
-    return
-        dcc_message_link_format(buffer, sizeof(buffer), &link) != DCC_OK ||
-        strcmp(buffer, "https://discord.com/channels/111/222/333") != 0 ||
-        strcmp(DCC_MESSAGE_LINK(111U, 222U, 333U), buffer) != 0 ||
-        dcc_message_link_format(buffer, sizeof(buffer), &dm_link) != DCC_OK ||
-        strcmp(buffer, "https://discord.com/channels/@me/444/555") != 0 ||
-        strcmp(DCC_DM_MESSAGE_LINK(444U, 555U), buffer) != 0;
+    if (dcc_message_link_format(buffer, sizeof(buffer), &link) != DCC_OK ||
+        strcmp(buffer, "https://discord.com/channels/111/222/333") != 0) {
+        return 1;
+    }
+    return dcc_message_link_format(buffer, sizeof(buffer), &dm_link) != DCC_OK ||
+           strcmp(buffer, "https://discord.com/channels/@me/444/555") != 0;
 }
 
 static int check_parse(void) {
@@ -68,7 +66,7 @@ static int check_parse(void) {
         expect_parse("https://ptb.discord.com/channels/111/222/333", 111U, 222U, 333U, 0U) ||
         expect_parse("/channels/111/222/333", 111U, 222U, 333U, 0U) ||
         expect_parse("channels/@me/444/555", 0U, 444U, 555U, 1U) ||
-        DCC_PARSE_MESSAGE_LINK("https://discord.com/channels/111/222/333", &link) != DCC_OK ||
+        dcc_message_link_parse("https://discord.com/channels/111/222/333", &link) != DCC_OK ||
         link.guild_id != 111U ||
         link.channel_id != 222U ||
         link.message_id != 333U;

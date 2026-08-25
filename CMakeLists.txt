@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 1.5.0
+    VERSION 2.0.0
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )
@@ -47,7 +47,11 @@ option(DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS "Keep LLAM tests enabled when LLAM is 
 option(DCC_BUNDLE_LLAM "Install LLAM runtime files with DCC packages when LLAM is built as a subdirectory" OFF)
 option(DCC_WITH_OPUS "Build the optional libopus voice codec backend when libopus is available" ON)
 option(DCC_WITH_DAVE "Enable the runtime-loaded official libdave backend" ON)
-set(DCC_LLAM_REQUIRED_VERSION "2.2.0" CACHE STRING "Minimum LLAM runtime version required by DCC")
+if(DEFINED DCC_LLAM_REQUIRED_VERSION AND
+   NOT DCC_LLAM_REQUIRED_VERSION STREQUAL "2.2.0")
+    message(FATAL_ERROR "DCC 2.0 requires the exact LLAM floor 2.2.0")
+endif()
+set(DCC_LLAM_REQUIRED_VERSION "2.2.0")
 set(DCC_LLAM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../LLAM" CACHE PATH "Path to the LLAM runtime source tree")
 set(DCC_LLAM_LIBRARY "${DCC_LLAM_ROOT}/libllam_runtime.a" CACHE FILEPATH "Path to a prebuilt LLAM static library")
 set(DCC_OPUS_ROOT "" CACHE PATH "Path to a libopus installation")
@@ -1446,6 +1450,7 @@ target_sources(dcc
         src/rest/rest_rate_limit_update.c
         src/rest/rest_error_observer.c
         src/rest/rest_result.c
+        src/rest/rest_result_fields.c
         src/rest/rest_runtime_stats.c
         src/rest/rest_resource.c
         src/rest/rest_request_handle.c
@@ -1682,6 +1687,8 @@ target_compile_definitions(dcc
         $<$<BOOL:${DCC_BUILD_SHARED}>:DCC_SHARED>
     PRIVATE
         DCC_BUILD
+        DCC_LEGACY_INTERNAL=1
+        DCC_REST_LEGACY_INTERNAL=1
         $<$<BOOL:${DCC_WITH_DAVE}>:DCC_WITH_DAVE=1>
 )
 
@@ -2006,7 +2013,6 @@ if(DCC_BUILD_TESTS)
             --compiler ${CMAKE_C_COMPILER}
             --cxx-compiler ${CMAKE_CXX_COMPILER}
             --llam-include ${DCC_V2_SURFACE_LLAM_INCLUDE}
-            --transition
     )
     set_tests_properties(dcc_v2_surface_audit PROPERTIES
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -2106,11 +2112,6 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_metrics_smoke)
     add_test(NAME dcc_metrics_smoke COMMAND dcc_metrics_smoke)
 
-    add_executable(dcc_legacy_abi_layout_smoke tests/legacy_abi_layout_smoke.c)
-    target_link_libraries(dcc_legacy_abi_layout_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_legacy_abi_layout_smoke)
-    add_test(NAME dcc_legacy_abi_layout_smoke COMMAND dcc_legacy_abi_layout_smoke)
-
     add_executable(dcc_pkg_config_consumer_smoke tests/pkg_config_consumer/main.c)
     target_link_libraries(dcc_pkg_config_consumer_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_pkg_config_consumer_smoke)
@@ -2169,64 +2170,6 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_json_smoke)
     add_test(NAME dcc_json_smoke COMMAND dcc_json_smoke)
 
-    add_executable(dcc_http_smoke
-        tests/http_smoke.c
-        tests/support/http_smoke_async_basic.c
-        tests/support/http_smoke_async_cancel_retry.c
-        tests/support/http_smoke_async_misc.c
-        tests/support/http_smoke_async_routes.c
-        tests/support/http_smoke_bucket.c
-        tests/support/http_smoke_builders.c
-        tests/support/http_smoke_builders_commands.c
-        tests/support/http_smoke_command_registry.c
-        tests/support/http_smoke_common.c
-        tests/support/http_smoke_gap.c
-        tests/support/http_smoke_official_surface.c
-        tests/support/http_smoke_public.c
-        tests/support/http_smoke_public_multipart.c
-        tests/support/http_smoke_rest_calls_channels.c
-        tests/support/http_smoke_rest_calls_guilds.c
-        tests/support/http_smoke_rest_calls_users_threads.c
-        tests/support/http_smoke_rest_calls_webhooks_apps.c
-        tests/support/http_smoke_rest_wrapper_interaction_convenience.c
-        tests/support/http_smoke_rest_wrapper.c
-        tests/support/http_smoke_rest_wrapper_channels.c
-        tests/support/http_smoke_rest_wrapper_guilds.c
-        tests/support/http_smoke_rest_wrapper_interactions.c
-        tests/support/http_smoke_rest_wrapper_users_threads.c
-        tests/support/http_smoke_rest_wrapper_webhooks_apps.c
-        tests/support/http_smoke_server.c
-    )
-    dcc_target_use_private_headers(dcc_http_smoke)
-    target_link_libraries(dcc_http_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_http_smoke)
-    add_test(NAME dcc_http_smoke COMMAND dcc_http_smoke)
-
-    add_executable(dcc_official_surface_smoke
-        tests/official_surface_smoke.c
-        tests/support/http_smoke_common.c
-        tests/support/http_smoke_official_surface.c
-        tests/support/http_smoke_public_multipart.c
-        tests/support/http_smoke_server.c
-    )
-    dcc_target_use_private_headers(dcc_official_surface_smoke)
-    target_link_libraries(dcc_official_surface_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_official_surface_smoke)
-    add_test(NAME dcc_official_surface_smoke COMMAND dcc_official_surface_smoke)
-
-    add_executable(dcc_official_surface_headers_smoke
-        tests/official_surface_headers/applications_header.c
-        tests/official_surface_headers/lobbies_header.c
-        tests/official_surface_headers/main.c
-        tests/official_surface_headers/oauth2_header.c
-        tests/official_surface_headers/rest_header.c
-        tests/official_surface_headers/sugar_header.c
-        tests/official_surface_headers/webhook_events_header.c
-    )
-    target_link_libraries(dcc_official_surface_headers_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_official_surface_headers_smoke)
-    add_test(NAME dcc_official_surface_headers_smoke COMMAND dcc_official_surface_headers_smoke)
-
     add_executable(dcc_component_session_smoke tests/component_session_smoke.c)
     target_link_libraries(dcc_component_session_smoke PRIVATE dcc::dcc)
     dcc_target_use_private_headers(dcc_component_session_smoke)
@@ -2274,96 +2217,6 @@ if(DCC_BUILD_TESTS)
         )
     endforeach()
 
-    add_executable(dcc_sugar_smoke tests/sugar_smoke.c)
-    target_link_libraries(dcc_sugar_smoke PRIVATE dcc::dcc)
-    target_include_directories(dcc_sugar_smoke PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-    dcc_target_enable_sanitizers(dcc_sugar_smoke)
-    add_test(NAME dcc_sugar_smoke COMMAND dcc_sugar_smoke)
-
-    add_executable(dcc_sugar_command_dsl_smoke tests/sugar_command_dsl_smoke.c)
-    target_link_libraries(dcc_sugar_command_dsl_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_command_dsl_smoke)
-    add_test(NAME dcc_sugar_command_dsl_smoke COMMAND dcc_sugar_command_dsl_smoke)
-
-    add_executable(dcc_sugar_app_registration_focused_smoke tests/sugar_app_registration_focused_smoke.c)
-    target_link_libraries(dcc_sugar_app_registration_focused_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_app_registration_focused_smoke)
-    add_test(NAME dcc_sugar_app_registration_focused_smoke COMMAND dcc_sugar_app_registration_focused_smoke)
-
-    add_executable(dcc_sugar_app_actions_focused_smoke tests/sugar_app_actions_focused_smoke.c)
-    target_link_libraries(dcc_sugar_app_actions_focused_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_app_actions_focused_smoke)
-    add_test(NAME dcc_sugar_app_actions_focused_smoke COMMAND dcc_sugar_app_actions_focused_smoke)
-
-    add_executable(dcc_sugar_context_focused_smoke tests/sugar_context_focused_smoke.c)
-    target_link_libraries(dcc_sugar_context_focused_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_context_focused_smoke)
-    add_test(NAME dcc_sugar_context_focused_smoke COMMAND dcc_sugar_context_focused_smoke)
-
-    add_executable(dcc_sugar_decorators_smoke tests/sugar_decorators_smoke.c)
-    target_link_libraries(dcc_sugar_decorators_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_decorators_smoke)
-    add_test(NAME dcc_sugar_decorators_smoke COMMAND dcc_sugar_decorators_smoke)
-
-    add_executable(dcc_sugar_listeners_smoke tests/sugar_listeners_smoke.c)
-    target_link_libraries(dcc_sugar_listeners_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_listeners_smoke)
-    add_test(NAME dcc_sugar_listeners_smoke COMMAND dcc_sugar_listeners_smoke)
-
-    add_executable(dcc_sugar_bot_main_compile tests/sugar_bot_main_compile.c)
-    target_link_libraries(dcc_sugar_bot_main_compile PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_bot_main_compile)
-
-    add_executable(dcc_sugar_embed_dsl_smoke tests/sugar_embed_dsl_smoke.c)
-    target_link_libraries(dcc_sugar_embed_dsl_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_embed_dsl_smoke)
-    add_test(NAME dcc_sugar_embed_dsl_smoke COMMAND dcc_sugar_embed_dsl_smoke)
-
-    add_executable(dcc_sugar_allowed_mentions_smoke tests/sugar_allowed_mentions_smoke.c)
-    target_link_libraries(dcc_sugar_allowed_mentions_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_allowed_mentions_smoke)
-    add_test(NAME dcc_sugar_allowed_mentions_smoke COMMAND dcc_sugar_allowed_mentions_smoke)
-
-    add_executable(dcc_sugar_status_smoke tests/sugar_status_smoke.c)
-    target_link_libraries(dcc_sugar_status_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_status_smoke)
-    add_test(NAME dcc_sugar_status_smoke COMMAND dcc_sugar_status_smoke)
-
-    add_executable(dcc_sugar_colors_smoke tests/sugar_colors_smoke.c)
-    target_link_libraries(dcc_sugar_colors_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_colors_smoke)
-    add_test(NAME dcc_sugar_colors_smoke COMMAND dcc_sugar_colors_smoke)
-
-    add_executable(dcc_sugar_time_smoke tests/sugar_time_smoke.c)
-    target_link_libraries(dcc_sugar_time_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_time_smoke)
-    add_test(NAME dcc_sugar_time_smoke COMMAND dcc_sugar_time_smoke)
-
-    add_executable(dcc_sugar_poll_smoke tests/sugar_poll_smoke.c)
-    target_link_libraries(dcc_sugar_poll_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_poll_smoke)
-    add_test(NAME dcc_sugar_poll_smoke COMMAND dcc_sugar_poll_smoke)
-
-    add_executable(dcc_sugar_flags_smoke tests/sugar_flags_smoke.c)
-    target_link_libraries(dcc_sugar_flags_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_flags_smoke)
-    add_test(NAME dcc_sugar_flags_smoke COMMAND dcc_sugar_flags_smoke)
-
-    add_executable(dcc_sugar_format_smoke tests/sugar_format_smoke.c)
-    target_link_libraries(dcc_sugar_format_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_format_smoke)
-    add_test(NAME dcc_sugar_format_smoke COMMAND dcc_sugar_format_smoke)
-
-    add_executable(dcc_sugar_cdn_smoke tests/sugar_cdn_smoke.c)
-    target_link_libraries(dcc_sugar_cdn_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_cdn_smoke)
-    add_test(NAME dcc_sugar_cdn_smoke COMMAND dcc_sugar_cdn_smoke)
-
-    add_executable(dcc_sugar_markdown_smoke tests/sugar_markdown_smoke.c)
-    target_link_libraries(dcc_sugar_markdown_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_markdown_smoke)
-    add_test(NAME dcc_sugar_markdown_smoke COMMAND dcc_sugar_markdown_smoke)
-
     add_executable(dcc_snowflake_parse_smoke tests/snowflake_parse_smoke.c)
     target_link_libraries(dcc_snowflake_parse_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_snowflake_parse_smoke)
@@ -2373,35 +2226,6 @@ if(DCC_BUILD_TESTS)
     target_link_libraries(dcc_message_link_smoke PRIVATE dcc::dcc)
     dcc_target_enable_sanitizers(dcc_message_link_smoke)
     add_test(NAME dcc_message_link_smoke COMMAND dcc_message_link_smoke)
-
-    add_executable(dcc_sugar_permissions_smoke tests/sugar_permissions_smoke.c)
-    target_link_libraries(dcc_sugar_permissions_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_permissions_smoke)
-    add_test(NAME dcc_sugar_permissions_smoke COMMAND dcc_sugar_permissions_smoke)
-
-    add_executable(dcc_sugar_component_presets_smoke tests/sugar_component_presets_smoke.c)
-    target_link_libraries(dcc_sugar_component_presets_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_component_presets_smoke)
-    add_test(NAME dcc_sugar_component_presets_smoke COMMAND dcc_sugar_component_presets_smoke)
-
-    add_executable(dcc_sugar_flow_smoke tests/sugar_flow_smoke.c)
-    target_link_libraries(dcc_sugar_flow_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_sugar_flow_smoke)
-    add_test(NAME dcc_sugar_flow_smoke COMMAND dcc_sugar_flow_smoke)
-
-    add_executable(dcc_store_smoke tests/store_smoke.c)
-    target_link_libraries(dcc_store_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_store_smoke)
-    add_test(NAME dcc_store_smoke COMMAND dcc_store_smoke)
-
-    add_executable(dcc_app_smoke
-        tests/app_smoke.c
-        tests/support/app_smoke_response_state.c
-    )
-    target_link_libraries(dcc_app_smoke PRIVATE dcc::dcc)
-    dcc_target_use_private_headers(dcc_app_smoke)
-    dcc_target_enable_sanitizers(dcc_app_smoke)
-    add_test(NAME dcc_app_smoke COMMAND dcc_app_smoke)
 
     add_executable(dcc_app_v2_listener_smoke tests/app_v2_listener_smoke.c)
     target_link_libraries(dcc_app_v2_listener_smoke PRIVATE dcc::dcc)
@@ -2446,35 +2270,6 @@ if(DCC_BUILD_TESTS)
     add_executable(dcc_app_windows_include_order_smoke tests/app_windows_include_order_smoke.c)
     target_link_libraries(dcc_app_windows_include_order_smoke PRIVATE dcc::dcc)
     dcc_target_use_private_headers(dcc_app_windows_include_order_smoke)
-
-    add_executable(dcc_app_message_command_smoke tests/app_message_command_smoke.c)
-    target_link_libraries(dcc_app_message_command_smoke PRIVATE dcc::dcc)
-    dcc_target_use_private_headers(dcc_app_message_command_smoke)
-    dcc_target_enable_sanitizers(dcc_app_message_command_smoke)
-    add_test(NAME dcc_app_message_command_smoke COMMAND dcc_app_message_command_smoke)
-
-    add_executable(dcc_app_wait_filter_smoke tests/app_wait_filter_smoke.c)
-    target_link_libraries(dcc_app_wait_filter_smoke PRIVATE dcc::dcc)
-    dcc_target_use_private_headers(dcc_app_wait_filter_smoke)
-    dcc_target_enable_sanitizers(dcc_app_wait_filter_smoke)
-    add_test(NAME dcc_app_wait_filter_smoke COMMAND dcc_app_wait_filter_smoke)
-
-    add_executable(dcc_app_autocomplete_sugar_smoke tests/app_autocomplete_sugar_smoke.c)
-    target_link_libraries(dcc_app_autocomplete_sugar_smoke PRIVATE dcc::dcc)
-    dcc_target_use_private_headers(dcc_app_autocomplete_sugar_smoke)
-    dcc_target_enable_sanitizers(dcc_app_autocomplete_sugar_smoke)
-    add_test(NAME dcc_app_autocomplete_sugar_smoke COMMAND dcc_app_autocomplete_sugar_smoke)
-
-    add_executable(dcc_app_dx_sugar_smoke tests/app_dx_sugar_smoke.c)
-    target_link_libraries(dcc_app_dx_sugar_smoke PRIVATE dcc::dcc)
-    dcc_target_use_private_headers(dcc_app_dx_sugar_smoke)
-    dcc_target_enable_sanitizers(dcc_app_dx_sugar_smoke)
-    add_test(NAME dcc_app_dx_sugar_smoke COMMAND dcc_app_dx_sugar_smoke)
-
-    add_executable(dcc_app_env_mentions_smoke tests/app_env_mentions_smoke.c)
-    target_link_libraries(dcc_app_env_mentions_smoke PRIVATE dcc::dcc)
-    dcc_target_enable_sanitizers(dcc_app_env_mentions_smoke)
-    add_test(NAME dcc_app_env_mentions_smoke COMMAND dcc_app_env_mentions_smoke)
 
     add_executable(dcc_interaction_flow_smoke
         tests/interaction_flow_smoke.c
@@ -3210,7 +3005,7 @@ if(DCC_BUILD_TESTS)
         set_tests_properties(dcc_doctor_help PROPERTIES PASS_REGULAR_EXPRESSION "--require-dave")
         add_test(NAME dcc_doctor_json COMMAND dcc_doctor --json)
         set_tests_properties(dcc_doctor_json PROPERTIES
-            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"1.5.0\""
+            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"2.0.0\""
         )
         add_test(NAME dcc_doctor_require_token COMMAND dcc_doctor --json --require-token)
         set_tests_properties(dcc_doctor_require_token PROPERTIES
@@ -3234,6 +3029,10 @@ if(DCC_BUILD_TESTS)
         set_tests_properties(dcc_new_app_generate PROPERTIES
             PASS_REGULAR_EXPRESSION "created DCC app dcc_new_app_smoke"
         )
+
+        # DCC 1 generator mutation fixtures are intentionally absent from the
+        # DCC 2 release matrix; canonical preset coverage is rebuilt separately.
+        if(FALSE)
 
         add_test(NAME dcc_new_app_add_config_channel
             COMMAND "$<TARGET_FILE:dcc_new_app>"
@@ -3846,6 +3645,7 @@ if(DCC_BUILD_TESTS)
         set_tests_properties(dcc_new_app_generated_compile PROPERTIES
             DEPENDS dcc_new_app_generated_compile_configure
         )
+        endif()
     endif()
 
     if(TARGET dcc_interaction_webhook)
@@ -4056,10 +3856,24 @@ if(DCC_BUILD_TESTS)
                 --build ${CMAKE_CURRENT_BINARY_DIR}
         )
         add_test(
+            NAME dcc_api_reference_audit
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_api_reference.py
+                --source ${CMAKE_CURRENT_SOURCE_DIR}
+                --check
+        )
+        add_test(
+            NAME dcc_api_contract_artifacts_audit
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_api_contract_artifacts.py
+                --source ${CMAKE_CURRENT_SOURCE_DIR}
+                --check
+        )
+        add_test(
             NAME dcc_sbom_generation
             COMMAND ${Python3_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_sbom.py
-                --version 1.5.0
+                --version ${PROJECT_VERSION}
                 --artifacts ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures
                 --output ${CMAKE_CURRENT_BINARY_DIR}/dcc-test-sbom.cdx.json
         )
@@ -4307,6 +4121,12 @@ endif()
 install(
     DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    PATTERN "dcc/sugar.h" EXCLUDE
+    PATTERN "dcc/sugar" EXCLUDE
+    PATTERN "dcc/app/legacy.h" EXCLUDE
+    PATTERN "dcc/rest/core.h" EXCLUDE
+    PATTERN "dcc/rest/core" EXCLUDE
+    PATTERN "dcc/rest/response_helpers.h" EXCLUDE
 )
 
 install(
@@ -4404,5 +4224,11 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/[.]DS_Store$"
     "/[.]env($|[.])"
     "/[.]git/"
+    "/include/dcc/sugar[.]h$"
+    "/include/dcc/sugar/"
+    "/include/dcc/app/legacy[.]h$"
+    "/include/dcc/rest/core[.]h$"
+    "/include/dcc/rest/core/"
+    "/include/dcc/rest/response_helpers[.]h$"
 )
 include(CPack)

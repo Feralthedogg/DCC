@@ -28,7 +28,7 @@ spec:
         fsGroup: 10001
       initContainers:
         - name: doctor
-          image: ghcr.io/OWNER/dcc-bot:1.5.0
+          image: ghcr.io/OWNER/dcc-bot:2.0.0
           command: ["/usr/local/bin/dcc_doctor"]
           args: ["--require-token", "--json"]
           envFrom:
@@ -41,7 +41,7 @@ spec:
               drop: ["ALL"]
       containers:
         - name: bot
-          image: ghcr.io/OWNER/dcc-bot:1.5.0
+          image: ghcr.io/OWNER/dcc-bot:2.0.0
           envFrom:
             - secretRef:
                 name: dcc-bot

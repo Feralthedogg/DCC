@@ -1,5 +1,6 @@
 #include <dcc/dcc.h>
 #include <dcc/interaction_flow.h>
+#include <dcc/rest/core/async.h>
 
 #include "internal/rest/dcc_rest_intercept_internal.h"
 

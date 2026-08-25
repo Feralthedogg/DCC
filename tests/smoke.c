@@ -274,63 +274,64 @@ static int run_rest_response_helper_smoke(void) {
         "{\"id\":\"1518234972190802092\",\"channel_id\":1518200161208238111,"
         "\"guild_id\":\"1182756143693578320\",\"name\":\"Feral\\u0020Bot\","
         "\"type\":0,\"position\":-7,\"nsfw\":true,\"archived\":false}";
-    dcc_rest_response_t response = {
+    dcc_rest_result_t response = {
         .size = sizeof(response),
-        .status = 200,
-        .error = DCC_OK,
+        .version = DCC_REST_RESULT_VERSION,
+        .http_status = 200,
+        .transport_status = DCC_OK,
         .body = response_body,
         .body_len = strlen(response_body),
     };
 
     dcc_snowflake_t snowflake = 0;
-    if (dcc_rest_response_message_id(&response, &snowflake) != DCC_OK ||
+    if (dcc_rest_result_message_id(&response, &snowflake) != DCC_OK ||
         snowflake != 1518234972190802092ULL) {
         fprintf(stderr, "message id response helper failed\n");
         return 1;
     }
-    if (dcc_rest_response_channel_id(&response, &snowflake) != DCC_OK ||
+    if (dcc_rest_result_channel_id(&response, &snowflake) != DCC_OK ||
         snowflake != 1518200161208238111ULL) {
         fprintf(stderr, "channel id response helper failed\n");
         return 1;
     }
-    if (dcc_rest_response_guild_id(&response, &snowflake) != DCC_OK ||
+    if (dcc_rest_result_guild_id(&response, &snowflake) != DCC_OK ||
         snowflake != 1182756143693578320ULL) {
         fprintf(stderr, "guild id response helper failed\n");
         return 1;
     }
-    if (dcc_rest_response_snowflake_field(&response, "missing", &snowflake) != DCC_ERR_NOT_FOUND) {
+    if (dcc_rest_result_snowflake_field(&response, "missing", &snowflake) != DCC_ERR_NOT_FOUND) {
         fprintf(stderr, "missing snowflake field helper failed\n");
         return 1;
     }
     uint64_t u64_value = UINT64_MAX;
-    if (dcc_rest_response_u64_field(&response, "type", &u64_value) != DCC_OK || u64_value != 0U) {
+    if (dcc_rest_result_u64_field(&response, "type", &u64_value) != DCC_OK || u64_value != 0U) {
         fprintf(stderr, "u64 field response helper failed\n");
         return 1;
     }
     int64_t i64_value = 0;
-    if (dcc_rest_response_i64_field(&response, "position", &i64_value) != DCC_OK || i64_value != -7) {
+    if (dcc_rest_result_i64_field(&response, "position", &i64_value) != DCC_OK || i64_value != -7) {
         fprintf(stderr, "i64 field response helper failed\n");
         return 1;
     }
     int bool_value = 0;
-    if (dcc_rest_response_bool_field(&response, "nsfw", &bool_value) != DCC_OK || bool_value != 1) {
+    if (dcc_rest_result_bool_field(&response, "nsfw", &bool_value) != DCC_OK || bool_value != 1) {
         fprintf(stderr, "true bool field response helper failed\n");
         return 1;
     }
     bool_value = 1;
-    if (dcc_rest_response_bool_field(&response, "archived", &bool_value) != DCC_OK || bool_value != 0) {
+    if (dcc_rest_result_bool_field(&response, "archived", &bool_value) != DCC_OK || bool_value != 0) {
         fprintf(stderr, "false bool field response helper failed\n");
         return 1;
     }
     char name[32];
     size_t name_len = 0;
-    if (dcc_rest_response_string_field_len(&response, "name", name, sizeof(name), &name_len) != DCC_OK ||
+    if (dcc_rest_result_string_field_len(&response, "name", name, sizeof(name), &name_len) != DCC_OK ||
         strcmp(name, "Feral Bot") != 0 ||
         name_len != strlen("Feral Bot")) {
         fprintf(stderr, "string field response helper failed\n");
         return 1;
     }
-    if (dcc_rest_response_string_field(&response, "name", name, 4U) != DCC_ERR_NOMEM) {
+    if (dcc_rest_result_string_field(&response, "name", name, 4U) != DCC_ERR_NOMEM) {
         fprintf(stderr, "small string field buffer response helper failed\n");
         return 1;
     }
@@ -338,7 +339,7 @@ static int run_rest_response_helper_smoke(void) {
     const char nested_body[] = "{\"nested\":{\"id\":\"1\"},\"id\":\"2\"}";
     response.body = nested_body;
     response.body_len = strlen(nested_body);
-    if (dcc_rest_response_message_id(&response, &snowflake) != DCC_OK ||
+    if (dcc_rest_result_message_id(&response, &snowflake) != DCC_OK ||
         snowflake != 2ULL) {
         fprintf(stderr, "top-level snowflake helper failed\n");
         return 1;
@@ -347,7 +348,7 @@ static int run_rest_response_helper_smoke(void) {
     const char malformed_body[] = "{\"id\":\"12x\"}";
     response.body = malformed_body;
     response.body_len = strlen(malformed_body);
-    if (dcc_rest_response_message_id(&response, &snowflake) != DCC_ERR_JSON) {
+    if (dcc_rest_result_message_id(&response, &snowflake) != DCC_ERR_JSON) {
         fprintf(stderr, "malformed snowflake helper failed\n");
         return 1;
     }
@@ -355,7 +356,7 @@ static int run_rest_response_helper_smoke(void) {
     const char malformed_number_body[] = "{\"id\":123x}";
     response.body = malformed_number_body;
     response.body_len = strlen(malformed_number_body);
-    if (dcc_rest_response_message_id(&response, &snowflake) != DCC_ERR_JSON) {
+    if (dcc_rest_result_message_id(&response, &snowflake) != DCC_ERR_JSON) {
         fprintf(stderr, "malformed numeric snowflake helper failed\n");
         return 1;
     }
@@ -363,7 +364,7 @@ static int run_rest_response_helper_smoke(void) {
     const char malformed_bool_body[] = "{\"nsfw\":truth}";
     response.body = malformed_bool_body;
     response.body_len = strlen(malformed_bool_body);
-    if (dcc_rest_response_bool_field(&response, "nsfw", &bool_value) != DCC_ERR_JSON) {
+    if (dcc_rest_result_bool_field(&response, "nsfw", &bool_value) != DCC_ERR_JSON) {
         fprintf(stderr, "malformed bool helper failed\n");
         return 1;
     }

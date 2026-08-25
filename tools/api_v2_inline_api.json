@@ -1,0 +1,1714 @@
+{
+  "inline": [
+    {
+      "class": "public_inline",
+      "fingerprint": "6e73434b22517912c8fc59cc0a74aeb3c8d1bf6223e925ab09c9c79e50d5c51f",
+      "name": "DCC_BOT_CONFIG",
+      "owner": "dcc/bot/main.h",
+      "signature": "dcc_bot_config_t DCC_BOT_CONFIG(void) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "d9b335013fd1f67f8d1cde86057280f515ac2cd5d4c3ff1391936e7a94365a11",
+      "name": "DCC_COMPONENT_V2_SIMPLE_SELECT",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t fn_(const char *custom_id) { \\ dcc_component_v2_builder_t v = dcc_component_v2_value(type_); \\ v.present = dcc_component_v2_field_mask( \\ DCC_COMPONENT_V2_FIELD_CUSTOM_ID); \\ v.as.select.custom_id = custom_id; return v; \\ } DCC_COMPONENT_V2_SIMPLE_SELECT(dcc_component_v2_user_select, DCC_COMPONENT_V2_USER_SELECT) DCC_COMPONENT_V2_SIMPLE_SELECT(dcc_component_v2_role_select, DCC_COMPONENT_V2_ROLE_SELECT) DCC_COMPONENT_V2_SIMPLE_SELECT(dcc_component_v2_mentionable_select, DCC_COMPONENT_V2_MENTIONABLE_SELECT) DCC_COMPONENT_V2_SIMPLE_SELECT(dcc_component_v2_channel_select, DCC_COMPONENT_V2_CHANNEL_SELECT) #undef DCC_COMPONENT_V2_SIMPLE_SELECT static inline dcc_component_v2_builder_t dcc_component_v2_text_input( const char *custom_id, dcc_text_input_style_t style) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4c5651e2da60aaeda5d33d39b03332aa4ea3df94261d6e95ceb2856e45526fb6",
+      "name": "DCC_CTX_AUTOCOMPLETE",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_AUTOCOMPLETE( dcc_ctx_t *ctx, dcc_autocomplete_builder_t autocomplete ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "bd124ef9368a53528ce2536ad4759596cf95ba6a9c1ccd71748fd26b16af44f0",
+      "name": "DCC_CTX_DEFER",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_DEFER(dcc_ctx_t *ctx) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "399a395129c39bfb7b113a5e595bb2437df190237a01739b20d4a4762339a970",
+      "name": "DCC_CTX_DEFER_EPHEMERAL",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_DEFER_EPHEMERAL(dcc_ctx_t *ctx) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "017c54cd61d12926d5df60354db0d159cba985557599e2cba67b9f20a2848bda",
+      "name": "DCC_CTX_FOLLOWUP",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_FOLLOWUP( dcc_ctx_t *ctx, dcc_message_builder_t message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "16cd70a002cefba457530bd1a175957f893d56436c93ee30b2307c6848b32c93",
+      "name": "DCC_CTX_FOLLOWUP_EPHEMERAL",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_FOLLOWUP_EPHEMERAL( dcc_ctx_t *ctx, dcc_message_builder_t message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "aeeecd31d7c115348d093e08b95c14e866977c3753f986be5e2c5feeebf6df5e",
+      "name": "DCC_CTX_FOLLOWUP_EPHEMERAL_TEXT",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_FOLLOWUP_EPHEMERAL_TEXT( dcc_ctx_t *ctx, const char *content ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ff14c35dcdbc61e020d11e18addd0615589f5734a01cb9618e320ff8e43dddd3",
+      "name": "DCC_CTX_FOLLOWUP_EPHEMERAL_UI",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_FOLLOWUP_EPHEMERAL_UI( dcc_ctx_t *ctx, dcc_component_v2_builder_t component ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3e62067fbad03ea142a6f64095d2cb4bb7a69c3bca44ced5b830c54dd7d6891d",
+      "name": "DCC_CTX_FOLLOWUP_EPHEMERAL_UI_ARRAY",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_FOLLOWUP_EPHEMERAL_UI_ARRAY( dcc_ctx_t *ctx, const dcc_component_v2_builder_t *components, size_t component_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "72c3d29740f6ebeb79717474f47729beb07b44f92c6692f84b88b8d9e2716fb6",
+      "name": "DCC_CTX_FOLLOWUP_TEXT",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_FOLLOWUP_TEXT( dcc_ctx_t *ctx, const char *content ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "52aefc205473b0c1a6f369660690dc0e5cf1cc98034b0b255c926ade0942e088",
+      "name": "DCC_CTX_FOLLOWUP_UI",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_FOLLOWUP_UI( dcc_ctx_t *ctx, dcc_component_v2_builder_t component ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "d44aba02750086eb9b282a45134f0250dfa93765ae56fb9dd2860563d4dd88bc",
+      "name": "DCC_CTX_FOLLOWUP_UI_ARRAY",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_FOLLOWUP_UI_ARRAY( dcc_ctx_t *ctx, const dcc_component_v2_builder_t *components, size_t component_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "545434dbcdf25c590612c853c7d9837d4ef11fdd844941b4f2259f04c5c0f30f",
+      "name": "DCC_CTX_REPLY",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_REPLY( dcc_ctx_t *ctx, dcc_message_builder_t message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "cec41ff6e11d751c668444f4711f510d708f07886265cc3e8c8db378c6db9e86",
+      "name": "DCC_CTX_REPLY_EPHEMERAL",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_REPLY_EPHEMERAL( dcc_ctx_t *ctx, dcc_message_builder_t message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ba0a2b398097c72e8991b17162a9ea00b2de5d398b580ef3a9940dc609d4cd0a",
+      "name": "DCC_CTX_REPLY_EPHEMERAL_TEXT",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_REPLY_EPHEMERAL_TEXT( dcc_ctx_t *ctx, const char *content ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "a174371970545cf26c65685510d9d0219f0880d717151f52cbda16ad9071a85a",
+      "name": "DCC_CTX_REPLY_EPHEMERAL_UI",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_REPLY_EPHEMERAL_UI( dcc_ctx_t *ctx, dcc_component_v2_builder_t component ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "2f4b3dbc71236b61edfff5262bf03db41ab1e311fa04a8a5249957f613696223",
+      "name": "DCC_CTX_REPLY_EPHEMERAL_UI_ARRAY",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_REPLY_EPHEMERAL_UI_ARRAY( dcc_ctx_t *ctx, const dcc_component_v2_builder_t *components, size_t component_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "09ab5540090f1862425adca5afd8d581e4ca41303ff2947d1113e2c326e188fa",
+      "name": "DCC_CTX_REPLY_TEXT",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_REPLY_TEXT( dcc_ctx_t *ctx, const char *content ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "cd4462d470048d81be82a49ee4362323632c3e3d5d35dc28a031805517538061",
+      "name": "DCC_CTX_REPLY_UI",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_REPLY_UI( dcc_ctx_t *ctx, dcc_component_v2_builder_t component ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "f805b2479662af82e094fd1cd6faf8864e32b341e28c4ad8629c444605b52984",
+      "name": "DCC_CTX_REPLY_UI_ARRAY",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_REPLY_UI_ARRAY( dcc_ctx_t *ctx, const dcc_component_v2_builder_t *components, size_t component_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "cff04cf2cf0be256fb1e727039c854a9e8c69b56239fe2efe354edc28746f643",
+      "name": "DCC_CTX_SEND",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_SEND( dcc_ctx_t *ctx, dcc_message_builder_t message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "c265b00f2eba58bc367c23b55b5a257f0acffb80b90d582db58b54a89853f880",
+      "name": "DCC_CTX_SEND_TEXT",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_SEND_TEXT( dcc_ctx_t *ctx, const char *content ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "13177e7096efdbf28bdd0b4107744e8dfb07e1cab0e4008a42610c173ee01b11",
+      "name": "DCC_CTX_SEND_UI",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_SEND_UI( dcc_ctx_t *ctx, dcc_component_v2_builder_t component ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "9172c71742ca185619ee21d9fecbf8487a7f1539ad2389eb970bb1ca854fb764",
+      "name": "DCC_CTX_SEND_UI_ARRAY",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_SEND_UI_ARRAY( dcc_ctx_t *ctx, const dcc_component_v2_builder_t *components, size_t component_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "b982d67ddfeea4fa7b19c94d90369adfd1dd4adcf35fb7b584075cb82630fdef",
+      "name": "DCC_CTX_SHOW_MODAL",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_SHOW_MODAL( dcc_ctx_t *ctx, dcc_modal_builder_t modal ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "d13bcb3ad932ec832fc606242e3278a812719d86628e3d4b61793f29ecaff688",
+      "name": "DCC_CTX_UPDATE",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_UPDATE( dcc_ctx_t *ctx, dcc_message_builder_t message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4774d5a1610e2f727fa120613823dfc5bad77fc4f30e0f54661d7196c5fa9dba",
+      "name": "DCC_CTX_UPDATE_UI",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_UPDATE_UI( dcc_ctx_t *ctx, dcc_component_v2_builder_t component ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "e361d0d1dccdd4ef308900a5144195816fab3879eb2a1556cfa6420cc8c1b33f",
+      "name": "DCC_CTX_UPDATE_UI_ARRAY",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_UPDATE_UI_ARRAY( dcc_ctx_t *ctx, const dcc_component_v2_builder_t *components, size_t component_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "af00dc0508c1096eb5da0c23563843f8da903a746083b5c1424f28eac3a1115d",
+      "name": "DCC_LISTENER_CONFIG",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_config_t DCC_LISTENER_CONFIG(void) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "558edfb5513ff08a27c288b069d0bcb8ef905b2f3918ddd5e43fab491c52e445",
+      "name": "DCC_LISTENER_CONFIG_WITH_POLICY",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_config_t DCC_LISTENER_CONFIG_WITH_POLICY( const dcc_listener_route_policy_t *policy ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3556d922091c501cfcd4f2e3c4e7da65a42405705add4fec2c126dee2dff8011",
+      "name": "DCC_LISTENER_DAILY_KST",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_schedule_target_t DCC_LISTENER_DAILY_KST( uint8_t hour, uint8_t minute ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "596e7895cbde001e62c91b917c0ab6d0a02377cb98be4edffa9757828a07a45c",
+      "name": "DCC_LISTENER_EVENT_HANDLER",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_handler_t DCC_LISTENER_EVENT_HANDLER( dcc_app_event_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "423ccf8a2264e6e9472ea959aeac4741080473d0dcb2d22fce1c7918b2330683",
+      "name": "DCC_LISTENER_INTERVAL",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_schedule_target_t DCC_LISTENER_INTERVAL( uint64_t interval_ms ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ed498494b1fa37f84eea16de9848c3c3743216982c41d13bb5ee167c6445268f",
+      "name": "DCC_LISTENER_MESSAGE_COMMAND_HANDLER",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_handler_t DCC_LISTENER_MESSAGE_COMMAND_HANDLER( dcc_app_message_command_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4efdf6a2a8e5d9d0a6349f76018befd5a1ab174a35eb787454bd3b9ced01ea23",
+      "name": "DCC_LISTENER_MESSAGE_HANDLER",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_handler_t DCC_LISTENER_MESSAGE_HANDLER( dcc_app_message_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "5f2d971b6b262f59c7ac8ee096e553ebb65a2830cf0213256a9879815d405966",
+      "name": "DCC_LISTENER_PLAIN_HANDLER",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_handler_t DCC_LISTENER_PLAIN_HANDLER( dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "a189dde29bd9a36ae0970e09b97bc53bea6727b5a2652733cdd0c8d807114cc2",
+      "name": "DCC_LISTENER_READY_HANDLER",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_handler_t DCC_LISTENER_READY_HANDLER( dcc_app_ready_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "d9aa3c29fa6a39c93ada3c01989b9295f1bf12ecdce889f818bab00d4d4a8639",
+      "name": "DCC_LISTENER_TASK_HANDLER",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_handler_t DCC_LISTENER_TASK_HANDLER( dcc_app_task_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "70d590cfd260dac85d9fe2dec061634bf05ee5211e88986e3215c40a004137d0",
+      "name": "DCC_LISTENER_TYPED_HANDLER",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_handler_t DCC_LISTENER_TYPED_HANDLER( dcc_app_typed_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "348d97ed6784d003f1b26987022e64316111f1a37657f5fba25c9f42a1ad2697",
+      "name": "DCC_LISTEN_AUTOCOMPLETE",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_AUTOCOMPLETE( const char *command_name, const char *description, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "99d436a1716e45b7c3246096fdc6f4c7b230d48ba461845c3baaa412b4726148",
+      "name": "DCC_LISTEN_AUTOCOMPLETE_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_AUTOCOMPLETE_WITH( const char *command_name, const char *description, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "6f06752c9227bccdc1dd04ce1fbe79365a46750b25acec1af4c879ad5915f8bf",
+      "name": "DCC_LISTEN_BUTTON",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_BUTTON( const char *custom_id, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "5852fcc02678234f49dbf86eb0b6d2846fb86f95c279feba7b327af66a754655",
+      "name": "DCC_LISTEN_BUTTON_PREFIX",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_BUTTON_PREFIX( const char *custom_id_prefix, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "8fb8993a338b9e709acb13817d5c169792690e92172a98f05a536e90559b4472",
+      "name": "DCC_LISTEN_BUTTON_PREFIX_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_BUTTON_PREFIX_WITH( const char *custom_id_prefix, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "d90ee4fdf06236d4c9d12da5c7794a6384d9b5ab37e8794af66dfac29a2bca4f",
+      "name": "DCC_LISTEN_BUTTON_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_BUTTON_WITH( const char *custom_id, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "08134956de5ae8e531a39b891e6a43d6e85227646640b00548ecef21afac000a",
+      "name": "DCC_LISTEN_EVENT",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_EVENT( dcc_event_type_t type, dcc_app_event_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "980808fedad01b76a76f39a2d1d6652c7397f234185e5893acf1d6dcb18901cd",
+      "name": "DCC_LISTEN_EVENT_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_EVENT_WITH( dcc_event_type_t type, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "8f5682fc0493542d4df0c6472f75c94f92bbd2719bf8cbab9050f224e6de6b89",
+      "name": "DCC_LISTEN_MESSAGE_COMMAND",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_COMMAND( const char *prefix, const char *name, dcc_app_message_command_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "fd6e709f56acfeb6a193a3ea47332e63302dc6ca15d29b8fc3e7179429345c05",
+      "name": "DCC_LISTEN_MESSAGE_COMMAND_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_COMMAND_WITH( const char *prefix, const char *name, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "19ef95de397ee572b23de0f1772a38e4514a9844695229252e9a1751543af111",
+      "name": "DCC_LISTEN_MESSAGE_CONTEXT_MENU",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_CONTEXT_MENU( const char *name, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "f71a7860fbe2687b7c2ab388f579dbecc6b80c151b696a6dec7c8e8c1b0cbb77",
+      "name": "DCC_LISTEN_MESSAGE_CONTEXT_MENU_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_CONTEXT_MENU_WITH( const char *name, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "6c38e1468f979f27aa546447d21e20ccf7de01431e42af4f231365ab296a3b48",
+      "name": "DCC_LISTEN_MESSAGE_CREATE",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_CREATE( dcc_app_message_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ec81a28251e7d5b289f993771ffe5a82581ae57115f79d9fe49bcf4399837aea",
+      "name": "DCC_LISTEN_MESSAGE_CREATE_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_CREATE_WITH( dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "06c0fd163400126f631622cd409d20573e71fde791e271122e4c1944966d573b",
+      "name": "DCC_LISTEN_MESSAGE_DELETE",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_DELETE( dcc_app_message_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ab536f598707dbba1116a6909b27e460f3718620bc995387dffc7b11bdd3a858",
+      "name": "DCC_LISTEN_MESSAGE_DELETE_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_DELETE_WITH( dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "53efebc3bff45835e4fccb180cc17c52ccf9575a3fe3b400ee61b5c6b35880d4",
+      "name": "DCC_LISTEN_MESSAGE_UPDATE",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_UPDATE( dcc_app_message_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "12539bc99c086d943c1fa9becc7078869fd6f67971dde6677130bb9734d5e91f",
+      "name": "DCC_LISTEN_MESSAGE_UPDATE_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MESSAGE_UPDATE_WITH( dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "a710229a1dc9094051f918df616381694ee9837d8b268391988b72f6fb0008b2",
+      "name": "DCC_LISTEN_MODAL",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MODAL( const char *custom_id, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "5bf17515b8e64fc5dc8dbe138fb9214e25fee9681e60386f4803567704977078",
+      "name": "DCC_LISTEN_MODAL_PREFIX",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MODAL_PREFIX( const char *custom_id_prefix, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "c0b51042556c12e50c33555caf5495a4630021d7ba351fafef449db2f767be4a",
+      "name": "DCC_LISTEN_MODAL_PREFIX_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MODAL_PREFIX_WITH( const char *custom_id_prefix, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0f802bc7785aec5c74d6d7a9044de8f8847fa3199bb50dc639f2a7c63ad3d0fb",
+      "name": "DCC_LISTEN_MODAL_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_MODAL_WITH( const char *custom_id, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "703454458a9422b98d9780feba25d245ecf7c7a3479aab4977a93fa3a4f10c23",
+      "name": "DCC_LISTEN_READY",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_READY(dcc_app_ready_fn handler) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "63fec81862138b50baddf1bc8ca8b0567ce905eb9b9ab03d6bc1fea991c93383",
+      "name": "DCC_LISTEN_READY_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_READY_WITH( dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "e9c807216e112bb64035cd9edbb3c0c32aacf38382bd5a9faf02430bb0b569b9",
+      "name": "DCC_LISTEN_SELECT",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SELECT( const char *custom_id, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4be5be75c4462d96dd9bb61ff702d27bd78f1fc8b37a412dca2e1c05f72761a2",
+      "name": "DCC_LISTEN_SELECT_PREFIX",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SELECT_PREFIX( const char *custom_id_prefix, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "fa4d77f946d816dfc3742c51524625d43262657daa1e3674b2067d85b7f24768",
+      "name": "DCC_LISTEN_SELECT_PREFIX_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SELECT_PREFIX_WITH( const char *custom_id_prefix, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0a3ababc043c5e6d027a3aa6cd81e9792b584458959292f16dc5c9a99200bf6c",
+      "name": "DCC_LISTEN_SELECT_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SELECT_WITH( const char *custom_id, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "b5a412c0aba24d8f34ea259c512d365a7b68a278e96f5d87fc588df2b5aa281a",
+      "name": "DCC_LISTEN_SLASH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SLASH( const char *name, const char *description, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3a6663adc61df6c398a87a582d08d67f26ce0d2d6025f5fd81cfc2f2d97387cb",
+      "name": "DCC_LISTEN_SLASH_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SLASH_WITH( const char *name, const char *description, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "87e74443f5dff7813390a8d685ca349c590f78c2f3b1a72945475f508dd1ce2c",
+      "name": "DCC_LISTEN_SUBCOMMAND",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SUBCOMMAND( const char *command_name, const char *subcommand_path, const char *description, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "c8b17f2ba65bcdeb116a60efbae4711216cc8a877b456227d55b3756fdfeccf8",
+      "name": "DCC_LISTEN_SUBCOMMAND_AUTOCOMPLETE",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SUBCOMMAND_AUTOCOMPLETE( const char *command_name, const char *subcommand_path, const char *description, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "d8ec3b10a92d40199db30577dbb1a3310c509ec265db6102feae5cbddc974d3b",
+      "name": "DCC_LISTEN_SUBCOMMAND_AUTOCOMPLETE_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SUBCOMMAND_AUTOCOMPLETE_WITH( const char *command_name, const char *subcommand_path, const char *description, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "9785a568d9a4b3cb0658118432a8c5fbb59ade3f36d0583e968ee6cdb21d27f2",
+      "name": "DCC_LISTEN_SUBCOMMAND_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_SUBCOMMAND_WITH( const char *command_name, const char *subcommand_path, const char *description, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3ac40589818503dc53f68566068535c1024198d849d9386bcfe52099d3a622fa",
+      "name": "DCC_LISTEN_TASK",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_TASK( dcc_listener_schedule_target_t schedule, dcc_app_task_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "90cca46a92f94ddcf2768e4caacb0c3496e1953731df424ace6968733434a4ce",
+      "name": "DCC_LISTEN_TASK_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_TASK_WITH( dcc_listener_schedule_target_t schedule, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "c028e6c6aa448a5a0a8679c9ad3272818e9eac6208fe7142f46d7dde535ebf08",
+      "name": "DCC_LISTEN_USER_CONTEXT_MENU",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_USER_CONTEXT_MENU( const char *name, dcc_app_handler_fn handler ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3891677c77e920f07d834ee5b28e92094bfc2dacc424e2dc8951aef02a362c33",
+      "name": "DCC_LISTEN_USER_CONTEXT_MENU_WITH",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t DCC_LISTEN_USER_CONTEXT_MENU_WITH( const char *name, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0e0015da72a810cfd06fc7f4326fd7f8b8f8349888aa4b011eeab21615ce3e49",
+      "name": "DCC_UI_BUTTON",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_BUTTON( dcc_button_style_t style, const char *label, const char *custom_id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0530fd0b51bfff05f30bf5603b0f6fd9b11819dd10a640ecb5349e5b7ba2d8a2",
+      "name": "DCC_UI_CARD_ACCENT_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_CARD_ACCENT_ARRAY( const dcc_component_v2_builder_t *components, size_t component_count, uint32_t accent_color ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3589dc2cdb69db5a5376dbfc992c321dd5a81f0c1ce8a2f40f6c5a262211df29",
+      "name": "DCC_UI_CARD_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_CARD_ARRAY( const dcc_component_v2_builder_t *components, size_t component_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "20f84e83c4c84530b312d46ba149cf75a52809eb8734a6f698b5e085dd1fcb61",
+      "name": "DCC_UI_CHANNEL_SELECT_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_CHANNEL_SELECT_ARRAY( const char *custom_id, const dcc_component_v2_select_default_value_t *default_values, size_t default_value_count, const uint32_t *channel_types, size_t channel_type_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "261ed09cc88512323648ec2d38aabd3e7d95fbd9451c63a61cd0e62004ed2dc5",
+      "name": "DCC_UI_CHECKBOX",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_CHECKBOX( const char *custom_id, uint8_t default_value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3d0ea91e861f0fb192c7493c3fbd7239aaa18faaee7c2071b4f4a6d09f78ae04",
+      "name": "DCC_UI_CHECKBOX_GROUP_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_CHECKBOX_GROUP_ARRAY( const char *custom_id, const dcc_component_v2_choice_option_t *options, size_t option_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0cb0734bf2f478d724ad0b5dd82f9c769907605671bd3f778938f0d33502a5fd",
+      "name": "DCC_UI_CHOICE",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_choice_option_t DCC_UI_CHOICE( const char *label, const char *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "62f8d5e1f23de623cb3e9aecd5f74891de481c8b899e0567c4e8bc0d35d73cfa",
+      "name": "DCC_UI_CHOICE_DEFAULT",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_choice_option_t DCC_UI_CHOICE_DEFAULT( const char *label, const char *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "51979eefd8dec172b65a499f1519d28c2b14f98c4d062799edfda72fe5e49230",
+      "name": "DCC_UI_CHOICE_DEFAULT_DESCRIPTION",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_choice_option_t DCC_UI_CHOICE_DEFAULT_DESCRIPTION( const char *label, const char *value, const char *description ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "10a4faf7074f7f276922118e9a981e322f62841343c766b78ed01d13830801a2",
+      "name": "DCC_UI_CHOICE_DESCRIPTION",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_choice_option_t DCC_UI_CHOICE_DESCRIPTION( const char *label, const char *value, const char *description ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "a1f7c1ff77056d6f93802b793087316be02bc60d4ce1e008ffb70a9cb21ca8b9",
+      "name": "DCC_UI_DANGER",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_DANGER( const char *label, const char *custom_id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "55d92f9973addc728465f2858c6de7e709a9518252332463f84a096bf82bdcdd",
+      "name": "DCC_UI_DEFAULT_CHANNEL",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_select_default_value_t DCC_UI_DEFAULT_CHANNEL( dcc_snowflake_t id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "f149e638a9ce9e9fdd129c5368ab20a70fa7b7693c22af9dc6af51be0c5aaa0c",
+      "name": "DCC_UI_DEFAULT_ROLE",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_select_default_value_t DCC_UI_DEFAULT_ROLE( dcc_snowflake_t id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "d025a409509e51da67f2096b22aee78076ac496d35774ec79316a0703011ea18",
+      "name": "DCC_UI_DEFAULT_USER",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_select_default_value_t DCC_UI_DEFAULT_USER( dcc_snowflake_t id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "54dbc3d7edae5bfbe7e890eab76890e817e64b4d3b7bdd34ab3556ce6228d3ea",
+      "name": "DCC_UI_FILE",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_FILE( const char *attachment_url ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0ce5187762ec3e32f15b0822ab80aeefab0a148dd1f6e4423d1fdd7f6cbdd079",
+      "name": "DCC_UI_FILE_UPLOAD",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_FILE_UPLOAD( const char *custom_id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "342a56c96a2bf480c9464cb3c3c1dcba00665da2d46c3f2f8d54ef8a520acc0a",
+      "name": "DCC_UI_FILE_UPLOAD_WITH_TYPES",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_FILE_UPLOAD_WITH_TYPES( const char *custom_id, const char *const *file_types, size_t file_type_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "cc2572854a3ee86b3dfabfefbc57b05cd0f8e886193b81fa72d5a33b6eeb1017",
+      "name": "DCC_UI_GALLERY_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_GALLERY_ARRAY( const dcc_component_v2_media_gallery_item_t *items, size_t item_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "b550b43542e75b7300069f5d61ce74cf0fb157793412395c903d5dbd9e87bc7d",
+      "name": "DCC_UI_INPUT",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_INPUT( const char *custom_id, dcc_text_input_style_t style ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ce6b42a440b19967e64d7c967dbc4f4b716f8bbc57da5cad99e8006984bf2811",
+      "name": "DCC_UI_INPUT_PLACEHOLDER",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_INPUT_PLACEHOLDER( const char *custom_id, dcc_text_input_style_t style, const char *placeholder ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "23ce02644263ea39a8a029410cbd4f8825200899f15aec3a5119fe951b3a06fd",
+      "name": "DCC_UI_LABEL",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_LABEL( const char *label, const dcc_component_v2_builder_t *component ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "f34f5f5f27eefe3fd8e4241583aa45bfdbe72975ab602d7a5d6c159ad7d323da",
+      "name": "DCC_UI_LINK",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_LINK( const char *label, const char *url ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "8727bfde8f72dd9a0710bbcdf898afef635fb5977f3d4936e988f119a58b0ed5",
+      "name": "DCC_UI_MEDIA",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_media_gallery_item_t DCC_UI_MEDIA( const char *url, const char *description ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "f78022f1b48daeb1fc89cdc4b352726109c3545080550b286a4cd0653d0a8dd2",
+      "name": "DCC_UI_MEDIA_SPOILER",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_media_gallery_item_t DCC_UI_MEDIA_SPOILER( const char *url, const char *description ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "16887abb8206f8fc909ae048dd4c757d548e87a974b958399b438a912e3ea601",
+      "name": "DCC_UI_MENTIONABLE_SELECT",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_MENTIONABLE_SELECT( const char *custom_id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "91d841b06f82fb6011e6bcc03f7e7b9f3413ad95204af06e7ae47b3aaa03d6a6",
+      "name": "DCC_UI_MODAL_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_modal_builder_t DCC_UI_MODAL_ARRAY( const char *custom_id, const char *title, const dcc_component_v2_builder_t *components, size_t component_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3bd7331d729fd78723ce876e198acedd60bc9bea1d9dd35a258c8d74d6d5d136",
+      "name": "DCC_UI_OPTION",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_select_option_t DCC_UI_OPTION( const char *label, const char *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3f95f1d3e9765b22ffffc9e59588a28c7736269a95e35ad7913047587d6a4ff7",
+      "name": "DCC_UI_OPTION_DEFAULT",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_select_option_t DCC_UI_OPTION_DEFAULT( const char *label, const char *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "08e73fb9bd10526f5552f2365bc762aeeac64e926a5c7295fccf109d3eb653e9",
+      "name": "DCC_UI_OPTION_DEFAULT_DESCRIPTION",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_select_option_t DCC_UI_OPTION_DEFAULT_DESCRIPTION( const char *label, const char *value, const char *description ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "68ccf3319e06f47c050f96989afc91401c75c242845642e6684f7570d0b136eb",
+      "name": "DCC_UI_OPTION_DESCRIPTION",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_select_option_t DCC_UI_OPTION_DESCRIPTION( const char *label, const char *value, const char *description ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "40d5a18b0db1862f187747b950f6307500999d0e28f80d2b63b8bbefe41afb37",
+      "name": "DCC_UI_PREMIUM",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_PREMIUM(dcc_snowflake_t sku_id) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "2b8658050ef0ab52fefb6e82f592ada0a9f378b55f339f1d1b80cfe5f2b66197",
+      "name": "DCC_UI_PRIMARY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_PRIMARY( const char *label, const char *custom_id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "557b907dc4edf664f007ab39dce712ee9a73d29232c6f4434ae4d29ec3bb9752",
+      "name": "DCC_UI_RADIO_GROUP_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_RADIO_GROUP_ARRAY( const char *custom_id, const dcc_component_v2_choice_option_t *options, size_t option_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "915bb1dc6f339421530c7f60eb61ea5dba00461819019f214ea5733b0a994088",
+      "name": "DCC_UI_ROLE_SELECT",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_ROLE_SELECT( const char *custom_id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3608ce545cd264c744c9be857ace2f7b6bc07fac1f6a2fecb8645bdce6c7d54f",
+      "name": "DCC_UI_ROW_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_ROW_ARRAY( const dcc_component_v2_builder_t *components, size_t component_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "68f98abd8e05df3b5b7fdb5907d922217c0ac7fec99b195f6bfb4ae451a7eaf6",
+      "name": "DCC_UI_SECONDARY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_SECONDARY( const char *label, const char *custom_id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "5fab0b5b4947ef9c04c6be5e700a678062bea7a1719899bb6b7db5369911bb8d",
+      "name": "DCC_UI_SECTION_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_SECTION_ARRAY( const dcc_component_v2_builder_t *components, size_t component_count, const dcc_component_v2_builder_t *accessory ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "522f95a14e8f11e44fef683cce0804a014b9e1eef2b0ba54b678f649d50580a1",
+      "name": "DCC_UI_SEPARATOR",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_SEPARATOR(void) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "efbb579aa61932b4a875f3da22ccf994b8af3bbf4f3be4921026b2e82617c042",
+      "name": "DCC_UI_SEPARATOR_LARGE",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_SEPARATOR_LARGE(void) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "541fb1c9bbc31c8bc3ebc328cb5cefd98b8c633de9644181f485ac1a691ef36a",
+      "name": "DCC_UI_STRING_SELECT_ARRAY",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_STRING_SELECT_ARRAY( const char *custom_id, const dcc_select_option_t *options, size_t option_count ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "b2bf316c49af5bc79af26c8ad9bd275f6a2d17228b3fcf6210fc3a861ab4fb8c",
+      "name": "DCC_UI_SUCCESS",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_SUCCESS( const char *label, const char *custom_id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "369283f166f4c359cb89aad82bddcd16302f780d32b308c3a3a53d8ebbacbafa",
+      "name": "DCC_UI_TEXT",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_TEXT(const char *content) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "23d53ce75d5301b6ed047fbd260bfdc769023a920c0452764e8ed41bd15369cb",
+      "name": "DCC_UI_THUMBNAIL",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_THUMBNAIL(const char *url) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4171ebca2e93be7d7df33349d24354d16a99a9a54e8fc8ac936491a421b956c6",
+      "name": "DCC_UI_USER_SELECT",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t DCC_UI_USER_SELECT( const char *custom_id ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "5811a94c206fa468ce1f81b2e0722e6724fe595878cdaeb23e94e2c35e2b90c1",
+      "name": "dcc_bot_component_listener",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t dcc_bot_component_listener( dcc_listener_kind_t kind, const char *custom_id, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "c4d6d04890bc115e42b806cbea193eb1cf5b826bd84395837fe9f3198fac35c7",
+      "name": "dcc_bot_event_listener",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t dcc_bot_event_listener( dcc_listener_kind_t kind, dcc_event_type_t type, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "c1db8351c615ecb98f833c26d5e1e10f020caa11be7be19eb39a431e6f769a58",
+      "name": "dcc_bot_listener_base",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t dcc_bot_listener_base( dcc_listener_kind_t kind, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "508760d2ee418738c7b8abf21d408faf6ffd55534425a7397db814549b10b89f",
+      "name": "dcc_bot_message_ephemeral",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t DCC_CTX_REPLY_UI_ARRAY( dcc_ctx_t *, const dcc_component_v2_builder_t *, size_t); /** Queues an ephemeral borrowed Components v2 array reply. */ static inline dcc_status_t DCC_CTX_REPLY_EPHEMERAL_UI_ARRAY( dcc_ctx_t *, const dcc_component_v2_builder_t *, size_t); /** Queues a Components v2 array as a component-source update. */ static inline dcc_status_t DCC_CTX_UPDATE_UI_ARRAY( dcc_ctx_t *, const dcc_component_v2_builder_t *, size_t); /** Forces a borrowed Components v2 array as a followup. */ static inline dcc_status_t DCC_CTX_FOLLOWUP_UI_ARRAY( dcc_ctx_t *, const dcc_component_v2_builder_t *, size_t); /** Forces an ephemeral Components v2 array followup. */ static inline dcc_status_t DCC_CTX_FOLLOWUP_EPHEMERAL_UI_ARRAY( dcc_ctx_t *, const dcc_component_v2_builder_t *, size_t); /** Sends a borrowed Components v2 array to the unrelated channel. */ static inline dcc_status_t DCC_CTX_SEND_UI_ARRAY( dcc_ctx_t *, const dcc_component_v2_builder_t *, size_t); static inline dcc_status_t dcc_bot_message_ephemeral( dcc_message_builder_t *message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "48b8bed73dad3dd2edaccc358e30ff4b1264e91f8ea588878108ed33d6555c92",
+      "name": "dcc_bot_message_ui",
+      "owner": "dcc/bot/replies.h",
+      "signature": "dcc_status_t dcc_bot_message_ui( dcc_message_builder_t *message, const dcc_component_v2_builder_t *components, size_t component_count, uint8_t ephemeral ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3319c44b2229c764c1c676721a3e73c7799c19111b01ea8fca6f225d7ab87ae6",
+      "name": "dcc_bot_module_aligned_state",
+      "owner": "dcc/hot_reload/module/context.h",
+      "signature": "void *dcc_bot_module_aligned_state( dcc_bot_module_ctx_t *ctx, size_t size, size_t alignment ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0df7533529c7b0bdc0acfdecc60ca355aed27c6a614db3528841fc6bdc94fc56",
+      "name": "dcc_bot_module_client",
+      "owner": "dcc/hot_reload/module/context.h",
+      "signature": "dcc_client_t *dcc_bot_module_client(const dcc_bot_module_ctx_t *ctx) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "27861d844faa843decb72f375e8fe17839b6f2318b19c39252e6b5e4fbb51333",
+      "name": "dcc_bot_module_deinit_from_descriptor",
+      "owner": "dcc/hot_reload/module/descriptor.h",
+      "signature": "void dcc_bot_module_deinit_from_descriptor( dcc_bot_module_ctx_t *ctx, const dcc_bot_module_descriptor_t *descriptor ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "84bf0c453dd9009eb8e1ea081a5fc3e8662c425fa9c8db2174b3f70738938c9c",
+      "name": "dcc_bot_module_descriptor_has",
+      "owner": "dcc/hot_reload/module/descriptor.h",
+      "signature": "int dcc_bot_module_descriptor_has( const dcc_bot_module_descriptor_t *descriptor, size_t offset, size_t field_size ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "e153be339b7e6f5211ddc213a11403487cc9410ae4386ec72d8ba0dc91f89d44",
+      "name": "dcc_bot_module_generation",
+      "owner": "dcc/hot_reload/module/context.h",
+      "signature": "uint64_t dcc_bot_module_generation(const dcc_bot_module_ctx_t *ctx) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "636d32f46cfd3e7b176db5121e61d52fc3d9664828c39ebbc3a272e7453a89ed",
+      "name": "dcc_bot_module_init_from_descriptor",
+      "owner": "dcc/hot_reload/module/descriptor.h",
+      "signature": "dcc_status_t dcc_bot_module_init_from_descriptor( dcc_bot_module_ctx_t *ctx, const dcc_bot_module_descriptor_t *descriptor ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "9466cf8bc49e54ce0c43616dbe4001706720722cf3c9f4ffcb86b09128cb26f2",
+      "name": "dcc_bot_module_on",
+      "owner": "dcc/hot_reload/module/context.h",
+      "signature": "dcc_status_t dcc_bot_module_on( dcc_bot_module_ctx_t *ctx, dcc_event_type_t type, dcc_event_cb cb, void *handler_user_data ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "04f37f0ee749181f5d1b946922b9c3eec7cfe5eb49d116bc847b172cdcbc225e",
+      "name": "dcc_bot_module_state",
+      "owner": "dcc/hot_reload/module/context.h",
+      "signature": "void *dcc_bot_module_state(dcc_bot_module_ctx_t *ctx, size_t size) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "6f3be4a51c40cb452385d972bd92c75ecffce718c4ba93e415b43610512fcd62",
+      "name": "dcc_bot_module_user_data",
+      "owner": "dcc/hot_reload/module/context.h",
+      "signature": "void *dcc_bot_module_user_data(const dcc_bot_module_ctx_t *ctx) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "925a3831b101b5506b345dc5d4ee100b3b5cb908726c2ca51f6e62e2fa8aff7f",
+      "name": "dcc_bot_route_listener",
+      "owner": "dcc/bot/listeners.h",
+      "signature": "dcc_listener_t dcc_bot_route_listener( dcc_listener_kind_t kind, const char *name, const char *description, const char *command_name, const char *subcommand_path, dcc_listener_handler_t handler, dcc_listener_config_t config ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4ccd206c719d497457adbfca454bda035e278ecf5771fbe6e5721650b0d3ed0f",
+      "name": "dcc_bot_ui_invalid",
+      "owner": "dcc/bot/ui.h",
+      "signature": "dcc_component_v2_builder_t dcc_bot_ui_invalid( dcc_component_v2_builder_t value, dcc_status_t status ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "a94ca47fd3a7efba8ed830c69b81bce2317a0ca28776cfc387a435ca871308c5",
+      "name": "dcc_channel_forum_tag_params_init",
+      "owner": "dcc/rest/types/channels.h",
+      "signature": "void dcc_channel_forum_tag_params_init( dcc_channel_forum_tag_params_t *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "2043e0e93d1a8ad8db79f0f39bea390dac44c9f0e3c2a5ce14c96523c0ee23c2",
+      "name": "dcc_channel_params_init",
+      "owner": "dcc/rest/types/channels.h",
+      "signature": "void dcc_channel_params_init(dcc_channel_params_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "2dadc805e1dc9cbebefb22d6d0395791f632a7737b82c81dcb527db7fb282c5f",
+      "name": "dcc_channel_permission_overwrite_init",
+      "owner": "dcc/rest/types/channels.h",
+      "signature": "void dcc_channel_permission_overwrite_init( dcc_channel_permission_overwrite_t *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "536fe2ba88c0da18ca6decf0a65c05696dc1dc02d7ad55c8d10f3d2d803afb26",
+      "name": "dcc_channel_position_init",
+      "owner": "dcc/rest/types/channels.h",
+      "signature": "void dcc_channel_position_init(dcc_channel_position_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "5c393978c50b11e22eb7079be08d9711a47c2dc8787e9f3f2000efc154527376",
+      "name": "dcc_channel_positions_params_init",
+      "owner": "dcc/rest/types/channels.h",
+      "signature": "void dcc_channel_positions_params_init( dcc_channel_positions_params_t *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "fa4f8e620b81143b2e6012f31f36d8c166eee19cb4ead2400b812f0a307d2a84",
+      "name": "dcc_channel_voice_status_params_init",
+      "owner": "dcc/rest/types/channels.h",
+      "signature": "void dcc_channel_voice_status_params_init( dcc_channel_voice_status_params_t *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "cec1ca27148b4ca38cb28bb9cad2f51df3380cc4868853ce6f79cacfc631087f",
+      "name": "dcc_component_v2_action_row",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_action_row( const dcc_component_v2_builder_t *items, size_t count) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "eedaed4f74f28189b20fa2a8d0926d1180cc4a83c1a0aec86e0e6b3cb8a86d30",
+      "name": "dcc_component_v2_button",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_button( dcc_button_style_t style, const char *label, const char *custom_id) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "73d2ae00978de94e697d6fdf388bc6ef791cb3c4d46484904f39519a786ac635",
+      "name": "dcc_component_v2_checkbox",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_checkbox( const char *custom_id, uint8_t default_value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "066afeeb2bcc75eda119d5c769a7b55d5470652b643e83f6a26d96847bb6ae73",
+      "name": "dcc_component_v2_checkbox_group",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_checkbox_group( const char *custom_id, const dcc_component_v2_choice_option_t *options, size_t count) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "e023b2848908c7ea482bda79cbadc0212f3434b5aba049e21539026a1897dbd5",
+      "name": "dcc_component_v2_container",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_container( const dcc_component_v2_builder_t *items, size_t count) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "76f1a6a8ffe2794a03e24f97b0ca7543b6afdd68aaa6524b42e279c78087adc0",
+      "name": "dcc_component_v2_field_mask",
+      "owner": "dcc/component_v2.h",
+      "signature": "uint64_t dcc_component_v2_field_mask( dcc_component_v2_field_t field) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "42bb7891ed77b04a2e1fc3d7baabc3a6cad5a5bdcd4d6abb9c0fd2c914e92b2f",
+      "name": "dcc_component_v2_file",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_file( dcc_component_v2_unfurled_media_t file) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "28fa1d0a801131c037bc3668de47dd0c93019ae0a9ec752baea5b67aa208c592",
+      "name": "dcc_component_v2_file_upload",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_file_upload( const char *custom_id) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0af94675d777ab88c76b3977feeb97a8a4e170aaa6430cd176e37e84e4f2af77",
+      "name": "dcc_component_v2_label",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_label( const char *label, const dcc_component_v2_builder_t *component) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ba1a1dd182dc8fa54ebe2e14bfb6932a0b1712e1c78c561e373daaf2ffacb3a1",
+      "name": "dcc_component_v2_link_button",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_link_button( const char *label, const char *url) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "6ce09c32c45369198b77271090f34f4e0ae4c3ef18b2434917ea914874861b74",
+      "name": "dcc_component_v2_media_gallery",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_media_gallery( const dcc_component_v2_media_gallery_item_t *items, size_t count) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "205f9faae484f962b0cc641e855a23972e4ce510ab4d4cbf9064f2b258747f1c",
+      "name": "dcc_component_v2_premium_button",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_premium_button( dcc_snowflake_t sku_id) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "5aedb0ef5699b076672ec2f1a3cd233ea3152f6703f0b1aa3ed6c50a6c731ebf",
+      "name": "dcc_component_v2_radio_group",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_radio_group( const char *custom_id, const dcc_component_v2_choice_option_t *options, size_t count) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4ffeb1db0974861ca18b132f7dd3deb9037966763cd2d896681c4f175a08d09c",
+      "name": "dcc_component_v2_section",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_section( const dcc_component_v2_builder_t *items, size_t count, const dcc_component_v2_builder_t *accessory) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "7e6c123f256ea9f2b01caa830b921b84172949f3abf4c9ce028d5a24c404337d",
+      "name": "dcc_component_v2_separator",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_separator( uint8_t divider, dcc_component_v2_separator_spacing_t spacing) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "152f8fee3daf6535ee7225ab374139ace7ca1dd9a5d67a35f0fbcc3c5880a72b",
+      "name": "dcc_component_v2_string_select",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_string_select( const char *custom_id, const dcc_select_option_t *options, size_t count) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "8c5d6d19fd12b0c18f3243e35b3ff836e9afe11fcbaf4d4f2215af19e4a5f15a",
+      "name": "dcc_component_v2_text_display",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_text_display( const char *content) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "384b34823af72bd5e411d0ae42e66ca1f024f6f24059791e40a191e99f7f6ced",
+      "name": "dcc_component_v2_thumbnail",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_thumbnail( dcc_component_v2_unfurled_media_t media) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "26db37e4932de19dccb6fa5b7b4184afdf7b159cbca8eabd7fa79e719da8ec29",
+      "name": "dcc_component_v2_value",
+      "owner": "dcc/component_v2.h",
+      "signature": "dcc_component_v2_builder_t dcc_component_v2_value( dcc_component_v2_type_t type) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "1df96a32ed44c8caca22277e96aa845d9524712e466446c0f9958e9aa6e249e0",
+      "name": "dcc_current_user_params_init",
+      "owner": "dcc/rest/types/users.h",
+      "signature": "void dcc_current_user_params_init(dcc_current_user_params_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "5097e094978fab998911d0f95bb1cf2b6593034876ed40a21dae6c554ce6838a",
+      "name": "dcc_current_user_voice_state_params_init",
+      "owner": "dcc/rest/types/voice_states.h",
+      "signature": "void dcc_current_user_voice_state_params_init( dcc_current_user_voice_state_params_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "95a415dcb3ff4e92e5ce6231a7b92b8bbd2910255c1cd8e8fe484f5b115143e6",
+      "name": "dcc_dm_channel_params_init",
+      "owner": "dcc/rest/types/channels.h",
+      "signature": "void dcc_dm_channel_params_init(dcc_dm_channel_params_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "a4189318befa71fe6ef5685463c65a48677a05f42a6da617e6ea0c20d44d66ee",
+      "name": "dcc_emoji_params_init",
+      "owner": "dcc/rest/types/emojis_stickers.h",
+      "signature": "void dcc_emoji_params_init(dcc_emoji_params_t *params) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "6390f6d39e1b59dfa2d174a9053bdb9fe0e7a0a27ecaa7d14cf2377d87dcae9d",
+      "name": "dcc_group_dm_recipient_params_init",
+      "owner": "dcc/rest/types/channels.h",
+      "signature": "void dcc_group_dm_recipient_params_init(dcc_group_dm_recipient_params_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ca97ec16c780d9c1581e3e66d9cb8ecfd4401c1907ee417eb38a90f582ae35bc",
+      "name": "dcc_guild_command_permissions_params_init",
+      "owner": "dcc/rest/types/application_commands.h",
+      "signature": "void dcc_guild_command_permissions_params_init( dcc_guild_command_permissions_params_t *params) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "733d56bcde53203f05dea69a7e03d17da9d7f9219e0bcb35d76acc4ad99f26fa",
+      "name": "dcc_guild_sticker_params_init",
+      "owner": "dcc/rest/types/emojis_stickers.h",
+      "signature": "void dcc_guild_sticker_params_init( dcc_guild_sticker_params_t *params) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "bc94048b0d74ece09576a4c14e034b0ba3928131f2f2a9fb51f71c05fa42d450",
+      "name": "dcc_invite_params_init",
+      "owner": "dcc/rest/types/invites.h",
+      "signature": "void dcc_invite_params_init(dcc_invite_params_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4b2dff483af85eb9f5701e7ad67ca7b55e2eba61fcb0b8f7054b277d82cd0cee",
+      "name": "dcc_listener_init",
+      "owner": "dcc/app/listeners.h",
+      "signature": "void dcc_listener_init( dcc_listener_t *listener, dcc_listener_kind_t kind ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "b01b5071b53f96a747389ac52b12f86c9e11a02aad1960adbb1dbd84cd6e0d61",
+      "name": "dcc_message_attachment_init",
+      "owner": "dcc/message.h",
+      "signature": "void dcc_message_attachment_init(dcc_message_attachment_t *attachment) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "fddf351d5855452280f59a8d06a955ece93d8948176ee8045e0b6d06c8aaa04c",
+      "name": "dcc_message_reference_init",
+      "owner": "dcc/message.h",
+      "signature": "void dcc_message_reference_init(dcc_message_reference_t *reference) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "2e77db0060ffb6a5794a992ce74c8aa526621c0f7e84b0acece97cd09cfec16e",
+      "name": "dcc_permissions_can",
+      "owner": "dcc/permissions.h",
+      "signature": "int dcc_permissions_can(dcc_permission_t permissions, dcc_permission_t required) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "5724e0115732214e4753d3b4abfb04cd97941856ab90388bb9e304aea13e06ca",
+      "name": "dcc_permissions_can_any",
+      "owner": "dcc/permissions.h",
+      "signature": "int dcc_permissions_can_any(dcc_permission_t permissions, dcc_permission_t required) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "87e21b969d1827fcba1f6e96b87577956cbca42e17944b5c33b3e1c71af7c03b",
+      "name": "dcc_permissions_has",
+      "owner": "dcc/permissions.h",
+      "signature": "int dcc_permissions_has(dcc_permission_t permissions, dcc_permission_t required) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "449269a0c9f3a382af0ffa8aa8027c05abd0b57f2504b8242a5c18403fc2a113",
+      "name": "dcc_permissions_has_any",
+      "owner": "dcc/permissions.h",
+      "signature": "int dcc_permissions_has_any(dcc_permission_t permissions, dcc_permission_t required) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "9e7dfcfb988d74f9a1c0df4fa7fea550a8525dc7cbf944d476e811eb7b5e004f",
+      "name": "dcc_rest_call_options_init",
+      "owner": "dcc/rest/request.h",
+      "signature": "void dcc_rest_call_options_init(dcc_rest_call_options_t *options) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3a9ad6643c4a95ada96bb0ebfeff80e8430e2c5b525fc5346d5357be4a0aa00f",
+      "name": "dcc_rest_command_list_query_init",
+      "owner": "dcc/rest/types/application_commands.h",
+      "signature": "void dcc_rest_command_list_query_init(dcc_rest_command_list_query_t *query) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "6174457bbfbd88d1ba10cb5ff74be64d66f49e2a4eecfbda6abde96e9b44c0c0",
+      "name": "dcc_rest_current_guild_member_nickname_init",
+      "owner": "dcc/rest/types/guild_members.h",
+      "signature": "void dcc_rest_current_guild_member_nickname_init( dcc_rest_current_guild_member_nickname_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "3913edc4e8606ade0c06515ecc421d3867cdb5f41c5cfb3f88e822f12cf7cc3f",
+      "name": "dcc_rest_current_guild_member_update_init",
+      "owner": "dcc/rest/types/guild_members.h",
+      "signature": "void dcc_rest_current_guild_member_update_init( dcc_rest_current_guild_member_update_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "1ecea01e66822503a13ff839680dd885926bfb412867e61810b73209241374cc",
+      "name": "dcc_rest_current_user_guilds_query_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_current_user_guilds_query_init( dcc_rest_current_user_guilds_query_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "b57f7cc80efd01ae4adeec7ef2735223f4479951da6dd9fc7b0b33675bf9559f",
+      "name": "dcc_rest_entitlement_query_init",
+      "owner": "dcc/rest/types/entitlements.h",
+      "signature": "void dcc_rest_entitlement_query_init(dcc_rest_entitlement_query_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "bc2b50262813f577f88310cb51f45afb911c3a88a7baf5de7ca2b9232ec65449",
+      "name": "dcc_rest_firewall_options_init",
+      "owner": "dcc/rest/firewall.h",
+      "signature": "void dcc_rest_firewall_options_init( dcc_rest_firewall_options_t *options ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ee0ad09571de5680c0f19f3d74daed71466cfa7c3ee90475e553b7e3a74713b1",
+      "name": "dcc_rest_follow_news_channel_init",
+      "owner": "dcc/rest/types/channels.h",
+      "signature": "void dcc_rest_follow_news_channel_init( dcc_rest_follow_news_channel_t *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "cea30a84a5abc8885102767cf0ffd10fb790bc68b18b0f9feb71c9ee092e7701",
+      "name": "dcc_rest_guild_audit_log_query_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_audit_log_query_init(dcc_rest_guild_audit_log_query_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ea609e82d27daf55383dd1826f3a20203c063ae9393fb06dca31e838996b641a",
+      "name": "dcc_rest_guild_ban_create_init",
+      "owner": "dcc/rest/types/guild_members.h",
+      "signature": "void dcc_rest_guild_ban_create_init(dcc_rest_guild_ban_create_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "abe82d29dab8446285a86b1efb753aa0d978c31ad9c9f926f259cabd9d780e18",
+      "name": "dcc_rest_guild_bans_query_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_bans_query_init(dcc_rest_guild_bans_query_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "579e608e4447d1a266d5cd7ad9e253175fe05cd684607ad9bf10608ac92cca81",
+      "name": "dcc_rest_guild_bulk_ban_init",
+      "owner": "dcc/rest/types/guild_members.h",
+      "signature": "void dcc_rest_guild_bulk_ban_init(dcc_rest_guild_bulk_ban_t *value, const dcc_snowflake_t *user_ids, size_t user_id_count) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4d15cd9718c3fc2504cd3beed61734fe0281afb176459395bf03375822de3650",
+      "name": "dcc_rest_guild_incident_actions_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_incident_actions_init(dcc_rest_guild_incident_actions_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "24b82e910f6a8c6f9f837780309d368b4ee0f05586d59dbe7d64fa59ee99ec4e",
+      "name": "dcc_rest_guild_member_add_init",
+      "owner": "dcc/rest/types/guild_members.h",
+      "signature": "void dcc_rest_guild_member_add_init(dcc_rest_guild_member_add_t *value, const char *access_token) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4417fa5bc605a75657463e0184334e379cece4b07f2a6210f499c920a36761f1",
+      "name": "dcc_rest_guild_member_search_query_init",
+      "owner": "dcc/rest/types/guild_members.h",
+      "signature": "void dcc_rest_guild_member_search_query_init( dcc_rest_guild_member_search_query_t *value, const char *query) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4715f184f327f19aec9878366535c029e31b7b15fdca4aa08e8ab4581aed7db0",
+      "name": "dcc_rest_guild_member_update_init",
+      "owner": "dcc/rest/types/guild_members.h",
+      "signature": "void dcc_rest_guild_member_update_init(dcc_rest_guild_member_update_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0fcea6a13590c4eeab3920ba35f0aca1e848c6616b3b8e995df8bb055ebe947d",
+      "name": "dcc_rest_guild_members_query_init",
+      "owner": "dcc/rest/types/guild_members.h",
+      "signature": "void dcc_rest_guild_members_query_init(dcc_rest_guild_members_query_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "87f7c7b036f297f719a78e552ba621ff719f28069660576d76d382ea068f9d05",
+      "name": "dcc_rest_guild_prune_init",
+      "owner": "dcc/rest/types/guild_members.h",
+      "signature": "void dcc_rest_guild_prune_init(dcc_rest_guild_prune_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "f98f380781babe775022ec8081b07997342e71edebbf06614a53d0fc8808d931",
+      "name": "dcc_rest_guild_prune_query_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_prune_query_init(dcc_rest_guild_prune_query_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "23d5c320650fe5903a0a6625487bd7af44ecb3f08ff727e8b398634fd72e5fa7",
+      "name": "dcc_rest_guild_query_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_query_init(dcc_rest_guild_query_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "1860e14a00e7c4b3fa412fccf7947e8dd0b293e9c06267570771fbba7b4f4a7e",
+      "name": "dcc_rest_guild_role_create_init",
+      "owner": "dcc/rest/types/roles.h",
+      "signature": "void dcc_rest_guild_role_create_init(dcc_rest_guild_role_create_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "48adf62d33d8316616833f3f9f6317e22f20ebca7be7022a43deb20b0d8220c8",
+      "name": "dcc_rest_guild_role_position_init",
+      "owner": "dcc/rest/types/roles.h",
+      "signature": "void dcc_rest_guild_role_position_init(dcc_rest_guild_role_position_t *value, dcc_snowflake_t role_id) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "65b1d0d27545c440c3232edc1eaf6de16a47f4c54de0299e974c0a0f8ca36fa7",
+      "name": "dcc_rest_guild_role_update_init",
+      "owner": "dcc/rest/types/roles.h",
+      "signature": "void dcc_rest_guild_role_update_init(dcc_rest_guild_role_update_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "a06c5eff013678c4ee0ce4ffa8c2187f38d501e612d3cd003e730edebef3791d",
+      "name": "dcc_rest_guild_soundboard_sound_create_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_soundboard_sound_create_init( dcc_rest_guild_soundboard_sound_create_t *value, const char *name, const char *sound) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "f5bd276bd80e1d13bb93a530ca1677fb4087314679d5f56c247781f6bf60d273",
+      "name": "dcc_rest_guild_soundboard_sound_update_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_soundboard_sound_update_init( dcc_rest_guild_soundboard_sound_update_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "2a6037de5727827b5674c7d438cbee45b60c147484fb151755aa07c50a99879e",
+      "name": "dcc_rest_guild_update_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_update_init(dcc_rest_guild_update_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "557643315a54a4962231faddb8bba430ae7fcbf2087df3c0ad1d2fc14d9578d2",
+      "name": "dcc_rest_guild_welcome_screen_update_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_welcome_screen_update_init( dcc_rest_guild_welcome_screen_update_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "1e1e2e0ddd760c34538d136cdc5ec5ee42a7982300cfe74606b0278931928d1a",
+      "name": "dcc_rest_guild_widget_image_query_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_widget_image_query_init( dcc_rest_guild_widget_image_query_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "d6677caea34c95119e0e606da0ba48147aa11c33cb3858ad7dbadac567d2c9a7",
+      "name": "dcc_rest_guild_widget_update_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_guild_widget_update_init(dcc_rest_guild_widget_update_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "37584c0ad1dbc35b68deee1ac5c3fc2834666fd198f3188237b44065ba63d5b8",
+      "name": "dcc_rest_id_page_init",
+      "owner": "dcc/rest/types/messages.h",
+      "signature": "void dcc_rest_id_page_init(dcc_rest_id_page_t *page) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ebc6b64a8ba0db0a530b33a6bd8564bf82baf5e32d09dbe225183e2ba45234c8",
+      "name": "dcc_rest_interaction_response_init",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "void dcc_rest_interaction_response_init( dcc_rest_interaction_response_t *response ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "1e3252e596e44b42e3907fcdeb311230d7530a359f3a46b777e8c80a73b7e5fd",
+      "name": "dcc_rest_interaction_response_set_autocomplete",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "dcc_status_t dcc_rest_interaction_response_set_autocomplete( dcc_rest_interaction_response_t *response, const dcc_autocomplete_builder_t *autocomplete ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "d98c0ab5b7629d8dd560a88d0a10f5c5e8fbcea73db7e74515be3070c83460a9",
+      "name": "dcc_rest_interaction_response_set_deferred_message",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "dcc_status_t dcc_rest_interaction_response_set_deferred_message( dcc_rest_interaction_response_t *response, const dcc_message_builder_t *message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "8e35097c1088cea86ce1a980cab4bbfa04aacafbdb838e77bbaf34b9a16d736e",
+      "name": "dcc_rest_interaction_response_set_deferred_update",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "dcc_status_t dcc_rest_interaction_response_set_deferred_update( dcc_rest_interaction_response_t *response ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "0a4b43295f40a27997b03cf3bb4b4c482333727df75d858d864b67eb03209488",
+      "name": "dcc_rest_interaction_response_set_launch_activity",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "dcc_status_t dcc_rest_interaction_response_set_launch_activity( dcc_rest_interaction_response_t *response ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4c760e147bfae2d6b35fa35f0b6e353e956e51e78e54ff402205d367b2180bd1",
+      "name": "dcc_rest_interaction_response_set_message",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "dcc_status_t dcc_rest_interaction_response_set_message( dcc_rest_interaction_response_t *response, const dcc_message_builder_t *message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "b3977dd985ef3833b3ac87b927313f340d6f6083ba1f883c78e75115c1ab852b",
+      "name": "dcc_rest_interaction_response_set_modal",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "dcc_status_t dcc_rest_interaction_response_set_modal( dcc_rest_interaction_response_t *response, const dcc_modal_builder_t *modal ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "bf2c58a53755df0a436c825de19eb53b277e7a26369276184f08e0ef5b005af3",
+      "name": "dcc_rest_interaction_response_set_pong",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "dcc_status_t dcc_rest_interaction_response_set_pong( dcc_rest_interaction_response_t *response ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "35c1db10c4cdc6a6b3c3017271bd72050dda65974fd74c6da6983bdaeae17de8",
+      "name": "dcc_rest_interaction_response_set_premium_required",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "dcc_status_t dcc_rest_interaction_response_set_premium_required( dcc_rest_interaction_response_t *response ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "079f6ce9266383ba46bed2700ae24ee75447d077e8b8aa165eea6bff1fc7a9b4",
+      "name": "dcc_rest_interaction_response_set_update_message",
+      "owner": "dcc/rest/types/interactions.h",
+      "signature": "dcc_status_t dcc_rest_interaction_response_set_update_message( dcc_rest_interaction_response_t *response, const dcc_message_builder_t *message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "2d79526abf3cdb386b877c960c034a56b7bfb46d86a9c9dc5ba77de3c775b7cb",
+      "name": "dcc_rest_invite_query_init",
+      "owner": "dcc/rest/types/invites.h",
+      "signature": "void dcc_rest_invite_query_init(dcc_rest_invite_query_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "4f12be1a04bcfcab37c3f90b58956f849c2b64f9ebf0893d7b47986203eff565",
+      "name": "dcc_rest_invite_target_users_upload_init",
+      "owner": "dcc/rest/types/invites.h",
+      "signature": "void dcc_rest_invite_target_users_upload_init( dcc_rest_invite_target_users_upload_t *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "44de50d0b6994ac8c336d8e3fa3f560b0bd93d12e0e07d9acc96b7cdc1c450f0",
+      "name": "dcc_rest_joined_thread_archive_query_init",
+      "owner": "dcc/rest/types/threads.h",
+      "signature": "void dcc_rest_joined_thread_archive_query_init( dcc_rest_joined_thread_archive_query_t *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "adadbaf6aa36274ab8ff551f9756a045aaeb569c2597467d098920d04311b6ec",
+      "name": "dcc_rest_message_list_query_init",
+      "owner": "dcc/rest/types/messages.h",
+      "signature": "void dcc_rest_message_list_query_init( dcc_rest_message_list_query_t *query ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "c3fcb41154df879e79cbc337b9ba2134c588feeb01a500b75e8540c932e3413d",
+      "name": "dcc_rest_message_payload_init",
+      "owner": "dcc/rest/types/messages.h",
+      "signature": "void dcc_rest_message_payload_init( dcc_rest_message_payload_t *payload, const dcc_message_builder_t *message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "32e5d9d5a814aa13cae4677255177d369b8428e6e1448c082997db7978ce0942",
+      "name": "dcc_rest_pin_page_init",
+      "owner": "dcc/rest/types/messages.h",
+      "signature": "void dcc_rest_pin_page_init(dcc_rest_pin_page_t *page) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "bbbde7474c8ca0c7da8f0bc30c4e8fb6057ba1005c9aa3b13669facb8dcdebcf",
+      "name": "dcc_rest_reaction_query_init",
+      "owner": "dcc/rest/types/messages.h",
+      "signature": "void dcc_rest_reaction_query_init( dcc_rest_reaction_query_t *query ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "fd3830179b7e6cce23d10ff27fb34ec9c42747b1fd988833632698e32837eb12",
+      "name": "dcc_rest_request_desc_init",
+      "owner": "dcc/rest/request.h",
+      "signature": "void dcc_rest_request_desc_init(dcc_rest_request_desc_t *description) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "7b5f74207a961506367b8125e82cdeefdd15b0fd6aad68216c0799095b6135d3",
+      "name": "dcc_rest_role_colors_init",
+      "owner": "dcc/rest/types/roles.h",
+      "signature": "void dcc_rest_role_colors_init(dcc_rest_role_colors_t *value, uint32_t primary_color) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "55f21efc607937dcc63b96eccbc3d1d3ee7eb33d3160d395083327b850cba7f9",
+      "name": "dcc_rest_scheduled_event_query_init",
+      "owner": "dcc/rest/types/scheduled_events.h",
+      "signature": "void dcc_rest_scheduled_event_query_init( dcc_rest_scheduled_event_query_t *query) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "ee216ae1c117c1ef85a550afbe78adce16482a21c6517ff7057e5b1d4acfc4bf",
+      "name": "dcc_rest_scheduled_event_users_query_init",
+      "owner": "dcc/rest/types/scheduled_events.h",
+      "signature": "void dcc_rest_scheduled_event_users_query_init( dcc_rest_scheduled_event_users_query_t *query) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "79f5321be0c9389f1293d5c4ba190c97e6e745670e2eb2cb536cd09078a7bca1",
+      "name": "dcc_rest_string_map_init",
+      "owner": "dcc/rest/types/string_map.h",
+      "signature": "void dcc_rest_string_map_init(dcc_rest_string_map_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "e232a304a676f6855a0f66bc4614967aa6186627867ad15ce660dd77c13eed87",
+      "name": "dcc_rest_thread_archive_query_init",
+      "owner": "dcc/rest/types/threads.h",
+      "signature": "void dcc_rest_thread_archive_query_init( dcc_rest_thread_archive_query_t *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "10bf17d3355e0820b46e841156c04e7987adf503171ca9ad6da3570a8ecd44e4",
+      "name": "dcc_rest_thread_member_query_init",
+      "owner": "dcc/rest/types/threads.h",
+      "signature": "void dcc_rest_thread_member_query_init( dcc_rest_thread_member_query_t *value ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "cd4fc4e2b18c39b020dfaeebb5886f4374add35ea195368c4fd0624e14a518e1",
+      "name": "dcc_rest_webhook_builder_init",
+      "owner": "dcc/rest/types/webhooks.h",
+      "signature": "void dcc_rest_webhook_builder_init( dcc_rest_webhook_builder_t *builder ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "7e3a0acf14ec475c52e0a0e7425b165fc826e526e0aef8493c8116e5c81759ec",
+      "name": "dcc_rest_webhook_compat_payload_init",
+      "owner": "dcc/rest/types/webhooks.h",
+      "signature": "void dcc_rest_webhook_compat_payload_init( dcc_rest_webhook_compat_payload_t *payload, const void *body, size_t body_len ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "f7474f4351ad0f220208cc40552311c097193e807f27f62f06ccb11777a506d9",
+      "name": "dcc_rest_webhook_execute_init",
+      "owner": "dcc/rest/types/webhooks.h",
+      "signature": "void dcc_rest_webhook_execute_init( dcc_rest_webhook_execute_t *execute, const dcc_message_builder_t *message ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "b30d9a83a60c71da936ddeb7afdb77d0583855a08edf822dd868ad23f1ed4ab4",
+      "name": "dcc_rest_webhook_message_edit_init",
+      "owner": "dcc/rest/types/webhooks.h",
+      "signature": "void dcc_rest_webhook_message_edit_init( dcc_rest_webhook_message_edit_t *edit, const dcc_rest_message_payload_t *payload ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "9eae839374372a0524dae68ec40bd6c5c0da24559429d77280b943c26288c8b6",
+      "name": "dcc_rest_webhook_message_query_init",
+      "owner": "dcc/rest/types/webhooks.h",
+      "signature": "void dcc_rest_webhook_message_query_init( dcc_rest_webhook_message_query_t *query ) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "bd4c3c0b27114405bc346c3c0d450a3da7584e4981841cbb4cc78d1665138ea1",
+      "name": "dcc_rest_welcome_channel_init",
+      "owner": "dcc/rest/types/guilds.h",
+      "signature": "void dcc_rest_welcome_channel_init(dcc_rest_welcome_channel_t *value, dcc_snowflake_t channel_id, const char *description) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "84c4aaa2b20e01242c30766b56eab626e9e23219f2858de63799fdbcaa4f2a6d",
+      "name": "dcc_scheduled_event_params_init",
+      "owner": "dcc/rest/types/scheduled_events.h",
+      "signature": "void dcc_scheduled_event_params_init( dcc_scheduled_event_params_t *params) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "318c534172fc7205f45ff547571d822da8877bb22fd3c61505daca8e8c67f359",
+      "name": "dcc_stage_instance_params_init",
+      "owner": "dcc/rest/types/stage.h",
+      "signature": "void dcc_stage_instance_params_init( dcc_stage_instance_params_t *params) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "6cf163053b87597691f4d20194028c652513e81a66e278b92fac4b7884e2cf8c",
+      "name": "dcc_template_params_init",
+      "owner": "dcc/rest/types/templates.h",
+      "signature": "void dcc_template_params_init(dcc_template_params_t *params) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "c8273ef38d489f180ed39f98366b6345c3263349216d58c638e894a450f690a3",
+      "name": "dcc_test_entitlement_params_init",
+      "owner": "dcc/rest/types/entitlements.h",
+      "signature": "void dcc_test_entitlement_params_init(dcc_test_entitlement_params_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "bf4868aa9e454a9312ac9fc1f3767306aa9fc393fd1d9ec08e62615979820c16",
+      "name": "dcc_thread_params_init",
+      "owner": "dcc/rest/types/threads.h",
+      "signature": "void dcc_thread_params_init(dcc_thread_params_t *value) {"
+    },
+    {
+      "class": "public_inline",
+      "fingerprint": "7d1fac0293f0c21531912adc84ba2485171da46190260eb420ff1e275cbf7495",
+      "name": "dcc_user_voice_state_params_init",
+      "owner": "dcc/rest/types/voice_states.h",
+      "signature": "void dcc_user_voice_state_params_init(dcc_user_voice_state_params_t *value) {"
+    }
+  ],
+  "schema": 1,
+  "version": "2.0.0"
+}

@@ -8,6 +8,7 @@
 
 #include <dcc/application_command.h>
 #include <dcc/app.h>
+#include <dcc/bot.h>
 #include <dcc/autocomplete.h>
 #include <dcc/cache.h>
 #include <dcc/client.h>

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(dcc_package_consumer LANGUAGES C)
+project(dcc_package_consumer LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -9,17 +9,10 @@ set(CMAKE_C_EXTENSIONS OFF)
 find_package(dcc CONFIG REQUIRED)
 
 add_executable(dcc_package_consumer
-    main.c
-    package_consumer_app.c
-    package_consumer_app_messages.c
-    package_consumer_cluster.c
-    package_consumer_hot_reload.c
-    package_consumer_interaction.c
-    package_consumer_interaction_server.c
-    package_consumer_official_surface.c
-    package_consumer_voice.c
-    package_consumer_wait.c
+    package_consumer_v2.c
+    package_consumer_v2.cpp
 )
+set_target_properties(dcc_package_consumer PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 target_link_libraries(dcc_package_consumer PRIVATE dcc::dcc)
 
 dcc_add_hot_reload_module(dcc_package_consumer_module

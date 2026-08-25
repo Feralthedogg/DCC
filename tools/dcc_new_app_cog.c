@@ -26,17 +26,11 @@ static int dcc_new_app_write_cog_header(
     }
     fprintf(
         file,
-        "#ifndef %s\n"
-        "#define %s\n"
-        "\n"
-        "#include <dcc/sugar.h>\n"
-        "\n"
-        "DCC_DECLARE_FEATURE(%s);\n"
-        "\n"
+        "#ifndef %s\n#define %s\n\n"
+        "#include <dcc/bot.h>\n\n"
+        "dcc_status_t on_ping(dcc_ctx_t *ctx, void *user_data);\n\n"
         "#endif\n",
-        guard,
-        guard,
-        cog_name
+        guard, guard
     );
     return fclose(file) == 0 ? 0 : -1;
 }
@@ -52,48 +46,11 @@ static int dcc_new_app_write_ping_cog_source(const dcc_new_app_options_t *option
         return -1;
     }
     fputs(
-        "#include \"ping.h\"\n"
-        "#include \"config.h\"\n"
-        "\n"
-        "#include <stdint.h>\n"
-        "#include <stdio.h>\n"
-        "\n"
-        "DCC_COMMAND_IMPL(on_ping) {\n"
+        "#include \"ping.h\"\n\n"
+        "dcc_status_t on_ping(dcc_ctx_t *ctx, void *user_data) {\n"
         "    (void)user_data;\n"
-        "\n"
-        "    uint64_t count = DCC_CTX_STORE_U64_OR(ctx, \"ping.count\", 0U) + 1U;\n"
-        "    if (DCC_CTX_STORE(ctx) != NULL) {\n"
-        "        (void)DCC_CTX_STORE_SET_U64(ctx, \"ping.count\", count);\n"
-        "    } else {\n"
-        "        count = 0U;\n"
-        "    }\n"
-        "\n"
-        "    if (count != 0U) {\n"
-        "        (void)DCC_CTX_REPLY_TEXT_F(ctx, \"pong #%llu\", (unsigned long long)count);\n"
-        "    } else {\n"
-        "        (void)DCC_CTX_REPLY_TEXT(ctx, \"pong\");\n"
-        "    }\n"
-        "}\n"
-        "\n"
-        "/* dcc_new_app:command-handlers */\n"
-        "\n"
-        "DCC_DEFINE_PUBLIC_FEATURE(\n"
-        "    ping,\n"
-        "    \"ping\",\n"
-        "    /* dcc_new_app:middleware-extension */\n"
-        "    DCC_FEATURE_COMMAND_ROUTES(\n"
-        "        DCC_COMMAND_ROUTE_NO_OPTIONS_DATA(\"ping\", \"Reply with pong\", on_ping, user_data)\n"
-        "        /* dcc_new_app:slash-routes */\n"
-        "    )\n"
-        "    /* dcc_new_app:subcommand-extension */\n"
-        "    /* dcc_new_app:component-extension */\n"
-        "    /* dcc_new_app:view-extension */\n"
-        "    /* dcc_new_app:event-extension */\n"
-        "    /* dcc_new_app:autocomplete-extension */\n"
-        "    /* dcc_new_app:context-menu-extension */\n"
-        "    /* dcc_new_app:message-command-extension */\n"
-        "    /* dcc_new_app:task-extension */\n"
-        ")\n",
+        "    return DCC_CTX_REPLY_TEXT(ctx, \"pong\");\n"
+        "}\n",
         file
     );
     return fclose(file) == 0 ? 0 : -1;

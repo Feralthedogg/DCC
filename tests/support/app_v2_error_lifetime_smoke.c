@@ -4,6 +4,8 @@
 #include <dcc/client.h>
 #include <dcc/error_details.h>
 #include <dcc/rest.h>
+#include <dcc/rest/core/async.h>
+#include <dcc/rest/core/request.h>
 #include <dcc/tasks.h>
 
 #include "internal/app/dcc_app_internal.h"

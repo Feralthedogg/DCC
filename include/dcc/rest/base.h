@@ -18,7 +18,6 @@ extern "C" {
 #endif
 
 typedef struct dcc_client dcc_client_t;
-typedef struct dcc_rest_future dcc_rest_future_t;
 
 typedef enum dcc_rest_method {
     DCC_REST_GET = 0,
@@ -27,6 +26,9 @@ typedef enum dcc_rest_method {
     DCC_REST_PATCH,
     DCC_REST_DELETE
 } dcc_rest_method_t;
+
+/** Returns the constant uppercase name for a REST method. */
+DCC_API const char *dcc_rest_method_name(dcc_rest_method_t method);
 
 typedef enum dcc_rest_priority {
     DCC_REST_PRIORITY_LOW = 0,

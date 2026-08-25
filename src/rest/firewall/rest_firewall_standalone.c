@@ -1,27 +1,34 @@
 #include "internal/rest/dcc_rest_firewall_internal.h"
 
-#include <string.h>
+#include <stdlib.h>
 
-dcc_status_t dcc_rest_firewall_init(
-    dcc_rest_firewall_t *firewall,
-    const dcc_rest_firewall_options_t *options
+dcc_status_t dcc_rest_firewall_create(
+    const dcc_rest_firewall_options_t *options,
+    dcc_rest_firewall_t **out_firewall
 ) {
-    if (firewall == NULL) {
+    if (out_firewall == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    memset(firewall, 0, sizeof(*firewall));
-    firewall->size = sizeof(*firewall);
+    *out_firewall = NULL;
+    dcc_rest_firewall_t *firewall = calloc(1U, sizeof(*firewall));
+    if (firewall == NULL) {
+        return DCC_ERR_NOMEM;
+    }
     firewall->state = dcc_rest_firewall_state_new(options, 0U);
-    return firewall->state != NULL ? DCC_OK : DCC_ERR_NOMEM;
+    if (firewall->state == NULL) {
+        free(firewall);
+        return DCC_ERR_NOMEM;
+    }
+    *out_firewall = firewall;
+    return DCC_OK;
 }
 
-void dcc_rest_firewall_deinit(dcc_rest_firewall_t *firewall) {
+void dcc_rest_firewall_destroy(dcc_rest_firewall_t *firewall) {
     if (firewall == NULL) {
         return;
     }
     dcc_rest_firewall_state_free((dcc_rest_firewall_state_t *)firewall->state);
-    firewall->state = NULL;
-    firewall->size = sizeof(*firewall);
+    free(firewall);
 }
 
 dcc_status_t dcc_rest_firewall_check(

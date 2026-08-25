@@ -4,6 +4,7 @@
 #if !defined(_WIN32)
 
 #include <dcc/dcc.h>
+#include <dcc/rest/core/async.h>
 
 #include <pthread.h>
 #include <stddef.h>

@@ -1,0 +1,2411 @@
+{
+  "schema": 1,
+  "types": [
+    {
+      "kind": "struct",
+      "name": "dcc_activity_instance_t",
+      "owner": "dcc/objects/resources/applications.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_activity_location_kind_t",
+      "owner": "dcc/objects/resources/applications.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_activity_location_t",
+      "owner": "dcc/objects/resources/applications.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_allowed_mentions_builder_t",
+      "owner": "dcc/message.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_app_command_sync_options_t",
+      "owner": "dcc/app/options.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_app_env_bind_type_t",
+      "owner": "dcc/app/env.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_app_env_binding_t",
+      "owner": "dcc/app/env.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_app_env_requirement_t",
+      "owner": "dcc/app/env.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_app_modal_flow_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_app_module_t",
+      "owner": "dcc/app/modules.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_app_options_t",
+      "owner": "dcc/app/options.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_app_t",
+      "owner": "dcc/app/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_app_wait_filter_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_app_wait_result_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_command_builder_t",
+      "owner": "dcc/application_command.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_command_option_builder_t",
+      "owner": "dcc/application_command.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_application_command_option_type_t",
+      "owner": "dcc/application_command.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_command_permission_t",
+      "owner": "dcc/objects/gateway_updates/application_commands.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_command_permissions_update_t",
+      "owner": "dcc/objects/gateway_updates/application_commands.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_command_registration_options_t",
+      "owner": "dcc/rest/types/application_commands.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_application_command_type_t",
+      "owner": "dcc/application_command.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_application_event_webhook_status_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_install_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_integration_type_config_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_application_integration_type_t",
+      "owner": "dcc/application_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_modify_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_role_connection_metadata_params_t",
+      "owner": "dcc/rest/types/role_connections.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_application_role_connection_metadata_type_t",
+      "owner": "dcc/rest/types/role_connections.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_application_role_connection_params_t",
+      "owner": "dcc/rest/types/role_connections.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_attachment_t",
+      "owner": "dcc/objects/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_auto_moderation_action_params_t",
+      "owner": "dcc/rest/types/auto_moderation.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_auto_moderation_action_t",
+      "owner": "dcc/objects/gateway_updates/moderation.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_auto_moderation_action_type_t",
+      "owner": "dcc/rest/types/auto_moderation.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_auto_moderation_event_type_t",
+      "owner": "dcc/rest/types/auto_moderation.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_auto_moderation_metadata_params_t",
+      "owner": "dcc/rest/types/auto_moderation.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_auto_moderation_preset_type_t",
+      "owner": "dcc/rest/types/auto_moderation.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_auto_moderation_rule_params_t",
+      "owner": "dcc/rest/types/auto_moderation.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_auto_moderation_rule_t",
+      "owner": "dcc/objects/gateway_updates/moderation.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_auto_moderation_trigger_type_t",
+      "owner": "dcc/rest/types/auto_moderation.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_autocomplete_builder_t",
+      "owner": "dcc/autocomplete.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_autocomplete_choice_t",
+      "owner": "dcc/autocomplete.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_autocomplete_choice_value_type_t",
+      "owner": "dcc/autocomplete.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_bot_config_t",
+      "owner": "dcc/bot/main.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_bot_module_ctx_t",
+      "owner": "dcc/hot_reload/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_bot_module_descriptor_t",
+      "owner": "dcc/hot_reload/module/types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_bot_module_handler_t",
+      "owner": "dcc/hot_reload/module/types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_bulk_guild_command_permissions_params_t",
+      "owner": "dcc/rest/types/application_commands.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_button_style_t",
+      "owner": "dcc/component_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cache_counts_t",
+      "owner": "dcc/cache.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cache_policy_t",
+      "owner": "dcc/cache.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_channel_auto_archive_duration_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_default_reaction_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_channel_forum_layout_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_forum_tag_params_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_group_dm_params_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_guild_params_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_channel_params_kind_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_params_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_permission_overwrite_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_channel_permission_overwrite_type_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_pins_update_t",
+      "owner": "dcc/objects/gateway_updates/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_position_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_positions_params_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_t",
+      "owner": "dcc/objects/resources/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_thread_params_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_channel_type_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_channel_voice_status_params_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_client_options_t",
+      "owner": "dcc/client.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_client_t",
+      "owner": "dcc/cache.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_client_t",
+      "owner": "dcc/cluster/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_client_t",
+      "owner": "dcc/events/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_client_t",
+      "owner": "dcc/rest/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_client_t",
+      "owner": "dcc/voice/base.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_cluster_health_state_t",
+      "owner": "dcc/cluster/health_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_health_summary_t",
+      "owner": "dcc/cluster/health_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_health_wait_options_t",
+      "owner": "dcc/cluster/health_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_identify_stats_t",
+      "owner": "dcc/cluster/health_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_operation_status_t",
+      "owner": "dcc/cluster/operation_types.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_cluster_operation_type_t",
+      "owner": "dcc/cluster/operation_types.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_cluster_options_t",
+      "owner": "dcc/cluster/supervisor_types.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_cluster_recovery_action_t",
+      "owner": "dcc/cluster/recovery_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_recovery_plan_t",
+      "owner": "dcc/cluster/recovery_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_remediation_loop_options_t",
+      "owner": "dcc/cluster/recovery_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_remediation_loop_result_t",
+      "owner": "dcc/cluster/recovery_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_remediation_options_t",
+      "owner": "dcc/cluster/recovery_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_remediation_result_t",
+      "owner": "dcc/cluster/recovery_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_restart_policy_t",
+      "owner": "dcc/cluster/supervisor_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_rolling_reconnect_options_t",
+      "owner": "dcc/cluster/operation_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_shard_info_t",
+      "owner": "dcc/cluster/shard_types.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_cluster_shard_status_t",
+      "owner": "dcc/cluster/shard_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_supervisor_action_t",
+      "owner": "dcc/cluster/supervisor_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_supervisor_decision_event_t",
+      "owner": "dcc/cluster/supervisor_types.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_cluster_supervisor_decision_t",
+      "owner": "dcc/cluster/supervisor_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_supervisor_event_t",
+      "owner": "dcc/cluster/supervisor_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_supervisor_status_t",
+      "owner": "dcc/cluster/supervisor_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_cluster_t",
+      "owner": "dcc/cluster/base.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_command_registry_diff_action_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_command_registry_diff_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_command_registry_entry_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_command_registry_operation_options_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_command_registry_operation_result_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_command_registry_operation_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_command_registry_options_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_command_registry_plan_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_command_registry_remote_entry_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_command_registry_remote_snapshot_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_command_registry_t",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_builder_t",
+      "owner": "dcc/component.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_emoji_t",
+      "owner": "dcc/component_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_session_check_t",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_component_session_listener_options_t",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_session_listener_t",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_session_options_t",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_session_result_t",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_session_store_t",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_session_t",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_component_session_verify_status_t",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_component_type_t",
+      "owner": "dcc/component.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_builder_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_button_value_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_choice_option_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_component_v2_context_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_component_v2_field_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "union",
+      "name": "dcc_component_v2_layout_value_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_media_gallery_item_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_media_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "union",
+      "name": "dcc_component_v2_media_value_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "union",
+      "name": "dcc_component_v2_modal_value_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_component_v2_select_default_type_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_select_default_value_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_select_value_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_component_v2_separator_spacing_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_separator_value_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_text_display_value_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_text_input_value_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_component_v2_type_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_unfurled_media_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_component_v2_validation_error_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_component_v2_validation_reason_t",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_ctx_component_bind_type_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_component_binding_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_component_field_binding_list_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_component_field_binding_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_ctx_field_validate_type_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_field_validator_list_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_field_validator_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_ctx_form_bind_type_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_form_binding_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_form_field_binding_list_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_form_field_binding_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_ctx_option_bind_type_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_option_binding_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_option_field_binding_list_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_option_field_binding_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_parsed_date_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_t",
+      "owner": "dcc/app/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ctx_validation_error_t",
+      "owner": "dcc/app/context.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_current_guild_member_params_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_current_user_params_t",
+      "owner": "dcc/rest/types/users.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_current_user_voice_state_params_t",
+      "owner": "dcc/rest/types/voice_states.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_dm_channel_params_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_embed_author_t",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_embed_builder_t",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_embed_field_t",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_embed_footer_t",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_embed_media_t",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_embedded_activity_update_t",
+      "owner": "dcc/objects/gateway_updates/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_emoji_params_t",
+      "owner": "dcc/rest/types/emojis_stickers.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_emoji_t",
+      "owner": "dcc/objects/resources/emojis.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_entitlement_t",
+      "owner": "dcc/objects/resources/commerce.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_error_origin_t",
+      "owner": "dcc/error_details.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_error_t",
+      "owner": "dcc/error_details.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_event_snapshot_t",
+      "owner": "dcc/events/wait/types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_event_t",
+      "owner": "dcc/events/base.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_event_type_t",
+      "owner": "dcc/events/types.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_event_wait_policy_mode_t",
+      "owner": "dcc/events/wait/types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_event_wait_policy_t",
+      "owner": "dcc/events/wait/types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_gateway_activity_t",
+      "owner": "dcc/objects/gateway/activity.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_gateway_event_data_t",
+      "owner": "dcc/objects/gateway/event_data.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_gateway_info_t",
+      "owner": "dcc/client.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_gateway_presence_update_t",
+      "owner": "dcc/client.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_gateway_request_guild_members_options_t",
+      "owner": "dcc/client.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_group_dm_recipient_params_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_guild_afk_timeout_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_application_command_update_t",
+      "owner": "dcc/objects/gateway_updates/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_audit_log_entry_t",
+      "owner": "dcc/objects/gateway_updates/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_ban_params_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_ban_t",
+      "owner": "dcc/objects/gateway_updates/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_command_permissions_params_t",
+      "owner": "dcc/rest/types/application_commands.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_command_permissions_update_params_t",
+      "owner": "dcc/rest/types/application_commands.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_guild_default_message_notification_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_guild_explicit_content_filter_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_id_list_update_t",
+      "owner": "dcc/objects/gateway_updates/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_join_request_update_t",
+      "owner": "dcc/objects/gateway_updates/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_member_nickname_params_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_member_params_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_member_role_params_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_guild_member_update_flag_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_members_chunk_t",
+      "owner": "dcc/objects/gateway_updates/guilds.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_guild_mfa_level_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_params_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_prune_params_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_sticker_params_t",
+      "owner": "dcc/rest/types/emojis_stickers.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_t",
+      "owner": "dcc/objects/resources/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_update_notice_t",
+      "owner": "dcc/objects/gateway_updates/guilds.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_guild_verification_level_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_guild_widget_params_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_hot_reload_backend_t",
+      "owner": "dcc/hot_reload/options.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_hot_reload_canary_decision_t",
+      "owner": "dcc/hot_reload/canary.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_hot_reload_canary_options_t",
+      "owner": "dcc/hot_reload/canary.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_hot_reload_canary_rollback_reason_t",
+      "owner": "dcc/hot_reload/canary.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_hot_reload_canary_state_t",
+      "owner": "dcc/hot_reload/canary.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_hot_reload_health_snapshot_t",
+      "owner": "dcc/hot_reload/health.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_hot_reload_health_t",
+      "owner": "dcc/hot_reload/health.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_hot_reload_options_t",
+      "owner": "dcc/hot_reload/options.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_hot_reload_run_options_t",
+      "owner": "dcc/hot_reload/options.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_hot_reload_t",
+      "owner": "dcc/hot_reload/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_integration_t",
+      "owner": "dcc/objects/gateway_updates/channels.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_intents_t",
+      "owner": "dcc/intents.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_authorizing_integration_owner_t",
+      "owner": "dcc/objects/interactions.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_interaction_context_type_t",
+      "owner": "dcc/application_types.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_interaction_flow_state_t",
+      "owner": "dcc/interaction_flow.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_flow_t",
+      "owner": "dcc/interaction_flow.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_form_field_t",
+      "owner": "dcc/objects/interactions.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_interaction_form_value_type_t",
+      "owner": "dcc/objects/interactions.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_http_header_t",
+      "owner": "dcc/interaction_server/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_option_t",
+      "owner": "dcc/objects/interactions.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_interaction_option_value_type_t",
+      "owner": "dcc/objects/interactions.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_request_t",
+      "owner": "dcc/interaction_server/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_resolved_permission_t",
+      "owner": "dcc/objects/interactions.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_resolved_t",
+      "owner": "dcc/objects/interactions.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_interaction_response_type_t",
+      "owner": "dcc/rest/types/interactions.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_interaction_route_flag_t",
+      "owner": "dcc/interaction_server/routes.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_route_t",
+      "owner": "dcc/interaction_server/routes.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_server_health_snapshot_t",
+      "owner": "dcc/interaction_server/health.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_interaction_server_health_t",
+      "owner": "dcc/interaction_server/health.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_server_options_t",
+      "owner": "dcc/interaction_server/lifecycle.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_server_protection_stats_t",
+      "owner": "dcc/interaction_server/health.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_server_state_t",
+      "owner": "dcc/interaction_server/health.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_server_stats_t",
+      "owner": "dcc/interaction_server/health.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_server_t",
+      "owner": "dcc/interaction_server/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_interaction_t",
+      "owner": "dcc/objects/interactions.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_invite_params_t",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_invite_t",
+      "owner": "dcc/objects/resources/invites.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_invite_target_type_t",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "kind": "union",
+      "name": "dcc_listener_binding_items_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_listener_binding_kind_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_binding_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_bindings_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_check_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_config_t",
+      "owner": "dcc/bot/listeners.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_listener_cooldown_bucket_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_cooldown_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_event_target_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "union",
+      "name": "dcc_listener_handler_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_listener_id_t",
+      "owner": "dcc/events/base.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_listener_kind_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_message_command_target_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_middleware_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_route_policy_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_route_target_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_listener_schedule_kind_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_schedule_target_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "union",
+      "name": "dcc_listener_target_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_validation_policy_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_listener_validator_kind_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_validator_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_listener_validators_t",
+      "owner": "dcc/app/listeners.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_channel_link_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_create_or_join_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_member_bulk_item_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_member_bulk_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_lobby_member_flag_t",
+      "owner": "dcc/objects/resources/lobbies.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_member_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_member_spec_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_member_t",
+      "owner": "dcc/objects/resources/lobbies.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_message_moderation_metadata_item_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_message_moderation_metadata_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_message_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_lobby_t",
+      "owner": "dcc/objects/resources/lobbies.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_localization_t",
+      "owner": "dcc/application_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_log_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_log_level_t",
+      "owner": "dcc/events/types.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_managed_message_options_t",
+      "owner": "dcc/managed_message.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_managed_message_publish_result_t",
+      "owner": "dcc/managed_message.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_managed_message_publish_stage_t",
+      "owner": "dcc/managed_message.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_managed_message_ref_t",
+      "owner": "dcc/managed_message.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_member_t",
+      "owner": "dcc/objects/resources/members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_message_attachment_t",
+      "owner": "dcc/message.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_message_builder_t",
+      "owner": "dcc/message.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_message_delete_bulk_t",
+      "owner": "dcc/objects/gateway_updates/messages.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_message_link_t",
+      "owner": "dcc/message_link.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_message_reaction_t",
+      "owner": "dcc/objects/gateway_updates/messages.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_message_reference_t",
+      "owner": "dcc/message.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_message_reference_type_t",
+      "owner": "dcc/message.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_message_search_has_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_message_search_order_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_message_search_params_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_message_search_sort_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_message_t",
+      "owner": "dcc/objects/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_modal_builder_t",
+      "owner": "dcc/modal.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_oauth2_exchange_code_options_t",
+      "owner": "dcc/oauth2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_oauth2_refresh_token_options_t",
+      "owner": "dcc/oauth2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_oauth2_revoke_token_options_t",
+      "owner": "dcc/oauth2.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_onboarding_emoji_params_t",
+      "owner": "dcc/rest/types/onboarding.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_onboarding_mode_t",
+      "owner": "dcc/rest/types/onboarding.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_onboarding_params_t",
+      "owner": "dcc/rest/types/onboarding.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_onboarding_prompt_flag_t",
+      "owner": "dcc/rest/types/onboarding.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_onboarding_prompt_option_params_t",
+      "owner": "dcc/rest/types/onboarding.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_onboarding_prompt_params_t",
+      "owner": "dcc/rest/types/onboarding.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_onboarding_prompt_type_t",
+      "owner": "dcc/rest/types/onboarding.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_permission_t",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_poll_answer_t",
+      "owner": "dcc/message.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_poll_builder_t",
+      "owner": "dcc/message.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_poll_layout_type_t",
+      "owner": "dcc/message.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_poll_media_t",
+      "owner": "dcc/message.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_poll_vote_t",
+      "owner": "dcc/objects/gateway_updates/messages.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_presence_t",
+      "owner": "dcc/objects/gateway_updates/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rate_limited_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_raw_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_ready_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_replay_kind_t",
+      "owner": "dcc/replay.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_replay_player_t",
+      "owner": "dcc/replay.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_replay_record_t",
+      "owner": "dcc/replay.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_replay_recorder_t",
+      "owner": "dcc/replay.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_replay_validation_result_t",
+      "owner": "dcc/replay.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_rest_async_status_t",
+      "owner": "dcc/rest/base.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_rest_auth_mode_t",
+      "owner": "dcc/rest/request.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_rest_call_options_t",
+      "owner": "dcc/rest/request.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_command_list_query_t",
+      "owner": "dcc/rest/types/application_commands.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_current_guild_member_nickname_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_current_guild_member_update_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_current_user_guilds_query_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_entitlement_query_t",
+      "owner": "dcc/rest/types/entitlements.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_rest_firewall_decision_t",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_rest_firewall_hard_limit_action_t",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_firewall_options_t",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_rest_firewall_reason_t",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_firewall_request_t",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_firewall_result_t",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_firewall_snapshot_t",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_firewall_t",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_follow_news_channel_t",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_audit_log_query_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_ban_create_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_bans_query_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_bulk_ban_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_incident_actions_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_member_add_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_member_search_query_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_member_update_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_members_query_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_prune_query_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_prune_t",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_query_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_role_create_t",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_role_position_t",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_role_update_t",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_soundboard_sound_create_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_soundboard_sound_update_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_update_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_welcome_screen_update_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_widget_image_query_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_rest_guild_widget_style_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_guild_widget_update_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_id_page_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "union",
+      "name": "dcc_rest_interaction_response_data_t",
+      "owner": "dcc/rest/types/interactions.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_interaction_response_t",
+      "owner": "dcc/rest/types/interactions.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_invite_query_t",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_invite_target_users_upload_t",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_joined_thread_archive_query_t",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_lobby_message_query_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_message_list_query_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_message_payload_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_rest_method_t",
+      "owner": "dcc/rest/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_multipart_field_t",
+      "owner": "dcc/rest/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_multipart_file_t",
+      "owner": "dcc/rest/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_pin_page_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_rest_priority_t",
+      "owner": "dcc/rest/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_reaction_query_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_rest_reaction_type_t",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_request_desc_t",
+      "owner": "dcc/rest/request.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_request_t",
+      "owner": "dcc/rest/request.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_response_t",
+      "owner": "dcc/rest/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_result_t",
+      "owner": "dcc/rest/result.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_role_colors_t",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_runtime_stats_t",
+      "owner": "dcc/rest/runtime.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_scheduled_event_query_t",
+      "owner": "dcc/rest/types/scheduled_events.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_scheduled_event_users_query_t",
+      "owner": "dcc/rest/types/scheduled_events.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_sku_subscription_query_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_string_map_entry_t",
+      "owner": "dcc/rest/types/string_map.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_string_map_t",
+      "owner": "dcc/rest/types/string_map.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_thread_archive_query_t",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_thread_member_query_t",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_webhook_builder_t",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_webhook_compat_payload_t",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_webhook_execute_t",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_webhook_message_edit_t",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_webhook_message_query_t",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_rest_welcome_channel_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_role_params_t",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_role_position_t",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_role_t",
+      "owner": "dcc/objects/resources/roles.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_runtime_stats_t",
+      "owner": "dcc/client.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_scheduled_event_entity_type_t",
+      "owner": "dcc/rest/types/scheduled_events.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_scheduled_event_params_t",
+      "owner": "dcc/rest/types/scheduled_events.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_scheduled_event_privacy_level_t",
+      "owner": "dcc/rest/types/scheduled_events.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_scheduled_event_status_t",
+      "owner": "dcc/rest/types/scheduled_events.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_scheduled_event_t",
+      "owner": "dcc/objects/resources/scheduled_events.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_scheduled_event_user_update_t",
+      "owner": "dcc/objects/gateway_updates/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_select_option_t",
+      "owner": "dcc/component_types.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_snowflake_t",
+      "owner": "dcc/snowflake.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_socket_close_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_soundboard_send_params_t",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_soundboard_sound_t",
+      "owner": "dcc/objects/resources/soundboard.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_stage_instance_params_t",
+      "owner": "dcc/rest/types/stage.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_stage_instance_t",
+      "owner": "dcc/objects/resources/stages.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_stage_privacy_level_t",
+      "owner": "dcc/rest/types/stage.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_status_t",
+      "owner": "dcc/error.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_sticker_t",
+      "owner": "dcc/objects/resources/stickers.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_store_file_options_t",
+      "owner": "dcc/store.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_store_managed_message_binding_t",
+      "owner": "dcc/store.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_store_options_t",
+      "owner": "dcc/store.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_store_t",
+      "owner": "dcc/store.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_subscription_t",
+      "owner": "dcc/objects/resources/commerce.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_task_class_t",
+      "owner": "dcc/tasks.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_task_flag_t",
+      "owner": "dcc/tasks.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_task_group_t",
+      "owner": "dcc/tasks.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_task_group_wait_result_t",
+      "owner": "dcc/tasks.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_task_options_t",
+      "owner": "dcc/tasks.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_template_params_t",
+      "owner": "dcc/rest/types/templates.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_test_entitlement_owner_type_t",
+      "owner": "dcc/rest/types/entitlements.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_test_entitlement_params_t",
+      "owner": "dcc/rest/types/entitlements.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_text_input_style_t",
+      "owner": "dcc/component_types.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_thread_list_sync_t",
+      "owner": "dcc/objects/gateway_updates/threads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_thread_member_t",
+      "owner": "dcc/objects/gateway_updates/threads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_thread_members_update_t",
+      "owner": "dcc/objects/gateway_updates/threads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_thread_params_t",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_typing_start_t",
+      "owner": "dcc/objects/gateway_updates/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_user_t",
+      "owner": "dcc/objects/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_user_voice_state_params_t",
+      "owner": "dcc/rest/types/voice_states.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_buffer_send_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_channel_effect_t",
+      "owner": "dcc/objects/gateway_updates/voice.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_channel_start_time_update_t",
+      "owner": "dcc/objects/gateway_updates/voice.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_channel_status_update_t",
+      "owner": "dcc/objects/gateway_updates/voice.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_client_disconnect_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_client_platform_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_voice_client_platform_t",
+      "owner": "dcc/voice/types/enums.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_client_speaking_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_client_stats_t",
+      "owner": "dcc/voice/types/session.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_client_t",
+      "owner": "dcc/events/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_client_t",
+      "owner": "dcc/voice/base.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_connect_wait_options_t",
+      "owner": "dcc/voice/supervisor.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_connect_wait_result_t",
+      "owner": "dcc/voice/supervisor.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_voice_dave_mls_frame_t",
+      "owner": "dcc/voice/types/dave.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_voice_dave_mls_opcode_t",
+      "owner": "dcc/voice/types/enums.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_dave_stats_t",
+      "owner": "dcc/voice/types/session.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_voice_dave_version_t",
+      "owner": "dcc/voice/types/enums.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_voice_encryption_mode_t",
+      "owner": "dcc/voice/types/enums.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_health_snapshot_t",
+      "owner": "dcc/voice/types/session.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_voice_health_t",
+      "owner": "dcc/voice/types/enums.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_voice_opus_application_t",
+      "owner": "dcc/voice/types/enums.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_opus_options_t",
+      "owner": "dcc/voice/types/codec.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_ready_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_receive_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_voice_reconnect_action_t",
+      "owner": "dcc/voice/types/enums.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_server_update_t",
+      "owner": "dcc/objects/gateway_updates/voice.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_session_info_t",
+      "owner": "dcc/voice/types/session.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_voice_session_state_t",
+      "owner": "dcc/voice/types/enums.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_state_params_t",
+      "owner": "dcc/rest/types/voice_states.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_state_t",
+      "owner": "dcc/objects/gateway/voice_state.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_voice_track_marker_event_t",
+      "owner": "dcc/events/payloads.h"
+    },
+    {
+      "kind": "alias",
+      "name": "dcc_webhook_event_route_t",
+      "owner": "dcc/webhook_events.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_webhook_event_t",
+      "owner": "dcc/webhook_events.h"
+    },
+    {
+      "kind": "enum",
+      "name": "dcc_webhook_event_type_t",
+      "owner": "dcc/webhook_events.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_webhooks_update_t",
+      "owner": "dcc/objects/gateway_updates/channels.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_welcome_channel_params_t",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "kind": "struct",
+      "name": "dcc_welcome_screen_params_t",
+      "owner": "dcc/rest/types/guilds.h"
+    }
+  ],
+  "version": "2.0.0"
+}

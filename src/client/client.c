@@ -6,6 +6,8 @@
 #include "internal/rest/dcc_rest_error_observer_internal.h"
 #include "internal/rest/dcc_rest_state_internal.h"
 
+#include <dcc/rest/core/async.h>
+
 #include <llam/runtime.h>
 
 #include <stdlib.h>

@@ -2,6 +2,7 @@
 #define DCC_REST_REQUEST_CORE_INTERNAL_H
 
 #include <dcc/rest.h>
+#include <dcc/rest/core/request.h>
 
 #ifdef __cplusplus
 extern "C" {

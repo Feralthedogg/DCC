@@ -47,6 +47,10 @@ if [ -z "$version" ]; then
     echo "cannot determine release version" >&2
     exit 1
 fi
+if [ "$cmake_version" = "2.0.0" ] && [ "$version" != "2.0.0" ]; then
+    echo "DCC 2 Stable packages require the exact version 2.0.0" >&2
+    exit 2
+fi
 version_base=${version%%-*}
 if [ "$version_base" != "$cmake_version" ] && [ "${DCC_ALLOW_VERSION_MISMATCH:-0}" != "1" ]; then
     echo "release version $version does not match CMake project version $cmake_version" >&2
@@ -200,7 +204,7 @@ cp "$source_archive" "$source_out"
 tar -tzf "$binary_out" | grep '/include/dcc/dcc.h$' >/dev/null
 tar -tzf "$binary_out" | grep '/include/dcc/oauth2.h$' >/dev/null
 tar -tzf "$binary_out" | grep '/include/dcc/rest/official_surface.h$' >/dev/null
-tar -tzf "$binary_out" | grep '/include/dcc/sugar/official_surface.h$' >/dev/null
+tar -tzf "$binary_out" | grep '/include/dcc/bot.h$' >/dev/null
 tar -tzf "$binary_out" | grep '/include/dcc/webhook_events.h$' >/dev/null
 if is_true "$bundle_llam"; then
     tar -tzf "$binary_out" | grep '/include/llam/runtime.h$' >/dev/null
@@ -229,15 +233,15 @@ tar -tzf "$source_out" | grep '/CMakeLists.txt$' >/dev/null
 tar -tzf "$source_out" | grep '/docs/index.md$' >/dev/null
 tar -tzf "$source_out" | grep '/include/dcc/oauth2.h$' >/dev/null
 tar -tzf "$source_out" | grep '/include/dcc/rest/official_surface.h$' >/dev/null
-tar -tzf "$source_out" | grep '/include/dcc/sugar/official_surface.h$' >/dev/null
+tar -tzf "$source_out" | grep '/include/dcc/bot.h$' >/dev/null
 tar -tzf "$source_out" | grep '/include/dcc/webhook_events.h$' >/dev/null
 tar -tzf "$source_out" | grep '/src/gateway/gateway_send_public.c$' >/dev/null
 tar -tzf "$source_out" | grep '/src/oauth2.c$' >/dev/null
 tar -tzf "$source_out" | grep '/src/rest/rest_official_surface.c$' >/dev/null
 tar -tzf "$source_out" | grep '/src/webhook_events.c$' >/dev/null
-tar -tzf "$source_out" | grep '/tests/official_surface_smoke.c$' >/dev/null
-tar -tzf "$source_out" | grep '/tests/package_consumer/package_consumer_official_surface.c$' >/dev/null
-tar -tzf "$source_out" | grep '/tests/support/http_smoke_official_surface.c$' >/dev/null
+tar -tzf "$source_out" | grep '/docs/migration-1-to-2.md$' >/dev/null
+tar -tzf "$source_out" | grep '/tests/package_consumer/package_consumer_v2.c$' >/dev/null
+tar -tzf "$source_out" | grep '/tests/package_consumer/package_consumer_v2.cpp$' >/dev/null
 tar -tzf "$source_out" | grep '/tools/audit_discord_api_docs_surface.py$' >/dev/null
 tar -tzf "$source_out" | grep '/tools/audit_official_events_surface.py$' >/dev/null
 tar -tzf "$source_out" | grep '/tools/audit_official_surface.py$' >/dev/null

@@ -65,7 +65,7 @@ nav:
       - Build Options: reference/build-options.md
       - Project Layout: architecture.md
   - Guides:
-      - Sugar-First API: guides/sugar.md
+      - Migrate From DCC 1: migration-1-to-2.md
       - App Runtime: guides/app-runtime.md
       - Gateway And Events: guides/gateway-events.md
       - Slash Command Registry: guides/command-registry.md
@@ -77,6 +77,7 @@ nav:
       - REST Firewall: guides/rate-limit-firewall.md
   - API Reference:
       - Public API Guide: api.md
+      - Generated DCC 2 Reference: reference/api/index.md
       - Official Discord Surface: reference/official-api-surface.md
       - CLI Tools: reference/cli.md
       - Runtime Modules: reference/runtime-modules.md

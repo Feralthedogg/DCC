@@ -1,5 +1,6 @@
 #include <dcc/dcc.h>
 #include <dcc/hot_reload.h>
+#include <dcc/rest/core/async.h>
 
 #if defined(_WIN32)
 int main(void) {

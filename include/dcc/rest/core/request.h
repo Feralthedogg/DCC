@@ -7,7 +7,13 @@
 extern "C" {
 #endif
 
-DCC_API dcc_status_t dcc_rest_request(
+#if defined(DCC_REST_LEGACY_INTERNAL)
+#define DCC_REST_LEGACY_API
+#else
+#define DCC_REST_LEGACY_API DCC_API
+#endif
+
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request(
     dcc_client_t *client,
     const char *method,
     const char *path,
@@ -16,7 +22,7 @@ DCC_API dcc_status_t dcc_rest_request(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_request_method(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request_method(
     dcc_client_t *client,
     dcc_rest_method_t method,
     const char *path,
@@ -25,7 +31,7 @@ DCC_API dcc_status_t dcc_rest_request_method(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_request_raw(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request_raw(
     dcc_client_t *client,
     const char *method,
     const char *path,
@@ -36,7 +42,7 @@ DCC_API dcc_status_t dcc_rest_request_raw(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_request_method_raw(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request_method_raw(
     dcc_client_t *client,
     dcc_rest_method_t method,
     const char *path,
@@ -47,7 +53,7 @@ DCC_API dcc_status_t dcc_rest_request_method_raw(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_request_multipart(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request_multipart(
     dcc_client_t *client,
     const char *method,
     const char *path,
@@ -59,7 +65,7 @@ DCC_API dcc_status_t dcc_rest_request_multipart(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_request_method_multipart(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request_method_multipart(
     dcc_client_t *client,
     dcc_rest_method_t method,
     const char *path,
@@ -74,5 +80,7 @@ DCC_API dcc_status_t dcc_rest_request_method_multipart(
 #ifdef __cplusplus
 }
 #endif
+
+#undef DCC_REST_LEGACY_API
 
 #endif

@@ -28,6 +28,12 @@ def api_names_from_text(text: str) -> set[str]:
 def current_api_names(include_dir: pathlib.Path) -> set[str]:
     names: set[str] = set()
     for header in include_dir.rglob("*.h"):
+        relative = header.relative_to(include_dir).as_posix()
+        if (relative == "sugar.h" or relative.startswith("sugar/") or
+                relative == "app/legacy.h" or relative == "rest/core.h" or
+                relative.startswith("rest/core/") or
+                relative == "rest/response_helpers.h"):
+            continue
         names.update(api_names_from_text(header.read_text(encoding="utf-8")))
     return names
 
@@ -170,11 +176,16 @@ def compile_headers(source: pathlib.Path, build: pathlib.Path) -> list[str]:
     with tempfile.TemporaryDirectory(prefix="dcc-header-audit-") as temp:
         unit = pathlib.Path(temp) / "header.c"
         for header in sorted((include_dir / "dcc").rglob("*.h")):
+            relative = header.relative_to(include_dir).as_posix()
+            if (relative == "dcc/sugar.h" or relative.startswith("dcc/sugar/") or
+                    relative == "dcc/app/legacy.h" or relative == "dcc/rest/core.h" or
+                    relative.startswith("dcc/rest/core/") or
+                    relative == "dcc/rest/response_helpers.h"):
+                continue
             header_text = header.read_text(encoding="utf-8")
             if header_text.startswith("/* Included by <dcc/"):
                 # Declaration fragments are validated through their owning umbrella.
                 continue
-            relative = header.relative_to(include_dir).as_posix()
             unit.write_text(f"#include <{relative}>\nint main(void) {{ return 0; }}\n", encoding="utf-8")
             result = subprocess.run(
                 [compiler, "-std=c11", "-fsyntax-only", *include_args, str(unit)],
@@ -196,9 +207,20 @@ def main() -> int:
     source = args.source.resolve()
     current = current_api_names(source / "include/dcc")
     errors = compile_headers(source, args.build.resolve())
+    baseline_path = source / "tools/api_v2_symbols.txt"
+    if not baseline_path.is_file():
+        errors.append("missing DCC 2 symbol baseline")
+    else:
+        baseline_lines = baseline_path.read_text(encoding="utf-8").splitlines()
+        if baseline_lines != sorted(set(baseline_lines)):
+            errors.append("DCC 2 symbol baseline is not sorted and unique")
+        if set(baseline_lines) != current:
+            errors.append("DCC 2 symbol baseline does not match installed declarations")
 
     previous = previous_api_names(source)
-    if previous is not None:
+    project_text = (source / "CMakeLists.txt").read_text(encoding="utf-8")
+    major_reset = bool(re.search(r"project\(dcc\s+VERSION\s+2\.", project_text))
+    if previous is not None and not major_reset:
         try:
             allowed_removals = intentional_api_removals(source)
         except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -211,8 +233,11 @@ def main() -> int:
     symbols = exported_symbols(args.library.resolve())
     if symbols is not None:
         missing = sorted(current - symbols)
+        extra = sorted(symbols - current)
         if missing:
             errors.append("DCC_API declarations missing from library: " + ", ".join(missing))
+        if extra and args.library.resolve().suffix != ".a":
+            errors.append("library exports absent from DCC 2 baseline: " + ", ".join(extra))
 
     if errors:
         print("public API audit failed:", file=sys.stderr)

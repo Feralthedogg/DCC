@@ -1,5 +1,6 @@
 #include <dcc/app.h>
 #include <dcc/managed_message.h>
+#include <dcc/rest/core/async.h>
 
 #include "internal/app/dcc_app_internal.h"
 #include "internal/rest/dcc_rest_endpoint_internal.h"

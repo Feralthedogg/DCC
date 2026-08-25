@@ -1,5 +1,7 @@
 #include "internal/hot_reload/dcc_hot_reload_internal.h"
 
+#include <dcc/rest/core/request.h>
+
 #include <string.h>
 
 static dcc_status_t dcc_worker_execute_rest(

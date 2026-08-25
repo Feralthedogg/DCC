@@ -2,6 +2,7 @@
 #include <dcc/client.h>
 #include <dcc/error_details.h>
 #include <dcc/rest.h>
+#include <dcc/rest/core/async.h>
 
 #include "internal/app/dcc_app_internal.h"
 #include "internal/rest/dcc_rest_error_observer_internal.h"

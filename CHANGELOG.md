@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0 - 2026-08-25
+
+Stable major release with the canonical five-leaf Bot API, status-returning
+handlers, flat listener configuration, ordered interaction actions, tagged
+Components v2 builders, and request/result REST ownership. The installed
+surface removes DCC 1 Sugar and App legacy headers, publishes exactly 224 REST
+endpoints plus 35 generic operations, and requires LLAM 2.2.0 with ABI major 2.
+
+See `docs/migration-1-to-2.md` for the intentional major-version migration.
+
 ## 1.5.0 - 2026-07-12
 
 ### Added

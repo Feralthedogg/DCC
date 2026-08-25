@@ -49,7 +49,8 @@ typedef struct dcc_emoji_params {
 
 #define DCC_GUILD_STICKER_PARAMS_INIT                                          \
   {sizeof(dcc_guild_sticker_params_t), DCC_GUILD_STICKER_PARAMS_VERSION,       \
-   UINT64_C(0), UINT64_C(0), NULL, NULL, NULL, {0}, UINT64_C(0), NULL, NULL, NULL, UINT64_C(0)}
+   UINT64_C(0), UINT64_C(0), NULL, NULL, NULL, \
+   {NULL, NULL, NULL, NULL, 0U}, UINT64_C(0), NULL, NULL, NULL, UINT64_C(0)}
 #define DCC_EMOJI_PARAMS_INIT                                                  \
   {sizeof(dcc_emoji_params_t), DCC_EMOJI_PARAMS_VERSION, UINT64_C(0),          \
    UINT64_C(0), NULL, NULL, NULL, 0U, UINT64_C(0)}

@@ -2,6 +2,7 @@
 
 #include <dcc/app.h>
 #include <dcc/dcc.h>
+#include <dcc/rest/core/async.h>
 
 #include "internal/app/dcc_app_internal.h"
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"

@@ -1,4 +1,5 @@
 #include <dcc/rest.h>
+#include <dcc/rest/core/async.h>
 
 dcc_status_t dcc_rest_request_async(
     dcc_client_t *client,

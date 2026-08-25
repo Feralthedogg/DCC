@@ -4,9 +4,9 @@ DCC is a C11 Discord client runtime built on LLAM 2.2.0. It covers Gateway,
 REST, interaction webhooks, Components V2, voice with the official libdave
 backend, sharding, replay tests, and isolated hot reload.
 
-Version 1.5.0 separates safe production behavior from development convenience:
-`DCC_BOT(...)` never changes commands on READY; `DCC_DEV_BOT(...)` opts into
-automatic development sync.
+DCC 2.0.0 Stable separates safe production behavior from development
+convenience: production runners never mutate commands on READY, while
+development runners opt into local dotenv loading and command synchronization.
 
 Documentation: <https://Feralthedogg.github.io/DCC/>
 
@@ -38,16 +38,15 @@ cmake --build mybot/build
 A minimal development-only program can use:
 
 ```c
-#include <dcc/sugar.h>
+#include <dcc/bot.h>
 
 DCC_SLASH_FN(ping) {
     (void)user_data;
-    (void)DCC_REPLY_TEXT(ctx, "pong");
+    return DCC_CTX_REPLY_TEXT(ctx, "pong");
 }
 
 DCC_DEV_BOT_MAIN(
-    "minimal",
-    DCC_APP_LISTENERS(DCC_LISTEN_SLASH("ping", "Reply with pong", ping))
+    DCC_LISTEN_SLASH("ping", "Reply with pong", ping)
 )
 ```
 

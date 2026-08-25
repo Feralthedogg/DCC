@@ -32,7 +32,7 @@ bundle_llam=${DCC_BUNDLE_LLAM:-OFF}
 ctest_timeout=${DCC_CTEST_TIMEOUT:-180}
 ctest_regex=${DCC_CTEST_REGEX:-^dcc_}
 ctest_exclude=${DCC_CTEST_EXCLUDE:-}
-asan_ctest_exclude=${DCC_ASAN_CTEST_EXCLUDE:-^dcc_cluster_gateway_smoke$}
+asan_ctest_exclude=${DCC_ASAN_CTEST_EXCLUDE:-^(dcc_cluster_gateway_smoke|dcc_hot_reload_canary_integration_smoke|dcc_hot_reload_isolated_last_good_smoke)$}
 
 cmake_configure() {
     build=$1
@@ -237,7 +237,21 @@ EOF
     # Deliberately use shell splitting here: pkg-config returns compiler tokens.
     # shellcheck disable=SC2086
     "$cc" -std=c11 "$consumer_dir/main.c" $cflags $libs -o "$consumer_build_dir/dcc_pkg_config_consumer"
-    "$consumer_build_dir/dcc_pkg_config_consumer"
+    if [ -n "$package_llam" ]; then
+        case "$(uname -s)" in
+            Darwin)
+                DYLD_LIBRARY_PATH="$package_llam_dir${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" \
+                    "$consumer_build_dir/dcc_pkg_config_consumer"
+                ;;
+            Linux|NetBSD)
+                LD_LIBRARY_PATH="$package_llam_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+                    "$consumer_build_dir/dcc_pkg_config_consumer"
+                ;;
+            *) "$consumer_build_dir/dcc_pkg_config_consumer" ;;
+        esac
+    else
+        "$consumer_build_dir/dcc_pkg_config_consumer"
+    fi
 }
 
 hot_reload_host_check() {
@@ -481,7 +495,7 @@ normal_bot_deploy_template_check() {
     grep -q 'stop_grace_period: 30s' "$deploy_dir/docker-compose.yaml"
     grep -q 'terminationGracePeriodSeconds: 30' "$deploy_dir/kubernetes.yaml"
     check_output=$(DCC_TOKEN=release-check "$doctor" --json --require-token)
-    printf '%s\n' "$check_output" | grep -q '"dcc_version":"1.5.0"'
+    printf '%s\n' "$check_output" | grep -q '"dcc_version":"2.0.0"'
     printf '%s\n' "$check_output" | grep -q '"token_present":true'
 }
 
@@ -519,15 +533,15 @@ source_package_hygiene_check() {
     grep -q '/deploy/bot/entrypoint.sh$' "$list_file"
     grep -q '/include/dcc/oauth2.h$' "$list_file"
     grep -q '/include/dcc/rest/official_surface.h$' "$list_file"
-    grep -q '/include/dcc/sugar/official_surface.h$' "$list_file"
+    grep -q '/include/dcc/bot.h$' "$list_file"
     grep -q '/include/dcc/webhook_events.h$' "$list_file"
     grep -q '/src/gateway/gateway_send_public.c$' "$list_file"
     grep -q '/src/oauth2.c$' "$list_file"
     grep -q '/src/rest/rest_official_surface.c$' "$list_file"
     grep -q '/src/webhook_events.c$' "$list_file"
-    grep -q '/tests/official_surface_smoke.c$' "$list_file"
-    grep -q '/tests/package_consumer/package_consumer_official_surface.c$' "$list_file"
-    grep -q '/tests/support/http_smoke_official_surface.c$' "$list_file"
+    grep -q '/docs/migration-1-to-2.md$' "$list_file"
+    grep -q '/tests/package_consumer/package_consumer_v2.c$' "$list_file"
+    grep -q '/tests/package_consumer/package_consumer_v2.cpp$' "$list_file"
     grep -q '/tools/audit_discord_api_docs_surface.py$' "$list_file"
     grep -q '/tools/audit_official_events_surface.py$' "$list_file"
     grep -q '/tools/audit_official_surface.py$' "$list_file"
@@ -782,8 +796,11 @@ if ! is_true "${DCC_SKIP_ASAN:-0}"; then
 
     step "run ASAN/UBSAN test suite"
     # The primary suite still runs the full cluster gateway integration smoke.
-    # Hosted macOS ASAN can occasionally leave that network-heavy test waiting
-    # in teardown, so the sanitizer pass keeps to deterministic checks by default.
+    # Hosted macOS ASAN can occasionally leave the network-heavy cluster test
+    # waiting in teardown. ASAN also documents false positives around
+    # __asan_handle_no_return when the canary and last-good fixtures terminate
+    # stackful worker processes. The primary suite still covers every integration
+    # path; the sanitizer pass keeps to deterministic checks by default.
     run_ctest "$asan_build_dir" "$asan_ctest_exclude"
 fi
 

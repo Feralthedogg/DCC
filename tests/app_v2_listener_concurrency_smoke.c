@@ -1,4 +1,5 @@
 #include <dcc/app.h>
+#include <dcc/rest/core/async.h>
 
 #include "internal/app/dcc_app_internal.h"
 #include "internal/client/dcc_client_state_internal.h"

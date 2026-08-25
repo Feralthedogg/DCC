@@ -116,13 +116,23 @@ typedef struct dcc_rest_request_desc {
       DCC_REST_GET, NULL, NULL, NULL, 0U, NULL }
 
 /** Initializes call options to normal priority with no callback; NULL is allowed. */
-DCC_API void dcc_rest_call_options_init(dcc_rest_call_options_t *options);
+static inline void dcc_rest_call_options_init(dcc_rest_call_options_t *options) {
+    if (options != NULL) {
+        dcc_rest_call_options_t value = DCC_REST_CALL_OPTIONS_INIT;
+        *options = value;
+    }
+}
 
 /**
  * Initializes a raw descriptor; NULL is allowed. The initialized descriptor
  * uses GET and has no path, content type, body, or call-options pointer.
  */
-DCC_API void dcc_rest_request_desc_init(dcc_rest_request_desc_t *description);
+static inline void dcc_rest_request_desc_init(dcc_rest_request_desc_t *description) {
+    if (description != NULL) {
+        dcc_rest_request_desc_t value = DCC_REST_REQUEST_DESC_INIT;
+        *description = value;
+    }
+}
 
 /**
  * Validates, copies, and queues one raw REST operation.

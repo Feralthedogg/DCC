@@ -11,7 +11,14 @@ static void isolated_ready(dcc_client_t *client, const dcc_event_t *event, void 
     if (url == NULL || url[0] == '\0') {
         return;
     }
-    (void)dcc_rest_request(client, "POST", url, "{\"worker\":true}", NULL, NULL);
+    static const char body[] = "{\"worker\":true}";
+    dcc_rest_request_desc_t request = DCC_REST_REQUEST_DESC_INIT;
+    request.method = DCC_REST_POST;
+    request.path = url;
+    request.content_type = "application/json";
+    request.body = body;
+    request.body_len = sizeof(body) - 1U;
+    (void)dcc_rest_submit(client, &request, NULL);
 }
 
 static void isolated_slash(dcc_client_t *client, const dcc_event_t *event, void *user_data) {

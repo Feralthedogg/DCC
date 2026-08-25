@@ -1,5 +1,5 @@
 #include <dcc/dcc.h>
-#include <dcc/sugar.h>
+#include <dcc/bot/ui.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -329,13 +329,13 @@ static int run_component_v2_modal_smoke(void) {
     }
     dcc_component_v2_builder_json_free(json);
 
-    dcc_component_v2_builder_t text_input = DCC_V2_TEXT_INPUT_REQUIRED(
-        "profile.name",
-        "Deprecated inner label",
-        DCC_TEXT_INPUT_SHORT,
-        1U
-    );
-    dcc_component_v2_builder_t text_label = DCC_V2_LABEL("Display name", text_input);
+    dcc_component_v2_builder_t text_input =
+        DCC_UI_INPUT("profile.name", DCC_TEXT_INPUT_SHORT);
+    if (dcc_component_v2_builder_set_required(&text_input, 1U) != DCC_OK) {
+        return 1;
+    }
+    dcc_component_v2_builder_t text_label =
+        DCC_UI_LABEL("Display name", &text_input);
     dcc_modal_builder_init(&modal);
     if (dcc_modal_builder_set_custom_id(&modal, "profile-modal") != DCC_OK ||
         dcc_modal_builder_set_title(&modal, "Profile") != DCC_OK ||

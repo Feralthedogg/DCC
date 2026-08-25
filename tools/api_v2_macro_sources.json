@@ -1,0 +1,2540 @@
+{
+  "macros": [
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_ALLOWED_MENTIONS_BUILDER_INIT",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 4U)",
+      "kind": "object",
+      "name": "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_PARSE_EVERYONE",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 3U)",
+      "kind": "object",
+      "name": "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_PARSE_ROLES",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_PARSE_USERS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 5U)",
+      "kind": "object",
+      "name": "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_REPLIED_USER",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_ROLES",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_USERS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_ALLOWED_MENTIONS_BUILDER_VERSION",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "__declspec(dllexport)",
+      "kind": "object",
+      "name": "DCC_API",
+      "owner": "dcc/export.h"
+    },
+    {
+      "arity": null,
+      "expansion": "__declspec(dllimport)",
+      "kind": "object",
+      "name": "DCC_API",
+      "owner": "dcc/export.h"
+    },
+    {
+      "arity": null,
+      "expansion": "__attribute__((visibility(\"default\")))",
+      "kind": "object",
+      "name": "DCC_API",
+      "owner": "dcc/export.h"
+    },
+    {
+      "arity": null,
+      "expansion": "#endif",
+      "kind": "object",
+      "name": "DCC_API",
+      "owner": "dcc/export.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_APPLICATION_COMMAND_BUILDER_INIT",
+      "owner": "dcc/application_command.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_APPLICATION_COMMAND_OPTION_BUILDER_INIT",
+      "owner": "dcc/application_command.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_APPLICATION_INSTALL_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_APPLICATION_INTEGRATION_TYPE_CONFIG_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_APPLICATION_MODIFY_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_APPLICATION_ROLE_CONNECTION_METADATA_PARAMS_INIT",
+      "owner": "dcc/rest/types/role_connections.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_APPLICATION_ROLE_CONNECTION_METADATA_PARAMS_VERSION",
+      "owner": "dcc/rest/types/role_connections.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_APPLICATION_ROLE_CONNECTION_PARAMS_INIT",
+      "owner": "dcc/rest/types/role_connections.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_APPLICATION_ROLE_CONNECTION_PARAMS_VERSION",
+      "owner": "dcc/rest/types/role_connections.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_AUTOCOMPLETE_BUILDER_INIT",
+      "owner": "dcc/autocomplete.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_AUTOCOMPLETE_CHOICE_INIT",
+      "owner": "dcc/autocomplete.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_AUTOCOMPLETE_CHOICE_NAMED_INIT",
+      "owner": "dcc/autocomplete.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_AUTOCOMPLETE_FN",
+      "owner": "dcc/bot/handlers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "25U",
+      "kind": "object",
+      "name": "DCC_AUTOCOMPLETE_MAX_CHOICES",
+      "owner": "dcc/autocomplete.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_BOT_CONFIG_INIT",
+      "owner": "dcc/bot/main.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_BOT_MAIN",
+      "owner": "dcc/bot/main.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_BOT_MAIN_WITH",
+      "owner": "dcc/bot/main.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_BOT_MODULE",
+      "owner": "dcc/hot_reload/module/macros.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "alignof(type)",
+      "kind": "function",
+      "name": "DCC_BOT_MODULE_ALIGNOF",
+      "owner": "dcc/hot_reload/module/macros.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "_Alignof(type)",
+      "kind": "function",
+      "name": "DCC_BOT_MODULE_ALIGNOF",
+      "owner": "dcc/hot_reload/module/macros.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\"dcc_bot_module_deinit\"",
+      "kind": "object",
+      "name": "DCC_BOT_MODULE_DEINIT_SYMBOL",
+      "owner": "dcc/hot_reload/base.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_BOT_MODULE_EXPORT",
+      "owner": "dcc/hot_reload/module/macros.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\"dcc_bot_module_init\"",
+      "kind": "object",
+      "name": "DCC_BOT_MODULE_INIT_SYMBOL",
+      "owner": "dcc/hot_reload/base.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_BOT_MODULE_ON",
+      "owner": "dcc/hot_reload/module/macros.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_BOT_MODULE_STATE",
+      "owner": "dcc/hot_reload/module/macros.h"
+    },
+    {
+      "arity": 3,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_BOT_MODULE_STATELESS",
+      "owner": "dcc/hot_reload/module/macros.h"
+    },
+    {
+      "arity": 4,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_BOT_MODULE_WITH_STATE",
+      "owner": "dcc/hot_reload/module/macros.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_BUTTON_FN",
+      "owner": "dcc/bot/handlers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_CHANNEL_FORUM_TAG_PARAMS_INIT",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_CHANNEL_FORUM_TAG_PARAMS_VERSION",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_CHANNEL_PARAMS_INIT",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_CHANNEL_PARAMS_VERSION",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_CHANNEL_PERMISSION_OVERWRITE_INIT",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_CHANNEL_PERMISSION_OVERWRITE_VERSION",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_CHANNEL_POSITIONS_PARAMS_INIT",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_CHANNEL_POSITIONS_PARAMS_VERSION",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_CHANNEL_POSITION_INIT",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_CHANNEL_POSITION_VERSION",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "type_ initializer_",
+      "kind": "function",
+      "name": "DCC_CHANNEL_RECORD_INIT_VALUE",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "(type_)initializer_",
+      "kind": "function",
+      "name": "DCC_CHANNEL_RECORD_INIT_VALUE",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_CHANNEL_VOICE_STATUS_PARAMS_INIT",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_CHANNEL_VOICE_STATUS_PARAMS_VERSION",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT32_MAX",
+      "kind": "object",
+      "name": "DCC_CLUSTER_NO_SHARD_INDEX",
+      "owner": "dcc/cluster/shard_types.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_COMMAND_REGISTRY_OPERATION_OPTIONS_INIT",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_COMMAND_REGISTRY_OPERATION_RESULT_INIT",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_COMMAND_REGISTRY_OPTIONS_INIT",
+      "owner": "dcc/command_registry.h"
+    },
+    {
+      "arity": null,
+      "expansion": "32U",
+      "kind": "object",
+      "name": "DCC_COMPONENT_SESSION_ACTION_MAX",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "arity": null,
+      "expansion": "100U",
+      "kind": "object",
+      "name": "DCC_COMPONENT_SESSION_CUSTOM_ID_MAX",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "arity": null,
+      "expansion": "16U",
+      "kind": "object",
+      "name": "DCC_COMPONENT_SESSION_ID_MAX",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "arity": null,
+      "expansion": "16U",
+      "kind": "object",
+      "name": "DCC_COMPONENT_SESSION_NONCE_MAX",
+      "owner": "dcc/component_session.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_COMPONENT_V2_BUILDER_INIT",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_COMPONENT_V2_SIMPLE_SELECT",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_COMPONENT_V2_VALIDATION_ERROR_INIT",
+      "owner": "dcc/component_v2.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_CURRENT_USER_PARAMS_INIT",
+      "owner": "dcc/rest/types/users.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_CURRENT_USER_PARAMS_VERSION",
+      "owner": "dcc/rest/types/users.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_CURRENT_USER_VOICE_STATE_PARAMS_INIT",
+      "owner": "dcc/rest/types/voice_states.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "__attribute__((deprecated(message)))",
+      "kind": "function",
+      "name": "DCC_DEPRECATED",
+      "owner": "dcc/export.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "__declspec(deprecated(message))",
+      "kind": "function",
+      "name": "DCC_DEPRECATED",
+      "owner": "dcc/export.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "#endif",
+      "kind": "function",
+      "name": "DCC_DEPRECATED",
+      "owner": "dcc/export.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_DEV_BOT_MAIN",
+      "owner": "dcc/bot/main.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_DEV_BOT_MAIN_WITH",
+      "owner": "dcc/bot/main.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_DM_CHANNEL_PARAMS_INIT",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_DM_CHANNEL_PARAMS_VERSION",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_INIT",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 8U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_AUTHOR",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 10U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_COLOR",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_DESCRIPTION",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 9U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_FIELDS",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 5U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_FOOTER",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 6U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_IMAGE",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 7U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_THUMBNAIL",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 4U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_TIMESTAMP",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_TITLE",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_TYPE",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 3U)",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_PRESENT_URL",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_EMBED_BUILDER_VERSION",
+      "owner": "dcc/embed.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_EMOJI_PARAMS_INIT",
+      "owner": "dcc/rest/types/emojis_stickers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_ERROR_VERSION",
+      "owner": "dcc/error_details.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_EVENT_FN",
+      "owner": "dcc/bot/handlers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1",
+      "kind": "object",
+      "name": "DCC_GATEWAY_INFO_HAS_SESSION_STATE",
+      "owner": "dcc/client.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_GROUP_DM_RECIPIENT_PARAMS_INIT",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_GROUP_DM_RECIPIENT_PARAMS_VERSION",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_GUILD_COMMAND_PERMISSIONS_PARAMS_INIT",
+      "owner": "dcc/rest/types/application_commands.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "type_ value_",
+      "kind": "function",
+      "name": "DCC_GUILD_MEMBER_RECORD_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "(type_) value_",
+      "kind": "function",
+      "name": "DCC_GUILD_MEMBER_RECORD_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "type_ value_",
+      "kind": "function",
+      "name": "DCC_GUILD_RECORD_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "(type_) value_",
+      "kind": "function",
+      "name": "DCC_GUILD_RECORD_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_GUILD_STICKER_PARAMS_INIT",
+      "owner": "dcc/rest/types/emojis_stickers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\"dcc_hot_reload_worker\"",
+      "kind": "object",
+      "name": "DCC_HOT_RELOAD_DEFAULT_WORKER",
+      "owner": "dcc/hot_reload/options.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT32_MAX",
+      "kind": "object",
+      "name": "DCC_HOT_RELOAD_NO_SETTLE",
+      "owner": "dcc/hot_reload/base.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_INTENTS_ALL",
+      "owner": "dcc/intents.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(10U * 1024U * 1024U)",
+      "kind": "object",
+      "name": "DCC_INTERACTION_DEFAULT_ATTACHMENT_SIZE_LIMIT",
+      "owner": "dcc/objects/interactions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_INVITE_PARAMS_INIT",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_INVITE_PARAMS_VERSION",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "type_ initializer_",
+      "kind": "function",
+      "name": "DCC_INVITE_RECORD_INIT_VALUE",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "(type_)initializer_",
+      "kind": "function",
+      "name": "DCC_INVITE_RECORD_INIT_VALUE",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LISTENER_CONFIG_INIT",
+      "owner": "dcc/bot/listeners.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LOBBY_CHANNEL_LINK_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LOBBY_CREATE_OR_JOIN_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LOBBY_MEMBER_BULK_ITEM_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LOBBY_MEMBER_BULK_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LOBBY_MEMBER_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LOBBY_MEMBER_SPEC_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LOBBY_MESSAGE_MODERATION_METADATA_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LOBBY_MESSAGE_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_LOBBY_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_MANAGED_MESSAGE_PUBLISH_RESULT_VERSION",
+      "owner": "dcc/managed_message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_MESSAGE_ATTACHMENT_INIT",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_INIT",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 9U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 11U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS_JSON",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 18U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 14U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS_JSON",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 6U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 13U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_JSON",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 7U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 16U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_CONTENT",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 5U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_EMBEDS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 12U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_EMBEDS_JSON",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 3U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_FLAGS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 17U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 10U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE_JSON",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_NONCE",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 8U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_POLL",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 15U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_POLL_JSON",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 4U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_STICKER_IDS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_PRESENT_TTS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_MESSAGE_BUILDER_VERSION",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(64)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_FLAG_EPHEMERAL",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(32768)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_FLAG_IS_COMPONENTS_V2",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(128)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_FLAG_LOADING",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(4)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_FLAG_SUPPRESS_EMBEDS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(4096)",
+      "kind": "object",
+      "name": "DCC_MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_MESSAGE_FN",
+      "owner": "dcc/bot/handlers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "128U",
+      "kind": "object",
+      "name": "DCC_MESSAGE_LINK_MAX",
+      "owner": "dcc/message_link.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "type_ initializer_",
+      "kind": "function",
+      "name": "DCC_MESSAGE_RECORD_INIT_VALUE",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "(type_)initializer_",
+      "kind": "function",
+      "name": "DCC_MESSAGE_RECORD_INIT_VALUE",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_MESSAGE_REFERENCE_INIT",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_MODAL_BUILDER_INIT",
+      "owner": "dcc/modal.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 3U)",
+      "kind": "object",
+      "name": "DCC_MODAL_BUILDER_PRESENT_COMPONENTS",
+      "owner": "dcc/modal.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_MODAL_BUILDER_PRESENT_COMPONENTS_JSON",
+      "owner": "dcc/modal.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 4U)",
+      "kind": "object",
+      "name": "DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2",
+      "owner": "dcc/modal.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 5U)",
+      "kind": "object",
+      "name": "DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2_JSON",
+      "owner": "dcc/modal.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID",
+      "owner": "dcc/modal.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_MODAL_BUILDER_PRESENT_TITLE",
+      "owner": "dcc/modal.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_MODAL_BUILDER_VERSION",
+      "owner": "dcc/modal.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_MODAL_FN",
+      "owner": "dcc/bot/handlers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "__declspec(dllexport)",
+      "kind": "object",
+      "name": "DCC_MODULE_API",
+      "owner": "dcc/hot_reload/base.h"
+    },
+    {
+      "arity": null,
+      "expansion": "__attribute__((visibility(\"default\")))",
+      "kind": "object",
+      "name": "DCC_MODULE_API",
+      "owner": "dcc/hot_reload/base.h"
+    },
+    {
+      "arity": null,
+      "expansion": "#endif",
+      "kind": "object",
+      "name": "DCC_MODULE_API",
+      "owner": "dcc/hot_reload/base.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000040)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_ADD_REACTIONS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000008)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_ADMINISTRATOR",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000008000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_ATTACH_FILES",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000004)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_BAN_MEMBERS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0010000000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_BYPASS_SLOWMODE",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000004000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_CHANGE_NICKNAME",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000100000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_CONNECT",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000100000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_CREATE_EVENTS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000080000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_CREATE_GUILD_EXPRESSIONS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000001)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_CREATE_INSTANT_INVITE",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000001000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_CREATE_PRIVATE_THREADS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000800000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_CREATE_PUBLIC_THREADS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000800000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_DEAFEN_MEMBERS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000004000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_EMBED_LINKS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000002)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_KICK_MEMBERS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000010)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_CHANNELS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000040000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_EMOJIS_AND_STICKERS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000200000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_EVENTS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "DCC_PERMISSION_MANAGE_EMOJIS_AND_STICKERS",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_EXPRESSIONS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000020)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_GUILD",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000002000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_MESSAGES",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000008000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_NICKNAMES",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000010000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_ROLES",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000400000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_THREADS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000020000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MANAGE_WEBHOOKS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000020000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MENTION_EVERYONE",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000010000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MODERATE_MEMBERS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000001000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MOVE_MEMBERS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000400000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_MUTE_MEMBERS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0008000000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_PIN_MESSAGES",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000100)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_PRIORITY_SPEAKER",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000010000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_READ_MESSAGE_HISTORY",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000100000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_REQUEST_TO_SPEAK",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000800)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_SEND_MESSAGES",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000004000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_SEND_MESSAGES_IN_THREADS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0002000000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_SEND_POLLS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000001000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_SEND_TTS_MESSAGES",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000400000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_SEND_VOICE_MESSAGES",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000200000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_SPEAK",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000200)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_STREAM",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000080000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_USE_APPLICATION_COMMANDS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000800000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_USE_CLYDE_AI",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000008000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_USE_EMBEDDED_ACTIVITIES",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0004000000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_USE_EXTERNAL_APPS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000040000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_USE_EXTERNAL_EMOJIS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000200000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_USE_EXTERNAL_SOUNDS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000002000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_USE_EXTERNAL_STICKERS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000040000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_USE_SOUNDBOARD",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000002000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_USE_VAD",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000080)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_VIEW_AUDIT_LOG",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000000400)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_VIEW_CHANNEL",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000020000000000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_VIEW_CREATOR_MONETIZATION_ANALYTICS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(0x0000000000080000)",
+      "kind": "object",
+      "name": "DCC_PERMISSION_VIEW_GUILD_INSIGHTS",
+      "owner": "dcc/permissions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_POLL_BUILDER_INIT",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 4U)",
+      "kind": "object",
+      "name": "DCC_POLL_BUILDER_PRESENT_ALLOW_MULTISELECT",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_POLL_BUILDER_PRESENT_ANSWERS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_POLL_BUILDER_PRESENT_DURATION_HOURS",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 3U)",
+      "kind": "object",
+      "name": "DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_POLL_BUILDER_PRESENT_QUESTION",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_POLL_BUILDER_VERSION",
+      "owner": "dcc/message.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_READY_FN",
+      "owner": "dcc/bot/handlers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_CALL_OPTIONS_INIT",
+      "owner": "dcc/rest/request.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_CALL_OPTIONS_VERSION",
+      "owner": "dcc/rest/request.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_COMMAND_LIST_QUERY_INIT",
+      "owner": "dcc/rest/types/application_commands.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_CURRENT_USER_GUILDS_QUERY_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_ENTITLEMENT_QUERY_INIT",
+      "owner": "dcc/rest/types/entitlements.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_ENTITLEMENT_QUERY_VERSION",
+      "owner": "dcc/rest/types/entitlements.h"
+    },
+    {
+      "arity": null,
+      "expansion": "9500U",
+      "kind": "object",
+      "name": "DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_HARD_LIMIT",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "arity": null,
+      "expansion": "8000U",
+      "kind": "object",
+      "name": "DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_SOFT_LIMIT",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "arity": null,
+      "expansion": "600000ULL",
+      "kind": "object",
+      "name": "DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_WINDOW_MS",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1000U",
+      "kind": "object",
+      "name": "DCC_REST_FIREWALL_DEFAULT_SOFT_LIMIT_DELAY_MS",
+      "owner": "dcc/rest/firewall.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_FOLLOW_NEWS_CHANNEL_INIT",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_FOLLOW_NEWS_CHANNEL_VERSION",
+      "owner": "dcc/rest/types/channels.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_AUDIT_LOG_QUERY_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_BANS_QUERY_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_BAN_CREATE_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_REST_GUILD_BULK_BAN_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_INCIDENT_ACTIONS_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_MEMBERS_QUERY_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_REST_GUILD_MEMBER_ADD_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_REST_GUILD_MEMBER_SEARCH_QUERY_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_MEMBER_UPDATE_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_PRUNE_INIT",
+      "owner": "dcc/rest/types/guild_members.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_PRUNE_QUERY_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_QUERY_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_ROLE_CREATE_INIT",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_REST_GUILD_ROLE_POSITION_INIT",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_ROLE_UPDATE_INIT",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_UPDATE_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_WIDGET_IMAGE_QUERY_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_GUILD_WIDGET_UPDATE_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_ID_PAGE_INIT",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_REST_ID_PAGE_PRESENT_AFTER",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_REST_ID_PAGE_PRESENT_BEFORE",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_REST_ID_PAGE_PRESENT_LIMIT",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_ID_PAGE_VERSION",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_INTERACTION_RESPONSE_INIT",
+      "owner": "dcc/rest/types/interactions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_REST_INTERACTION_RESPONSE_PRESENT_AUTOCOMPLETE",
+      "owner": "dcc/rest/types/interactions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_REST_INTERACTION_RESPONSE_PRESENT_MESSAGE",
+      "owner": "dcc/rest/types/interactions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_REST_INTERACTION_RESPONSE_PRESENT_MODAL",
+      "owner": "dcc/rest/types/interactions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 3U)",
+      "kind": "object",
+      "name": "DCC_REST_INTERACTION_RESPONSE_PRESENT_WITH_RESPONSE",
+      "owner": "dcc/rest/types/interactions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_INTERACTION_RESPONSE_VERSION",
+      "owner": "dcc/rest/types/interactions.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_INVITE_QUERY_INIT",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_INVITE_QUERY_VERSION",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_INVITE_TARGET_USERS_UPLOAD_INIT",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_INVITE_TARGET_USERS_UPLOAD_VERSION",
+      "owner": "dcc/rest/types/invites.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_JOINED_THREAD_ARCHIVE_QUERY_INIT",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_JOINED_THREAD_ARCHIVE_QUERY_VERSION",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_LOBBY_MESSAGE_QUERY_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_MESSAGE_LIST_QUERY_INIT",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 3U)",
+      "kind": "object",
+      "name": "DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_MESSAGE_LIST_QUERY_VERSION",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_MESSAGE_PAYLOAD_INIT",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_MESSAGE_PAYLOAD_VERSION",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_PIN_PAGE_INIT",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_REST_PIN_PAGE_PRESENT_BEFORE",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_REST_PIN_PAGE_PRESENT_LIMIT",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_PIN_PAGE_VERSION",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_REACTION_QUERY_INIT",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_REST_REACTION_QUERY_PRESENT_AFTER",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_REST_REACTION_QUERY_PRESENT_LIMIT",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_REST_REACTION_QUERY_PRESENT_TYPE",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_REACTION_QUERY_VERSION",
+      "owner": "dcc/rest/types/messages.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_REQUEST_DESC_INIT",
+      "owner": "dcc/rest/request.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_REQUEST_DESC_VERSION",
+      "owner": "dcc/rest/request.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_RESULT_VERSION",
+      "owner": "dcc/rest/result.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_REST_ROLE_COLORS_INIT",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_RUNTIME_STATS_INIT",
+      "owner": "dcc/rest/runtime.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_SCHEDULED_EVENT_QUERY_INIT",
+      "owner": "dcc/rest/types/scheduled_events.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_SCHEDULED_EVENT_USERS_QUERY_INIT",
+      "owner": "dcc/rest/types/scheduled_events.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_SKU_SUBSCRIPTION_QUERY_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_STRING_MAP_INIT",
+      "owner": "dcc/rest/types/string_map.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_STRING_MAP_VERSION",
+      "owner": "dcc/rest/types/string_map.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_TASK10_RECORD_VERSION",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_THREAD_ARCHIVE_QUERY_INIT",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_THREAD_ARCHIVE_QUERY_VERSION",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_THREAD_MEMBER_QUERY_INIT",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_THREAD_MEMBER_QUERY_VERSION",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_BUILDER_INIT",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_BUILDER_PRESENT_AVATAR",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_BUILDER_PRESENT_CHANNEL_ID",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_BUILDER_PRESENT_NAME",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_BUILDER_VERSION",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_COMPAT_PAYLOAD_INIT",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_COMPAT_PAYLOAD_VERSION",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_EXECUTE_INIT",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 3U)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_EXECUTE_PRESENT_APPLIED_TAG_IDS",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_EXECUTE_PRESENT_AVATAR_URL",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 5U)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_ID",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 2U)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_NAME",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_EXECUTE_PRESENT_USERNAME",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 4U)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_EXECUTE_PRESENT_WAIT",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 6U)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_EXECUTE_PRESENT_WITH_COMPONENTS",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_EXECUTE_VERSION",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_MESSAGE_EDIT_INIT",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "(UINT64_C(1) << 1U)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_WITH_COMPONENTS",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_MESSAGE_EDIT_VERSION",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_MESSAGE_QUERY_INIT",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1)",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_REST_WEBHOOK_MESSAGE_QUERY_VERSION",
+      "owner": "dcc/rest/types/webhooks.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_REST_WELCOME_CHANNEL_INIT",
+      "owner": "dcc/rest/types/guilds.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "type_ value_",
+      "kind": "function",
+      "name": "DCC_ROLE_RECORD_INIT",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "(type_) value_",
+      "kind": "function",
+      "name": "DCC_ROLE_RECORD_INIT",
+      "owner": "dcc/rest/types/roles.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_SCHEDULED_EVENT_PARAMS_INIT",
+      "owner": "dcc/rest/types/scheduled_events.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_SELECT_FN",
+      "owner": "dcc/bot/handlers.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_SLASH_FN",
+      "owner": "dcc/bot/handlers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "UINT64_C(1420070400000)",
+      "kind": "object",
+      "name": "DCC_SNOWFLAKE_DISCORD_EPOCH_MS",
+      "owner": "dcc/snowflake.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_SOUNDBOARD_SEND_PARAMS_INIT",
+      "owner": "dcc/rest/types/official_surface.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_STAGE_INSTANCE_PARAMS_INIT",
+      "owner": "dcc/rest/types/stage.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_TASK_FN",
+      "owner": "dcc/bot/handlers.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_TEMPLATE_PARAMS_INIT",
+      "owner": "dcc/rest/types/templates.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_TEST_ENTITLEMENT_PARAMS_INIT",
+      "owner": "dcc/rest/types/entitlements.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_TEST_ENTITLEMENT_PARAMS_VERSION",
+      "owner": "dcc/rest/types/entitlements.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_THREAD_PARAMS_INIT",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_THREAD_PARAMS_VERSION",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "type_ initializer_",
+      "kind": "function",
+      "name": "DCC_THREAD_RECORD_INIT_VALUE",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "(type_)initializer_",
+      "kind": "function",
+      "name": "DCC_THREAD_RECORD_INIT_VALUE",
+      "owner": "dcc/rest/types/threads.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_UI_CARD",
+      "owner": "dcc/bot/ui.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_UI_CARD_ACCENT",
+      "owner": "dcc/bot/ui.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_UI_CHECKBOX_GROUP",
+      "owner": "dcc/bot/ui.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_UI_GALLERY",
+      "owner": "dcc/bot/ui.h"
+    },
+    {
+      "arity": 3,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_UI_MODAL",
+      "owner": "dcc/bot/ui.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_UI_RADIO_GROUP",
+      "owner": "dcc/bot/ui.h"
+    },
+    {
+      "arity": 1,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_UI_ROW",
+      "owner": "dcc/bot/ui.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_UI_SECTION",
+      "owner": "dcc/bot/ui.h"
+    },
+    {
+      "arity": 2,
+      "expansion": "\\",
+      "kind": "function",
+      "name": "DCC_UI_STRING_SELECT",
+      "owner": "dcc/bot/ui.h"
+    },
+    {
+      "arity": null,
+      "expansion": "\\",
+      "kind": "object",
+      "name": "DCC_USER_VOICE_STATE_PARAMS_INIT",
+      "owner": "dcc/rest/types/voice_states.h"
+    },
+    {
+      "arity": null,
+      "expansion": "typedef struct dcc_voice_client dcc_voice_client_t;",
+      "kind": "object",
+      "name": "DCC_VOICE_CLIENT_TYPEDEF",
+      "owner": "dcc/events/base.h"
+    },
+    {
+      "arity": null,
+      "expansion": "typedef struct dcc_voice_client dcc_voice_client_t;",
+      "kind": "object",
+      "name": "DCC_VOICE_CLIENT_TYPEDEF",
+      "owner": "dcc/voice/base.h"
+    },
+    {
+      "arity": null,
+      "expansion": "1U",
+      "kind": "object",
+      "name": "DCC_VOICE_STATE_PARAMS_VERSION",
+      "owner": "dcc/rest/types/voice_states.h"
+    }
+  ],
+  "schema": 1,
+  "version": "2.0.0"
+}

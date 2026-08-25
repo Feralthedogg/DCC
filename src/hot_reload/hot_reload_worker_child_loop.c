@@ -2,6 +2,8 @@
 #include "internal/gateway/dcc_gateway_session_receive_internal.h"
 #include "internal/hot_reload/dcc_hot_reload_internal.h"
 
+#include <dcc/rest/core/async.h>
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>

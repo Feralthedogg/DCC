@@ -23,6 +23,10 @@ typedef struct dcc_rest_firewall_state {
     uint8_t attached;
 } dcc_rest_firewall_state_t;
 
+struct dcc_rest_firewall {
+    dcc_rest_firewall_state_t *state;
+};
+
 dcc_rest_firewall_state_t *dcc_rest_firewall_state_new(
     const dcc_rest_firewall_options_t *options,
     uint8_t attached

@@ -149,8 +149,8 @@ int main(int argc, char **argv) {
         return arg_status > 0 ? 0 : 1;
     }
 
-    (void)dcc_app_load_env_file(".env", 0U);
-    (void)dcc_app_load_env_file("../../.env", 0U);
+    (void)dcc_app_env_load_file(".env", 0U);
+    (void)dcc_app_env_load_file("../../.env", 0U);
 
     const char *module_path = args.module_path;
     const char *worker_path = args.worker_path;

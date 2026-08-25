@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
         .cert_dir_ok = dcc_doctor_path_ok("SSL_CERT_DIR"),
     };
     result.dcc_ok = strcmp(result.dcc_version, DCC_VERSION_STRING) == 0 &&
-        DCC_VERSION_MAJOR == 1 && DCC_VERSION_MINOR == 5 && DCC_VERSION_PATCH == 0;
+        DCC_VERSION_MAJOR == 2 && DCC_VERSION_MINOR == 0 && DCC_VERSION_PATCH == 0;
     result.llam_ok = dcc_doctor_version_at_least(result.llam_version, 2U, 2U, 0U);
     result.token_present = dcc_app_env_get_token(NULL, &token) == DCC_OK;
     result.dave_available = dcc_doctor_check_dave();

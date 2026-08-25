@@ -24,18 +24,6 @@ typedef struct dcc_rest_request_delivery_frame {
 
 static _Thread_local dcc_rest_request_delivery_frame_t *dcc_rest_request_delivery;
 
-void dcc_rest_call_options_init(dcc_rest_call_options_t *options) {
-    if (options != NULL) {
-        *options = (dcc_rest_call_options_t)DCC_REST_CALL_OPTIONS_INIT;
-    }
-}
-
-void dcc_rest_request_desc_init(dcc_rest_request_desc_t *description) {
-    if (description != NULL) {
-        *description = (dcc_rest_request_desc_t)DCC_REST_REQUEST_DESC_INIT;
-    }
-}
-
 dcc_status_t dcc_rest_request_handle_create(
     dcc_client_t *client,
     dcc_rest_result_fn callback,

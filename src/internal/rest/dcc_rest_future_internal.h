@@ -6,6 +6,9 @@
 #include "internal/rest/dcc_rest_runtime_internal.h"
 
 #include <dcc/dcc.h>
+typedef struct dcc_rest_future dcc_rest_future_t;
+#include <dcc/rest/core/async.h>
+#include <dcc/rest/core/future.h>
 #include <llam/runtime.h>
 
 #include <stdatomic.h>

@@ -3,19 +3,6 @@
 #include <stddef.h>
 #include <string.h>
 
-void dcc_rest_firewall_options_init(dcc_rest_firewall_options_t *options) {
-    if (options == NULL) {
-        return;
-    }
-    memset(options, 0, sizeof(*options));
-    options->size = sizeof(*options);
-    options->invalid_request_soft_limit = DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_SOFT_LIMIT;
-    options->invalid_request_hard_limit = DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_HARD_LIMIT;
-    options->invalid_request_window_ms = DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_WINDOW_MS;
-    options->soft_limit_delay_ms = DCC_REST_FIREWALL_DEFAULT_SOFT_LIMIT_DELAY_MS;
-    options->on_hard_limit = DCC_REST_FIREWALL_HARD_LIMIT_REJECT_NONCRITICAL;
-}
-
 dcc_status_t dcc_rest_firewall_options_validate(const dcc_rest_firewall_options_t *options) {
     if (options == NULL ||
         options->size < offsetof(dcc_rest_firewall_options_t, on_hard_limit) + sizeof(options->on_hard_limit) ||

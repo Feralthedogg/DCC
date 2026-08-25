@@ -10,9 +10,7 @@
 #include <dcc/rest/result.h>
 #include <dcc/rest/request.h>
 #include <dcc/rest/runtime.h>
-#include <dcc/rest/response_helpers.h>
 #include <dcc/rest/types.h>
-#include <dcc/rest/core.h>
 #include <dcc/rest/firewall.h>
 #include <dcc/rest/channels.h>
 #include <dcc/rest/messages.h>

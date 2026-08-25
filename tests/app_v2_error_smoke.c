@@ -3,6 +3,8 @@
 #include <dcc/error_details.h>
 #include <dcc/rest.h>
 #include <dcc/rest/result.h>
+#include <dcc/rest/core/async.h>
+#include <dcc/rest/core/request.h>
 
 #include "internal/app/dcc_app_internal.h"
 #include "internal/client/dcc_client_state_internal.h"

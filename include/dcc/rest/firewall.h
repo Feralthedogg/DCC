@@ -76,21 +76,35 @@ typedef struct dcc_rest_firewall_snapshot {
     uint8_t attached;
 } dcc_rest_firewall_snapshot_t;
 
-typedef struct dcc_rest_firewall {
-    size_t size;
-    void *state;
-} dcc_rest_firewall_t;
+typedef struct dcc_rest_firewall dcc_rest_firewall_t;
 
-DCC_API void dcc_rest_firewall_options_init(dcc_rest_firewall_options_t *options);
+/** Initializes standalone firewall options in caller-compiled storage. */
+static inline void dcc_rest_firewall_options_init(
+    dcc_rest_firewall_options_t *options
+) {
+    if (options != NULL) {
+        dcc_rest_firewall_options_t value = {
+            sizeof(value),
+            DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_SOFT_LIMIT,
+            DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_HARD_LIMIT,
+            DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_WINDOW_MS,
+            DCC_REST_FIREWALL_DEFAULT_SOFT_LIMIT_DELAY_MS,
+            DCC_REST_FIREWALL_HARD_LIMIT_REJECT_NONCRITICAL,
+        };
+        *options = value;
+    }
+}
 DCC_API dcc_status_t dcc_rest_firewall_options_validate(
     const dcc_rest_firewall_options_t *options
 );
 
-DCC_API dcc_status_t dcc_rest_firewall_init(
-    dcc_rest_firewall_t *firewall,
-    const dcc_rest_firewall_options_t *options
+/** Creates one standalone firewall owner and clears output on failure. */
+DCC_API dcc_status_t dcc_rest_firewall_create(
+    const dcc_rest_firewall_options_t *options,
+    dcc_rest_firewall_t **out_firewall
 );
-DCC_API void dcc_rest_firewall_deinit(dcc_rest_firewall_t *firewall);
+/** Consumes a standalone firewall owner; NULL is allowed. */
+DCC_API void dcc_rest_firewall_destroy(dcc_rest_firewall_t *firewall);
 DCC_API dcc_status_t dcc_rest_firewall_check(
     dcc_rest_firewall_t *firewall,
     const dcc_rest_firewall_request_t *request,

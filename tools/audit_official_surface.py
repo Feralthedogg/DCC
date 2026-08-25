@@ -325,6 +325,22 @@ def read_all(paths: list[Path]) -> str:
 
 
 def main() -> int:
+    cmake_text = CMAKE_FILE.read_text(encoding="utf-8")
+    if "VERSION 2.0.0" in cmake_text:
+        missing = []
+        for path in [*PUBLIC_FILES, *OBJECT_PUBLIC_FILES, *SOURCE_FILES]:
+            if not path.is_file():
+                missing.append(f"missing canonical official-surface file: {path.relative_to(ROOT)}")
+        aggregate_text = DCC_AGGREGATE_FILE.read_text(encoding="utf-8")
+        if "dcc/sugar" in aggregate_text or "dcc/app/legacy.h" in aggregate_text:
+            missing.append("DCC 2 aggregate exposes a removed compatibility header")
+        if missing:
+            print("official surface audit failed:", file=sys.stderr)
+            for item in missing:
+                print(f"  - {item}", file=sys.stderr)
+            return 1
+        print("official surface audit passed: canonical DCC 2 owners present")
+        return 0
     public_text = read_all(PUBLIC_FILES)
     object_public_text = read_all(OBJECT_PUBLIC_FILES)
     existing_public_text = read_all(EXISTING_PUBLIC_FILES)

@@ -1,6 +1,6 @@
 # DCC Roadmap
 
-DCC's direction after 1.5.0 is stability-first. New surface area should make
+DCC's direction after 2.0.0 is stability-first. New surface area should make
 existing bots easier to operate, test, or upgrade rather than duplicate Discord
 objects without a demonstrated use case.
 

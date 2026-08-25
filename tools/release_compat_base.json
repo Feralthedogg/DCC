@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "current_version": "2.0.0",
+  "previous_stable_tag": "v1.5.0",
+  "compat_base": "6ba1e29a45ec3617cf17e05b716c54b8094bbf96",
+  "comparison_mode": "major_reset"
+}

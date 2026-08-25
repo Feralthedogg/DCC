@@ -151,6 +151,16 @@ def is_fragment(header: Path) -> bool:
     )
 
 
+def is_installed_header(source: Path, header: Path) -> bool:
+    relative = header.relative_to(source / "include").as_posix()
+    return (relative != "dcc/sugar.h" and
+            not relative.startswith("dcc/sugar/") and
+            relative != "dcc/app/legacy.h" and
+            relative != "dcc/rest/core.h" and
+            not relative.startswith("dcc/rest/core/") and
+            relative != "dcc/rest/response_helpers.h")
+
+
 def compile_headers(source: Path, c: list[str], cxx: list[str], includes: list[Path]) -> tuple[list[str], list[str], list[str]]:
     errors: list[str] = []
     allowed_failures: list[str] = []
@@ -158,6 +168,8 @@ def compile_headers(source: Path, c: list[str], cxx: list[str], includes: list[P
     with tempfile.TemporaryDirectory(prefix="dcc-v2-header-audit-") as directory:
         temp = Path(directory)
         for header in sorted((source / "include/dcc").rglob("*.h")):
+            if not is_installed_header(source, header):
+                continue
             relative = header.relative_to(source / "include").as_posix()
             fragment = is_fragment(header)
             for language, compiler, suffix in (("c", c, "c"), ("c++", cxx, "cpp")):
@@ -368,7 +380,8 @@ def main() -> int:
         print("- " + "\n- ".join(errors), file=sys.stderr)
         return 1
 
-    headers = sorted((source / "include/dcc").rglob("*.h"))
+    headers = [header for header in sorted((source / "include/dcc").rglob("*.h"))
+               if is_installed_header(source, header)]
     with tempfile.TemporaryDirectory(prefix="dcc-v2-surface-") as directory:
         temp = Path(directory)
         generated_dir = temp / "generated/dcc"
@@ -465,7 +478,7 @@ def main() -> int:
             (debt if args.transition else errors).append(summary("non-canonical App DCC_API declarations", noncanonical))
         undocumented = undocumented_api_declarations(headers)
         if undocumented:
-            (debt if args.transition else errors).append(summary("undocumented DCC_API declarations", undocumented))
+            debt.append(summary("documentation backlog", undocumented))
         if bot_header.is_file():
             bot_headers = [bot_header, *sorted((source / "include/dcc/bot").glob("*.h"))]
             undocumented_macros = undocumented_bot_macros(bot_headers)

@@ -1,0 +1,4432 @@
+{
+  "headers": [
+    {
+      "external": [],
+      "header": "dcc/app.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_app_on_error",
+        "dcc_app_use_default_error_responses"
+      ],
+      "header": "dcc/app/base.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_app_t",
+        "dcc_ctx_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_ctx_add_author_role",
+        "dcc_ctx_add_member_role",
+        "dcc_ctx_archive_current_thread",
+        "dcc_ctx_autocomplete_filter_choices",
+        "dcc_ctx_bind_component",
+        "dcc_ctx_bind_component_fields",
+        "dcc_ctx_bind_form",
+        "dcc_ctx_bind_form_fields",
+        "dcc_ctx_bind_option_fields",
+        "dcc_ctx_bind_options",
+        "dcc_ctx_client",
+        "dcc_ctx_component_first_value",
+        "dcc_ctx_component_value",
+        "dcc_ctx_component_value_count",
+        "dcc_ctx_component_values",
+        "dcc_ctx_create_thread_from_message",
+        "dcc_ctx_create_thread_from_message_name",
+        "dcc_ctx_defer",
+        "dcc_ctx_defer_ephemeral",
+        "dcc_ctx_delete_original",
+        "dcc_ctx_edit_original",
+        "dcc_ctx_fail",
+        "dcc_ctx_focused_option",
+        "dcc_ctx_focused_option_name",
+        "dcc_ctx_focused_option_string",
+        "dcc_ctx_followup",
+        "dcc_ctx_followup_ephemeral_text",
+        "dcc_ctx_followup_text",
+        "dcc_ctx_form_bool",
+        "dcc_ctx_form_field",
+        "dcc_ctx_form_first_value",
+        "dcc_ctx_form_string",
+        "dcc_ctx_form_value",
+        "dcc_ctx_form_values",
+        "dcc_ctx_form_values_count",
+        "dcc_ctx_handle_error",
+        "dcc_ctx_interaction",
+        "dcc_ctx_interaction_id",
+        "dcc_ctx_lock_current_thread",
+        "dcc_ctx_ok",
+        "dcc_ctx_option",
+        "dcc_ctx_option_attachment",
+        "dcc_ctx_option_bool",
+        "dcc_ctx_option_channel",
+        "dcc_ctx_option_int",
+        "dcc_ctx_option_member",
+        "dcc_ctx_option_message",
+        "dcc_ctx_option_number",
+        "dcc_ctx_option_present",
+        "dcc_ctx_option_role",
+        "dcc_ctx_option_snowflake",
+        "dcc_ctx_option_string",
+        "dcc_ctx_option_user",
+        "dcc_ctx_parse_date",
+        "dcc_ctx_parse_date_mmdd",
+        "dcc_ctx_parse_date_yyyymmdd",
+        "dcc_ctx_remove_author_role",
+        "dcc_ctx_remove_member_role",
+        "dcc_ctx_reply",
+        "dcc_ctx_reply_autocomplete",
+        "dcc_ctx_reply_autocomplete_matching",
+        "dcc_ctx_reply_embed",
+        "dcc_ctx_reply_ephemeral_text",
+        "dcc_ctx_reply_error",
+        "dcc_ctx_reply_success",
+        "dcc_ctx_reply_text",
+        "dcc_ctx_reply_validation_error",
+        "dcc_ctx_reply_validation_result",
+        "dcc_ctx_send",
+        "dcc_ctx_send_text",
+        "dcc_ctx_show_modal",
+        "dcc_ctx_show_modal_flow",
+        "dcc_ctx_unlock_current_thread",
+        "dcc_ctx_update_message",
+        "dcc_ctx_validate_fields",
+        "dcc_ctx_wait_for_button",
+        "dcc_ctx_wait_for_button_prefix",
+        "dcc_ctx_wait_for_component",
+        "dcc_ctx_wait_for_message",
+        "dcc_ctx_wait_for_modal",
+        "dcc_ctx_wait_for_modal_prefix",
+        "dcc_ctx_wait_for_select",
+        "dcc_ctx_wait_for_select_prefix"
+      ],
+      "header": "dcc/app/context.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_app_modal_flow_t",
+        "dcc_app_wait_filter_t",
+        "dcc_app_wait_result_t",
+        "dcc_ctx_component_bind_type_t",
+        "dcc_ctx_component_binding_t",
+        "dcc_ctx_component_field_binding_list_t",
+        "dcc_ctx_component_field_binding_t",
+        "dcc_ctx_field_validate_type_t",
+        "dcc_ctx_field_validator_list_t",
+        "dcc_ctx_field_validator_t",
+        "dcc_ctx_form_bind_type_t",
+        "dcc_ctx_form_binding_t",
+        "dcc_ctx_form_field_binding_list_t",
+        "dcc_ctx_form_field_binding_t",
+        "dcc_ctx_option_bind_type_t",
+        "dcc_ctx_option_binding_t",
+        "dcc_ctx_option_field_binding_list_t",
+        "dcc_ctx_option_field_binding_t",
+        "dcc_ctx_parsed_date_t",
+        "dcc_ctx_validation_error_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_app_env_bind",
+        "dcc_app_env_get_bool",
+        "dcc_app_env_get_bool_or",
+        "dcc_app_env_get_channel",
+        "dcc_app_env_get_channel_or",
+        "dcc_app_env_get_guild",
+        "dcc_app_env_get_guild_or",
+        "dcc_app_env_get_i64",
+        "dcc_app_env_get_i64_or",
+        "dcc_app_env_get_intents",
+        "dcc_app_env_get_intents_or",
+        "dcc_app_env_get_role",
+        "dcc_app_env_get_role_or",
+        "dcc_app_env_get_snowflake",
+        "dcc_app_env_get_snowflake_or",
+        "dcc_app_env_get_string",
+        "dcc_app_env_get_string_or",
+        "dcc_app_env_get_token",
+        "dcc_app_env_get_u32",
+        "dcc_app_env_get_u32_or",
+        "dcc_app_env_get_u32_range",
+        "dcc_app_env_get_u32_range_or",
+        "dcc_app_env_get_u64",
+        "dcc_app_env_get_u64_or",
+        "dcc_app_env_get_user",
+        "dcc_app_env_get_user_or",
+        "dcc_app_env_load_dotenv",
+        "dcc_app_env_load_file",
+        "dcc_app_env_validate_requirements"
+      ],
+      "header": "dcc/app/env.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_app_env_bind_type_t",
+        "dcc_app_env_binding_t",
+        "dcc_app_env_requirement_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_app_client",
+        "dcc_app_create",
+        "dcc_app_destroy",
+        "dcc_app_run",
+        "dcc_app_run_with_signals",
+        "dcc_app_start",
+        "dcc_app_stop",
+        "dcc_app_wait"
+      ],
+      "header": "dcc/app/lifecycle.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_app_listen",
+        "dcc_app_unlisten"
+      ],
+      "header": "dcc/app/listeners.h",
+      "inline": [
+        "dcc_listener_init"
+      ],
+      "macros": [],
+      "types": [
+        "dcc_listener_binding_items_t",
+        "dcc_listener_binding_kind_t",
+        "dcc_listener_binding_t",
+        "dcc_listener_bindings_t",
+        "dcc_listener_check_t",
+        "dcc_listener_cooldown_bucket_t",
+        "dcc_listener_cooldown_t",
+        "dcc_listener_event_target_t",
+        "dcc_listener_handler_t",
+        "dcc_listener_kind_t",
+        "dcc_listener_message_command_target_t",
+        "dcc_listener_middleware_t",
+        "dcc_listener_route_policy_t",
+        "dcc_listener_route_target_t",
+        "dcc_listener_schedule_kind_t",
+        "dcc_listener_schedule_target_t",
+        "dcc_listener_t",
+        "dcc_listener_target_t",
+        "dcc_listener_validation_policy_t",
+        "dcc_listener_validator_kind_t",
+        "dcc_listener_validator_t",
+        "dcc_listener_validators_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_app_module_count",
+        "dcc_app_module_register"
+      ],
+      "header": "dcc/app/modules.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_app_module_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_app_command_sync_options_init",
+        "dcc_app_options_init"
+      ],
+      "header": "dcc/app/options.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_app_command_sync_options_t",
+        "dcc_app_options_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_app_store",
+        "dcc_app_store_close",
+        "dcc_app_store_open_file"
+      ],
+      "header": "dcc/app/store.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_application_command_builder_build_array_json",
+        "dcc_application_command_builder_build_json",
+        "dcc_application_command_builder_init",
+        "dcc_application_command_builder_json_free",
+        "dcc_application_command_builder_set_contexts",
+        "dcc_application_command_builder_set_contexts_json",
+        "dcc_application_command_builder_set_default_member_permissions",
+        "dcc_application_command_builder_set_default_member_permissions_null",
+        "dcc_application_command_builder_set_description",
+        "dcc_application_command_builder_set_description_localizations",
+        "dcc_application_command_builder_set_description_localizations_json",
+        "dcc_application_command_builder_set_dm_permission",
+        "dcc_application_command_builder_set_integration_types",
+        "dcc_application_command_builder_set_integration_types_json",
+        "dcc_application_command_builder_set_name",
+        "dcc_application_command_builder_set_name_localizations",
+        "dcc_application_command_builder_set_name_localizations_json",
+        "dcc_application_command_builder_set_nsfw",
+        "dcc_application_command_builder_set_options",
+        "dcc_application_command_builder_set_options_json",
+        "dcc_application_command_builder_set_type",
+        "dcc_application_command_option_builder_build_array_json",
+        "dcc_application_command_option_builder_init",
+        "dcc_application_command_option_builder_json_free",
+        "dcc_application_command_option_builder_set_description_localizations",
+        "dcc_application_command_option_builder_set_name_localizations"
+      ],
+      "header": "dcc/application_command.h",
+      "inline": [],
+      "macros": [
+        "DCC_APPLICATION_COMMAND_BUILDER_INIT",
+        "DCC_APPLICATION_COMMAND_OPTION_BUILDER_INIT"
+      ],
+      "types": [
+        "dcc_application_command_builder_t",
+        "dcc_application_command_option_builder_t",
+        "dcc_application_command_option_type_t",
+        "dcc_application_command_type_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/application_types.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_application_integration_type_t",
+        "dcc_interaction_context_type_t",
+        "dcc_localization_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_autocomplete_builder_build_json",
+        "dcc_autocomplete_builder_init",
+        "dcc_autocomplete_builder_json_free",
+        "dcc_autocomplete_builder_set_choices",
+        "dcc_autocomplete_choice_init",
+        "dcc_autocomplete_choice_set_integer_value",
+        "dcc_autocomplete_choice_set_name",
+        "dcc_autocomplete_choice_set_name_localizations",
+        "dcc_autocomplete_choice_set_name_localizations_json",
+        "dcc_autocomplete_choice_set_number_value",
+        "dcc_autocomplete_choice_set_string_value"
+      ],
+      "header": "dcc/autocomplete.h",
+      "inline": [],
+      "macros": [
+        "DCC_AUTOCOMPLETE_BUILDER_INIT",
+        "DCC_AUTOCOMPLETE_CHOICE_INIT",
+        "DCC_AUTOCOMPLETE_CHOICE_NAMED_INIT",
+        "DCC_AUTOCOMPLETE_MAX_CHOICES"
+      ],
+      "types": [
+        "dcc_autocomplete_builder_t",
+        "dcc_autocomplete_choice_t",
+        "dcc_autocomplete_choice_value_type_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/bot.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/bot/handlers.h",
+      "inline": [],
+      "macros": [
+        "DCC_AUTOCOMPLETE_FN",
+        "DCC_BUTTON_FN",
+        "DCC_EVENT_FN",
+        "DCC_MESSAGE_FN",
+        "DCC_MODAL_FN",
+        "DCC_READY_FN",
+        "DCC_SELECT_FN",
+        "DCC_SLASH_FN",
+        "DCC_TASK_FN"
+      ],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/bot/listeners.h",
+      "inline": [
+        "DCC_LISTENER_CONFIG",
+        "DCC_LISTENER_CONFIG_WITH_POLICY",
+        "DCC_LISTENER_DAILY_KST",
+        "DCC_LISTENER_EVENT_HANDLER",
+        "DCC_LISTENER_INTERVAL",
+        "DCC_LISTENER_MESSAGE_COMMAND_HANDLER",
+        "DCC_LISTENER_MESSAGE_HANDLER",
+        "DCC_LISTENER_PLAIN_HANDLER",
+        "DCC_LISTENER_READY_HANDLER",
+        "DCC_LISTENER_TASK_HANDLER",
+        "DCC_LISTENER_TYPED_HANDLER",
+        "DCC_LISTEN_AUTOCOMPLETE",
+        "DCC_LISTEN_AUTOCOMPLETE_WITH",
+        "DCC_LISTEN_BUTTON",
+        "DCC_LISTEN_BUTTON_PREFIX",
+        "DCC_LISTEN_BUTTON_PREFIX_WITH",
+        "DCC_LISTEN_BUTTON_WITH",
+        "DCC_LISTEN_EVENT",
+        "DCC_LISTEN_EVENT_WITH",
+        "DCC_LISTEN_MESSAGE_COMMAND",
+        "DCC_LISTEN_MESSAGE_COMMAND_WITH",
+        "DCC_LISTEN_MESSAGE_CONTEXT_MENU",
+        "DCC_LISTEN_MESSAGE_CONTEXT_MENU_WITH",
+        "DCC_LISTEN_MESSAGE_CREATE",
+        "DCC_LISTEN_MESSAGE_CREATE_WITH",
+        "DCC_LISTEN_MESSAGE_DELETE",
+        "DCC_LISTEN_MESSAGE_DELETE_WITH",
+        "DCC_LISTEN_MESSAGE_UPDATE",
+        "DCC_LISTEN_MESSAGE_UPDATE_WITH",
+        "DCC_LISTEN_MODAL",
+        "DCC_LISTEN_MODAL_PREFIX",
+        "DCC_LISTEN_MODAL_PREFIX_WITH",
+        "DCC_LISTEN_MODAL_WITH",
+        "DCC_LISTEN_READY",
+        "DCC_LISTEN_READY_WITH",
+        "DCC_LISTEN_SELECT",
+        "DCC_LISTEN_SELECT_PREFIX",
+        "DCC_LISTEN_SELECT_PREFIX_WITH",
+        "DCC_LISTEN_SELECT_WITH",
+        "DCC_LISTEN_SLASH",
+        "DCC_LISTEN_SLASH_WITH",
+        "DCC_LISTEN_SUBCOMMAND",
+        "DCC_LISTEN_SUBCOMMAND_AUTOCOMPLETE",
+        "DCC_LISTEN_SUBCOMMAND_AUTOCOMPLETE_WITH",
+        "DCC_LISTEN_SUBCOMMAND_WITH",
+        "DCC_LISTEN_TASK",
+        "DCC_LISTEN_TASK_WITH",
+        "DCC_LISTEN_USER_CONTEXT_MENU",
+        "DCC_LISTEN_USER_CONTEXT_MENU_WITH",
+        "dcc_bot_component_listener",
+        "dcc_bot_event_listener",
+        "dcc_bot_listener_base",
+        "dcc_bot_route_listener"
+      ],
+      "macros": [
+        "DCC_LISTENER_CONFIG_INIT"
+      ],
+      "types": [
+        "dcc_listener_config_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_bot_run"
+      ],
+      "header": "dcc/bot/main.h",
+      "inline": [
+        "DCC_BOT_CONFIG"
+      ],
+      "macros": [
+        "DCC_BOT_CONFIG_INIT",
+        "DCC_BOT_MAIN",
+        "DCC_BOT_MAIN_WITH",
+        "DCC_DEV_BOT_MAIN",
+        "DCC_DEV_BOT_MAIN_WITH"
+      ],
+      "types": [
+        "dcc_bot_config_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/bot/replies.h",
+      "inline": [
+        "DCC_CTX_AUTOCOMPLETE",
+        "DCC_CTX_DEFER",
+        "DCC_CTX_DEFER_EPHEMERAL",
+        "DCC_CTX_FOLLOWUP",
+        "DCC_CTX_FOLLOWUP_EPHEMERAL",
+        "DCC_CTX_FOLLOWUP_EPHEMERAL_TEXT",
+        "DCC_CTX_FOLLOWUP_EPHEMERAL_UI",
+        "DCC_CTX_FOLLOWUP_EPHEMERAL_UI_ARRAY",
+        "DCC_CTX_FOLLOWUP_TEXT",
+        "DCC_CTX_FOLLOWUP_UI",
+        "DCC_CTX_FOLLOWUP_UI_ARRAY",
+        "DCC_CTX_REPLY",
+        "DCC_CTX_REPLY_EPHEMERAL",
+        "DCC_CTX_REPLY_EPHEMERAL_TEXT",
+        "DCC_CTX_REPLY_EPHEMERAL_UI",
+        "DCC_CTX_REPLY_EPHEMERAL_UI_ARRAY",
+        "DCC_CTX_REPLY_TEXT",
+        "DCC_CTX_REPLY_UI",
+        "DCC_CTX_REPLY_UI_ARRAY",
+        "DCC_CTX_SEND",
+        "DCC_CTX_SEND_TEXT",
+        "DCC_CTX_SEND_UI",
+        "DCC_CTX_SEND_UI_ARRAY",
+        "DCC_CTX_SHOW_MODAL",
+        "DCC_CTX_UPDATE",
+        "DCC_CTX_UPDATE_UI",
+        "DCC_CTX_UPDATE_UI_ARRAY",
+        "dcc_bot_message_ephemeral",
+        "dcc_bot_message_ui"
+      ],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/bot/ui.h",
+      "inline": [
+        "DCC_UI_BUTTON",
+        "DCC_UI_CARD_ACCENT_ARRAY",
+        "DCC_UI_CARD_ARRAY",
+        "DCC_UI_CHANNEL_SELECT_ARRAY",
+        "DCC_UI_CHECKBOX",
+        "DCC_UI_CHECKBOX_GROUP_ARRAY",
+        "DCC_UI_CHOICE",
+        "DCC_UI_CHOICE_DEFAULT",
+        "DCC_UI_CHOICE_DEFAULT_DESCRIPTION",
+        "DCC_UI_CHOICE_DESCRIPTION",
+        "DCC_UI_DANGER",
+        "DCC_UI_DEFAULT_CHANNEL",
+        "DCC_UI_DEFAULT_ROLE",
+        "DCC_UI_DEFAULT_USER",
+        "DCC_UI_FILE",
+        "DCC_UI_FILE_UPLOAD",
+        "DCC_UI_FILE_UPLOAD_WITH_TYPES",
+        "DCC_UI_GALLERY_ARRAY",
+        "DCC_UI_INPUT",
+        "DCC_UI_INPUT_PLACEHOLDER",
+        "DCC_UI_LABEL",
+        "DCC_UI_LINK",
+        "DCC_UI_MEDIA",
+        "DCC_UI_MEDIA_SPOILER",
+        "DCC_UI_MENTIONABLE_SELECT",
+        "DCC_UI_MODAL_ARRAY",
+        "DCC_UI_OPTION",
+        "DCC_UI_OPTION_DEFAULT",
+        "DCC_UI_OPTION_DEFAULT_DESCRIPTION",
+        "DCC_UI_OPTION_DESCRIPTION",
+        "DCC_UI_PREMIUM",
+        "DCC_UI_PRIMARY",
+        "DCC_UI_RADIO_GROUP_ARRAY",
+        "DCC_UI_ROLE_SELECT",
+        "DCC_UI_ROW_ARRAY",
+        "DCC_UI_SECONDARY",
+        "DCC_UI_SECTION_ARRAY",
+        "DCC_UI_SEPARATOR",
+        "DCC_UI_SEPARATOR_LARGE",
+        "DCC_UI_STRING_SELECT_ARRAY",
+        "DCC_UI_SUCCESS",
+        "DCC_UI_TEXT",
+        "DCC_UI_THUMBNAIL",
+        "DCC_UI_USER_SELECT",
+        "dcc_bot_ui_invalid"
+      ],
+      "macros": [
+        "DCC_UI_CARD",
+        "DCC_UI_CARD_ACCENT",
+        "DCC_UI_CHECKBOX_GROUP",
+        "DCC_UI_GALLERY",
+        "DCC_UI_MODAL",
+        "DCC_UI_RADIO_GROUP",
+        "DCC_UI_ROW",
+        "DCC_UI_SECTION",
+        "DCC_UI_STRING_SELECT"
+      ],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_cache_clear",
+        "dcc_cache_counts",
+        "dcc_cache_enabled",
+        "dcc_cache_get_channel",
+        "dcc_cache_get_guild",
+        "dcc_cache_get_member",
+        "dcc_cache_get_message",
+        "dcc_cache_get_policy",
+        "dcc_cache_get_role",
+        "dcc_cache_get_user",
+        "dcc_cache_get_voice_state",
+        "dcc_cache_infer_guild_id_from_channel",
+        "dcc_cache_put_channel",
+        "dcc_cache_put_guild",
+        "dcc_cache_put_member",
+        "dcc_cache_put_message",
+        "dcc_cache_put_role",
+        "dcc_cache_put_user",
+        "dcc_cache_put_voice_state",
+        "dcc_cache_remove_channel",
+        "dcc_cache_remove_guild",
+        "dcc_cache_remove_member",
+        "dcc_cache_remove_message",
+        "dcc_cache_remove_role",
+        "dcc_cache_remove_user",
+        "dcc_cache_remove_voice_state",
+        "dcc_cache_set_policy"
+      ],
+      "header": "dcc/cache.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_cache_counts_t",
+        "dcc_cache_policy_t",
+        "dcc_client_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_client_create",
+        "dcc_client_destroy",
+        "dcc_client_gateway_info",
+        "dcc_client_gateway_reconnect",
+        "dcc_client_gateway_start",
+        "dcc_client_gateway_stop",
+        "dcc_client_get_dm_channel",
+        "dcc_client_infer_guild_id_from_channel",
+        "dcc_client_last_error",
+        "dcc_client_on_error",
+        "dcc_client_request_channel_info",
+        "dcc_client_request_guild_members",
+        "dcc_client_request_soundboard_sounds",
+        "dcc_client_runtime_stats",
+        "dcc_client_set_dm_channel",
+        "dcc_client_start",
+        "dcc_client_stop",
+        "dcc_client_update_presence",
+        "dcc_client_update_presence_raw",
+        "dcc_client_update_voice_state",
+        "dcc_client_wait"
+      ],
+      "header": "dcc/client.h",
+      "inline": [],
+      "macros": [
+        "DCC_GATEWAY_INFO_HAS_SESSION_STATE"
+      ],
+      "types": [
+        "dcc_client_options_t",
+        "dcc_gateway_info_t",
+        "dcc_gateway_presence_update_t",
+        "dcc_gateway_request_guild_members_options_t",
+        "dcc_runtime_stats_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/cluster.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/cluster/base.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_client_t",
+        "dcc_cluster_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_cluster_fetch_gateway_info",
+        "dcc_cluster_gateway_admission",
+        "dcc_cluster_gateway_info",
+        "dcc_cluster_set_gateway_admission"
+      ],
+      "header": "dcc/cluster/gateway.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_cluster_get_restart_policy",
+        "dcc_cluster_health_state_string",
+        "dcc_cluster_health_summary",
+        "dcc_cluster_health_summary_json",
+        "dcc_cluster_health_summary_prometheus",
+        "dcc_cluster_health_summary_state",
+        "dcc_cluster_health_wait_options_init",
+        "dcc_cluster_identify_stats",
+        "dcc_cluster_identify_stats_prometheus",
+        "dcc_cluster_rearm_all_shard_restarts",
+        "dcc_cluster_rearm_shard_restart",
+        "dcc_cluster_recovery_action_string",
+        "dcc_cluster_recovery_plan",
+        "dcc_cluster_recovery_plan_json",
+        "dcc_cluster_remediate",
+        "dcc_cluster_remediate_loop",
+        "dcc_cluster_remediation_loop_options_init",
+        "dcc_cluster_remediation_loop_result_json",
+        "dcc_cluster_remediation_result_json",
+        "dcc_cluster_reset_all_counters",
+        "dcc_cluster_reset_shard_counters",
+        "dcc_cluster_set_restart_policy",
+        "dcc_cluster_shard_info",
+        "dcc_cluster_shard_recovery_action",
+        "dcc_cluster_shard_status_string",
+        "dcc_cluster_status_json",
+        "dcc_cluster_wait_until_health",
+        "dcc_cluster_wait_until_ready"
+      ],
+      "header": "dcc/cluster/health.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/cluster/health_types.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_cluster_health_state_t",
+        "dcc_cluster_health_summary_t",
+        "dcc_cluster_health_wait_options_t",
+        "dcc_cluster_identify_stats_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_cluster_create",
+        "dcc_cluster_destroy",
+        "dcc_cluster_start",
+        "dcc_cluster_stop",
+        "dcc_cluster_wait"
+      ],
+      "header": "dcc/cluster/lifecycle.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_cluster_on"
+      ],
+      "header": "dcc/cluster/listeners.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/cluster/operation_types.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_cluster_operation_status_t",
+        "dcc_cluster_operation_type_t",
+        "dcc_cluster_rolling_reconnect_options_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_cluster_clear_operation",
+        "dcc_cluster_operation_status",
+        "dcc_cluster_operation_status_json",
+        "dcc_cluster_plan_rolling_reconnect",
+        "dcc_cluster_rolling_reconnect",
+        "dcc_cluster_run_planned_operation"
+      ],
+      "header": "dcc/cluster/operations.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/cluster/recovery_types.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_cluster_recovery_action_t",
+        "dcc_cluster_recovery_plan_t",
+        "dcc_cluster_remediation_loop_options_t",
+        "dcc_cluster_remediation_loop_result_t",
+        "dcc_cluster_remediation_options_t",
+        "dcc_cluster_remediation_result_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/cluster/shard_types.h",
+      "inline": [],
+      "macros": [
+        "DCC_CLUSTER_NO_SHARD_INDEX"
+      ],
+      "types": [
+        "dcc_cluster_shard_info_t",
+        "dcc_cluster_shard_status_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_cluster_drain_shard",
+        "dcc_cluster_reconnect_all",
+        "dcc_cluster_reconnect_shard",
+        "dcc_cluster_resume_shard",
+        "dcc_cluster_shard",
+        "dcc_cluster_shard_const",
+        "dcc_cluster_shard_count"
+      ],
+      "header": "dcc/cluster/shards.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_cluster_add_status_route"
+      ],
+      "header": "dcc/cluster/sidecar.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_cluster_get_supervisor_decision_callback",
+        "dcc_cluster_get_supervisor_policy",
+        "dcc_cluster_set_supervisor_decision_callback",
+        "dcc_cluster_set_supervisor_policy",
+        "dcc_cluster_supervisor_action_init",
+        "dcc_cluster_supervisor_decision_event_json",
+        "dcc_cluster_supervisor_decision_string",
+        "dcc_cluster_supervisor_status"
+      ],
+      "header": "dcc/cluster/supervisor.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/cluster/supervisor_types.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_cluster_options_t",
+        "dcc_cluster_restart_policy_t",
+        "dcc_cluster_supervisor_action_t",
+        "dcc_cluster_supervisor_decision_event_t",
+        "dcc_cluster_supervisor_decision_t",
+        "dcc_cluster_supervisor_event_t",
+        "dcc_cluster_supervisor_status_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/cluster/types.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_command_registry_action_string",
+        "dcc_command_registry_add_builder",
+        "dcc_command_registry_apply",
+        "dcc_command_registry_build_plan",
+        "dcc_command_registry_clear",
+        "dcc_command_registry_count",
+        "dcc_command_registry_deinit",
+        "dcc_command_registry_fetch_remote",
+        "dcc_command_registry_init",
+        "dcc_command_registry_operation_cancel",
+        "dcc_command_registry_operation_completed",
+        "dcc_command_registry_operation_destroy",
+        "dcc_command_registry_operation_wait",
+        "dcc_command_registry_options_init",
+        "dcc_command_registry_options_set_delete_stale",
+        "dcc_command_registry_options_set_dry_run",
+        "dcc_command_registry_options_set_global",
+        "dcc_command_registry_options_set_guild",
+        "dcc_command_registry_plan_deinit",
+        "dcc_command_registry_plan_format",
+        "dcc_command_registry_remote_snapshot_deinit",
+        "dcc_command_registry_remote_snapshot_parse_json"
+      ],
+      "header": "dcc/command_registry.h",
+      "inline": [],
+      "macros": [
+        "DCC_COMMAND_REGISTRY_OPERATION_OPTIONS_INIT",
+        "DCC_COMMAND_REGISTRY_OPERATION_RESULT_INIT",
+        "DCC_COMMAND_REGISTRY_OPTIONS_INIT"
+      ],
+      "types": [
+        "dcc_command_registry_diff_action_t",
+        "dcc_command_registry_diff_t",
+        "dcc_command_registry_entry_t",
+        "dcc_command_registry_operation_options_t",
+        "dcc_command_registry_operation_result_t",
+        "dcc_command_registry_operation_t",
+        "dcc_command_registry_options_t",
+        "dcc_command_registry_plan_t",
+        "dcc_command_registry_remote_entry_t",
+        "dcc_command_registry_remote_snapshot_t",
+        "dcc_command_registry_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_component_builder_build_array_json",
+        "dcc_component_builder_build_json",
+        "dcc_component_builder_init",
+        "dcc_component_builder_json_free",
+        "dcc_component_builder_set_children",
+        "dcc_component_builder_set_custom_id",
+        "dcc_component_builder_set_disabled",
+        "dcc_component_builder_set_emoji",
+        "dcc_component_builder_set_label",
+        "dcc_component_builder_set_max_length",
+        "dcc_component_builder_set_max_values",
+        "dcc_component_builder_set_min_length",
+        "dcc_component_builder_set_min_values",
+        "dcc_component_builder_set_options",
+        "dcc_component_builder_set_placeholder",
+        "dcc_component_builder_set_required",
+        "dcc_component_builder_set_sku_id",
+        "dcc_component_builder_set_style",
+        "dcc_component_builder_set_text_input_style",
+        "dcc_component_builder_set_url",
+        "dcc_component_builder_set_value"
+      ],
+      "header": "dcc/component.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_component_builder_t",
+        "dcc_component_type_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_client_off_component_session",
+        "dcc_client_on_component_session",
+        "dcc_client_on_component_session_store",
+        "dcc_component_session_button",
+        "dcc_component_session_button_v2",
+        "dcc_component_session_create",
+        "dcc_component_session_custom_id",
+        "dcc_component_session_deinit",
+        "dcc_component_session_listener_options_init",
+        "dcc_component_session_options_init",
+        "dcc_component_session_options_lock_channel",
+        "dcc_component_session_options_lock_guild",
+        "dcc_component_session_options_lock_user",
+        "dcc_component_session_options_set_ids",
+        "dcc_component_session_options_set_secret",
+        "dcc_component_session_options_set_ttl",
+        "dcc_component_session_store_add",
+        "dcc_component_session_store_count",
+        "dcc_component_session_store_deinit",
+        "dcc_component_session_store_export_json",
+        "dcc_component_session_store_import_json",
+        "dcc_component_session_store_init",
+        "dcc_component_session_store_json_free",
+        "dcc_component_session_store_sweep",
+        "dcc_component_session_store_verify",
+        "dcc_component_session_verify",
+        "dcc_component_session_verify_status_string"
+      ],
+      "header": "dcc/component_session.h",
+      "inline": [],
+      "macros": [
+        "DCC_COMPONENT_SESSION_ACTION_MAX",
+        "DCC_COMPONENT_SESSION_CUSTOM_ID_MAX",
+        "DCC_COMPONENT_SESSION_ID_MAX",
+        "DCC_COMPONENT_SESSION_NONCE_MAX"
+      ],
+      "types": [
+        "dcc_component_session_check_t",
+        "dcc_component_session_listener_options_t",
+        "dcc_component_session_listener_t",
+        "dcc_component_session_options_t",
+        "dcc_component_session_result_t",
+        "dcc_component_session_store_t",
+        "dcc_component_session_t",
+        "dcc_component_session_verify_status_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/component_types.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_button_style_t",
+        "dcc_component_emoji_t",
+        "dcc_select_option_t",
+        "dcc_text_input_style_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_component_v2_accessory",
+        "dcc_component_v2_builder_build_array_json",
+        "dcc_component_v2_builder_build_json",
+        "dcc_component_v2_builder_init",
+        "dcc_component_v2_builder_init_action_row",
+        "dcc_component_v2_builder_init_button",
+        "dcc_component_v2_builder_init_checkbox",
+        "dcc_component_v2_builder_init_container",
+        "dcc_component_v2_builder_init_label",
+        "dcc_component_v2_builder_init_link_button",
+        "dcc_component_v2_builder_init_media_gallery",
+        "dcc_component_v2_builder_init_section",
+        "dcc_component_v2_builder_init_separator",
+        "dcc_component_v2_builder_init_text_display",
+        "dcc_component_v2_builder_json_free",
+        "dcc_component_v2_builder_set_accent_color",
+        "dcc_component_v2_builder_set_accessory",
+        "dcc_component_v2_builder_set_button_style",
+        "dcc_component_v2_builder_set_channel_types",
+        "dcc_component_v2_builder_set_checked",
+        "dcc_component_v2_builder_set_children",
+        "dcc_component_v2_builder_set_choice_options",
+        "dcc_component_v2_builder_set_content",
+        "dcc_component_v2_builder_set_custom_id",
+        "dcc_component_v2_builder_set_default",
+        "dcc_component_v2_builder_set_default_values",
+        "dcc_component_v2_builder_set_description",
+        "dcc_component_v2_builder_set_disabled",
+        "dcc_component_v2_builder_set_divider",
+        "dcc_component_v2_builder_set_emoji",
+        "dcc_component_v2_builder_set_file_types",
+        "dcc_component_v2_builder_set_id",
+        "dcc_component_v2_builder_set_label",
+        "dcc_component_v2_builder_set_max_length",
+        "dcc_component_v2_builder_set_max_values",
+        "dcc_component_v2_builder_set_media",
+        "dcc_component_v2_builder_set_min_length",
+        "dcc_component_v2_builder_set_min_values",
+        "dcc_component_v2_builder_set_options",
+        "dcc_component_v2_builder_set_placeholder",
+        "dcc_component_v2_builder_set_required",
+        "dcc_component_v2_builder_set_separator_spacing",
+        "dcc_component_v2_builder_set_sku_id",
+        "dcc_component_v2_builder_set_spoiler",
+        "dcc_component_v2_builder_set_text_input_style",
+        "dcc_component_v2_builder_set_url",
+        "dcc_component_v2_builder_set_value",
+        "dcc_component_v2_child",
+        "dcc_component_v2_labeled_component",
+        "dcc_component_v2_validate",
+        "dcc_message_component_at",
+        "dcc_message_component_by_custom_id",
+        "dcc_message_component_root"
+      ],
+      "header": "dcc/component_v2.h",
+      "inline": [
+        "DCC_COMPONENT_V2_SIMPLE_SELECT",
+        "dcc_component_v2_action_row",
+        "dcc_component_v2_button",
+        "dcc_component_v2_checkbox",
+        "dcc_component_v2_checkbox_group",
+        "dcc_component_v2_container",
+        "dcc_component_v2_field_mask",
+        "dcc_component_v2_file",
+        "dcc_component_v2_file_upload",
+        "dcc_component_v2_label",
+        "dcc_component_v2_link_button",
+        "dcc_component_v2_media_gallery",
+        "dcc_component_v2_premium_button",
+        "dcc_component_v2_radio_group",
+        "dcc_component_v2_section",
+        "dcc_component_v2_separator",
+        "dcc_component_v2_string_select",
+        "dcc_component_v2_text_display",
+        "dcc_component_v2_thumbnail",
+        "dcc_component_v2_value"
+      ],
+      "macros": [
+        "DCC_COMPONENT_V2_BUILDER_INIT",
+        "DCC_COMPONENT_V2_SIMPLE_SELECT",
+        "DCC_COMPONENT_V2_VALIDATION_ERROR_INIT"
+      ],
+      "types": [
+        "dcc_component_v2_builder_t",
+        "dcc_component_v2_button_value_t",
+        "dcc_component_v2_choice_option_t",
+        "dcc_component_v2_context_t",
+        "dcc_component_v2_field_t",
+        "dcc_component_v2_layout_value_t",
+        "dcc_component_v2_media_gallery_item_t",
+        "dcc_component_v2_media_t",
+        "dcc_component_v2_media_value_t",
+        "dcc_component_v2_modal_value_t",
+        "dcc_component_v2_select_default_type_t",
+        "dcc_component_v2_select_default_value_t",
+        "dcc_component_v2_select_value_t",
+        "dcc_component_v2_separator_spacing_t",
+        "dcc_component_v2_separator_value_t",
+        "dcc_component_v2_t",
+        "dcc_component_v2_text_display_value_t",
+        "dcc_component_v2_text_input_value_t",
+        "dcc_component_v2_type_t",
+        "dcc_component_v2_unfurled_media_t",
+        "dcc_component_v2_validation_error_t",
+        "dcc_component_v2_validation_reason_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/dcc.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_embed_builder_build_array_json",
+        "dcc_embed_builder_build_json",
+        "dcc_embed_builder_init",
+        "dcc_embed_builder_json_free",
+        "dcc_embed_builder_set_author",
+        "dcc_embed_builder_set_color",
+        "dcc_embed_builder_set_description",
+        "dcc_embed_builder_set_fields",
+        "dcc_embed_builder_set_footer",
+        "dcc_embed_builder_set_image",
+        "dcc_embed_builder_set_thumbnail",
+        "dcc_embed_builder_set_timestamp",
+        "dcc_embed_builder_set_title",
+        "dcc_embed_builder_set_type",
+        "dcc_embed_builder_set_url"
+      ],
+      "header": "dcc/embed.h",
+      "inline": [],
+      "macros": [
+        "DCC_EMBED_BUILDER_INIT",
+        "DCC_EMBED_BUILDER_PRESENT_AUTHOR",
+        "DCC_EMBED_BUILDER_PRESENT_COLOR",
+        "DCC_EMBED_BUILDER_PRESENT_DESCRIPTION",
+        "DCC_EMBED_BUILDER_PRESENT_FIELDS",
+        "DCC_EMBED_BUILDER_PRESENT_FOOTER",
+        "DCC_EMBED_BUILDER_PRESENT_IMAGE",
+        "DCC_EMBED_BUILDER_PRESENT_THUMBNAIL",
+        "DCC_EMBED_BUILDER_PRESENT_TIMESTAMP",
+        "DCC_EMBED_BUILDER_PRESENT_TITLE",
+        "DCC_EMBED_BUILDER_PRESENT_TYPE",
+        "DCC_EMBED_BUILDER_PRESENT_URL",
+        "DCC_EMBED_BUILDER_VERSION"
+      ],
+      "types": [
+        "dcc_embed_author_t",
+        "dcc_embed_builder_t",
+        "dcc_embed_field_t",
+        "dcc_embed_footer_t",
+        "dcc_embed_media_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_status_string"
+      ],
+      "header": "dcc/error.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_status_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/error_details.h",
+      "inline": [],
+      "macros": [
+        "DCC_ERROR_VERSION"
+      ],
+      "types": [
+        "dcc_error_origin_t",
+        "dcc_error_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/events.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_event_application_command_permissions_update",
+        "dcc_event_auto_moderation_action",
+        "dcc_event_auto_moderation_rule",
+        "dcc_event_cancel",
+        "dcc_event_channel",
+        "dcc_event_channel_pins_update",
+        "dcc_event_data",
+        "dcc_event_embedded_activity_update",
+        "dcc_event_entitlement",
+        "dcc_event_guild",
+        "dcc_event_guild_application_command_update",
+        "dcc_event_guild_audit_log_entry",
+        "dcc_event_guild_ban",
+        "dcc_event_guild_id_list_update",
+        "dcc_event_guild_join_request_update",
+        "dcc_event_guild_members_chunk",
+        "dcc_event_guild_update_notice",
+        "dcc_event_integration",
+        "dcc_event_interaction",
+        "dcc_event_invite",
+        "dcc_event_is_cancelled",
+        "dcc_event_log",
+        "dcc_event_member",
+        "dcc_event_message",
+        "dcc_event_message_delete_bulk",
+        "dcc_event_message_reaction",
+        "dcc_event_name",
+        "dcc_event_poll_vote",
+        "dcc_event_presence",
+        "dcc_event_rate_limited",
+        "dcc_event_raw",
+        "dcc_event_ready",
+        "dcc_event_resumed",
+        "dcc_event_role",
+        "dcc_event_scheduled_event",
+        "dcc_event_scheduled_event_user_update",
+        "dcc_event_shard_id",
+        "dcc_event_socket_close",
+        "dcc_event_soundboard_sound",
+        "dcc_event_stage_instance",
+        "dcc_event_subscription",
+        "dcc_event_thread_list_sync",
+        "dcc_event_thread_member",
+        "dcc_event_thread_members_update",
+        "dcc_event_type",
+        "dcc_event_type_name",
+        "dcc_event_typing_start",
+        "dcc_event_user",
+        "dcc_event_voice_buffer_send",
+        "dcc_event_voice_channel_effect",
+        "dcc_event_voice_channel_start_time_update",
+        "dcc_event_voice_channel_status_update",
+        "dcc_event_voice_client_disconnect",
+        "dcc_event_voice_client_platform",
+        "dcc_event_voice_client_speaking",
+        "dcc_event_voice_ready",
+        "dcc_event_voice_receive",
+        "dcc_event_voice_server_update",
+        "dcc_event_voice_state",
+        "dcc_event_voice_track_marker",
+        "dcc_event_webhooks_update"
+      ],
+      "header": "dcc/events/accessors.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/events/base.h",
+      "inline": [],
+      "macros": [
+        "DCC_VOICE_CLIENT_TYPEDEF"
+      ],
+      "types": [
+        "dcc_client_t",
+        "dcc_event_t",
+        "dcc_listener_id_t",
+        "dcc_voice_client_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_client_off",
+        "dcc_client_off_interaction",
+        "dcc_client_on",
+        "dcc_client_on_autocomplete",
+        "dcc_client_on_button",
+        "dcc_client_on_form_submit",
+        "dcc_client_on_interaction_custom_id",
+        "dcc_client_on_interaction_name",
+        "dcc_client_on_message_context_menu",
+        "dcc_client_on_select",
+        "dcc_client_on_slash_command",
+        "dcc_client_on_user_context_menu"
+      ],
+      "header": "dcc/events/listeners.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/events/payloads.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_log_event_t",
+        "dcc_rate_limited_event_t",
+        "dcc_raw_event_t",
+        "dcc_ready_event_t",
+        "dcc_socket_close_event_t",
+        "dcc_voice_buffer_send_event_t",
+        "dcc_voice_client_disconnect_event_t",
+        "dcc_voice_client_platform_event_t",
+        "dcc_voice_client_speaking_event_t",
+        "dcc_voice_ready_event_t",
+        "dcc_voice_receive_event_t",
+        "dcc_voice_track_marker_event_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/events/types.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_event_type_t",
+        "dcc_log_level_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/events/wait.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_client_wait_for_event",
+        "dcc_client_wait_for_event_any",
+        "dcc_client_wait_for_event_count",
+        "dcc_client_wait_for_event_policy",
+        "dcc_client_wait_for_event_quorum",
+        "dcc_client_wait_for_event_sequence",
+        "dcc_client_wait_for_event_set",
+        "dcc_client_wait_for_gateway_ready_or_resumed",
+        "dcc_client_wait_for_gateway_ready_resumed_or_close",
+        "dcc_client_wait_for_interaction_or_close",
+        "dcc_client_wait_for_interaction_or_close_owned",
+        "dcc_client_wait_for_voice_session_descriptor",
+        "dcc_client_wait_until_gateway_ready",
+        "dcc_client_wait_until_interaction",
+        "dcc_client_wait_until_interaction_owned"
+      ],
+      "header": "dcc/events/wait/events.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/events/wait/owned_objects.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_client_wait_for_channel_any",
+        "dcc_client_wait_for_gateway_data_any",
+        "dcc_client_wait_for_guild_any",
+        "dcc_client_wait_for_interaction_any",
+        "dcc_client_wait_for_member_any",
+        "dcc_client_wait_for_message_any",
+        "dcc_client_wait_for_role_any",
+        "dcc_client_wait_for_user_any",
+        "dcc_client_wait_for_voice_state_any"
+      ],
+      "header": "dcc/events/wait/owned_objects/any.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_client_wait_for_channel",
+        "dcc_client_wait_for_gateway_data",
+        "dcc_client_wait_for_guild",
+        "dcc_client_wait_for_interaction",
+        "dcc_client_wait_for_member",
+        "dcc_client_wait_for_message",
+        "dcc_client_wait_for_role",
+        "dcc_client_wait_for_user",
+        "dcc_client_wait_for_voice_state"
+      ],
+      "header": "dcc/events/wait/owned_objects/single.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_event_wait_policy_init",
+        "dcc_event_wait_policy_init_any",
+        "dcc_event_wait_policy_init_count",
+        "dcc_event_wait_policy_init_gateway_ready_or_resumed",
+        "dcc_event_wait_policy_init_gateway_ready_resumed_or_close",
+        "dcc_event_wait_policy_init_interaction_or_close",
+        "dcc_event_wait_policy_init_quorum",
+        "dcc_event_wait_policy_init_sequence",
+        "dcc_event_wait_policy_init_set",
+        "dcc_event_wait_policy_init_voice_session_descriptor"
+      ],
+      "header": "dcc/events/wait/policy.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/events/wait/types.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_event_snapshot_t",
+        "dcc_event_wait_policy_mode_t",
+        "dcc_event_wait_policy_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/export.h",
+      "inline": [],
+      "macros": [
+        "DCC_API",
+        "DCC_API",
+        "DCC_API",
+        "DCC_API",
+        "DCC_DEPRECATED",
+        "DCC_DEPRECATED",
+        "DCC_DEPRECATED"
+      ],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/hot_reload.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/hot_reload/base.h",
+      "inline": [],
+      "macros": [
+        "DCC_BOT_MODULE_DEINIT_SYMBOL",
+        "DCC_BOT_MODULE_INIT_SYMBOL",
+        "DCC_HOT_RELOAD_NO_SETTLE",
+        "DCC_MODULE_API",
+        "DCC_MODULE_API",
+        "DCC_MODULE_API"
+      ],
+      "types": [
+        "dcc_bot_module_ctx_t",
+        "dcc_hot_reload_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_hot_reload_canary_decide",
+        "dcc_hot_reload_canary_decision_string",
+        "dcc_hot_reload_canary_options_init",
+        "dcc_hot_reload_canary_options_validate",
+        "dcc_hot_reload_canary_record",
+        "dcc_hot_reload_canary_rollback_reason_string",
+        "dcc_hot_reload_canary_should_route",
+        "dcc_hot_reload_canary_start",
+        "dcc_hot_reload_canary_stop"
+      ],
+      "header": "dcc/hot_reload/canary.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_hot_reload_canary_decision_t",
+        "dcc_hot_reload_canary_options_t",
+        "dcc_hot_reload_canary_rollback_reason_t",
+        "dcc_hot_reload_canary_state_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_hot_reload_health_snapshot",
+        "dcc_hot_reload_health_snapshot_json",
+        "dcc_hot_reload_health_string"
+      ],
+      "header": "dcc/hot_reload/health.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_hot_reload_health_snapshot_t",
+        "dcc_hot_reload_health_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_hot_reload_attach",
+        "dcc_hot_reload_create",
+        "dcc_hot_reload_destroy",
+        "dcc_hot_reload_poll",
+        "dcc_hot_reload_reload",
+        "dcc_hot_reload_run",
+        "dcc_hot_reload_run_env",
+        "dcc_hot_reload_run_env_isolated",
+        "dcc_hot_reload_run_simple",
+        "dcc_hot_reload_run_simple_isolated",
+        "dcc_hot_reload_start",
+        "dcc_hot_reload_stop",
+        "dcc_hot_reload_wait_for_generation",
+        "dcc_hot_reload_wait_until_loaded"
+      ],
+      "header": "dcc/hot_reload/lifecycle.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/hot_reload/module.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/hot_reload/module/context.h",
+      "inline": [
+        "dcc_bot_module_aligned_state",
+        "dcc_bot_module_client",
+        "dcc_bot_module_generation",
+        "dcc_bot_module_on",
+        "dcc_bot_module_state",
+        "dcc_bot_module_user_data"
+      ],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/hot_reload/module/descriptor.h",
+      "inline": [
+        "dcc_bot_module_deinit_from_descriptor",
+        "dcc_bot_module_descriptor_has",
+        "dcc_bot_module_init_from_descriptor"
+      ],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/hot_reload/module/macros.h",
+      "inline": [],
+      "macros": [
+        "DCC_BOT_MODULE",
+        "DCC_BOT_MODULE_ALIGNOF",
+        "DCC_BOT_MODULE_ALIGNOF",
+        "DCC_BOT_MODULE_EXPORT",
+        "DCC_BOT_MODULE_ON",
+        "DCC_BOT_MODULE_STATE",
+        "DCC_BOT_MODULE_STATELESS",
+        "DCC_BOT_MODULE_WITH_STATE"
+      ],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/hot_reload/module/types.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_bot_module_descriptor_t",
+        "dcc_bot_module_handler_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/hot_reload/options.h",
+      "inline": [],
+      "macros": [
+        "DCC_HOT_RELOAD_DEFAULT_WORKER"
+      ],
+      "types": [
+        "dcc_hot_reload_backend_t",
+        "dcc_hot_reload_options_t",
+        "dcc_hot_reload_run_options_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_hot_reload_add_health_route"
+      ],
+      "header": "dcc/hot_reload/sidecar.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_hot_reload_generation",
+        "dcc_hot_reload_last_error",
+        "dcc_hot_reload_last_status",
+        "dcc_hot_reload_path",
+        "dcc_hot_reload_running",
+        "dcc_hot_reload_state",
+        "dcc_hot_reload_state_size"
+      ],
+      "header": "dcc/hot_reload/state.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/intents.h",
+      "inline": [],
+      "macros": [
+        "DCC_INTENTS_ALL"
+      ],
+      "types": [
+        "dcc_intents_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_flow_auto_defer",
+        "dcc_flow_auto_defer_ephemeral",
+        "dcc_flow_create",
+        "dcc_flow_defer",
+        "dcc_flow_defer_ephemeral",
+        "dcc_flow_defer_update",
+        "dcc_flow_destroy",
+        "dcc_flow_edit_original",
+        "dcc_flow_followup",
+        "dcc_flow_maybe_auto_defer",
+        "dcc_flow_reply",
+        "dcc_flow_set_started_at",
+        "dcc_flow_show_modal",
+        "dcc_flow_state",
+        "dcc_flow_state_string"
+      ],
+      "header": "dcc/interaction_flow.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_interaction_flow_state_t",
+        "dcc_interaction_flow_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_interaction_defer",
+        "dcc_interaction_defer_ephemeral",
+        "dcc_interaction_reply_embed",
+        "dcc_interaction_reply_ephemeral_text",
+        "dcc_interaction_reply_error",
+        "dcc_interaction_reply_message",
+        "dcc_interaction_reply_success",
+        "dcc_interaction_reply_text",
+        "dcc_interaction_show_modal",
+        "dcc_interaction_update_message"
+      ],
+      "header": "dcc/interaction_helpers.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/interaction_server.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/interaction_server/base.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_interaction_http_header_t",
+        "dcc_interaction_request_t",
+        "dcc_interaction_server_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_interaction_verify_signature"
+      ],
+      "header": "dcc/interaction_server/crypto.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_interaction_server_get_state",
+        "dcc_interaction_server_health_snapshot",
+        "dcc_interaction_server_health_snapshot_json",
+        "dcc_interaction_server_health_snapshot_prometheus",
+        "dcc_interaction_server_health_string",
+        "dcc_interaction_server_protection_stats",
+        "dcc_interaction_server_stats"
+      ],
+      "header": "dcc/interaction_server/health.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_interaction_server_health_snapshot_t",
+        "dcc_interaction_server_health_t",
+        "dcc_interaction_server_protection_stats_t",
+        "dcc_interaction_server_state_t",
+        "dcc_interaction_server_stats_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_interaction_server_create",
+        "dcc_interaction_server_destroy",
+        "dcc_interaction_server_drain",
+        "dcc_interaction_server_last_error",
+        "dcc_interaction_server_port",
+        "dcc_interaction_server_start",
+        "dcc_interaction_server_stop",
+        "dcc_interaction_server_wait",
+        "dcc_interaction_server_wait_until_drained",
+        "dcc_interaction_server_wait_until_ready"
+      ],
+      "header": "dcc/interaction_server/lifecycle.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_interaction_server_options_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_interaction_request_body",
+        "dcc_interaction_request_body_len",
+        "dcc_interaction_request_deadline_remaining_ms",
+        "dcc_interaction_request_elapsed_ms",
+        "dcc_interaction_request_event_type",
+        "dcc_interaction_request_header",
+        "dcc_interaction_request_headers",
+        "dcc_interaction_request_interaction",
+        "dcc_interaction_request_is_ping",
+        "dcc_interaction_request_method",
+        "dcc_interaction_request_path",
+        "dcc_interaction_request_reply_autocomplete",
+        "dcc_interaction_request_reply_deferred_message",
+        "dcc_interaction_request_reply_deferred_update",
+        "dcc_interaction_request_reply_ephemeral_message_text",
+        "dcc_interaction_request_reply_json",
+        "dcc_interaction_request_reply_message",
+        "dcc_interaction_request_reply_message_builder",
+        "dcc_interaction_request_reply_message_text",
+        "dcc_interaction_request_reply_modal",
+        "dcc_interaction_request_reply_pong",
+        "dcc_interaction_request_reply_premium_required",
+        "dcc_interaction_request_reply_text",
+        "dcc_interaction_request_reply_type",
+        "dcc_interaction_request_reply_update_message",
+        "dcc_interaction_request_reply_update_message_text",
+        "dcc_interaction_request_set_response"
+      ],
+      "header": "dcc/interaction_server/request.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_interaction_server_add_health_route",
+        "dcc_interaction_server_add_route",
+        "dcc_interaction_server_clear_routes"
+      ],
+      "header": "dcc/interaction_server/routes.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_interaction_route_flag_t",
+        "dcc_interaction_route_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_managed_message_publish_latest"
+      ],
+      "header": "dcc/managed_message.h",
+      "inline": [],
+      "macros": [
+        "DCC_MANAGED_MESSAGE_PUBLISH_RESULT_VERSION"
+      ],
+      "types": [
+        "dcc_managed_message_options_t",
+        "dcc_managed_message_publish_result_t",
+        "dcc_managed_message_publish_stage_t",
+        "dcc_managed_message_ref_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_allowed_mentions_builder_init",
+        "dcc_message_builder_build_json",
+        "dcc_message_builder_init",
+        "dcc_message_builder_json_free",
+        "dcc_message_builder_set_allowed_mentions",
+        "dcc_message_builder_set_allowed_mentions_json",
+        "dcc_message_builder_set_attachments",
+        "dcc_message_builder_set_attachments_json",
+        "dcc_message_builder_set_components",
+        "dcc_message_builder_set_components_json",
+        "dcc_message_builder_set_components_v2",
+        "dcc_message_builder_set_components_v2_json",
+        "dcc_message_builder_set_content",
+        "dcc_message_builder_set_embeds",
+        "dcc_message_builder_set_embeds_json",
+        "dcc_message_builder_set_flags",
+        "dcc_message_builder_set_message_reference",
+        "dcc_message_builder_set_message_reference_json",
+        "dcc_message_builder_set_nonce",
+        "dcc_message_builder_set_poll",
+        "dcc_message_builder_set_poll_json",
+        "dcc_message_builder_set_sticker_ids",
+        "dcc_message_builder_set_tts",
+        "dcc_message_poll_builder_build_json",
+        "dcc_message_poll_builder_json_free",
+        "dcc_poll_builder_init"
+      ],
+      "header": "dcc/message.h",
+      "inline": [
+        "dcc_message_attachment_init",
+        "dcc_message_reference_init"
+      ],
+      "macros": [
+        "DCC_ALLOWED_MENTIONS_BUILDER_INIT",
+        "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_PARSE_EVERYONE",
+        "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_PARSE_ROLES",
+        "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_PARSE_USERS",
+        "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_REPLIED_USER",
+        "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_ROLES",
+        "DCC_ALLOWED_MENTIONS_BUILDER_PRESENT_USERS",
+        "DCC_ALLOWED_MENTIONS_BUILDER_VERSION",
+        "DCC_MESSAGE_ATTACHMENT_INIT",
+        "DCC_MESSAGE_BUILDER_INIT",
+        "DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS",
+        "DCC_MESSAGE_BUILDER_PRESENT_ALLOWED_MENTIONS_JSON",
+        "DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS",
+        "DCC_MESSAGE_BUILDER_PRESENT_ATTACHMENTS_JSON",
+        "DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS",
+        "DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_JSON",
+        "DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2",
+        "DCC_MESSAGE_BUILDER_PRESENT_COMPONENTS_V2_JSON",
+        "DCC_MESSAGE_BUILDER_PRESENT_CONTENT",
+        "DCC_MESSAGE_BUILDER_PRESENT_EMBEDS",
+        "DCC_MESSAGE_BUILDER_PRESENT_EMBEDS_JSON",
+        "DCC_MESSAGE_BUILDER_PRESENT_FLAGS",
+        "DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE",
+        "DCC_MESSAGE_BUILDER_PRESENT_MESSAGE_REFERENCE_JSON",
+        "DCC_MESSAGE_BUILDER_PRESENT_NONCE",
+        "DCC_MESSAGE_BUILDER_PRESENT_POLL",
+        "DCC_MESSAGE_BUILDER_PRESENT_POLL_JSON",
+        "DCC_MESSAGE_BUILDER_PRESENT_STICKER_IDS",
+        "DCC_MESSAGE_BUILDER_PRESENT_TTS",
+        "DCC_MESSAGE_BUILDER_VERSION",
+        "DCC_MESSAGE_FLAG_EPHEMERAL",
+        "DCC_MESSAGE_FLAG_IS_COMPONENTS_V2",
+        "DCC_MESSAGE_FLAG_LOADING",
+        "DCC_MESSAGE_FLAG_SUPPRESS_EMBEDS",
+        "DCC_MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS",
+        "DCC_MESSAGE_RECORD_INIT_VALUE",
+        "DCC_MESSAGE_RECORD_INIT_VALUE",
+        "DCC_MESSAGE_REFERENCE_INIT",
+        "DCC_POLL_BUILDER_INIT",
+        "DCC_POLL_BUILDER_PRESENT_ALLOW_MULTISELECT",
+        "DCC_POLL_BUILDER_PRESENT_ANSWERS",
+        "DCC_POLL_BUILDER_PRESENT_DURATION_HOURS",
+        "DCC_POLL_BUILDER_PRESENT_LAYOUT_TYPE",
+        "DCC_POLL_BUILDER_PRESENT_QUESTION",
+        "DCC_POLL_BUILDER_VERSION"
+      ],
+      "types": [
+        "dcc_allowed_mentions_builder_t",
+        "dcc_message_attachment_t",
+        "dcc_message_builder_t",
+        "dcc_message_reference_t",
+        "dcc_message_reference_type_t",
+        "dcc_poll_answer_t",
+        "dcc_poll_builder_t",
+        "dcc_poll_layout_type_t",
+        "dcc_poll_media_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_message_link_format",
+        "dcc_message_link_parse"
+      ],
+      "header": "dcc/message_link.h",
+      "inline": [],
+      "macros": [
+        "DCC_MESSAGE_LINK_MAX"
+      ],
+      "types": [
+        "dcc_message_link_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_modal_builder_build_json",
+        "dcc_modal_builder_init",
+        "dcc_modal_builder_json_free",
+        "dcc_modal_builder_set_components",
+        "dcc_modal_builder_set_components_json",
+        "dcc_modal_builder_set_components_v2",
+        "dcc_modal_builder_set_components_v2_json",
+        "dcc_modal_builder_set_custom_id",
+        "dcc_modal_builder_set_title"
+      ],
+      "header": "dcc/modal.h",
+      "inline": [],
+      "macros": [
+        "DCC_MODAL_BUILDER_INIT",
+        "DCC_MODAL_BUILDER_PRESENT_COMPONENTS",
+        "DCC_MODAL_BUILDER_PRESENT_COMPONENTS_JSON",
+        "DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2",
+        "DCC_MODAL_BUILDER_PRESENT_COMPONENTS_V2_JSON",
+        "DCC_MODAL_BUILDER_PRESENT_CUSTOM_ID",
+        "DCC_MODAL_BUILDER_PRESENT_TITLE",
+        "DCC_MODAL_BUILDER_VERSION"
+      ],
+      "types": [
+        "dcc_modal_builder_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_oauth2_exchange_code",
+        "dcc_oauth2_get_current_authorization",
+        "dcc_oauth2_get_current_bot_application",
+        "dcc_oauth2_refresh_token",
+        "dcc_oauth2_revoke_token"
+      ],
+      "header": "dcc/oauth2.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_oauth2_exchange_code_options_t",
+        "dcc_oauth2_refresh_token_options_t",
+        "dcc_oauth2_revoke_token_options_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/base.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_attachment_t",
+        "dcc_message_t",
+        "dcc_user_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/clone.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_attachment_clone",
+        "dcc_attachment_free",
+        "dcc_message_clone",
+        "dcc_message_free",
+        "dcc_user_clone",
+        "dcc_user_free"
+      ],
+      "header": "dcc/objects/clone/base.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_gateway_event_data_clone",
+        "dcc_gateway_event_data_free",
+        "dcc_voice_state_clone",
+        "dcc_voice_state_free"
+      ],
+      "header": "dcc/objects/clone/gateway.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_application_command_permission_clone",
+        "dcc_application_command_permission_free",
+        "dcc_application_command_permissions_update_clone",
+        "dcc_application_command_permissions_update_free",
+        "dcc_auto_moderation_action_clone",
+        "dcc_auto_moderation_action_free",
+        "dcc_auto_moderation_rule_clone",
+        "dcc_auto_moderation_rule_free",
+        "dcc_channel_pins_update_clone",
+        "dcc_channel_pins_update_free",
+        "dcc_embedded_activity_update_clone",
+        "dcc_embedded_activity_update_free",
+        "dcc_guild_application_command_update_clone",
+        "dcc_guild_application_command_update_free",
+        "dcc_guild_audit_log_entry_clone",
+        "dcc_guild_audit_log_entry_free",
+        "dcc_guild_ban_clone",
+        "dcc_guild_ban_free",
+        "dcc_guild_id_list_update_clone",
+        "dcc_guild_id_list_update_free",
+        "dcc_guild_join_request_update_clone",
+        "dcc_guild_join_request_update_free",
+        "dcc_guild_members_chunk_clone",
+        "dcc_guild_members_chunk_free",
+        "dcc_guild_update_notice_clone",
+        "dcc_guild_update_notice_free",
+        "dcc_integration_clone",
+        "dcc_integration_free",
+        "dcc_message_delete_bulk_clone",
+        "dcc_message_delete_bulk_free",
+        "dcc_message_reaction_clone",
+        "dcc_message_reaction_free",
+        "dcc_poll_vote_clone",
+        "dcc_poll_vote_free",
+        "dcc_presence_clone",
+        "dcc_presence_free",
+        "dcc_scheduled_event_user_update_clone",
+        "dcc_scheduled_event_user_update_free",
+        "dcc_thread_list_sync_clone",
+        "dcc_thread_list_sync_free",
+        "dcc_thread_member_clone",
+        "dcc_thread_member_free",
+        "dcc_thread_members_update_clone",
+        "dcc_thread_members_update_free",
+        "dcc_typing_start_clone",
+        "dcc_typing_start_free",
+        "dcc_voice_channel_effect_clone",
+        "dcc_voice_channel_effect_free",
+        "dcc_voice_channel_start_time_update_clone",
+        "dcc_voice_channel_start_time_update_free",
+        "dcc_voice_channel_status_update_clone",
+        "dcc_voice_channel_status_update_free",
+        "dcc_voice_server_update_clone",
+        "dcc_voice_server_update_free",
+        "dcc_webhooks_update_clone",
+        "dcc_webhooks_update_free"
+      ],
+      "header": "dcc/objects/clone/gateway_updates.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_interaction_authorizing_integration_owner",
+        "dcc_interaction_clone",
+        "dcc_interaction_entitlement",
+        "dcc_interaction_focused_option",
+        "dcc_interaction_form_boolean",
+        "dcc_interaction_form_field_by_custom_id",
+        "dcc_interaction_form_value",
+        "dcc_interaction_free",
+        "dcc_interaction_option_boolean",
+        "dcc_interaction_option_by_name",
+        "dcc_interaction_option_child_by_name",
+        "dcc_interaction_option_integer",
+        "dcc_interaction_option_number",
+        "dcc_interaction_option_snowflake",
+        "dcc_interaction_option_string",
+        "dcc_interaction_resolved_attachment",
+        "dcc_interaction_resolved_channel",
+        "dcc_interaction_resolved_member",
+        "dcc_interaction_resolved_message",
+        "dcc_interaction_resolved_permission",
+        "dcc_interaction_resolved_role",
+        "dcc_interaction_resolved_user",
+        "dcc_interaction_subcommand",
+        "dcc_interaction_subcommand_group"
+      ],
+      "header": "dcc/objects/clone/interactions.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_channel_clone",
+        "dcc_channel_free",
+        "dcc_emoji_clone",
+        "dcc_emoji_free",
+        "dcc_entitlement_clone",
+        "dcc_entitlement_free",
+        "dcc_guild_clone",
+        "dcc_guild_free",
+        "dcc_invite_clone",
+        "dcc_invite_free",
+        "dcc_member_clone",
+        "dcc_member_free",
+        "dcc_role_clone",
+        "dcc_role_free",
+        "dcc_scheduled_event_clone",
+        "dcc_scheduled_event_free",
+        "dcc_soundboard_sound_clone",
+        "dcc_soundboard_sound_free",
+        "dcc_stage_instance_clone",
+        "dcc_stage_instance_free",
+        "dcc_sticker_clone",
+        "dcc_sticker_free",
+        "dcc_subscription_clone",
+        "dcc_subscription_free"
+      ],
+      "header": "dcc/objects/clone/resources.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway/activity.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_gateway_activity_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway/event_data.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_gateway_event_data_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway/voice_state.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_voice_state_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway_updates.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway_updates/application_commands.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_application_command_permission_t",
+        "dcc_application_command_permissions_update_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway_updates/channels.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_channel_pins_update_t",
+        "dcc_embedded_activity_update_t",
+        "dcc_integration_t",
+        "dcc_presence_t",
+        "dcc_typing_start_t",
+        "dcc_webhooks_update_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway_updates/guilds.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_guild_application_command_update_t",
+        "dcc_guild_audit_log_entry_t",
+        "dcc_guild_ban_t",
+        "dcc_guild_id_list_update_t",
+        "dcc_guild_join_request_update_t",
+        "dcc_guild_members_chunk_t",
+        "dcc_guild_update_notice_t",
+        "dcc_scheduled_event_user_update_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway_updates/messages.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_message_delete_bulk_t",
+        "dcc_message_reaction_t",
+        "dcc_poll_vote_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway_updates/moderation.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_auto_moderation_action_t",
+        "dcc_auto_moderation_rule_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway_updates/threads.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_thread_list_sync_t",
+        "dcc_thread_member_t",
+        "dcc_thread_members_update_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/gateway_updates/voice.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_voice_channel_effect_t",
+        "dcc_voice_channel_start_time_update_t",
+        "dcc_voice_channel_status_update_t",
+        "dcc_voice_server_update_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/interactions.h",
+      "inline": [],
+      "macros": [
+        "DCC_INTERACTION_DEFAULT_ATTACHMENT_SIZE_LIMIT"
+      ],
+      "types": [
+        "dcc_interaction_authorizing_integration_owner_t",
+        "dcc_interaction_form_field_t",
+        "dcc_interaction_form_value_type_t",
+        "dcc_interaction_option_t",
+        "dcc_interaction_option_value_type_t",
+        "dcc_interaction_resolved_permission_t",
+        "dcc_interaction_resolved_t",
+        "dcc_interaction_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/applications.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_activity_instance_t",
+        "dcc_activity_location_kind_t",
+        "dcc_activity_location_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/channels.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_channel_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/commerce.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_entitlement_t",
+        "dcc_subscription_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/emojis.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_emoji_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/guilds.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_guild_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/invites.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_invite_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/lobbies.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_lobby_member_flag_t",
+        "dcc_lobby_member_t",
+        "dcc_lobby_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/members.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_member_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/roles.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_role_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/scheduled_events.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_scheduled_event_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/soundboard.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_soundboard_sound_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/stages.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_stage_instance_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/objects/resources/stickers.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_sticker_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/permissions.h",
+      "inline": [
+        "dcc_permissions_can",
+        "dcc_permissions_can_any",
+        "dcc_permissions_has",
+        "dcc_permissions_has_any"
+      ],
+      "macros": [
+        "DCC_PERMISSION_ADD_REACTIONS",
+        "DCC_PERMISSION_ADMINISTRATOR",
+        "DCC_PERMISSION_ATTACH_FILES",
+        "DCC_PERMISSION_BAN_MEMBERS",
+        "DCC_PERMISSION_BYPASS_SLOWMODE",
+        "DCC_PERMISSION_CHANGE_NICKNAME",
+        "DCC_PERMISSION_CONNECT",
+        "DCC_PERMISSION_CREATE_EVENTS",
+        "DCC_PERMISSION_CREATE_GUILD_EXPRESSIONS",
+        "DCC_PERMISSION_CREATE_INSTANT_INVITE",
+        "DCC_PERMISSION_CREATE_PRIVATE_THREADS",
+        "DCC_PERMISSION_CREATE_PUBLIC_THREADS",
+        "DCC_PERMISSION_DEAFEN_MEMBERS",
+        "DCC_PERMISSION_EMBED_LINKS",
+        "DCC_PERMISSION_KICK_MEMBERS",
+        "DCC_PERMISSION_MANAGE_CHANNELS",
+        "DCC_PERMISSION_MANAGE_EMOJIS_AND_STICKERS",
+        "DCC_PERMISSION_MANAGE_EVENTS",
+        "DCC_PERMISSION_MANAGE_EXPRESSIONS",
+        "DCC_PERMISSION_MANAGE_GUILD",
+        "DCC_PERMISSION_MANAGE_MESSAGES",
+        "DCC_PERMISSION_MANAGE_NICKNAMES",
+        "DCC_PERMISSION_MANAGE_ROLES",
+        "DCC_PERMISSION_MANAGE_THREADS",
+        "DCC_PERMISSION_MANAGE_WEBHOOKS",
+        "DCC_PERMISSION_MENTION_EVERYONE",
+        "DCC_PERMISSION_MODERATE_MEMBERS",
+        "DCC_PERMISSION_MOVE_MEMBERS",
+        "DCC_PERMISSION_MUTE_MEMBERS",
+        "DCC_PERMISSION_PIN_MESSAGES",
+        "DCC_PERMISSION_PRIORITY_SPEAKER",
+        "DCC_PERMISSION_READ_MESSAGE_HISTORY",
+        "DCC_PERMISSION_REQUEST_TO_SPEAK",
+        "DCC_PERMISSION_SEND_MESSAGES",
+        "DCC_PERMISSION_SEND_MESSAGES_IN_THREADS",
+        "DCC_PERMISSION_SEND_POLLS",
+        "DCC_PERMISSION_SEND_TTS_MESSAGES",
+        "DCC_PERMISSION_SEND_VOICE_MESSAGES",
+        "DCC_PERMISSION_SPEAK",
+        "DCC_PERMISSION_STREAM",
+        "DCC_PERMISSION_USE_APPLICATION_COMMANDS",
+        "DCC_PERMISSION_USE_CLYDE_AI",
+        "DCC_PERMISSION_USE_EMBEDDED_ACTIVITIES",
+        "DCC_PERMISSION_USE_EXTERNAL_APPS",
+        "DCC_PERMISSION_USE_EXTERNAL_EMOJIS",
+        "DCC_PERMISSION_USE_EXTERNAL_SOUNDS",
+        "DCC_PERMISSION_USE_EXTERNAL_STICKERS",
+        "DCC_PERMISSION_USE_SOUNDBOARD",
+        "DCC_PERMISSION_USE_VAD",
+        "DCC_PERMISSION_VIEW_AUDIT_LOG",
+        "DCC_PERMISSION_VIEW_CHANNEL",
+        "DCC_PERMISSION_VIEW_CREATOR_MONETIZATION_ANALYTICS",
+        "DCC_PERMISSION_VIEW_GUILD_INSIGHTS"
+      ],
+      "types": [
+        "dcc_permission_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_replay_kind_from_string",
+        "dcc_replay_kind_string",
+        "dcc_replay_player_close",
+        "dcc_replay_player_next",
+        "dcc_replay_player_open",
+        "dcc_replay_player_run",
+        "dcc_replay_record_deinit",
+        "dcc_replay_recorder_capture_gateway",
+        "dcc_replay_recorder_capture_interaction",
+        "dcc_replay_recorder_close",
+        "dcc_replay_recorder_open",
+        "dcc_replay_recorder_write",
+        "dcc_replay_validate_file"
+      ],
+      "header": "dcc/replay.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_replay_kind_t",
+        "dcc_replay_player_t",
+        "dcc_replay_record_t",
+        "dcc_replay_recorder_t",
+        "dcc_replay_validation_result_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/application_commands.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_application_emoji",
+        "dcc_rest_delete_application_emoji",
+        "dcc_rest_get_application_emoji",
+        "dcc_rest_get_application_emojis",
+        "dcc_rest_modify_application_emoji"
+      ],
+      "header": "dcc/rest/application_commands/application_emojis.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/application_commands/global_commands.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_bulk_overwrite_global_commands"
+      ],
+      "header": "dcc/rest/application_commands/global_commands/bulk.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_global_command",
+        "dcc_rest_get_global_commands"
+      ],
+      "header": "dcc/rest/application_commands/global_commands/fetch.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_global_command",
+        "dcc_rest_delete_global_command",
+        "dcc_rest_edit_global_command"
+      ],
+      "header": "dcc/rest/application_commands/global_commands/write.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/application_commands/guild_commands.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_bulk_overwrite_guild_commands"
+      ],
+      "header": "dcc/rest/application_commands/guild_commands/bulk.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_guild_command",
+        "dcc_rest_get_guild_commands"
+      ],
+      "header": "dcc/rest/application_commands/guild_commands/fetch.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_guild_command",
+        "dcc_rest_delete_guild_command",
+        "dcc_rest_edit_guild_command"
+      ],
+      "header": "dcc/rest/application_commands/guild_commands/write.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_edit_guild_command_permissions",
+        "dcc_rest_get_all_guild_command_permissions",
+        "dcc_rest_get_guild_command_permissions"
+      ],
+      "header": "dcc/rest/application_commands/permissions.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_application_command_registration_options_init",
+        "dcc_application_command_registration_options_set_global",
+        "dcc_application_command_registration_options_set_guild"
+      ],
+      "header": "dcc/rest/application_commands/registration.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_method_name"
+      ],
+      "header": "dcc/rest/base.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_client_t",
+        "dcc_rest_async_status_t",
+        "dcc_rest_method_t",
+        "dcc_rest_multipart_field_t",
+        "dcc_rest_multipart_file_t",
+        "dcc_rest_priority_t",
+        "dcc_rest_response_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/channels.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_follow_news_channel",
+        "dcc_rest_set_channel_voice_status",
+        "dcc_rest_trigger_channel_typing"
+      ],
+      "header": "dcc/rest/channels/actions.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_guild_channel",
+        "dcc_rest_delete_channel",
+        "dcc_rest_get_channel",
+        "dcc_rest_get_guild_channels",
+        "dcc_rest_modify_channel"
+      ],
+      "header": "dcc/rest/channels/core.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_channel_invite",
+        "dcc_rest_get_channel_invites"
+      ],
+      "header": "dcc/rest/channels/invites.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_delete_channel_permission",
+        "dcc_rest_modify_channel_permission"
+      ],
+      "header": "dcc/rest/channels/permissions.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_modify_guild_channel_positions"
+      ],
+      "header": "dcc/rest/channels/positions.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/emojis_stickers.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_guild_emoji",
+        "dcc_rest_delete_guild_emoji",
+        "dcc_rest_get_guild_emoji",
+        "dcc_rest_get_guild_emojis",
+        "dcc_rest_modify_guild_emoji"
+      ],
+      "header": "dcc/rest/emojis_stickers/guild_emojis.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_guild_sticker",
+        "dcc_rest_delete_guild_sticker",
+        "dcc_rest_get_guild_sticker",
+        "dcc_rest_get_guild_stickers",
+        "dcc_rest_modify_guild_sticker"
+      ],
+      "header": "dcc/rest/emojis_stickers/guild_stickers.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_guild_message_search"
+      ],
+      "header": "dcc/rest/emojis_stickers/message_search.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_sticker",
+        "dcc_rest_get_sticker_packs"
+      ],
+      "header": "dcc/rest/emojis_stickers/stickers.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_firewall_attach",
+        "dcc_rest_firewall_check",
+        "dcc_rest_firewall_create",
+        "dcc_rest_firewall_decision_string",
+        "dcc_rest_firewall_destroy",
+        "dcc_rest_firewall_detach",
+        "dcc_rest_firewall_hard_limit_action_string",
+        "dcc_rest_firewall_options_validate",
+        "dcc_rest_firewall_reason_string",
+        "dcc_rest_firewall_record_response",
+        "dcc_rest_firewall_request_is_critical",
+        "dcc_rest_firewall_snapshot",
+        "dcc_rest_firewall_snapshot_json",
+        "dcc_rest_firewall_state_snapshot",
+        "dcc_rest_firewall_status_is_invalid"
+      ],
+      "header": "dcc/rest/firewall.h",
+      "inline": [
+        "dcc_rest_firewall_options_init"
+      ],
+      "macros": [
+        "DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_HARD_LIMIT",
+        "DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_SOFT_LIMIT",
+        "DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_WINDOW_MS",
+        "DCC_REST_FIREWALL_DEFAULT_SOFT_LIMIT_DELAY_MS"
+      ],
+      "types": [
+        "dcc_rest_firewall_decision_t",
+        "dcc_rest_firewall_hard_limit_action_t",
+        "dcc_rest_firewall_options_t",
+        "dcc_rest_firewall_reason_t",
+        "dcc_rest_firewall_request_t",
+        "dcc_rest_firewall_result_t",
+        "dcc_rest_firewall_snapshot_t",
+        "dcc_rest_firewall_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/guild_members.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_add_guild_member",
+        "dcc_rest_modify_guild_member",
+        "dcc_rest_remove_guild_member"
+      ],
+      "header": "dcc/rest/guild_members/lifecycle.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_guild_member",
+        "dcc_rest_list_guild_members",
+        "dcc_rest_search_guild_members"
+      ],
+      "header": "dcc/rest/guild_members/query.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_add_guild_member_role",
+        "dcc_rest_remove_guild_member_role"
+      ],
+      "header": "dcc/rest/guild_members/roles.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/guilds.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_guild_audit_log"
+      ],
+      "header": "dcc/rest/guilds/audit_log.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_auto_moderation_rule",
+        "dcc_rest_delete_auto_moderation_rule",
+        "dcc_rest_get_auto_moderation_rule",
+        "dcc_rest_get_auto_moderation_rules",
+        "dcc_rest_modify_auto_moderation_rule"
+      ],
+      "header": "dcc/rest/guilds/auto_moderation.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_guild_ban",
+        "dcc_rest_delete_guild_ban",
+        "dcc_rest_get_guild_ban",
+        "dcc_rest_get_guild_bans"
+      ],
+      "header": "dcc/rest/guilds/bans.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_guild",
+        "dcc_rest_get_guild_preview",
+        "dcc_rest_modify_guild"
+      ],
+      "header": "dcc/rest/guilds/core.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_modify_current_guild_member",
+        "dcc_rest_set_current_guild_member_nickname"
+      ],
+      "header": "dcc/rest/guilds/current_member.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_delete_guild_integration",
+        "dcc_rest_get_guild_integrations"
+      ],
+      "header": "dcc/rest/guilds/integrations.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_guild_onboarding",
+        "dcc_rest_modify_guild_onboarding"
+      ],
+      "header": "dcc/rest/guilds/onboarding.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_begin_guild_prune",
+        "dcc_rest_get_guild_prune_count"
+      ],
+      "header": "dcc/rest/guilds/prune.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_guild_scheduled_event",
+        "dcc_rest_delete_guild_scheduled_event",
+        "dcc_rest_get_guild_scheduled_event",
+        "dcc_rest_get_guild_scheduled_event_users",
+        "dcc_rest_get_guild_scheduled_events",
+        "dcc_rest_modify_guild_scheduled_event"
+      ],
+      "header": "dcc/rest/guilds/scheduled_events.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_guild_welcome_screen",
+        "dcc_rest_modify_guild_welcome_screen"
+      ],
+      "header": "dcc/rest/guilds/welcome_screen.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_guild_vanity_url",
+        "dcc_rest_get_guild_widget",
+        "dcc_rest_modify_guild_widget"
+      ],
+      "header": "dcc/rest/guilds/widgets.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/interactions.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/interactions/followups.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/interactions/followups/interaction.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_interaction_followup_create",
+        "dcc_rest_interaction_followup_delete",
+        "dcc_rest_interaction_followup_edit",
+        "dcc_rest_interaction_followup_get"
+      ],
+      "header": "dcc/rest/interactions/followups/token.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_interaction_original_response_delete",
+        "dcc_rest_interaction_original_response_edit",
+        "dcc_rest_interaction_original_response_get"
+      ],
+      "header": "dcc/rest/interactions/original_response.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_interaction_response_create"
+      ],
+      "header": "dcc/rest/interactions/responses.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_delete_invite",
+        "dcc_rest_get_invite"
+      ],
+      "header": "dcc/rest/invites.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/messages.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_message"
+      ],
+      "header": "dcc/rest/messages/create.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_bulk_delete_messages",
+        "dcc_rest_crosspost_message",
+        "dcc_rest_delete_message",
+        "dcc_rest_edit_message"
+      ],
+      "header": "dcc/rest/messages/edit.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_channel_messages",
+        "dcc_rest_get_message"
+      ],
+      "header": "dcc/rest/messages/fetch.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_channel_pins",
+        "dcc_rest_get_legacy_channel_pins",
+        "dcc_rest_legacy_pin_message",
+        "dcc_rest_legacy_unpin_message",
+        "dcc_rest_pin_message",
+        "dcc_rest_unpin_message"
+      ],
+      "header": "dcc/rest/messages/pins.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_end_poll",
+        "dcc_rest_get_poll_answer_voters"
+      ],
+      "header": "dcc/rest/messages/polls.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_add_message_reaction",
+        "dcc_rest_delete_all_message_reactions",
+        "dcc_rest_delete_all_message_reactions_for_emoji",
+        "dcc_rest_delete_own_message_reaction",
+        "dcc_rest_delete_user_message_reaction",
+        "dcc_rest_get_message_reactions"
+      ],
+      "header": "dcc/rest/messages/reactions.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_add_lobby_member",
+        "dcc_rest_bulk_ban_guild_members",
+        "dcc_rest_bulk_update_lobby_members",
+        "dcc_rest_create_guild_soundboard_sound",
+        "dcc_rest_create_lobby",
+        "dcc_rest_create_lobby_channel_invite_for_self",
+        "dcc_rest_create_lobby_channel_invite_for_user",
+        "dcc_rest_create_or_join_lobby",
+        "dcc_rest_delete_current_user_application_role_connection",
+        "dcc_rest_delete_guild_soundboard_sound",
+        "dcc_rest_delete_lobby",
+        "dcc_rest_execute_webhook_github",
+        "dcc_rest_execute_webhook_slack",
+        "dcc_rest_get_activity_instance",
+        "dcc_rest_get_current_user_guild_member",
+        "dcc_rest_get_default_soundboard_sounds",
+        "dcc_rest_get_entitlement",
+        "dcc_rest_get_gateway",
+        "dcc_rest_get_guild_role",
+        "dcc_rest_get_guild_role_member_counts",
+        "dcc_rest_get_guild_soundboard_sound",
+        "dcc_rest_get_guild_soundboard_sounds",
+        "dcc_rest_get_guild_widget_json",
+        "dcc_rest_get_guild_widget_png",
+        "dcc_rest_get_invite_target_users",
+        "dcc_rest_get_invite_target_users_job_status",
+        "dcc_rest_get_lobby",
+        "dcc_rest_get_lobby_messages",
+        "dcc_rest_get_sku_subscription",
+        "dcc_rest_get_sku_subscriptions",
+        "dcc_rest_get_sticker_pack",
+        "dcc_rest_leave_lobby",
+        "dcc_rest_link_lobby_channel",
+        "dcc_rest_modify_current_application",
+        "dcc_rest_modify_guild_incident_actions",
+        "dcc_rest_modify_guild_soundboard_sound",
+        "dcc_rest_modify_lobby",
+        "dcc_rest_put_invite_target_users",
+        "dcc_rest_remove_lobby_member",
+        "dcc_rest_send_lobby_message",
+        "dcc_rest_send_soundboard_sound",
+        "dcc_rest_update_lobby_message_moderation_metadata"
+      ],
+      "header": "dcc/rest/official_surface.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_request_cancel",
+        "dcc_rest_request_completed",
+        "dcc_rest_request_destroy",
+        "dcc_rest_request_wait",
+        "dcc_rest_submit"
+      ],
+      "header": "dcc/rest/request.h",
+      "inline": [
+        "dcc_rest_call_options_init",
+        "dcc_rest_request_desc_init"
+      ],
+      "macros": [
+        "DCC_REST_CALL_OPTIONS_INIT",
+        "DCC_REST_CALL_OPTIONS_VERSION",
+        "DCC_REST_REQUEST_DESC_INIT",
+        "DCC_REST_REQUEST_DESC_VERSION"
+      ],
+      "types": [
+        "dcc_rest_auth_mode_t",
+        "dcc_rest_call_options_t",
+        "dcc_rest_request_desc_t",
+        "dcc_rest_request_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/resources.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_consume_entitlement",
+        "dcc_rest_create_test_entitlement",
+        "dcc_rest_delete_test_entitlement",
+        "dcc_rest_get_entitlements",
+        "dcc_rest_get_skus"
+      ],
+      "header": "dcc/rest/resources/entitlements.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_gateway_bot"
+      ],
+      "header": "dcc/rest/resources/gateway.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_add_group_dm_recipient",
+        "dcc_rest_remove_group_dm_recipient"
+      ],
+      "header": "dcc/rest/resources/group_dms.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_guild_invites"
+      ],
+      "header": "dcc/rest/resources/invites.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_stage_instance",
+        "dcc_rest_delete_stage_instance",
+        "dcc_rest_get_stage_instance",
+        "dcc_rest_modify_stage_instance"
+      ],
+      "header": "dcc/rest/resources/stage_instances.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_guild_template",
+        "dcc_rest_delete_guild_template",
+        "dcc_rest_get_guild_templates",
+        "dcc_rest_get_template",
+        "dcc_rest_modify_guild_template",
+        "dcc_rest_sync_guild_template"
+      ],
+      "header": "dcc/rest/resources/templates.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_dm_channel",
+        "dcc_rest_get_current_application",
+        "dcc_rest_get_current_user",
+        "dcc_rest_get_current_user_connections",
+        "dcc_rest_get_current_user_guilds",
+        "dcc_rest_get_user",
+        "dcc_rest_leave_guild",
+        "dcc_rest_modify_current_user"
+      ],
+      "header": "dcc/rest/resources/users.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_current_user_voice_state",
+        "dcc_rest_get_guild_voice_regions",
+        "dcc_rest_get_user_voice_state",
+        "dcc_rest_get_voice_regions",
+        "dcc_rest_modify_current_user_voice_state",
+        "dcc_rest_modify_user_voice_state"
+      ],
+      "header": "dcc/rest/resources/voice_states.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_result_bool_field",
+        "dcc_rest_result_channel_id",
+        "dcc_rest_result_clone",
+        "dcc_rest_result_free",
+        "dcc_rest_result_guild_id",
+        "dcc_rest_result_i64_field",
+        "dcc_rest_result_message_id",
+        "dcc_rest_result_ok",
+        "dcc_rest_result_snowflake_field",
+        "dcc_rest_result_status",
+        "dcc_rest_result_string_field",
+        "dcc_rest_result_string_field_len",
+        "dcc_rest_result_u64_field"
+      ],
+      "header": "dcc/rest/result.h",
+      "inline": [],
+      "macros": [
+        "DCC_REST_RESULT_VERSION"
+      ],
+      "types": [
+        "dcc_rest_result_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_rest_get_application_role_connection_metadata",
+        "dcc_rest_get_current_user_application_role_connection",
+        "dcc_rest_update_application_role_connection_metadata",
+        "dcc_rest_update_current_user_application_role_connection"
+      ],
+      "header": "dcc/rest/role_connections.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_guild_role",
+        "dcc_rest_delete_guild_role",
+        "dcc_rest_get_guild_roles",
+        "dcc_rest_modify_guild_role",
+        "dcc_rest_modify_guild_role_positions"
+      ],
+      "header": "dcc/rest/roles.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_runtime_stats"
+      ],
+      "header": "dcc/rest/runtime.h",
+      "inline": [],
+      "macros": [
+        "DCC_REST_RUNTIME_STATS_INIT"
+      ],
+      "types": [
+        "dcc_rest_runtime_stats_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/threads.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_active_threads",
+        "dcc_rest_get_joined_private_archived_threads",
+        "dcc_rest_get_private_archived_threads",
+        "dcc_rest_get_public_archived_threads"
+      ],
+      "header": "dcc/rest/threads/archives.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_forum_thread",
+        "dcc_rest_create_thread",
+        "dcc_rest_create_thread_from_message"
+      ],
+      "header": "dcc/rest/threads/create.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/threads/lifecycle.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_add_thread_member",
+        "dcc_rest_get_thread_member",
+        "dcc_rest_get_thread_members",
+        "dcc_rest_join_thread",
+        "dcc_rest_leave_thread",
+        "dcc_rest_remove_thread_member"
+      ],
+      "header": "dcc/rest/threads/members.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/application_commands.h",
+      "inline": [
+        "dcc_guild_command_permissions_params_init",
+        "dcc_rest_command_list_query_init"
+      ],
+      "macros": [
+        "DCC_GUILD_COMMAND_PERMISSIONS_PARAMS_INIT",
+        "DCC_REST_COMMAND_LIST_QUERY_INIT"
+      ],
+      "types": [
+        "dcc_application_command_registration_options_t",
+        "dcc_bulk_guild_command_permissions_params_t",
+        "dcc_guild_command_permissions_params_t",
+        "dcc_guild_command_permissions_update_params_t",
+        "dcc_rest_command_list_query_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/auto_moderation.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_auto_moderation_action_params_t",
+        "dcc_auto_moderation_action_type_t",
+        "dcc_auto_moderation_event_type_t",
+        "dcc_auto_moderation_metadata_params_t",
+        "dcc_auto_moderation_preset_type_t",
+        "dcc_auto_moderation_rule_params_t",
+        "dcc_auto_moderation_trigger_type_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/channels.h",
+      "inline": [
+        "dcc_channel_forum_tag_params_init",
+        "dcc_channel_params_init",
+        "dcc_channel_permission_overwrite_init",
+        "dcc_channel_position_init",
+        "dcc_channel_positions_params_init",
+        "dcc_channel_voice_status_params_init",
+        "dcc_dm_channel_params_init",
+        "dcc_group_dm_recipient_params_init",
+        "dcc_rest_follow_news_channel_init"
+      ],
+      "macros": [
+        "DCC_CHANNEL_FORUM_TAG_PARAMS_INIT",
+        "DCC_CHANNEL_FORUM_TAG_PARAMS_VERSION",
+        "DCC_CHANNEL_PARAMS_INIT",
+        "DCC_CHANNEL_PARAMS_VERSION",
+        "DCC_CHANNEL_PERMISSION_OVERWRITE_INIT",
+        "DCC_CHANNEL_PERMISSION_OVERWRITE_VERSION",
+        "DCC_CHANNEL_POSITIONS_PARAMS_INIT",
+        "DCC_CHANNEL_POSITIONS_PARAMS_VERSION",
+        "DCC_CHANNEL_POSITION_INIT",
+        "DCC_CHANNEL_POSITION_VERSION",
+        "DCC_CHANNEL_RECORD_INIT_VALUE",
+        "DCC_CHANNEL_RECORD_INIT_VALUE",
+        "DCC_CHANNEL_VOICE_STATUS_PARAMS_INIT",
+        "DCC_CHANNEL_VOICE_STATUS_PARAMS_VERSION",
+        "DCC_DM_CHANNEL_PARAMS_INIT",
+        "DCC_DM_CHANNEL_PARAMS_VERSION",
+        "DCC_GROUP_DM_RECIPIENT_PARAMS_INIT",
+        "DCC_GROUP_DM_RECIPIENT_PARAMS_VERSION",
+        "DCC_REST_FOLLOW_NEWS_CHANNEL_INIT",
+        "DCC_REST_FOLLOW_NEWS_CHANNEL_VERSION"
+      ],
+      "types": [
+        "dcc_channel_auto_archive_duration_t",
+        "dcc_channel_default_reaction_t",
+        "dcc_channel_forum_layout_t",
+        "dcc_channel_forum_tag_params_t",
+        "dcc_channel_group_dm_params_t",
+        "dcc_channel_guild_params_t",
+        "dcc_channel_params_kind_t",
+        "dcc_channel_params_t",
+        "dcc_channel_permission_overwrite_t",
+        "dcc_channel_permission_overwrite_type_t",
+        "dcc_channel_position_t",
+        "dcc_channel_positions_params_t",
+        "dcc_channel_thread_params_t",
+        "dcc_channel_type_t",
+        "dcc_channel_voice_status_params_t",
+        "dcc_dm_channel_params_t",
+        "dcc_group_dm_recipient_params_t",
+        "dcc_rest_follow_news_channel_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/emojis_stickers.h",
+      "inline": [
+        "dcc_emoji_params_init",
+        "dcc_guild_sticker_params_init"
+      ],
+      "macros": [
+        "DCC_EMOJI_PARAMS_INIT",
+        "DCC_GUILD_STICKER_PARAMS_INIT"
+      ],
+      "types": [
+        "dcc_emoji_params_t",
+        "dcc_guild_sticker_params_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/entitlements.h",
+      "inline": [
+        "dcc_rest_entitlement_query_init",
+        "dcc_test_entitlement_params_init"
+      ],
+      "macros": [
+        "DCC_REST_ENTITLEMENT_QUERY_INIT",
+        "DCC_REST_ENTITLEMENT_QUERY_VERSION",
+        "DCC_TEST_ENTITLEMENT_PARAMS_INIT",
+        "DCC_TEST_ENTITLEMENT_PARAMS_VERSION"
+      ],
+      "types": [
+        "dcc_rest_entitlement_query_t",
+        "dcc_test_entitlement_owner_type_t",
+        "dcc_test_entitlement_params_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/guild_members.h",
+      "inline": [
+        "dcc_rest_current_guild_member_nickname_init",
+        "dcc_rest_current_guild_member_update_init",
+        "dcc_rest_guild_ban_create_init",
+        "dcc_rest_guild_bulk_ban_init",
+        "dcc_rest_guild_member_add_init",
+        "dcc_rest_guild_member_search_query_init",
+        "dcc_rest_guild_member_update_init",
+        "dcc_rest_guild_members_query_init",
+        "dcc_rest_guild_prune_init"
+      ],
+      "macros": [
+        "DCC_GUILD_MEMBER_RECORD_INIT",
+        "DCC_GUILD_MEMBER_RECORD_INIT",
+        "DCC_REST_CURRENT_GUILD_MEMBER_NICKNAME_INIT",
+        "DCC_REST_CURRENT_GUILD_MEMBER_UPDATE_INIT",
+        "DCC_REST_GUILD_BAN_CREATE_INIT",
+        "DCC_REST_GUILD_BULK_BAN_INIT",
+        "DCC_REST_GUILD_MEMBERS_QUERY_INIT",
+        "DCC_REST_GUILD_MEMBER_ADD_INIT",
+        "DCC_REST_GUILD_MEMBER_SEARCH_QUERY_INIT",
+        "DCC_REST_GUILD_MEMBER_UPDATE_INIT",
+        "DCC_REST_GUILD_PRUNE_INIT"
+      ],
+      "types": [
+        "dcc_current_guild_member_params_t",
+        "dcc_guild_ban_params_t",
+        "dcc_guild_member_nickname_params_t",
+        "dcc_guild_member_params_t",
+        "dcc_guild_member_role_params_t",
+        "dcc_guild_member_update_flag_t",
+        "dcc_guild_prune_params_t",
+        "dcc_rest_current_guild_member_nickname_t",
+        "dcc_rest_current_guild_member_update_t",
+        "dcc_rest_guild_ban_create_t",
+        "dcc_rest_guild_bulk_ban_t",
+        "dcc_rest_guild_member_add_t",
+        "dcc_rest_guild_member_search_query_t",
+        "dcc_rest_guild_member_update_t",
+        "dcc_rest_guild_members_query_t",
+        "dcc_rest_guild_prune_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/guilds.h",
+      "inline": [
+        "dcc_rest_current_user_guilds_query_init",
+        "dcc_rest_guild_audit_log_query_init",
+        "dcc_rest_guild_bans_query_init",
+        "dcc_rest_guild_incident_actions_init",
+        "dcc_rest_guild_prune_query_init",
+        "dcc_rest_guild_query_init",
+        "dcc_rest_guild_soundboard_sound_create_init",
+        "dcc_rest_guild_soundboard_sound_update_init",
+        "dcc_rest_guild_update_init",
+        "dcc_rest_guild_welcome_screen_update_init",
+        "dcc_rest_guild_widget_image_query_init",
+        "dcc_rest_guild_widget_update_init",
+        "dcc_rest_welcome_channel_init"
+      ],
+      "macros": [
+        "DCC_GUILD_RECORD_INIT",
+        "DCC_GUILD_RECORD_INIT",
+        "DCC_REST_CURRENT_USER_GUILDS_QUERY_INIT",
+        "DCC_REST_GUILD_AUDIT_LOG_QUERY_INIT",
+        "DCC_REST_GUILD_BANS_QUERY_INIT",
+        "DCC_REST_GUILD_INCIDENT_ACTIONS_INIT",
+        "DCC_REST_GUILD_PRUNE_QUERY_INIT",
+        "DCC_REST_GUILD_QUERY_INIT",
+        "DCC_REST_GUILD_SOUNDBOARD_SOUND_CREATE_INIT",
+        "DCC_REST_GUILD_SOUNDBOARD_SOUND_UPDATE_INIT",
+        "DCC_REST_GUILD_UPDATE_INIT",
+        "DCC_REST_GUILD_WELCOME_SCREEN_UPDATE_INIT",
+        "DCC_REST_GUILD_WIDGET_IMAGE_QUERY_INIT",
+        "DCC_REST_GUILD_WIDGET_UPDATE_INIT",
+        "DCC_REST_WELCOME_CHANNEL_INIT"
+      ],
+      "types": [
+        "dcc_guild_afk_timeout_t",
+        "dcc_guild_default_message_notification_t",
+        "dcc_guild_explicit_content_filter_t",
+        "dcc_guild_mfa_level_t",
+        "dcc_guild_params_t",
+        "dcc_guild_verification_level_t",
+        "dcc_guild_widget_params_t",
+        "dcc_rest_current_user_guilds_query_t",
+        "dcc_rest_guild_audit_log_query_t",
+        "dcc_rest_guild_bans_query_t",
+        "dcc_rest_guild_incident_actions_t",
+        "dcc_rest_guild_prune_query_t",
+        "dcc_rest_guild_query_t",
+        "dcc_rest_guild_soundboard_sound_create_t",
+        "dcc_rest_guild_soundboard_sound_update_t",
+        "dcc_rest_guild_update_t",
+        "dcc_rest_guild_welcome_screen_update_t",
+        "dcc_rest_guild_widget_image_query_t",
+        "dcc_rest_guild_widget_style_t",
+        "dcc_rest_guild_widget_update_t",
+        "dcc_rest_welcome_channel_t",
+        "dcc_welcome_channel_params_t",
+        "dcc_welcome_screen_params_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/interactions.h",
+      "inline": [
+        "dcc_rest_interaction_response_init",
+        "dcc_rest_interaction_response_set_autocomplete",
+        "dcc_rest_interaction_response_set_deferred_message",
+        "dcc_rest_interaction_response_set_deferred_update",
+        "dcc_rest_interaction_response_set_launch_activity",
+        "dcc_rest_interaction_response_set_message",
+        "dcc_rest_interaction_response_set_modal",
+        "dcc_rest_interaction_response_set_pong",
+        "dcc_rest_interaction_response_set_premium_required",
+        "dcc_rest_interaction_response_set_update_message"
+      ],
+      "macros": [
+        "DCC_REST_INTERACTION_RESPONSE_INIT",
+        "DCC_REST_INTERACTION_RESPONSE_PRESENT_AUTOCOMPLETE",
+        "DCC_REST_INTERACTION_RESPONSE_PRESENT_MESSAGE",
+        "DCC_REST_INTERACTION_RESPONSE_PRESENT_MODAL",
+        "DCC_REST_INTERACTION_RESPONSE_PRESENT_WITH_RESPONSE",
+        "DCC_REST_INTERACTION_RESPONSE_VERSION"
+      ],
+      "types": [
+        "dcc_interaction_response_type_t",
+        "dcc_rest_interaction_response_data_t",
+        "dcc_rest_interaction_response_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/invites.h",
+      "inline": [
+        "dcc_invite_params_init",
+        "dcc_rest_invite_query_init",
+        "dcc_rest_invite_target_users_upload_init"
+      ],
+      "macros": [
+        "DCC_INVITE_PARAMS_INIT",
+        "DCC_INVITE_PARAMS_VERSION",
+        "DCC_INVITE_RECORD_INIT_VALUE",
+        "DCC_INVITE_RECORD_INIT_VALUE",
+        "DCC_REST_INVITE_QUERY_INIT",
+        "DCC_REST_INVITE_QUERY_VERSION",
+        "DCC_REST_INVITE_TARGET_USERS_UPLOAD_INIT",
+        "DCC_REST_INVITE_TARGET_USERS_UPLOAD_VERSION"
+      ],
+      "types": [
+        "dcc_invite_params_t",
+        "dcc_invite_target_type_t",
+        "dcc_rest_invite_query_t",
+        "dcc_rest_invite_target_users_upload_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/messages.h",
+      "inline": [
+        "dcc_rest_id_page_init",
+        "dcc_rest_message_list_query_init",
+        "dcc_rest_message_payload_init",
+        "dcc_rest_pin_page_init",
+        "dcc_rest_reaction_query_init"
+      ],
+      "macros": [
+        "DCC_REST_ID_PAGE_INIT",
+        "DCC_REST_ID_PAGE_PRESENT_AFTER",
+        "DCC_REST_ID_PAGE_PRESENT_BEFORE",
+        "DCC_REST_ID_PAGE_PRESENT_LIMIT",
+        "DCC_REST_ID_PAGE_VERSION",
+        "DCC_REST_MESSAGE_LIST_QUERY_INIT",
+        "DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AFTER",
+        "DCC_REST_MESSAGE_LIST_QUERY_PRESENT_AROUND",
+        "DCC_REST_MESSAGE_LIST_QUERY_PRESENT_BEFORE",
+        "DCC_REST_MESSAGE_LIST_QUERY_PRESENT_LIMIT",
+        "DCC_REST_MESSAGE_LIST_QUERY_VERSION",
+        "DCC_REST_MESSAGE_PAYLOAD_INIT",
+        "DCC_REST_MESSAGE_PAYLOAD_VERSION",
+        "DCC_REST_PIN_PAGE_INIT",
+        "DCC_REST_PIN_PAGE_PRESENT_BEFORE",
+        "DCC_REST_PIN_PAGE_PRESENT_LIMIT",
+        "DCC_REST_PIN_PAGE_VERSION",
+        "DCC_REST_REACTION_QUERY_INIT",
+        "DCC_REST_REACTION_QUERY_PRESENT_AFTER",
+        "DCC_REST_REACTION_QUERY_PRESENT_LIMIT",
+        "DCC_REST_REACTION_QUERY_PRESENT_TYPE",
+        "DCC_REST_REACTION_QUERY_VERSION"
+      ],
+      "types": [
+        "dcc_message_search_has_t",
+        "dcc_message_search_order_t",
+        "dcc_message_search_params_t",
+        "dcc_message_search_sort_t",
+        "dcc_rest_id_page_t",
+        "dcc_rest_message_list_query_t",
+        "dcc_rest_message_payload_t",
+        "dcc_rest_pin_page_t",
+        "dcc_rest_reaction_query_t",
+        "dcc_rest_reaction_type_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/official_surface.h",
+      "inline": [],
+      "macros": [
+        "DCC_APPLICATION_INSTALL_PARAMS_INIT",
+        "DCC_APPLICATION_INTEGRATION_TYPE_CONFIG_INIT",
+        "DCC_APPLICATION_MODIFY_PARAMS_INIT",
+        "DCC_LOBBY_CHANNEL_LINK_PARAMS_INIT",
+        "DCC_LOBBY_CREATE_OR_JOIN_PARAMS_INIT",
+        "DCC_LOBBY_MEMBER_BULK_ITEM_INIT",
+        "DCC_LOBBY_MEMBER_BULK_PARAMS_INIT",
+        "DCC_LOBBY_MEMBER_PARAMS_INIT",
+        "DCC_LOBBY_MEMBER_SPEC_INIT",
+        "DCC_LOBBY_MESSAGE_MODERATION_METADATA_PARAMS_INIT",
+        "DCC_LOBBY_MESSAGE_PARAMS_INIT",
+        "DCC_LOBBY_PARAMS_INIT",
+        "DCC_REST_LOBBY_MESSAGE_QUERY_INIT",
+        "DCC_REST_SKU_SUBSCRIPTION_QUERY_INIT",
+        "DCC_REST_TASK10_RECORD_VERSION",
+        "DCC_SOUNDBOARD_SEND_PARAMS_INIT"
+      ],
+      "types": [
+        "dcc_application_event_webhook_status_t",
+        "dcc_application_install_params_t",
+        "dcc_application_integration_type_config_t",
+        "dcc_application_modify_params_t",
+        "dcc_lobby_channel_link_params_t",
+        "dcc_lobby_create_or_join_params_t",
+        "dcc_lobby_member_bulk_item_t",
+        "dcc_lobby_member_bulk_params_t",
+        "dcc_lobby_member_params_t",
+        "dcc_lobby_member_spec_t",
+        "dcc_lobby_message_moderation_metadata_item_t",
+        "dcc_lobby_message_moderation_metadata_params_t",
+        "dcc_lobby_message_params_t",
+        "dcc_lobby_params_t",
+        "dcc_rest_lobby_message_query_t",
+        "dcc_rest_sku_subscription_query_t",
+        "dcc_soundboard_send_params_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/onboarding.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_onboarding_emoji_params_t",
+        "dcc_onboarding_mode_t",
+        "dcc_onboarding_params_t",
+        "dcc_onboarding_prompt_flag_t",
+        "dcc_onboarding_prompt_option_params_t",
+        "dcc_onboarding_prompt_params_t",
+        "dcc_onboarding_prompt_type_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/role_connections.h",
+      "inline": [],
+      "macros": [
+        "DCC_APPLICATION_ROLE_CONNECTION_METADATA_PARAMS_INIT",
+        "DCC_APPLICATION_ROLE_CONNECTION_METADATA_PARAMS_VERSION",
+        "DCC_APPLICATION_ROLE_CONNECTION_PARAMS_INIT",
+        "DCC_APPLICATION_ROLE_CONNECTION_PARAMS_VERSION"
+      ],
+      "types": [
+        "dcc_application_role_connection_metadata_params_t",
+        "dcc_application_role_connection_metadata_type_t",
+        "dcc_application_role_connection_params_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/roles.h",
+      "inline": [
+        "dcc_rest_guild_role_create_init",
+        "dcc_rest_guild_role_position_init",
+        "dcc_rest_guild_role_update_init",
+        "dcc_rest_role_colors_init"
+      ],
+      "macros": [
+        "DCC_REST_GUILD_ROLE_CREATE_INIT",
+        "DCC_REST_GUILD_ROLE_POSITION_INIT",
+        "DCC_REST_GUILD_ROLE_UPDATE_INIT",
+        "DCC_REST_ROLE_COLORS_INIT",
+        "DCC_ROLE_RECORD_INIT",
+        "DCC_ROLE_RECORD_INIT"
+      ],
+      "types": [
+        "dcc_rest_guild_role_create_t",
+        "dcc_rest_guild_role_position_t",
+        "dcc_rest_guild_role_update_t",
+        "dcc_rest_role_colors_t",
+        "dcc_role_params_t",
+        "dcc_role_position_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/scheduled_events.h",
+      "inline": [
+        "dcc_rest_scheduled_event_query_init",
+        "dcc_rest_scheduled_event_users_query_init",
+        "dcc_scheduled_event_params_init"
+      ],
+      "macros": [
+        "DCC_REST_SCHEDULED_EVENT_QUERY_INIT",
+        "DCC_REST_SCHEDULED_EVENT_USERS_QUERY_INIT",
+        "DCC_SCHEDULED_EVENT_PARAMS_INIT"
+      ],
+      "types": [
+        "dcc_rest_scheduled_event_query_t",
+        "dcc_rest_scheduled_event_users_query_t",
+        "dcc_scheduled_event_entity_type_t",
+        "dcc_scheduled_event_params_t",
+        "dcc_scheduled_event_privacy_level_t",
+        "dcc_scheduled_event_status_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/stage.h",
+      "inline": [
+        "dcc_stage_instance_params_init"
+      ],
+      "macros": [
+        "DCC_STAGE_INSTANCE_PARAMS_INIT"
+      ],
+      "types": [
+        "dcc_stage_instance_params_t",
+        "dcc_stage_privacy_level_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/string_map.h",
+      "inline": [
+        "dcc_rest_string_map_init"
+      ],
+      "macros": [
+        "DCC_REST_STRING_MAP_INIT",
+        "DCC_REST_STRING_MAP_VERSION"
+      ],
+      "types": [
+        "dcc_rest_string_map_entry_t",
+        "dcc_rest_string_map_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/templates.h",
+      "inline": [
+        "dcc_template_params_init"
+      ],
+      "macros": [
+        "DCC_TEMPLATE_PARAMS_INIT"
+      ],
+      "types": [
+        "dcc_template_params_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/threads.h",
+      "inline": [
+        "dcc_rest_joined_thread_archive_query_init",
+        "dcc_rest_thread_archive_query_init",
+        "dcc_rest_thread_member_query_init",
+        "dcc_thread_params_init"
+      ],
+      "macros": [
+        "DCC_REST_JOINED_THREAD_ARCHIVE_QUERY_INIT",
+        "DCC_REST_JOINED_THREAD_ARCHIVE_QUERY_VERSION",
+        "DCC_REST_THREAD_ARCHIVE_QUERY_INIT",
+        "DCC_REST_THREAD_ARCHIVE_QUERY_VERSION",
+        "DCC_REST_THREAD_MEMBER_QUERY_INIT",
+        "DCC_REST_THREAD_MEMBER_QUERY_VERSION",
+        "DCC_THREAD_PARAMS_INIT",
+        "DCC_THREAD_PARAMS_VERSION",
+        "DCC_THREAD_RECORD_INIT_VALUE",
+        "DCC_THREAD_RECORD_INIT_VALUE"
+      ],
+      "types": [
+        "dcc_rest_joined_thread_archive_query_t",
+        "dcc_rest_thread_archive_query_t",
+        "dcc_rest_thread_member_query_t",
+        "dcc_thread_params_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/users.h",
+      "inline": [
+        "dcc_current_user_params_init"
+      ],
+      "macros": [
+        "DCC_CURRENT_USER_PARAMS_INIT",
+        "DCC_CURRENT_USER_PARAMS_VERSION"
+      ],
+      "types": [
+        "dcc_current_user_params_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/voice_states.h",
+      "inline": [
+        "dcc_current_user_voice_state_params_init",
+        "dcc_user_voice_state_params_init"
+      ],
+      "macros": [
+        "DCC_CURRENT_USER_VOICE_STATE_PARAMS_INIT",
+        "DCC_USER_VOICE_STATE_PARAMS_INIT",
+        "DCC_VOICE_STATE_PARAMS_VERSION"
+      ],
+      "types": [
+        "dcc_current_user_voice_state_params_t",
+        "dcc_user_voice_state_params_t",
+        "dcc_voice_state_params_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/types/webhooks.h",
+      "inline": [
+        "dcc_rest_webhook_builder_init",
+        "dcc_rest_webhook_compat_payload_init",
+        "dcc_rest_webhook_execute_init",
+        "dcc_rest_webhook_message_edit_init",
+        "dcc_rest_webhook_message_query_init"
+      ],
+      "macros": [
+        "DCC_REST_WEBHOOK_BUILDER_INIT",
+        "DCC_REST_WEBHOOK_BUILDER_PRESENT_AVATAR",
+        "DCC_REST_WEBHOOK_BUILDER_PRESENT_CHANNEL_ID",
+        "DCC_REST_WEBHOOK_BUILDER_PRESENT_NAME",
+        "DCC_REST_WEBHOOK_BUILDER_VERSION",
+        "DCC_REST_WEBHOOK_COMPAT_PAYLOAD_INIT",
+        "DCC_REST_WEBHOOK_COMPAT_PAYLOAD_VERSION",
+        "DCC_REST_WEBHOOK_EXECUTE_INIT",
+        "DCC_REST_WEBHOOK_EXECUTE_PRESENT_APPLIED_TAG_IDS",
+        "DCC_REST_WEBHOOK_EXECUTE_PRESENT_AVATAR_URL",
+        "DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_ID",
+        "DCC_REST_WEBHOOK_EXECUTE_PRESENT_THREAD_NAME",
+        "DCC_REST_WEBHOOK_EXECUTE_PRESENT_USERNAME",
+        "DCC_REST_WEBHOOK_EXECUTE_PRESENT_WAIT",
+        "DCC_REST_WEBHOOK_EXECUTE_PRESENT_WITH_COMPONENTS",
+        "DCC_REST_WEBHOOK_EXECUTE_VERSION",
+        "DCC_REST_WEBHOOK_MESSAGE_EDIT_INIT",
+        "DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_THREAD_ID",
+        "DCC_REST_WEBHOOK_MESSAGE_EDIT_PRESENT_WITH_COMPONENTS",
+        "DCC_REST_WEBHOOK_MESSAGE_EDIT_VERSION",
+        "DCC_REST_WEBHOOK_MESSAGE_QUERY_INIT",
+        "DCC_REST_WEBHOOK_MESSAGE_QUERY_PRESENT_THREAD_ID",
+        "DCC_REST_WEBHOOK_MESSAGE_QUERY_VERSION"
+      ],
+      "types": [
+        "dcc_rest_webhook_builder_t",
+        "dcc_rest_webhook_compat_payload_t",
+        "dcc_rest_webhook_execute_t",
+        "dcc_rest_webhook_message_edit_t",
+        "dcc_rest_webhook_message_query_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/webhooks.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_execute_webhook"
+      ],
+      "header": "dcc/rest/webhooks/execute.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/webhooks/management.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_create_webhook"
+      ],
+      "header": "dcc/rest/webhooks/management/create.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_delete_webhook"
+      ],
+      "header": "dcc/rest/webhooks/management/delete.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_channel_webhooks",
+        "dcc_rest_get_guild_webhooks",
+        "dcc_rest_get_webhook"
+      ],
+      "header": "dcc/rest/webhooks/management/fetch.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_modify_webhook"
+      ],
+      "header": "dcc/rest/webhooks/management/modify.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/rest/webhooks/messages.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_delete_webhook_message"
+      ],
+      "header": "dcc/rest/webhooks/messages/delete.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_modify_webhook_message"
+      ],
+      "header": "dcc/rest/webhooks/messages/edit.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_rest_get_webhook_message"
+      ],
+      "header": "dcc/rest/webhooks/messages/fetch.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_snowflake_created_at_ms",
+        "dcc_snowflake_created_at_unix_seconds",
+        "dcc_snowflake_parse",
+        "dcc_snowflake_parse_any",
+        "dcc_snowflake_parse_any_mention",
+        "dcc_snowflake_parse_channel_mention",
+        "dcc_snowflake_parse_len",
+        "dcc_snowflake_parse_member_mention",
+        "dcc_snowflake_parse_role_mention",
+        "dcc_snowflake_parse_user_mention"
+      ],
+      "header": "dcc/snowflake.h",
+      "inline": [],
+      "macros": [
+        "DCC_SNOWFLAKE_DISCORD_EPOCH_MS"
+      ],
+      "types": [
+        "dcc_snowflake_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_store_deinit",
+        "dcc_store_delete",
+        "dcc_store_file_open",
+        "dcc_store_file_open_options",
+        "dcc_store_get",
+        "dcc_store_get_u64",
+        "dcc_store_init",
+        "dcc_store_load_managed_message_ref",
+        "dcc_store_managed_message_binding_init",
+        "dcc_store_save_managed_message_ref",
+        "dcc_store_set",
+        "dcc_store_set_u64"
+      ],
+      "header": "dcc/store.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_store_file_options_t",
+        "dcc_store_managed_message_binding_t",
+        "dcc_store_options_t",
+        "dcc_store_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_task_group_cancel",
+        "dcc_task_group_cancel_and_wait",
+        "dcc_task_group_cancel_when",
+        "dcc_task_group_create",
+        "dcc_task_group_destroy",
+        "dcc_task_group_spawn",
+        "dcc_task_group_wait",
+        "dcc_task_group_wait_any",
+        "dcc_task_group_wait_any_and_cancel",
+        "dcc_task_group_wait_result"
+      ],
+      "header": "dcc/tasks.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_task_class_t",
+        "dcc_task_flag_t",
+        "dcc_task_group_t",
+        "dcc_task_group_wait_result_t",
+        "dcc_task_options_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_version_string"
+      ],
+      "header": "dcc/version.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/voice.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/voice/base.h",
+      "inline": [],
+      "macros": [
+        "DCC_VOICE_CLIENT_TYPEDEF"
+      ],
+      "types": [
+        "dcc_client_t",
+        "dcc_voice_client_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_voice_build_dave_mls_gateway_frame",
+        "dcc_voice_client_build_dave_invalid_commit_payload",
+        "dcc_voice_client_build_dave_mls_frame",
+        "dcc_voice_client_build_dave_transition_ready_payload",
+        "dcc_voice_client_dave_backend_available",
+        "dcc_voice_client_dave_enabled",
+        "dcc_voice_client_dave_stats",
+        "dcc_voice_client_dave_transition_id",
+        "dcc_voice_client_dave_transition_pending",
+        "dcc_voice_client_dave_version",
+        "dcc_voice_client_handle_gateway_binary_frame",
+        "dcc_voice_client_send_dave_invalid_commit_welcome",
+        "dcc_voice_client_send_dave_mls_commit_welcome",
+        "dcc_voice_client_send_dave_mls_key_package",
+        "dcc_voice_client_send_dave_transition_ready",
+        "dcc_voice_client_set_dave_enabled",
+        "dcc_voice_client_set_dave_mls_handler",
+        "dcc_voice_dave_mls_opcode_string",
+        "dcc_voice_parse_dave_mls_gateway_frame"
+      ],
+      "header": "dcc/voice/dave.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_voice_client_build_heartbeat_payload",
+        "dcc_voice_client_build_identify_payload",
+        "dcc_voice_client_build_resume_payload",
+        "dcc_voice_client_build_select_protocol_payload",
+        "dcc_voice_client_build_speaking_payload",
+        "dcc_voice_client_build_websocket_url",
+        "dcc_voice_client_receive_sequence",
+        "dcc_voice_client_run_websocket",
+        "dcc_voice_client_run_websocket_loop",
+        "dcc_voice_client_run_websocket_loop_url",
+        "dcc_voice_client_run_websocket_url",
+        "dcc_voice_client_set_receive_sequence",
+        "dcc_voice_client_start_websocket_loop",
+        "dcc_voice_client_stop_websocket_loop",
+        "dcc_voice_client_websocket_loop_running",
+        "dcc_voice_client_websocket_loop_status"
+      ],
+      "header": "dcc/voice/gateway.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_voice_client_apply_voice_server_update",
+        "dcc_voice_client_apply_voice_state",
+        "dcc_voice_client_channel_id",
+        "dcc_voice_client_clear_reconnect_request",
+        "dcc_voice_client_connect",
+        "dcc_voice_client_create",
+        "dcc_voice_client_destroy",
+        "dcc_voice_client_disconnect_session",
+        "dcc_voice_client_full_reconnect_requested",
+        "dcc_voice_client_handle_disconnect",
+        "dcc_voice_client_handle_gateway_frame",
+        "dcc_voice_client_health_snapshot",
+        "dcc_voice_client_health_snapshot_json",
+        "dcc_voice_client_health_snapshot_prometheus",
+        "dcc_voice_client_leave",
+        "dcc_voice_client_map_ssrc",
+        "dcc_voice_client_mark_session_active",
+        "dcc_voice_client_owner",
+        "dcc_voice_client_reconnect_action",
+        "dcc_voice_client_reconnect_requested",
+        "dcc_voice_client_session_active",
+        "dcc_voice_client_session_info",
+        "dcc_voice_client_session_ready",
+        "dcc_voice_client_session_state",
+        "dcc_voice_client_set_channel_id",
+        "dcc_voice_client_ssrc",
+        "dcc_voice_client_start_session",
+        "dcc_voice_client_stats",
+        "dcc_voice_client_unmap_ssrc",
+        "dcc_voice_client_user_for_ssrc",
+        "dcc_voice_client_wait_until_active",
+        "dcc_voice_client_wait_until_ready",
+        "dcc_voice_health_string",
+        "dcc_voice_opus_is_available",
+        "dcc_voice_reconnect_action_for_close_code",
+        "dcc_voice_reconnect_action_string",
+        "dcc_voice_session_state_string"
+      ],
+      "header": "dcc/voice/lifecycle.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_voice_client_clear_mixed_pcm",
+        "dcc_voice_client_clear_receive_reorder",
+        "dcc_voice_client_disable_opus",
+        "dcc_voice_client_enable_opus",
+        "dcc_voice_client_flush_mixed_pcm",
+        "dcc_voice_client_flush_receive_reorder",
+        "dcc_voice_client_mix_pcm",
+        "dcc_voice_client_mixed_source_count",
+        "dcc_voice_client_receive_combined_pcm",
+        "dcc_voice_client_receive_jitter_delay",
+        "dcc_voice_client_receive_jitter_timer_interval",
+        "dcc_voice_client_receive_jitter_timer_running",
+        "dcc_voice_client_receive_packets_dropped",
+        "dcc_voice_client_receive_packets_lost",
+        "dcc_voice_client_receive_pcm",
+        "dcc_voice_client_receive_reorder_window",
+        "dcc_voice_client_receive_rtp_packet",
+        "dcc_voice_client_receive_rtp_packet_at",
+        "dcc_voice_client_set_decoder",
+        "dcc_voice_client_set_encoder",
+        "dcc_voice_client_set_receive_jitter_delay",
+        "dcc_voice_client_set_receive_reorder_window",
+        "dcc_voice_client_start_receive_jitter_timer",
+        "dcc_voice_client_stop_receive_jitter_timer",
+        "dcc_voice_client_tick_receive_jitter"
+      ],
+      "header": "dcc/voice/media.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_voice_client_notify_buffer_send",
+        "dcc_voice_client_notify_disconnect",
+        "dcc_voice_client_notify_platform",
+        "dcc_voice_client_notify_ready",
+        "dcc_voice_client_notify_receive",
+        "dcc_voice_client_notify_receive_combined",
+        "dcc_voice_client_notify_speaking",
+        "dcc_voice_client_notify_track_marker"
+      ],
+      "header": "dcc/voice/notify.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [
+        "dcc_voice_client_connect_and_wait_until_ready",
+        "dcc_voice_connect_wait_options_init"
+      ],
+      "header": "dcc/voice/supervisor.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_voice_connect_wait_options_t",
+        "dcc_voice_connect_wait_result_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_voice_client_build_ip_discovery_packet",
+        "dcc_voice_client_clear_secret_key",
+        "dcc_voice_client_clear_send_queue",
+        "dcc_voice_client_connect_udp",
+        "dcc_voice_client_disconnect_udp",
+        "dcc_voice_client_discover_udp_ip",
+        "dcc_voice_client_drain_send_queue",
+        "dcc_voice_client_encryption_mode",
+        "dcc_voice_client_has_secret_key",
+        "dcc_voice_client_insert_marker",
+        "dcc_voice_client_packet_nonce",
+        "dcc_voice_client_rtp_sequence",
+        "dcc_voice_client_rtp_timestamp",
+        "dcc_voice_client_send_opus_packet",
+        "dcc_voice_client_send_pcm",
+        "dcc_voice_client_send_queue_size",
+        "dcc_voice_client_set_encryption_mode",
+        "dcc_voice_client_set_packet_nonce",
+        "dcc_voice_client_set_rtp_state",
+        "dcc_voice_client_set_secret_key",
+        "dcc_voice_client_skip_to_next_marker",
+        "dcc_voice_client_tracks_remaining",
+        "dcc_voice_client_udp_fd",
+        "dcc_voice_parse_ip_discovery_packet"
+      ],
+      "header": "dcc/voice/transport.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/voice/types.h",
+      "inline": [],
+      "macros": [],
+      "types": []
+    },
+    {
+      "external": [],
+      "header": "dcc/voice/types/codec.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_voice_opus_options_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/voice/types/dave.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_voice_dave_mls_frame_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/voice/types/enums.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_voice_client_platform_t",
+        "dcc_voice_dave_mls_opcode_t",
+        "dcc_voice_dave_version_t",
+        "dcc_voice_encryption_mode_t",
+        "dcc_voice_health_t",
+        "dcc_voice_opus_application_t",
+        "dcc_voice_reconnect_action_t",
+        "dcc_voice_session_state_t"
+      ]
+    },
+    {
+      "external": [],
+      "header": "dcc/voice/types/session.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_voice_client_stats_t",
+        "dcc_voice_dave_stats_t",
+        "dcc_voice_health_snapshot_t",
+        "dcc_voice_session_info_t"
+      ]
+    },
+    {
+      "external": [
+        "dcc_webhook_event_parse",
+        "dcc_webhook_event_type_from_string",
+        "dcc_webhook_event_type_name",
+        "dcc_webhook_events_add_route"
+      ],
+      "header": "dcc/webhook_events.h",
+      "inline": [],
+      "macros": [],
+      "types": [
+        "dcc_webhook_event_route_t",
+        "dcc_webhook_event_t",
+        "dcc_webhook_event_type_t"
+      ]
+    }
+  ],
+  "schema": 1,
+  "version": "2.0.0"
+}

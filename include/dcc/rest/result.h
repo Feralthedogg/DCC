@@ -8,6 +8,7 @@
 
 #include <dcc/error.h>
 #include <dcc/export.h>
+#include <dcc/snowflake.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -66,6 +67,36 @@ DCC_API dcc_status_t dcc_rest_result_clone(
 
 /** Releases a result returned by dcc_rest_result_clone(); NULL is allowed. */
 DCC_API void dcc_rest_result_free(dcc_rest_result_t *result);
+
+/** Extracts a top-level JSON snowflake field from a valid result body. */
+DCC_API dcc_status_t dcc_rest_result_snowflake_field(
+    const dcc_rest_result_t *result, const char *field_name, dcc_snowflake_t *out);
+/** Extracts a top-level JSON unsigned integer field. */
+DCC_API dcc_status_t dcc_rest_result_u64_field(
+    const dcc_rest_result_t *result, const char *field_name, uint64_t *out);
+/** Extracts a top-level JSON signed integer field. */
+DCC_API dcc_status_t dcc_rest_result_i64_field(
+    const dcc_rest_result_t *result, const char *field_name, int64_t *out);
+/** Extracts a top-level JSON boolean field. */
+DCC_API dcc_status_t dcc_rest_result_bool_field(
+    const dcc_rest_result_t *result, const char *field_name, int *out);
+/** Extracts a top-level JSON string including a terminator in `out_cap`. */
+DCC_API dcc_status_t dcc_rest_result_string_field(
+    const dcc_rest_result_t *result, const char *field_name,
+    char *out, size_t out_cap);
+/** Extracts a string and publishes its byte length. */
+DCC_API dcc_status_t dcc_rest_result_string_field_len(
+    const dcc_rest_result_t *result, const char *field_name,
+    char *out, size_t out_cap, size_t *out_len);
+/** Extracts the top-level message ID. */
+DCC_API dcc_status_t dcc_rest_result_message_id(
+    const dcc_rest_result_t *result, dcc_snowflake_t *out_message_id);
+/** Extracts the top-level channel ID. */
+DCC_API dcc_status_t dcc_rest_result_channel_id(
+    const dcc_rest_result_t *result, dcc_snowflake_t *out_channel_id);
+/** Extracts the top-level guild ID. */
+DCC_API dcc_status_t dcc_rest_result_guild_id(
+    const dcc_rest_result_t *result, dcc_snowflake_t *out_guild_id);
 
 #ifdef __cplusplus
 }

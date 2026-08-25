@@ -30,6 +30,36 @@ def main() -> int:
         version = ""
     else:
         version = match.group(1)
+        if version != "2.0.0":
+            errors.append(f"Stable release version must be exactly 2.0.0, found {version}")
+
+    if "SOVERSION ${PROJECT_VERSION_MAJOR}" not in cmake:
+        errors.append("shared library SOVERSION must follow ABI major 2")
+    if 'set(DCC_LLAM_REQUIRED_VERSION "2.2.0")' not in cmake:
+        errors.append("LLAM minimum must be the non-cache exact floor 2.2.0")
+    app_aggregate = read(source / "include/dcc/app.h")
+    app_includes = re.findall(r"#include <(dcc/app/[^>]+)>", app_aggregate)
+    expected_app = [
+        "dcc/app/base.h", "dcc/app/options.h", "dcc/app/lifecycle.h",
+        "dcc/app/listeners.h", "dcc/app/context.h", "dcc/app/modules.h",
+        "dcc/app/store.h", "dcc/app/env.h",
+    ]
+    if app_includes != expected_app:
+        errors.append(f"<dcc/app.h> must expose the exact eight-header sequence: {app_includes}")
+    dcc_aggregate = read(source / "include/dcc/dcc.h")
+    if "#include <dcc/bot.h>" not in dcc_aggregate:
+        errors.append("<dcc/dcc.h> must include <dcc/bot.h>")
+    if "dcc/sugar" in dcc_aggregate or "dcc/app/legacy.h" in dcc_aggregate:
+        errors.append("DCC 2 aggregate contains a removed compatibility edge")
+    if "DCC 2.0.0 Stable" not in read(source / "README.md"):
+        errors.append("README does not identify DCC 2.0.0 Stable")
+    if not (source / "docs/reference/api/index.md").is_file():
+        errors.append("generated DCC 2 API reference is missing")
+    if not (source / "tools/api_v2_symbols.txt").is_file():
+        errors.append("DCC 2 symbol baseline is missing")
+    workflow = read(source / ".github/workflows/release.yml")
+    if "- 'v2.0.0'" not in workflow or "prerelease: false" not in workflow:
+        errors.append("release workflow must publish only v2.0.0 as non-prerelease")
 
     generated = build / "generated/include/dcc/version_generated.h"
     if not generated.is_file():

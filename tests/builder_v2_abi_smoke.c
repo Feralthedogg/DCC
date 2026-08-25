@@ -8,6 +8,7 @@
 #include <dcc/message.h>
 #include <dcc/modal.h>
 #include <dcc/rest.h>
+#include <dcc/rest/core/async.h>
 
 #include "internal/app/dcc_app_internal.h"
 #include "internal/command_registry/dcc_command_registry_internal.h"

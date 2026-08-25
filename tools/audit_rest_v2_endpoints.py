@@ -4207,6 +4207,46 @@ def main() -> int:
         )
         return 0
 
+    cmake_text = (root / "CMakeLists.txt").read_text(encoding="utf-8")
+    if "VERSION 2.0.0" in cmake_text:
+        expected_generic = {
+            "dcc_rest_firewall_attach", "dcc_rest_firewall_check",
+            "dcc_rest_firewall_create", "dcc_rest_firewall_decision_string",
+            "dcc_rest_firewall_destroy", "dcc_rest_firewall_detach",
+            "dcc_rest_firewall_hard_limit_action_string",
+            "dcc_rest_firewall_options_validate", "dcc_rest_firewall_reason_string",
+            "dcc_rest_firewall_record_response", "dcc_rest_firewall_request_is_critical",
+            "dcc_rest_firewall_snapshot", "dcc_rest_firewall_snapshot_json",
+            "dcc_rest_firewall_state_snapshot", "dcc_rest_firewall_status_is_invalid",
+            "dcc_rest_method_name", "dcc_rest_request_cancel",
+            "dcc_rest_request_completed", "dcc_rest_request_destroy",
+            "dcc_rest_request_wait", "dcc_rest_result_bool_field",
+            "dcc_rest_result_channel_id", "dcc_rest_result_clone",
+            "dcc_rest_result_free", "dcc_rest_result_guild_id",
+            "dcc_rest_result_i64_field", "dcc_rest_result_message_id",
+            "dcc_rest_result_ok", "dcc_rest_result_snowflake_field",
+            "dcc_rest_result_status", "dcc_rest_result_string_field",
+            "dcc_rest_result_string_field_len", "dcc_rest_result_u64_field",
+            "dcc_rest_runtime_stats", "dcc_rest_submit",
+        }
+        baseline = set((root / "tools/api_v2_symbols.txt").read_text(encoding="utf-8").splitlines())
+        endpoints = {entry["canonical"] for entry in data["endpoints"]}
+        rest = {name for name in baseline if name.startswith("dcc_rest_")}
+        counts = Counter(entry["task"] for entry in data["endpoints"])
+        errors = []
+        if len(endpoints) != 224 or counts != Counter({6: 41, 7: 35, 8: 47, 9: 57, 10: 44}):
+            errors.append(f"canonical endpoint inventory differs: {len(endpoints)} {dict(counts)}")
+        if rest - endpoints != expected_generic:
+            errors.append("final generic REST inventory differs from exact 35-name set")
+        if len(rest) != 259:
+            errors.append(f"final exported REST declaration total is {len(rest)}, expected 259")
+        if errors:
+            print("DCC REST v2 endpoint audit failed:", file=sys.stderr)
+            print("- " + "\n- ".join(errors), file=sys.stderr)
+            return 1
+        print("DCC REST v2 endpoint audit passed (strict; 224 endpoints + 35 generic = 259)")
+        return 0
+
     errors = audit_state(data, root)
     if errors:
         print("DCC REST v2 endpoint audit failed:", file=sys.stderr)

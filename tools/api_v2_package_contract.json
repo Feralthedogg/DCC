@@ -1,0 +1,13 @@
+{
+  "c_standard": 11,
+  "cmake_package": "dcc",
+  "llam_abi_major": 2,
+  "llam_minimum": "2.2.0",
+  "pkg_config": {
+    "module": "dcc",
+    "name": "DCC"
+  },
+  "schema": 1,
+  "target": "dcc::dcc",
+  "version": "2.0.0"
+}

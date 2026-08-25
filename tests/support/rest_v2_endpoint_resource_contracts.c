@@ -6,6 +6,7 @@
 #include <dcc/rest/interactions.h>
 #include <dcc/rest/messages.h>
 #include <dcc/rest/request.h>
+#include <dcc/rest/core/async.h>
 #include <dcc/rest/webhooks.h>
 
 #include "internal/rest/dcc_rest_endpoint_internal.h"

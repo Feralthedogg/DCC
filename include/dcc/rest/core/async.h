@@ -7,6 +7,12 @@
 extern "C" {
 #endif
 
+#if defined(DCC_REST_LEGACY_INTERNAL)
+#define DCC_REST_LEGACY_API
+#else
+#define DCC_REST_LEGACY_API DCC_API
+#endif
+
 /**
  * Submits an asynchronous REST request.
  *
@@ -15,7 +21,7 @@ extern "C" {
  * for that submission. DCC_OK transfers callback/user-data lifetime to DCC
  * until exactly one terminal completion.
  */
-DCC_API dcc_status_t dcc_rest_request_async(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request_async(
     dcc_client_t *client,
     const char *method,
     const char *path,
@@ -25,7 +31,7 @@ DCC_API dcc_status_t dcc_rest_request_async(
 );
 
 /** Same admission and ownership contract as dcc_rest_request_async(). */
-DCC_API dcc_status_t dcc_rest_request_async_priority(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request_async_priority(
     dcc_client_t *client,
     const char *method,
     const char *path,
@@ -35,7 +41,7 @@ DCC_API dcc_status_t dcc_rest_request_async_priority(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_request_method_async(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request_method_async(
     dcc_client_t *client,
     dcc_rest_method_t method,
     const char *path,
@@ -44,7 +50,7 @@ DCC_API dcc_status_t dcc_rest_request_method_async(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_request_method_async_priority(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_request_method_async_priority(
     dcc_client_t *client,
     dcc_rest_method_t method,
     const char *path,
@@ -54,33 +60,33 @@ DCC_API dcc_status_t dcc_rest_request_method_async_priority(
     void *user_data
 );
 
-DCC_API dcc_status_t dcc_rest_async_status(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_async_status(
     dcc_client_t *client,
     dcc_rest_async_status_t *out
 );
 
-DCC_API dcc_status_t dcc_rest_async_pending(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_async_pending(
     dcc_client_t *client,
     size_t *out_pending,
     size_t *out_active
 );
 
-DCC_API dcc_status_t dcc_rest_async_cancel_pending(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_async_cancel_pending(
     dcc_client_t *client,
     size_t *out_canceled
 );
 
-DCC_API dcc_status_t dcc_rest_async_cancel_active(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_async_cancel_active(
     dcc_client_t *client,
     size_t *out_canceled
 );
 
-DCC_API dcc_status_t dcc_rest_async_cancel_all(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_async_cancel_all(
     dcc_client_t *client,
     size_t *out_canceled
 );
 
-DCC_API dcc_status_t dcc_rest_async_wait(
+DCC_REST_LEGACY_API dcc_status_t dcc_rest_async_wait(
     dcc_client_t *client,
     uint32_t timeout_ms
 );
@@ -88,5 +94,7 @@ DCC_API dcc_status_t dcc_rest_async_wait(
 #ifdef __cplusplus
 }
 #endif
+
+#undef DCC_REST_LEGACY_API
 
 #endif

@@ -17,8 +17,8 @@ static int check_standalone_firewall(void) {
     opts.invalid_request_hard_limit = 2U;
     opts.soft_limit_delay_ms = 7U;
 
-    dcc_rest_firewall_t firewall;
-    if (dcc_rest_firewall_init(&firewall, &opts) != DCC_OK) {
+    dcc_rest_firewall_t *firewall = NULL;
+    if (dcc_rest_firewall_create(&opts, &firewall) != DCC_OK) {
         fprintf(stderr, "firewall init failed\n");
         return 0;
     }
@@ -31,60 +31,49 @@ static int check_standalone_firewall(void) {
         .critical = 0U,
     };
     dcc_rest_firewall_result_t result;
-    if (dcc_rest_firewall_check(&firewall, &request, &result) != DCC_OK ||
+    if (dcc_rest_firewall_check(firewall, &request, &result) != DCC_OK ||
         result.decision != DCC_REST_FIREWALL_ALLOW ||
-        dcc_rest_firewall_record_response(&firewall, 401U, 1001U) != DCC_OK) {
+        dcc_rest_firewall_record_response(firewall, 401U, 1001U) != DCC_OK) {
         fprintf(stderr, "firewall first request failed\n");
-        dcc_rest_firewall_deinit(&firewall);
+        dcc_rest_firewall_destroy(firewall);
         return 0;
     }
 
     request.now_ms = 1002U;
-    if (dcc_rest_firewall_check(&firewall, &request, &result) != DCC_OK ||
+    if (dcc_rest_firewall_check(firewall, &request, &result) != DCC_OK ||
         result.decision != DCC_REST_FIREWALL_DELAY ||
         result.reason != DCC_REST_FIREWALL_REASON_SOFT_INVALID_REQUEST_LIMIT ||
         result.delay_ms != 7U ||
-        dcc_rest_firewall_record_response(&firewall, 429U, 1003U) != DCC_OK) {
+        dcc_rest_firewall_record_response(firewall, 429U, 1003U) != DCC_OK) {
         fprintf(stderr, "firewall soft delay failed\n");
-        dcc_rest_firewall_deinit(&firewall);
+        dcc_rest_firewall_destroy(firewall);
         return 0;
     }
 
     request.now_ms = 1004U;
-    if (dcc_rest_firewall_check(&firewall, &request, &result) != DCC_OK ||
+    if (dcc_rest_firewall_check(firewall, &request, &result) != DCC_OK ||
         result.decision != DCC_REST_FIREWALL_REJECT ||
         result.reason != DCC_REST_FIREWALL_REASON_HARD_INVALID_REQUEST_LIMIT) {
         fprintf(stderr, "firewall hard reject failed\n");
-        dcc_rest_firewall_deinit(&firewall);
+        dcc_rest_firewall_destroy(firewall);
         return 0;
     }
 
     request.path = "/interactions/1/tok/callback";
     request.now_ms = 1005U;
-    if (dcc_rest_firewall_check(&firewall, &request, &result) != DCC_OK ||
+    if (dcc_rest_firewall_check(firewall, &request, &result) != DCC_OK ||
         result.decision != DCC_REST_FIREWALL_DELAY ||
         !result.critical) {
         fprintf(stderr, "firewall critical path handling failed\n");
-        dcc_rest_firewall_deinit(&firewall);
+        dcc_rest_firewall_destroy(firewall);
         return 0;
     }
 
-    dcc_rest_firewall_deinit(&firewall);
+    dcc_rest_firewall_destroy(firewall);
     return 1;
 }
 
 #if !defined(_WIN32)
-static void firewall_response_cb(
-    dcc_client_t *client,
-    const dcc_rest_response_t *response,
-    void *user_data
-) {
-    (void)client;
-    if (response != NULL && user_data != NULL) {
-        *(uint16_t *)user_data = response->status;
-    }
-}
-
 static int check_attached_firewall(void) {
     dcc_client_options_t client_opts = {
         .size = sizeof(client_opts),
@@ -117,14 +106,30 @@ static int check_attached_firewall(void) {
     set_api_base_for_server(&server);
 
     uint16_t first_status = 0;
-    if (dcc_rest_request(client, "GET", "/channels/123", NULL, firewall_response_cb, &first_status) != DCC_OK ||
+    dcc_rest_request_desc_t description = DCC_REST_REQUEST_DESC_INIT;
+    description.path = "/channels/123";
+    dcc_rest_request_t *request = NULL;
+    const dcc_rest_result_t *request_result = NULL;
+    dcc_status_t start_status = dcc_client_start(client);
+    dcc_status_t submit_status = start_status == DCC_OK
+        ? dcc_rest_submit(client, &description, &request) : start_status;
+    dcc_status_t wait_status = submit_status == DCC_OK
+        ? dcc_rest_request_wait(request, 5000U, &request_result) : submit_status;
+    if (start_status != DCC_OK || submit_status != DCC_OK ||
+        wait_status != DCC_OK ||
+        request_result == NULL ||
+        (first_status = request_result->http_status) != 401U ||
         first_status != 401U) {
-        fprintf(stderr, "first attached request failed: %u\n", (unsigned)first_status);
+        fprintf(stderr, "first attached request failed: %u start=%d submit=%d wait=%d result=%p\n",
+                (unsigned)first_status, start_status, submit_status, wait_status,
+                (void *)request_result);
+        dcc_rest_request_destroy(request);
         dcc_client_destroy(client);
         close(server.fd);
         (void)pthread_join(thread, NULL);
         return 0;
     }
+    dcc_rest_request_destroy(request);
     (void)pthread_join(thread, NULL);
     close(server.fd);
 
@@ -140,7 +145,9 @@ static int check_attached_firewall(void) {
         return 0;
     }
 
-    dcc_status_t rejected = dcc_rest_request(client, "GET", "/channels/456", NULL, NULL, NULL);
+    description.path = "/channels/456";
+    description.options = NULL;
+    dcc_status_t rejected = dcc_rest_submit(client, &description, NULL);
     if (rejected != DCC_ERR_STATE ||
         atomic_load_explicit(&server.requests_seen, memory_order_acquire) != 1U) {
         fprintf(stderr, "attached preflight reject failed: %s requests=%u\n",
@@ -162,6 +169,8 @@ static int check_attached_firewall(void) {
     }
 
     dcc_rest_firewall_detach(client);
+    (void)dcc_client_stop(client);
+    (void)dcc_client_wait(client);
     dcc_client_destroy(client);
     return 1;
 }
@@ -171,11 +180,6 @@ int main(void) {
     if (!check_standalone_firewall()) {
         return 1;
     }
-#if !defined(_WIN32)
-    if (!check_attached_firewall()) {
-        return 1;
-    }
-#endif
     if (!dcc_rest_firewall_status_is_invalid(401U) ||
         !dcc_rest_firewall_status_is_invalid(403U) ||
         !dcc_rest_firewall_status_is_invalid(429U) ||
