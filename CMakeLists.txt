@@ -2565,6 +2565,11 @@ if(DCC_BUILD_TESTS)
     dcc_target_configure_hot_reload_module(
         dcc_hot_reload_isolated_module dcc_hot_reload_worker
     )
+    if(WIN32)
+        # PE/COFF modules cannot defer these host API references until load
+        # time the way ELF and Mach-O test modules do.
+        target_link_libraries(dcc_hot_reload_isolated_module PRIVATE dcc::dcc)
+    endif()
     set_target_properties(dcc_hot_reload_isolated_module PROPERTIES PREFIX "")
     dcc_target_enable_sanitizers(dcc_hot_reload_isolated_module)
 
