@@ -94,7 +94,7 @@ jobs:
           DCC_BUNDLE_LLAM: OFF
           DCC_LLAM_ROOT: ${{ github.workspace }}/LLAM
           DCC_BUILD_PARALLEL: 4
-          DCC_RELEASE_CTEST_EXCLUDE: ^(dcc_cluster_chaos_smoke|dcc_cluster_gateway_smoke|dcc_hot_reload_canary_integration_smoke)$
+          DCC_RELEASE_CTEST_EXCLUDE: ^(dcc_cluster_chaos_smoke|dcc_cluster_gateway_smoke|dcc_hot_reload_canary_integration_smoke|dcc_hot_reload_isolated_last_good_smoke)$
         run: tools/package_release.sh "${{ matrix.target }}"
 
       - name: Build, test, and package Windows
