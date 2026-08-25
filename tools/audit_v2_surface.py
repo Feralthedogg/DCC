@@ -67,6 +67,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def command_parts(command: str, label: str) -> list[str]:
+    direct = Path(command.strip().strip('"'))
+    if direct.is_file():
+        return [str(direct)]
     parts = shlex.split(command, posix=os.name != "nt")
     if not parts:
         raise ValueError(f"{label} compiler is not executable: {command}")
