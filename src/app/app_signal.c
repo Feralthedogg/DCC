@@ -138,7 +138,7 @@ dcc_status_t dcc_app_run_dotenv_defined_with_signals(
     const char *token_env,
     const dcc_app_definition_t *definition
 ) {
-    dcc_status_t status = dcc_app_load_dotenv();
+    dcc_status_t status = dcc_app_env_load_dotenv();
     if (status != DCC_OK && status != DCC_ERR_NOT_FOUND) return status;
     return dcc_app_run_from_env_defined_with_signals(token_env, definition);
 }

@@ -55,6 +55,27 @@ typedef void (*dcc_app_legacy_ready_fn)(dcc_app_t *app, const dcc_ready_event_t 
 typedef void (*dcc_app_legacy_message_fn)(dcc_app_t *app, const dcc_message_t *message, const dcc_event_t *event, void *user_data);
 typedef void (*dcc_app_legacy_message_command_fn)(dcc_app_t *app, const dcc_message_t *message, const char *args, const dcc_event_t *event, void *user_data);
 typedef void (*dcc_app_legacy_task_fn)(dcc_app_t *app, void *user_data);
+
+/** Transition wrapper for `dcc_app_env_load_file()`. */
+static inline dcc_status_t dcc_app_load_env_file(
+    const char *path,
+    uint8_t overwrite
+) {
+    return dcc_app_env_load_file(path, overwrite);
+}
+
+/** Transition wrapper for `dcc_app_env_load_dotenv()`. */
+static inline dcc_status_t dcc_app_load_dotenv(void) {
+    return dcc_app_env_load_dotenv();
+}
+
+/** Transition wrapper for `dcc_app_env_validate_requirements()`. */
+static inline dcc_status_t dcc_app_validate_env_requirements(
+    const dcc_app_env_requirement_t *requirements,
+    size_t count
+) {
+    return dcc_app_env_validate_requirements(requirements, count);
+}
 typedef void (*dcc_app_message_id_cb)(
     dcc_app_t *app,
     const dcc_rest_response_t *response,
@@ -582,8 +603,6 @@ DCC_API dcc_status_t dcc_app_select_typed(
     dcc_app_t *app,
     const dcc_app_typed_component_t *component
 );
-DCC_API dcc_status_t dcc_app_run_with_signals(dcc_app_t *app);
-
 DCC_API dcc_status_t dcc_app_auto_defer(dcc_app_t *app, uint64_t after_ms);
 DCC_API dcc_status_t dcc_app_auto_defer_ephemeral(dcc_app_t *app, uint64_t after_ms);
 DCC_API dcc_status_t dcc_app_disable_auto_defer(dcc_app_t *app);

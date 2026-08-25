@@ -53,6 +53,14 @@ DCC_API dcc_status_t dcc_app_wait(dcc_app_t *app);
 /** Starts and waits for an application. */
 DCC_API dcc_status_t dcc_app_run(dcc_app_t *app);
 
+/**
+ * Runs a borrowed application while handling SIGINT/SIGTERM on its owner thread.
+ *
+ * Only one signal monitor may be active. The function restores the caller's
+ * handlers before returning and reports the underlying run status.
+ */
+DCC_API dcc_status_t dcc_app_run_with_signals(dcc_app_t *app);
+
 #ifdef __cplusplus
 }
 #endif

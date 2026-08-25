@@ -47,8 +47,11 @@ typedef struct dcc_app_env_binding {
     dcc_intents_t fallback_intents;
 } dcc_app_env_binding_t;
 
-DCC_API dcc_status_t dcc_app_load_env_file(const char *path, uint8_t overwrite);
-DCC_API dcc_status_t dcc_app_load_dotenv(void);
+/** Loads environment assignments from `path`; input is borrowed for the call. */
+DCC_API dcc_status_t dcc_app_env_load_file(const char *path, uint8_t overwrite);
+
+/** Loads `.env`, overwriting existing values; a missing file is reported. */
+DCC_API dcc_status_t dcc_app_env_load_dotenv(void);
 DCC_API dcc_status_t dcc_app_env_get_token(const char *preferred_env, const char **out);
 DCC_API dcc_status_t dcc_app_env_get_string(const char *name, const char **out);
 DCC_API dcc_status_t dcc_app_env_get_string_or(
@@ -130,7 +133,8 @@ DCC_API dcc_status_t dcc_app_env_get_intents_or(
     dcc_intents_t *out
 );
 DCC_API dcc_status_t dcc_app_env_bind(const dcc_app_env_binding_t *bindings, size_t count);
-DCC_API dcc_status_t dcc_app_validate_env_requirements(
+/** Validates the borrowed requirement array without retaining its contents. */
+DCC_API dcc_status_t dcc_app_env_validate_requirements(
     const dcc_app_env_requirement_t *requirements,
     size_t count
 );

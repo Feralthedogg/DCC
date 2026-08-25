@@ -8,6 +8,7 @@
 #include <dcc/app/context.h>
 #include <dcc/app/modules.h>
 #include <dcc/app/store.h>
+#include <dcc/app/env.h>
 #include <dcc/app/legacy.h>
 
 #endif

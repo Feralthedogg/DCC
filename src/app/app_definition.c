@@ -33,41 +33,6 @@ static dcc_status_t dcc_app_definition_check_array(const void *items, size_t cou
     return items != NULL || count == 0U ? DCC_OK : DCC_ERR_INVALID_ARG;
 }
 
-dcc_status_t dcc_app_validate_env_requirements(
-    const dcc_app_env_requirement_t *requirements,
-    size_t count
-) {
-    if (requirements == NULL) {
-        return count == 0U ? DCC_OK : DCC_ERR_INVALID_ARG;
-    }
-
-    dcc_status_t status = DCC_OK;
-    for (size_t i = 0; i < count; ++i) {
-        const dcc_app_env_requirement_t *requirement = &requirements[i];
-        if (requirement->size < offsetof(dcc_app_env_requirement_t, name) +
-                sizeof(requirement->name) ||
-            requirement->name == NULL ||
-            requirement->name[0] == '\0') {
-            return DCC_ERR_INVALID_ARG;
-        }
-        const char *value = getenv(requirement->name);
-        if (value == NULL || value[0] == '\0') {
-            if (requirement->description != NULL && requirement->description[0] != '\0') {
-                fprintf(
-                    stderr,
-                    "[dcc] missing required env: %s (%s)\n",
-                    requirement->name,
-                    requirement->description
-                );
-            } else {
-                fprintf(stderr, "[dcc] missing required env: %s\n", requirement->name);
-            }
-            status = DCC_ERR_NOT_FOUND;
-        }
-    }
-    return status;
-}
-
 dcc_status_t dcc_app_validate_definition_env(const dcc_app_definition_t *definition) {
     if (definition == NULL) {
         return DCC_ERR_INVALID_ARG;
@@ -79,7 +44,7 @@ dcc_status_t dcc_app_validate_definition_env(const dcc_app_definition_t *definit
         )) {
         return DCC_OK;
     }
-    return dcc_app_validate_env_requirements(
+    return dcc_app_env_validate_requirements(
         definition->required_env,
         definition->required_env_count
     );
@@ -808,7 +773,7 @@ dcc_status_t dcc_app_run_dotenv_defined(
     const char *token_env,
     const dcc_app_definition_t *definition
 ) {
-    dcc_status_t status = dcc_app_load_dotenv();
+    dcc_status_t status = dcc_app_env_load_dotenv();
     if (status != DCC_OK && status != DCC_ERR_NOT_FOUND) {
         return status;
     }

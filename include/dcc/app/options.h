@@ -22,13 +22,17 @@ typedef struct dcc_app_command_sync_options {
 } dcc_app_command_sync_options_t;
 
 typedef struct dcc_app_options {
+    /** Caller-declared covered prefix; fields beyond `size` are not read. */
     size_t size;
+    /** Client inputs, including the token string, are borrowed during create. */
     dcc_client_options_t client;
+    /** Registry data and its nested strings are borrowed during create/sync. */
     dcc_command_registry_options_t command_registry;
     uint64_t auto_defer_after_ms;
     uint8_t auto_defer_ephemeral;
     dcc_app_command_sync_options_t command_sync;
     uint8_t command_sync_on_ready;
+    /** Store path is borrowed during application creation. */
     const char *store_file_path;
 } dcc_app_options_t;
 
