@@ -9,10 +9,9 @@ import subprocess
 import sys
 
 
-def run(audit: Path, source: Path, progress: int) -> subprocess.CompletedProcess[str]:
+def run(audit: Path, source: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(audit), "--source", str(source),
-         "--progress-through", str(progress)],
+        [sys.executable, str(audit), "--source", str(source)],
         check=False, capture_output=True, text=True, encoding="utf-8",
         errors="replace",
     )
@@ -25,7 +24,7 @@ def main() -> int:
     source = args.source.resolve()
     audit = source / "tools/audit_rest_v2_endpoints.py"
 
-    task9 = run(audit, source, 9)
+    task9 = run(audit, source)
     if task9.returncode != 0:
         print("Task 9 manifest migration failed:", file=sys.stderr)
         print(f"{task9.stdout}\n{task9.stderr}"[:20000], file=sys.stderr)

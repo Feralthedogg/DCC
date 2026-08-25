@@ -1348,12 +1348,9 @@ target_sources(dcc
         src/rest/rest_channel_permission_builders.c
         src/rest/rest_channel_positions.c
         src/rest/rest_channels.c
-        src/rest/rest_direct_messages.c
-        src/rest/rest_direct_messages_json.c
         src/rest/rest_application_emojis.c
         src/rest/rest_entitlements.c
         src/rest/rest_entitlements_test.c
-        src/rest/rest_entitlements_test_body.c
         src/rest/rest_endpoint_v2.c
         src/rest/rest_guild_emojis.c
         src/rest/rest_future_lifecycle.c
@@ -1362,7 +1359,8 @@ target_sources(dcc
         src/rest/rest_future_wait.c
         src/rest/rest_future_wait_channel.c
         src/rest/rest_gateway.c
-        src/rest/rest_official_surface.c
+    src/rest/rest_official_surface.c
+    src/rest/rest_official_task10.c
         src/rest/rest_group_dms.c
         src/rest/rest_header_parse.c
         src/rest/rest_headers.c
@@ -1448,7 +1446,8 @@ target_sources(dcc
         src/rest/rest_request_handle.c
         src/rest/rest_submit.c
         src/rest/rest_task8_core.c
-        src/rest/rest_task9_core.c
+    src/rest/rest_task9_core.c
+    src/rest/rest_task10_core.c
         src/rest/rest_task8_queries.c
         src/rest/rest_task8_member_role_bodies.c
         src/rest/rest_task8_guild_bodies.c
@@ -1461,10 +1460,7 @@ target_sources(dcc
         src/rest/rest_route_fingerprint.c
         src/rest/rest_request_url.c
         src/rest/rest_role_connections.c
-        src/rest/rest_role_connections_key.c
-        src/rest/rest_role_connections_metadata_builder.c
         src/rest/rest_role_connections_user.c
-        src/rest/rest_role_connections_user_builder.c
         src/rest/rest_role_body.c
         src/rest/rest_roles_create.c
         src/rest/rest_roles_delete.c
@@ -1491,7 +1487,6 @@ target_sources(dcc
         src/rest/rest_users_dms.c
         src/rest/rest_users.c
         src/rest/rest_voice_regions.c
-        src/rest/rest_voice_state_body.c
         src/rest/rest_voice_states_current_user.c
         src/rest/rest_voice_states_user.c
         src/rest/rest_webhook_execute.c
@@ -2018,7 +2013,6 @@ if(DCC_BUILD_TESTS)
         COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_rest_v2_endpoints.py
             --source ${CMAKE_CURRENT_SOURCE_DIR}
-            --progress-through 9
     )
     set_tests_properties(dcc_rest_v2_endpoint_manifest_audit PROPERTIES
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

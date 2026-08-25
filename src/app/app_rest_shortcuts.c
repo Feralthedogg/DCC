@@ -26,7 +26,6 @@
 #include <dcc/rest/messages/edit.h>
 #include <dcc/rest/messages/pins.h>
 #include <dcc/rest/messages/reactions.h>
-#include <dcc/rest/resources/direct_messages.h>
 #include <dcc/rest/resources/entitlements.h>
 #include <dcc/rest/resources/gateway.h>
 #include <dcc/rest/resources/group_dms.h>
@@ -332,7 +331,14 @@ dcc_status_t dcc_app_modify_current_user_voice_state_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_current_user_voice_state_params(dcc_app_client(app), params, cb, user_data);
+    dcc_current_user_voice_state_params_t typed = DCC_CURRENT_USER_VOICE_STATE_PARAMS_INIT;
+    if (params->channel_id != 0U) { typed.present |= DCC_VOICE_STATE_PRESENT_CHANNEL_ID; typed.channel_id = params->channel_id; }
+    typed.present |= DCC_VOICE_STATE_PRESENT_SUPPRESS;
+    typed.suppress = params->suppress;
+    if (params->request_to_speak_timestamp != NULL) { typed.present |= DCC_VOICE_STATE_PRESENT_REQUEST_TO_SPEAK_TIMESTAMP; typed.request_to_speak_timestamp = params->request_to_speak_timestamp; }
+    DCC_ENDPOINT_LEGACY_RETURN(cb, user_data,
+        dcc_rest_modify_current_user_voice_state, dcc_app_client(app),
+        params->guild_id, &typed);
 }
 
 dcc_status_t dcc_app_get_user_voice_state(
@@ -371,7 +377,12 @@ dcc_status_t dcc_app_modify_user_voice_state_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_user_voice_state_params(dcc_app_client(app), params, cb, user_data);
+    dcc_user_voice_state_params_t typed = DCC_USER_VOICE_STATE_PARAMS_INIT;
+    if (params->channel_id != 0U) { typed.present |= DCC_VOICE_STATE_PRESENT_CHANNEL_ID; typed.channel_id = params->channel_id; }
+    typed.present |= DCC_VOICE_STATE_PRESENT_SUPPRESS;
+    typed.suppress = params->suppress;
+    DCC_ENDPOINT_LEGACY_RETURN(cb, user_data, dcc_rest_modify_user_voice_state,
+        dcc_app_client(app), params->guild_id, params->user_id, &typed);
 }
 
 dcc_status_t dcc_app_get_voice_regions(

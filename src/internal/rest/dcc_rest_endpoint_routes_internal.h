@@ -83,7 +83,6 @@
 #define DCC_REST_ROUTE_DPP_CURRENT_USER_CONNECTIONS_GET "/users/@me/connections"
 #define DCC_REST_ROUTE_DPP_CURRENT_USER_EDIT "/users/@me"
 #define DCC_REST_ROUTE_DPP_CURRENT_USER_GET "/users/@me"
-#define DCC_REST_ROUTE_DPP_CURRENT_USER_GET_DMS "/users/@me/channels"
 #define DCC_REST_ROUTE_DPP_CURRENT_USER_GET_GUILDS "/users/@me/guilds"
 #define DCC_REST_ROUTE_DPP_CURRENT_USER_GET_VOICE_STATE "/guilds/%llu/voice-states/@me"
 #define DCC_REST_ROUTE_DPP_CURRENT_USER_JOIN_THREAD "/channels/%llu/thread-members/@me"

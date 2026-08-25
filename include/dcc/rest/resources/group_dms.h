@@ -11,24 +11,17 @@ DCC_API dcc_status_t dcc_rest_add_group_dm_recipient(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t user_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-);
-
-DCC_API dcc_status_t dcc_rest_add_group_dm_recipient_params(
-    dcc_client_t *client,
     const dcc_group_dm_recipient_params_t *params,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 DCC_API dcc_status_t dcc_rest_remove_group_dm_recipient(
     dcc_client_t *client,
     dcc_snowflake_t channel_id,
     dcc_snowflake_t user_id,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 #ifdef __cplusplus

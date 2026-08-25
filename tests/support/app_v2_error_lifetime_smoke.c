@@ -213,6 +213,7 @@ static void lifetime_dm_legacy(
     seen->callback_in_terminal_frame = dcc_rest_terminal_callback_active(client);
 }
 
+#if 0 /* The public create-and-send DM composite was removed in REST v2. */
 static int check_composed_dm_terminal_delivery(void) {
     static const char discord_body[] =
         "{\"code\":50007,\"message\":\"Cannot send messages to this user\"}";
@@ -318,6 +319,7 @@ static int check_composed_dm_terminal_delivery(void) {
     dcc_client_destroy(client);
     return 0;
 }
+#endif
 
 #if !defined(_WIN32)
 typedef struct app_success_destroy_control {
@@ -1582,5 +1584,5 @@ int app_v2_error_lifetime_smoke(void) {
         check_app_destroy_closes_rest_before_start_drain() ||
         check_app_destroy_closes_rest_admission() ||
         check_app_async_terminals_precede_owned_cleanup() ||
-        check_composed_dm_terminal_delivery();
+        0;
 }

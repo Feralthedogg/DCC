@@ -113,7 +113,7 @@ int run_public_rest_wrapper_expect_users_threads_smoke(dcc_client_t *client) {
                     "get_entitlements",
                     call_rest_get_entitlements,
                     "GET",
-                    "/applications/123/entitlements?limit=2&user_id=444",
+                    "/applications/123/entitlements?user_id=444&limit=2",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(
@@ -121,7 +121,7 @@ int run_public_rest_wrapper_expect_users_threads_smoke(dcc_client_t *client) {
                     "get_entitlements_page",
                     call_rest_get_entitlements_page,
                     "GET",
-                    "/applications/123/entitlements?user_id=444&sku_ids=555%2C556&before_id=111&after_id=222&limit=25&guild_id=333&exclude_ended=true",
+                    "/applications/123/entitlements?user_id=444&sku_ids=555,556&before=111&after=222&limit=25&guild_id=333&exclude_ended=true",
                     NULL
                 ) != 0 ||
         run_public_rest_wrapper_expect(

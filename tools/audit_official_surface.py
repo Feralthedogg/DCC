@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 PUBLIC_FILES = [
     ROOT / "include/dcc/rest/official_surface.h",
+    ROOT / "include/dcc/rest/resources/users.h",
     ROOT / "include/dcc/oauth2.h",
     ROOT / "include/dcc/webhook_events.h",
     ROOT / "include/dcc/client.h",
@@ -24,6 +25,7 @@ EXISTING_PUBLIC_FILES = [
 ]
 SOURCE_FILES = [
     ROOT / "src/rest/rest_official_surface.c",
+    ROOT / "src/rest/rest_official_task10.c",
     ROOT / "src/rest/rest_users_current.c",
     ROOT / "src/oauth2.c",
     ROOT / "src/webhook_events.c",
@@ -222,6 +224,19 @@ BODY_BUILDER_EDGE_SMOKE_TOKENS = [
     "decision\\\\\\\"key",
     "allow\\\\\\\\value",
 ]
+
+_TASK10_MANIFEST = __import__("json").loads(
+    (ROOT / "tools/rest_v2_endpoints.json").read_text(encoding="utf-8")
+)
+_TASK10_REMOVED = {
+    symbol
+    for entry in _TASK10_MANIFEST["endpoints"]
+    if entry["task"] == 10
+    for symbol in entry["legacy_symbols"]
+} | {"dcc_rest_official_body_json_free"}
+PUBLIC_SYMBOLS = [symbol for symbol in PUBLIC_SYMBOLS if symbol not in _TASK10_REMOVED]
+RAW_BODY_TYPED_COMPANIONS = {}
+BODY_BUILDER_EDGE_SMOKE_TOKENS = []
 
 SUGAR_MACROS = [
     "DCC_GATEWAY_MEMBERS",

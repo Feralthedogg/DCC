@@ -1,6 +1,7 @@
 #ifndef DCC_REST_TYPES_H
 #define DCC_REST_TYPES_H
 
+#include <dcc/rest/types/string_map.h>
 #include <dcc/rest/types/stage.h>
 #include <dcc/rest/types/roles.h>
 #include <dcc/rest/types/guilds.h>

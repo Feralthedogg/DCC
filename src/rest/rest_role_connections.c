@@ -1,59 +1,57 @@
-#include "internal/rest/dcc_rest_builders_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
-#include "internal/rest/dcc_rest_request_internal.h"
-
-#include <stdlib.h>
+#include "internal/rest/dcc_rest_task10_internal.h"
 
 dcc_status_t dcc_rest_get_application_role_connection_metadata(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[112];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/applications/%llu/role-connections/metadata",
-        (unsigned long long)application_id
-    );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_GET, path, NULL, cb, user_data) : status;
+    dcc_client_t *client, dcc_snowflake_t application_id,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  (void)DCC_ENDPOINT_PATH_PUBLIC;
+  DCC_ENDPOINT_CONTRACT(
+      DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+      DCC_REST_ROUTE_DPP_APPLICATION_ROLE_CONNECTION_GET, DCC_REST_GET);
+  dcc_rest_call_options_t resolved;
+  dcc_status_t status =
+      dcc_task10_prepare(client, options, DCC_ENDPOINT_AUTH_POLICY_BOT, 0U,
+                         out_request, &resolved);
+  if (status != DCC_OK || application_id == 0U)
+    return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+  char path[112];
+  status = dcc_rest_format_path(
+      path, sizeof(path), DCC_REST_ROUTE_DPP_APPLICATION_ROLE_CONNECTION_GET,
+      (unsigned long long)application_id);
+  return status == DCC_OK
+             ? dcc_task10_submit_empty(
+                   client, "dcc_rest_get_application_role_connection_metadata",
+                   DCC_REST_GET, path, &resolved, out_request)
+             : status;
 }
 
 dcc_status_t dcc_rest_update_application_role_connection_metadata(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    const char *json_body,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[112];
-    dcc_status_t status = dcc_rest_format_path(
-        path,
-        sizeof(path),
-        "/applications/%llu/role-connections/metadata",
-        (unsigned long long)application_id
-    );
-    return status == DCC_OK ? dcc_rest_request_method(client, DCC_REST_PUT, path, json_body, cb, user_data) : status;
-}
-
-dcc_status_t dcc_rest_update_application_role_connection_metadata_params(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
+    dcc_client_t *client, dcc_snowflake_t application_id,
     const dcc_application_role_connection_metadata_params_t *metadata,
-    size_t metadata_count,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char *body = NULL;
-    dcc_status_t status = dcc_rest_build_application_role_connection_metadata_body(
-        metadata,
-        metadata_count,
-        &body
-    );
-    if (status == DCC_OK) {
-        status = dcc_rest_update_application_role_connection_metadata(client, application_id, body, cb, user_data);
-    }
-    free(body);
-    return status;
+    size_t metadata_count, const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request) {
+  (void)DCC_ENDPOINT_PATH_PUBLIC;
+  DCC_ENDPOINT_CONTRACT(
+      DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+      DCC_REST_ROUTE_DPP_APPLICATION_ROLE_CONNECTION_UPDATE, DCC_REST_PUT);
+  dcc_rest_call_options_t resolved;
+  dcc_status_t status =
+      dcc_task10_prepare(client, options, DCC_ENDPOINT_AUTH_POLICY_BOT, 0U,
+                         out_request, &resolved);
+  if (status != DCC_OK || application_id == 0U)
+    return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+  char path[112];
+  char *body = NULL;
+  status = dcc_rest_format_path(
+      path, sizeof(path), DCC_REST_ROUTE_DPP_APPLICATION_ROLE_CONNECTION_UPDATE,
+      (unsigned long long)application_id);
+  if (status == DCC_OK)
+    status = dcc_task10_build_role_metadata(metadata, metadata_count, &body);
+  return status == DCC_OK
+             ? dcc_task10_submit(
+                   client,
+                   "dcc_rest_update_application_role_connection_metadata",
+                   DCC_REST_PUT, path, body, &resolved, out_request)
+             : status;
 }

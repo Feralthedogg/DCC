@@ -1,58 +1,50 @@
-#include "internal/rest/dcc_rest_buffer_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
-#include "internal/rest/dcc_rest_query_collections_internal.h"
-#include "internal/rest/dcc_rest_request_internal.h"
+#include "internal/rest/dcc_rest_task10_internal.h"
 
-dcc_status_t dcc_rest_get_entitlements(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    const char *query,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    char path[96];
-    dcc_status_t status = dcc_rest_format_path(path, sizeof(path), "/applications/%llu/entitlements", (unsigned long long)application_id);
-    return status == DCC_OK ? dcc_rest_request_with_query(client, DCC_REST_GET, path, query, NULL, cb, user_data) : status;
-}
+#include <stdlib.h>
+#include <string.h>
 
-dcc_status_t dcc_rest_get_entitlements_page(
-    dcc_client_t *client,
-    dcc_snowflake_t application_id,
-    dcc_snowflake_t user_id,
-    const dcc_snowflake_t *sku_ids,
-    size_t sku_id_count,
-    dcc_snowflake_t before_id,
-    dcc_snowflake_t after_id,
-    uint8_t limit,
-    dcc_snowflake_t guild_id,
-    uint8_t exclude_ended,
-    dcc_rest_cb cb,
-    void *user_data
-) {
-    dcc_rest_buffer_t query = {0};
-    uint8_t effective_limit = limit != 0 ? limit : 100U;
-    dcc_status_t status = dcc_rest_query_append_u64(&query, "user_id", user_id);
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_snowflake_csv(&query, "sku_ids", sku_ids, sku_id_count);
+dcc_status_t
+dcc_rest_get_entitlements(dcc_client_t *client, dcc_snowflake_t application_id,
+                          const dcc_rest_entitlement_query_t *query,
+                          const dcc_rest_call_options_t *options,
+                          dcc_rest_request_t **out_request) {
+  (void)DCC_ENDPOINT_PATH_PUBLIC;
+  DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT,
+                        DCC_ENDPOINT_AUDIT_REASON_DENIED,
+                        DCC_REST_ROUTE_DPP_ENTITLEMENTS_GET, DCC_REST_GET);
+  dcc_rest_call_options_t resolved;
+  dcc_status_t status =
+      dcc_task10_prepare(client, options, DCC_ENDPOINT_AUTH_POLICY_BOT, 0U,
+                         out_request, &resolved);
+  if (status != DCC_OK || application_id == 0U)
+    return status != DCC_OK ? status : DCC_ERR_INVALID_ARG;
+  char base[96];
+  char *query_text = NULL;
+  char *path = NULL;
+  status = dcc_rest_format_path(base, sizeof(base),
+                                DCC_REST_ROUTE_DPP_ENTITLEMENTS_GET,
+                                (unsigned long long)application_id);
+  if (status == DCC_OK)
+    status = dcc_task10_entitlement_query(query, &query_text);
+  if (status == DCC_OK) {
+    size_t a = strlen(base), b = query_text != NULL ? strlen(query_text) : 0U;
+    path = malloc(a + b + 1U);
+    if (path == NULL)
+      status = DCC_ERR_NOMEM;
+    else {
+      memcpy(path, base, a);
+      if (b)
+        memcpy(path + a, query_text, b);
+      path[a + b] = '\0';
     }
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_u64(&query, "before_id", before_id);
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_u64(&query, "after_id", after_id);
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_u64(&query, "limit", effective_limit);
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_u64(&query, "guild_id", guild_id);
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_query_append_bool(&query, "exclude_ended", exclude_ended);
-    }
-    if (status == DCC_OK) {
-        status = dcc_rest_get_entitlements(client, application_id, query.data, cb, user_data);
-    }
-    dcc_rest_buffer_deinit(&query);
-    return status;
+  }
+  free(query_text);
+  if (status == DCC_OK)
+    status =
+        dcc_task10_submit_empty(client, "dcc_rest_get_entitlements",
+                                DCC_REST_GET, path, &resolved, out_request);
+  free(path);
+  return status;
 }

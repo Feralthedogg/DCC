@@ -1558,7 +1558,7 @@ DCC_API dcc_status_t dcc_app_get_guild_scheduled_event_users_page(
 DCC_API dcc_status_t dcc_app_managed_message_publish_latest(
     dcc_app_t *app,
     const dcc_managed_message_options_t *options,
-    dcc_managed_message_publish_cb cb,
+    dcc_managed_message_publish_fn cb,
     void *user_data
 );
 DCC_API dcc_status_t dcc_app_managed_message_publish_latest_store(
@@ -1566,7 +1566,7 @@ DCC_API dcc_status_t dcc_app_managed_message_publish_latest_store(
     const char *key,
     dcc_snowflake_t channel_id,
     const dcc_message_builder_t *message,
-    dcc_managed_message_publish_cb cb,
+    dcc_managed_message_publish_fn cb,
     void *user_data
 );
 DCC_API dcc_status_t dcc_app_wait_for_interaction(

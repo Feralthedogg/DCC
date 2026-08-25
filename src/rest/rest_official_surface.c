@@ -7,8 +7,8 @@
 #include "internal/rest/dcc_rest_paths_internal.h"
 #include "internal/rest/dcc_rest_request_core_internal.h"
 #include "internal/rest/dcc_rest_request_internal.h"
-#include "internal/rest/dcc_rest_task9_internal.h"
 #include "internal/rest/dcc_rest_task8_internal.h"
+#include "internal/rest/dcc_rest_task9_internal.h"
 
 #include <dcc/rest/official_surface.h>
 
@@ -68,6 +68,7 @@ static dcc_status_t dcc_rest_json_append_escaped_key_string_member(
   return status;
 }
 
+#if 0 /* Task 10 removed legacy application/soundboard serializers. */
 static int dcc_rest_string_array_valid(const char *const *values, size_t count,
                                        size_t max_count, size_t max_len) {
   if (count > max_count || (count != 0 && values == NULL)) {
@@ -332,7 +333,7 @@ dcc_status_t dcc_rest_modify_current_application_params(
   if (status == DCC_OK) {
     status = dcc_rest_modify_current_application(client, json, cb, user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
 
@@ -416,7 +417,7 @@ dcc_status_t dcc_rest_send_soundboard_sound_params(
     status =
         dcc_rest_send_soundboard_sound(client, channel_id, json, cb, user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
 
@@ -426,6 +427,7 @@ dcc_status_t dcc_rest_get_default_soundboard_sounds(dcc_client_t *client,
   return dcc_rest_request_method(
       client, DCC_REST_GET, "/soundboard-default-sounds", NULL, cb, user_data);
 }
+#endif
 
 dcc_status_t dcc_rest_get_guild_soundboard_sounds(
     dcc_client_t *client, dcc_snowflake_t guild_id,
@@ -553,6 +555,7 @@ dcc_status_t dcc_rest_delete_guild_soundboard_sound(
       path, NULL, &resolved, out_request);
 }
 
+#if 0 /* Task 10 removed raw subscription query overloads. */
 dcc_status_t dcc_rest_get_sku_subscriptions(dcc_client_t *client,
                                             dcc_snowflake_t sku_id,
                                             const char *query, dcc_rest_cb cb,
@@ -581,6 +584,7 @@ dcc_status_t dcc_rest_get_sku_subscription(dcc_client_t *client,
                                                     NULL, cb, user_data)
                           : status;
 }
+#endif
 
 dcc_status_t
 dcc_rest_bulk_ban_guild_members(dcc_client_t *client, dcc_snowflake_t guild_id,
@@ -741,8 +745,6 @@ dcc_status_t dcc_rest_modify_guild_incident_actions(
       path, json, &resolved, out_request);
 }
 
-void dcc_rest_official_body_json_free(char *json) { free(json); }
-
 static dcc_status_t dcc_rest_invite_path(char *path, size_t path_size,
                                          const char *format,
                                          const char *invite_code) {
@@ -852,6 +854,7 @@ dcc_status_t dcc_rest_get_invite_target_users_job_status(
              : status;
 }
 
+#if 0 /* Task 10 replaced the legacy callback endpoint. */
 dcc_status_t dcc_rest_get_entitlement(dcc_client_t *client,
                                       dcc_snowflake_t application_id,
                                       dcc_snowflake_t entitlement_id,
@@ -868,22 +871,28 @@ dcc_status_t dcc_rest_get_entitlement(dcc_client_t *client,
                                                     NULL, cb, user_data)
                           : status;
 }
+#endif
 
-dcc_status_t dcc_rest_get_sticker_pack(
-    dcc_client_t *client,
-    dcc_snowflake_t pack_id,
-    const dcc_rest_call_options_t *options,
-    dcc_rest_request_t **out_request
-) {
+dcc_status_t dcc_rest_get_sticker_pack(dcc_client_t *client,
+                                       dcc_snowflake_t pack_id,
+                                       const dcc_rest_call_options_t *options,
+                                       dcc_rest_request_t **out_request) {
   (void)DCC_ENDPOINT_PATH_PUBLIC;
-  DCC_ENDPOINT_CONTRACT(DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
-                        DCC_REST_ROUTE_DCC_DCC_REST_GET_STICKER_PACK, DCC_REST_GET);
-  if (out_request != NULL) *out_request = NULL;
+  DCC_ENDPOINT_CONTRACT(
+      DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+      DCC_REST_ROUTE_DCC_DCC_REST_GET_STICKER_PACK, DCC_REST_GET);
+  if (out_request != NULL)
+    *out_request = NULL;
   char path[256];
-  dcc_status_t status = dcc_rest_format_path(path, sizeof(path), DCC_REST_ROUTE_DCC_DCC_REST_GET_STICKER_PACK, (unsigned long long)pack_id);
-  if (status != DCC_OK) { return status; }
-  status = dcc_task9_submit_owned(client, "dcc_rest_get_sticker_pack", DCC_REST_GET,
-      path, NULL, 0U, NULL, options, DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
+  dcc_status_t status = dcc_rest_format_path(
+      path, sizeof(path), DCC_REST_ROUTE_DCC_DCC_REST_GET_STICKER_PACK,
+      (unsigned long long)pack_id);
+  if (status != DCC_OK) {
+    return status;
+  }
+  status = dcc_task9_submit_owned(
+      client, "dcc_rest_get_sticker_pack", DCC_REST_GET, path, NULL, 0U, NULL,
+      options, DCC_ENDPOINT_AUTH_POLICY_BOT, DCC_ENDPOINT_AUDIT_REASON_DENIED,
       out_request);
   return status;
 }
@@ -914,6 +923,7 @@ dcc_status_t dcc_rest_get_current_user_guild_member(
              : status;
 }
 
+#if 0 /* Task 10 replaced the legacy callback endpoint. */
 dcc_status_t dcc_rest_delete_current_user_application_role_connection(
     dcc_client_t *client, dcc_snowflake_t application_id, dcc_rest_cb cb,
     void *user_data) {
@@ -925,6 +935,7 @@ dcc_status_t dcc_rest_delete_current_user_application_role_connection(
                                                     path, NULL, cb, user_data)
                           : status;
 }
+#endif
 
 dcc_status_t dcc_rest_execute_webhook_slack(
     dcc_client_t *client, dcc_snowflake_t webhook_id, const char *webhook_token,
@@ -1002,6 +1013,7 @@ dcc_status_t dcc_rest_execute_webhook_github(
   return status;
 }
 
+#if 0 /* Task 10 removed the raw lobby API and its public body builders. */
 dcc_status_t dcc_rest_create_lobby(dcc_client_t *client, const char *json_body,
                                    dcc_rest_cb cb, void *user_data) {
   return dcc_rest_request_method(client, DCC_REST_POST, "/lobbies", json_body,
@@ -1138,7 +1150,7 @@ dcc_status_t dcc_rest_create_lobby_params(dcc_client_t *client,
   if (status == DCC_OK) {
     status = dcc_rest_create_lobby(client, json, cb, user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
 
@@ -1197,7 +1209,7 @@ dcc_status_t dcc_rest_create_or_join_lobby_params(
   if (status == DCC_OK) {
     status = dcc_rest_create_or_join_lobby(client, json, cb, user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
 
@@ -1233,7 +1245,7 @@ dcc_status_t dcc_rest_modify_lobby_params(dcc_client_t *client,
   if (status == DCC_OK) {
     status = dcc_rest_modify_lobby(client, lobby_id, json, cb, user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
 
@@ -1309,7 +1321,7 @@ dcc_status_t dcc_rest_add_lobby_member_params(
     status = dcc_rest_add_lobby_member(client, lobby_id, user_id, json, cb,
                                        user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
 
@@ -1404,7 +1416,7 @@ dcc_status_t dcc_rest_bulk_update_lobby_members_params(
     status = dcc_rest_bulk_update_lobby_members(client, lobby_id, json, cb,
                                                 user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
 
@@ -1488,7 +1500,7 @@ dcc_status_t dcc_rest_link_lobby_channel_params(
   if (status == DCC_OK) {
     status = dcc_rest_link_lobby_channel(client, lobby_id, json, cb, user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
 
@@ -1558,7 +1570,7 @@ dcc_status_t dcc_rest_send_lobby_message_params(
   if (status == DCC_OK) {
     status = dcc_rest_send_lobby_message(client, lobby_id, json, cb, user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
 
@@ -1652,9 +1664,10 @@ dcc_status_t dcc_rest_update_lobby_message_moderation_metadata_params(
     status = dcc_rest_update_lobby_message_moderation_metadata(
         client, lobby_id, message_id, json, cb, user_data);
   }
-  dcc_rest_official_body_json_free(json);
+  free(json);
   return status;
 }
+#endif
 
 dcc_status_t dcc_rest_create_lobby_channel_invite_for_self(
     dcc_client_t *client, dcc_snowflake_t lobby_id,

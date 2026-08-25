@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter, defaultdict
 from dataclasses import dataclass
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -17,6 +18,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "tools/rest_v2_endpoints.json"
 ROUTE_DEFINITION_HEADER = "src/internal/rest/dcc_rest_endpoint_routes_internal.h"
+APP_MIRROR_BASELINE = "tools/rest_v2_task10_app_mirrors.txt"
+APP_MIRROR_DIGEST = "4b3246e7c89911bba7bf3256b1021294845aae343e8a6f32580fcd116e6a660f"
 
 TOP_LEVEL_FIELDS = frozenset({
     "schema_version", "generic_operations", "transition_helpers",
@@ -722,7 +725,6 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, default=ROOT)
     parser.add_argument("--manifest", type=Path)
-    parser.add_argument("--progress-through", type=int, choices=range(6, 11))
     parser.add_argument("--self-test", action="store_true")
     return parser.parse_args()
 
@@ -2539,20 +2541,104 @@ def sensitive_transport_contract_errors(root: Path) -> list[str]:
     return errors
 
 
+def app_mirror_freeze_errors(root: Path) -> list[str]:
+    errors: list[str] = []
+    baseline_path = root / APP_MIRROR_BASELINE
+    try:
+        rows = [line.split("\t") for line in baseline_path.read_text(encoding="utf-8").splitlines()]
+    except OSError as exc:
+        return [f"App mirror baseline cannot be read: {exc}"]
+    if any(len(row) != 2 for row in rows):
+        return ["App mirror baseline rows must be SYMBOL<TAB>SOURCE"]
+    expected = {symbol: source for symbol, source in rows}
+    if len(rows) != 196 or len(expected) != 196:
+        errors.append(
+            f"App mirror baseline must contain exactly 196 unique names, found {len(expected)}"
+        )
+    names = "".join(f"{name}\n" for name in sorted(expected))
+    digest = hashlib.sha256(names.encode("utf-8")).hexdigest()
+    if digest != APP_MIRROR_DIGEST:
+        errors.append(f"App mirror baseline digest changed: {digest}")
+
+    actual: dict[str, list[str]] = defaultdict(list)
+    owners = sorted(set(expected.values()))
+    definition_pattern = re.compile(
+        r"^dcc_status_t\s+(dcc_app_[A-Za-z0-9_]+)\s*\(", re.MULTILINE
+    )
+    for owner in owners:
+        source = c_discovery_mask((root / owner).read_text(encoding="utf-8"))
+        for name in definition_pattern.findall(source):
+            actual[name].append(owner)
+    for name, owner in expected.items():
+        found = actual.get(name, [])
+        if found != [owner]:
+            errors.append(
+                f"{name}: frozen App mirror must be defined once by {owner}, found {found}"
+            )
+    unexpected = sorted(set(actual) - set(expected))
+    if unexpected:
+        errors.append("unexpected App REST mirror(s): " + ", ".join(unexpected))
+
+    legacy_header = c_discovery_mask(
+        (root / "include/dcc/app/legacy.h").read_text(encoding="utf-8")
+    )
+    for name in expected:
+        count = len(re.findall(rf"\b{re.escape(name)}\s*\(", legacy_header))
+        if count != 1:
+            errors.append(
+                f"{name}: frozen App mirror must be declared once in include/dcc/app/legacy.h, found {count}"
+            )
+
+    frozen_sources = {str((root / owner).resolve()) for owner in owners}
+    for path in sorted((root / "src").rglob("*.c")):
+        if str(path.resolve()) in frozen_sources:
+            continue
+        source = c_discovery_mask(path.read_text(encoding="utf-8"))
+        used = sorted(
+            name for name in expected
+            if re.search(rf"\b{re.escape(name)}\s*\(", source)
+        )
+        if used:
+            errors.append(
+                f"internal source {path.relative_to(root)} calls frozen App mirror(s): "
+                + ", ".join(used)
+            )
+
+    context_names = {
+        "dcc_ctx_add_member_role", "dcc_ctx_remove_member_role",
+        "dcc_ctx_create_thread_from_message",
+        "dcc_ctx_create_thread_from_message_name",
+        "dcc_ctx_archive_current_thread", "dcc_ctx_lock_current_thread",
+        "dcc_ctx_unlock_current_thread", "dcc_ctx_add_author_role",
+        "dcc_ctx_remove_author_role",
+    }
+    context_owner = c_discovery_mask(
+        (root / "src/app/app_context_shortcuts.c").read_text(encoding="utf-8")
+    )
+    mirror_owner = c_discovery_mask(
+        (root / "src/app/app_rest_shortcuts_resources.c").read_text(encoding="utf-8")
+    )
+    for name in sorted(context_names):
+        if len(re.findall(rf"^dcc_status_t\s+{name}\s*\(", context_owner, re.MULTILINE)) != 1:
+            errors.append(f"{name}: context helper is not owned once by app_context_shortcuts.c")
+        if re.search(rf"\b{name}\s*\(", mirror_owner):
+            errors.append(f"{name}: context helper remains in frozen App mirror owner")
+    return errors
+
+
 def audit_state_from_inventory(
     data: dict[str, Any],
     root: Path,
-    progress_through: int | None,
     declarations: dict[str, list[Declaration]],
     definitions: dict[str, list[Definition]],
     internal: dict[str, list[Declaration]],
     *,
     validate_schema: bool = True,
     check_opaque_contract: bool = True,
-) -> tuple[list[str], dict[tuple[int, str], int]]:
+) -> list[str]:
     errors = validate_manifest(data, root) if validate_schema else []
     if errors:
-        return errors, {}
+        return errors
 
     classified = set(data["generic_operations"])
     classified.update(item["symbol"] for item in data["transition_helpers"])
@@ -2594,7 +2680,6 @@ def audit_state_from_inventory(
             errors.append(f"{symbol}: immutable generic must have exactly one external definition")
 
     helper = data["transition_helpers"][0]
-    helper_present = progress_through is not None and progress_through < helper["removal_task"]
     errors.extend(
         exact_symbol_owner_errors(
             helper["symbol"],
@@ -2602,45 +2687,24 @@ def audit_state_from_inventory(
             helper["source"],
             declarations,
             definitions,
-            present=helper_present,
+            present=False,
         )
     )
 
-    removal_required = progress_through is None or progress_through >= 7
     for candidate in data["removed_candidates"]:
         for symbol, owner in candidate["owners"].items():
-            if removal_required:
-                errors.extend(
-                    exact_symbol_owner_errors(
-                        symbol,
-                        [],
-                        "",
-                        declarations,
-                        definitions,
-                        present=False,
-                    )
-                )
-                continue
-            # Before Task 7 the reviewed unavailable symbol may still be in
-            # its exact baseline owner or may have been removed early. A
-            # partial/moved resurrection is never accepted.
-            if not declarations.get(symbol) and not definitions.get(symbol):
-                continue
             errors.extend(
                 exact_symbol_owner_errors(
                     symbol,
-                    [owner["header"]],
-                    owner["source"],
+                    [],
+                    "",
                     declarations,
                     definitions,
-                    present=True,
+                    present=False,
                 )
             )
 
     for composite in data["transition_composites"]:
-        composite_present = (
-            progress_through is not None and progress_through < composite["removal_task"]
-        )
         for symbol in composite["symbols"]:
             owner = composite["owners"][symbol]
             errors.extend(
@@ -2650,7 +2714,7 @@ def audit_state_from_inventory(
                     owner["source"],
                     declarations,
                     definitions,
-                    present=composite_present,
+                    present=False,
                 )
             )
 
@@ -2662,15 +2726,13 @@ def audit_state_from_inventory(
     for entry in data["endpoints"]:
         canonical_now = not canonical_endpoint_errors(entry, declarations, definitions)
         baseline_now = not baseline_endpoint_errors(entry, declarations, definitions)
-        canonical_required = progress_through is None or entry["task"] <= progress_through
         if canonical_now:
             evidence_phases = ["canonical"]
         elif baseline_now:
             evidence_phases = ["baseline"]
-            if canonical_required:
-                evidence_phases.append("canonical")
+            evidence_phases.append("canonical")
         else:
-            evidence_phases = ["canonical" if canonical_required else "baseline"]
+            evidence_phases = ["canonical"]
         for evidence_field in ("route_evidence", "method_evidence"):
             for evidence_phase in evidence_phases:
                 for symbol, token_value in entry[evidence_field][evidence_phase].items():
@@ -2706,51 +2768,29 @@ def audit_state_from_inventory(
                             "different normalized templates"
                         )
 
-    debt: dict[tuple[int, str], int] = defaultdict(int)
     for entry in data["endpoints"]:
-        task = entry["task"]
-        if progress_through is None or task <= progress_through:
-            errors.extend(canonical_endpoint_errors(entry, declarations, definitions))
-            if progress_through is None or progress_through >= 7:
-                errors.extend(canonical_capability_errors(entry, definitions))
-        else:
-            errors.extend(future_endpoint_errors(entry, declarations, definitions))
-            if canonical_endpoint_errors(entry, declarations, definitions):
-                debt[(task, entry["domain"])] += 1
-
-    if progress_through is not None:
-        future_groups = {
-            (entry["task"], entry["domain"])
-            for entry in data["endpoints"]
-            if entry["task"] > progress_through
-        }
-        for task, domain in sorted(future_groups):
-            if debt.get((task, domain), 0) == 0:
-                errors.append(
-                    f"stale progress allowance: task {task} domain {domain} has no "
-                    "remaining REST violation"
-                )
+        errors.extend(canonical_endpoint_errors(entry, declarations, definitions))
+        errors.extend(canonical_capability_errors(entry, definitions))
 
     if check_opaque_contract:
         errors.extend(opaque_payload_contract_errors(root))
-        if progress_through is None or progress_through >= 7:
-            errors.extend(sensitive_transport_contract_errors(root))
-    return errors, dict(debt)
+        errors.extend(sensitive_transport_contract_errors(root))
+    return errors
 
 
 def audit_state(
     data: dict[str, Any],
     root: Path,
-    progress_through: int | None,
-) -> tuple[list[str], dict[tuple[int, str], int]]:
-    return audit_state_from_inventory(
+) -> list[str]:
+    errors = audit_state_from_inventory(
         data,
         root,
-        progress_through,
         public_declarations(root),
         external_definitions(root),
         internal_declarations(root),
     )
+    errors.extend(app_mirror_freeze_errors(root))
+    return errors
 
 
 def synthetic_canonical_args(entry: dict[str, Any]) -> str:
@@ -2848,7 +2888,6 @@ def synthetic_set_endpoint_state(
 
 def synthetic_inventory(
     data: dict[str, Any],
-    progress_through: int | None,
 ) -> tuple[
     dict[str, list[Declaration]],
     dict[str, list[Definition]],
@@ -2867,45 +2906,12 @@ def synthetic_inventory(
             "void",
         )
     helper = data["transition_helpers"][0]
-    if progress_through is not None and progress_through < helper["removal_task"]:
-        synthetic_add_symbol(
-            declarations,
-            definitions,
-            helper["symbol"],
-            [helper["header"]],
-            helper["source"],
-            "char *json",
-        )
-    if progress_through is not None and progress_through < 7:
-        for candidate in data["removed_candidates"]:
-            for symbol, owner in candidate["owners"].items():
-                synthetic_add_symbol(
-                    declarations,
-                    definitions,
-                    symbol,
-                    [owner["header"]],
-                    owner["source"],
-                    "dcc_client_t *client, dcc_rest_cb cb, void *user_data",
-                )
-    for composite in data["transition_composites"]:
-        if progress_through is not None and progress_through < composite["removal_task"]:
-            for symbol in composite["symbols"]:
-                owner = composite["owners"][symbol]
-                synthetic_add_symbol(
-                    declarations,
-                    definitions,
-                    symbol,
-                    [owner["header"]],
-                    owner["source"],
-                    "dcc_client_t *client, dcc_rest_cb cb, void *user_data",
-                )
     for entry in data["endpoints"]:
-        canonical = progress_through is None or entry["task"] <= progress_through
         synthetic_set_endpoint_state(
             entry,
             declarations,
             definitions,
-            canonical=canonical,
+            canonical=True,
         )
     return declarations, definitions, internal
 
@@ -3697,17 +3703,17 @@ void dcc_rest_other_init(void) {
 
     def expect_state_rejected(
         label: str,
-        progress: int | None,
+        fixture_task: int | None,
         mutate: Any,
         needle: str | None = None,
     ) -> None:
         nonlocal rejected
-        declarations, definitions, internal = synthetic_inventory(data, progress)
+        del fixture_task
+        declarations, definitions, internal = synthetic_inventory(data)
         mutate(declarations, definitions, internal)
-        state_errors, _ = audit_state_from_inventory(
+        state_errors = audit_state_from_inventory(
             data,
             root,
-            progress,
             declarations,
             definitions,
             internal,
@@ -3718,38 +3724,6 @@ void dcc_rest_other_init(void) {
             failures.append(f"self-test did not reject {label}")
         else:
             rejected += 1
-
-    declarations, definitions, internal = synthetic_inventory(data, 6)
-    state_errors, _ = audit_state_from_inventory(
-        data,
-        root,
-        6,
-        declarations,
-        definitions,
-        internal,
-        validate_schema=False,
-        check_opaque_contract=False,
-    )
-    if state_errors:
-        failures.append("synthetic progress-through-6 inventory failed: " + " | ".join(state_errors[:3]))
-
-    declarations, definitions, internal = synthetic_inventory(data, 7)
-    state_errors, state_debt = audit_state_from_inventory(
-        data,
-        root,
-        7,
-        declarations,
-        definitions,
-        internal,
-        validate_schema=False,
-        check_opaque_contract=False,
-    )
-    if state_errors or sum(state_debt.values()) != 148:
-        failures.append(
-            "synthetic progress-through-7 inventory failed: "
-            + " | ".join(state_errors[:3])
-            + f" (deferred={sum(state_debt.values())})"
-        )
 
     expect_state_rejected(
         "unclassified public declaration",
@@ -3925,27 +3899,6 @@ void dcc_rest_other_init(void) {
     def duplicate_definition(declarations: Any, definitions: Any, internal: Any) -> None:
         definitions[first_task6["canonical"]].append(definitions[first_task6["canonical"]][0])
     expect_state_rejected("duplicate external definition", 6, duplicate_definition)
-
-    later_with_legacy = next(
-        entry for entry in data["endpoints"]
-        if entry["task"] > 6 and entry["legacy_symbols"]
-    )
-    def wrong_later_owner(declarations: Any, definitions: Any, internal: Any) -> None:
-        symbol = later_with_legacy["legacy_symbols"][0]
-        item = declarations[symbol][0]
-        declarations[symbol][0] = Declaration(
-            item.name,
-            item.return_type,
-            item.args,
-            "include/dcc/rest/wrong.h",
-        )
-    expect_state_rejected("wrong later-task owner", 6, wrong_later_owner, "matches neither")
-
-    def missing_later_symbol(declarations: Any, definitions: Any, internal: Any) -> None:
-        symbol = later_with_legacy["legacy_symbols"][0]
-        declarations.pop(symbol)
-        definitions.pop(symbol)
-    expect_state_rejected("invented or missing later-task legacy symbol", 6, missing_later_symbol)
 
     def lingering_task6_overload(declarations: Any, definitions: Any, internal: Any) -> None:
         legacy = first_task6["legacy_symbols"][0]
@@ -4200,38 +4153,6 @@ void dcc_rest_other_init(void) {
                     definitions,
                     canonical=True,
                 )
-    expect_state_rejected(
-        "stale per-domain progress allowance",
-        6,
-        migrate_future_domain,
-        "task 7 domain channels",
-    )
-
-    def complete_task7_under_stale_progress(
-        declarations: Any,
-        definitions: Any,
-        internal: Any,
-    ) -> None:
-        for entry in data["endpoints"]:
-            if entry["task"] == 7:
-                synthetic_set_endpoint_state(
-                    entry,
-                    declarations,
-                    definitions,
-                    canonical=True,
-                )
-        for candidate in data["removed_candidates"]:
-            for symbol in candidate["owners"]:
-                declarations.pop(symbol, None)
-                definitions.pop(symbol, None)
-
-    expect_state_rejected(
-        "stale progress-through-6 after complete Task 7 migration",
-        6,
-        complete_task7_under_stale_progress,
-        "task 7 domain",
-    )
-
     def stale_task9_composite(declarations: Any, definitions: Any, internal: Any) -> None:
         composite = next(item for item in data["transition_composites"] if item["removal_task"] == 9)
         symbol = composite["symbols"][0]
@@ -4285,7 +4206,7 @@ def main() -> int:
         )
         return 0
 
-    errors, debt = audit_state(data, root, args.progress_through)
+    errors = audit_state(data, root)
     if errors:
         print("DCC REST v2 endpoint audit failed:", file=sys.stderr)
         preview = errors[:80]
@@ -4293,12 +4214,11 @@ def main() -> int:
         if len(errors) > len(preview):
             print(f"- ... {len(errors) - len(preview)} additional violation(s)", file=sys.stderr)
         return 1
-    mode = "strict" if args.progress_through is None else f"progress-through-{args.progress_through}"
     counts = Counter(entry["task"] for entry in data["endpoints"])
     summary = ", ".join(f"task {task}={counts[task]}" for task in sorted(counts))
     print(
-        f"DCC REST v2 endpoint audit passed ({mode}; {len(data['endpoints'])} endpoints; "
-        f"{summary}; deferred violations={sum(debt.values())})"
+        f"DCC REST v2 endpoint audit passed (strict; {len(data['endpoints'])} endpoints; "
+        f"{summary})"
     )
     return 0
 

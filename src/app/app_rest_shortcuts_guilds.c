@@ -26,7 +26,6 @@
 #include <dcc/rest/messages/edit.h>
 #include <dcc/rest/messages/pins.h>
 #include <dcc/rest/messages/reactions.h>
-#include <dcc/rest/resources/direct_messages.h>
 #include <dcc/rest/resources/entitlements.h>
 #include <dcc/rest/resources/gateway.h>
 #include <dcc/rest/resources/group_dms.h>

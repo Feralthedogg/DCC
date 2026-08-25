@@ -402,7 +402,7 @@ int run_public_rest_wrapper_expect_guilds_smoke(dcc_client_t *client) {
                     call_rest_modify_current_user_params,
                     "PATCH",
                     "/users/@me",
-                    "{\"nickname\":\"bot typed\",\"avatar\":\"data:image/png;base64,AA==\",\"banner\":\"data:image/png;base64,BB==\"}"
+                    "{\"username\":\"bot typed\",\"avatar\":\"data:image/png;base64,AA==\",\"banner\":\"data:image/png;base64,BB==\"}"
                 ) != 0 ||
         run_public_rest_wrapper_expect(
                     client,

@@ -2832,7 +2832,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_add_lobby_member_params",
@@ -3399,7 +3399,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_build_lobby_member_bulk_body",
@@ -4535,7 +4535,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_build_lobby_body",
@@ -4792,7 +4792,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_build_lobby_create_or_join_body",
@@ -5604,7 +5604,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -6308,7 +6308,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -7512,7 +7512,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -8585,7 +8585,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -8644,7 +8644,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -8761,7 +8761,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -11297,7 +11297,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -11333,7 +11333,7 @@
       "task": 10,
       "method": "GET",
       "route_formatter": "dcc_dcc_rest_get_lobby_messages",
-      "input": "dcc_rest_id_page_t",
+      "input": "dcc_rest_lobby_message_query_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -11344,7 +11344,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_rest_id_page_t *page",
+          "declaration": "const dcc_rest_lobby_message_query_t *query",
           "role": "input"
         },
         {
@@ -11356,7 +11356,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -11755,7 +11755,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -11814,7 +11814,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -13517,7 +13517,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -13751,7 +13751,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_build_lobby_channel_link_body",
@@ -14175,7 +14175,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_build_application_modify_body",
@@ -14351,7 +14351,7 @@
       "task": 10,
       "method": "PATCH",
       "route_formatter": "dpp_current_user_set_voice_state",
-      "input": "dcc_voice_state_params_t",
+      "input": "dcc_current_user_voice_state_params_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -14362,7 +14362,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_voice_state_params_t *params",
+          "declaration": "const dcc_current_user_voice_state_params_t *params",
           "role": "input"
         },
         {
@@ -15414,7 +15414,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_modify_lobby_params"
@@ -15523,7 +15523,7 @@
       "task": 10,
       "method": "PATCH",
       "route_formatter": "dpp_user_set_voice_state",
-      "input": "dcc_voice_state_params_t",
+      "input": "dcc_user_voice_state_params_t",
       "canonical_parameters": [
         {
           "declaration": "dcc_client_t *client",
@@ -15538,7 +15538,7 @@
           "role": "path"
         },
         {
-          "declaration": "const dcc_voice_state_params_t *params",
+          "declaration": "const dcc_user_voice_state_params_t *params",
           "role": "input"
         },
         {
@@ -16096,7 +16096,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [],
       "canonical_state": "current",
@@ -16280,7 +16280,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_build_lobby_message_body",
@@ -16351,7 +16351,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_build_soundboard_send_body",
@@ -16867,7 +16867,7 @@
           "role": "out_request"
         }
       ],
-      "source": "src/rest/rest_official_surface.c",
+      "source": "src/rest/rest_official_task10.c",
       "multipart": false,
       "legacy_symbols": [
         "dcc_rest_build_lobby_message_moderation_metadata_body",

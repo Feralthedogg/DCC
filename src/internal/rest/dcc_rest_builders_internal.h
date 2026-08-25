@@ -8,7 +8,6 @@
 #include "internal/rest/dcc_rest_emoji_builders_internal.h"
 #include "internal/rest/dcc_rest_guild_member_builders_internal.h"
 #include "internal/rest/dcc_rest_onboarding_builders_internal.h"
-#include "internal/rest/dcc_rest_role_connection_builders_internal.h"
 #include "internal/rest/dcc_rest_scheduled_event_builders_internal.h"
 
 #endif

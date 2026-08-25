@@ -16,8 +16,7 @@ def main() -> int:
     source = args.source.resolve()
     audit = source / "tools/audit_rest_v2_endpoints.py"
     result = subprocess.run(
-        [sys.executable, str(audit), "--source", str(source),
-         "--progress-through", "10"],
+        [sys.executable, str(audit), "--source", str(source)],
         check=False, capture_output=True, text=True, encoding="utf-8",
         errors="replace",
     )
@@ -27,7 +26,7 @@ def main() -> int:
         return 1
     expected = (
         "224 endpoints; task 6=41, task 7=35, task 8=47, "
-        "task 9=57, task 10=44; deferred violations=0"
+        "task 9=57, task 10=44)"
     )
     if expected not in result.stdout:
         print("Task 10 final endpoint arithmetic changed", file=sys.stderr)

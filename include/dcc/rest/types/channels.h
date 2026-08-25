@@ -310,11 +310,21 @@ static inline void dcc_dm_channel_params_init(dcc_dm_channel_params_t *value) {
 
 typedef struct dcc_group_dm_recipient_params {
     size_t size;
-    dcc_snowflake_t channel_id;
-    dcc_snowflake_t user_id;
+    uint32_t version;
+    uint64_t present;
     const char *access_token;
     const char *nick;
+    dcc_snowflake_t channel_id; /* frozen App compatibility route suffix */
+    dcc_snowflake_t user_id;
 } dcc_group_dm_recipient_params_t;
+
+#define DCC_GROUP_DM_RECIPIENT_PARAMS_VERSION 1U
+#define DCC_GROUP_DM_RECIPIENT_PARAMS_INIT \
+    { sizeof(dcc_group_dm_recipient_params_t), DCC_GROUP_DM_RECIPIENT_PARAMS_VERSION, \
+      UINT64_C(0), NULL, NULL, 0U, 0U }
+static inline void dcc_group_dm_recipient_params_init(dcc_group_dm_recipient_params_t *value) {
+    if (value != NULL) *value = (dcc_group_dm_recipient_params_t)DCC_GROUP_DM_RECIPIENT_PARAMS_INIT;
+}
 
 #ifdef __cplusplus
 }

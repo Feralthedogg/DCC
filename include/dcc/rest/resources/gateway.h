@@ -9,8 +9,8 @@ extern "C" {
 
 DCC_API dcc_status_t dcc_rest_get_gateway_bot(
     dcc_client_t *client,
-    dcc_rest_cb cb,
-    void *user_data
+    const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request
 );
 
 #ifdef __cplusplus
