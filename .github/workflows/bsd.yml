@@ -88,7 +88,9 @@ jobs:
               ;;
             OpenBSD)
               sudo sh -c 'echo https://cdn.openbsd.org/pub/OpenBSD > /etc/installurl'
-              retry sudo pkg_add cmake pkgconf 'python%3.12'
+              retry sudo pkg_add cmake
+              # The OpenBSD 7.8 python-3 meta package advertises the 3.11 pkgpath branch.
+              retry sudo pkg_add 'python%3.11'
               ;;
             NetBSD)
               retry sudo pkgin -y install cmake openssl pkgconf python312
@@ -155,7 +157,7 @@ jobs:
             FreeBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/local" ;;
             NetBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/pkg" ;;
           esac
-          DCC_RELEASE_VERSION=ci \
+          DCC_RELEASE_VERSION=2.0.0 \
             DCC_ALLOW_VERSION_MISMATCH=1 \
             DCC_SKIP_RELEASE_TESTS=1 \
             DCC_BUILD_PARALLEL=2 \
@@ -168,5 +170,5 @@ jobs:
             --dry-run \
             --skip-llam \
             --target "${{ matrix.package_target }}" \
-            --version ci \
+            --version 2.0.0 \
             --base-url https://example.invalid
