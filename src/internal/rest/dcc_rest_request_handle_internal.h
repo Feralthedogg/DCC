@@ -17,6 +17,12 @@ extern "C" {
 
 struct dcc_rest_async_request;
 
+typedef void (*dcc_rest_request_post_hook_fn)(
+    dcc_client_t *client,
+    const dcc_rest_result_t *result,
+    void *user_data
+);
+
 struct dcc_rest_request {
     atomic_uint references;
     atomic_bool terminal_claimed;
@@ -26,6 +32,8 @@ struct dcc_rest_request {
     dcc_client_t *client;
     dcc_rest_result_fn callback;
     void *callback_user_data;
+    dcc_rest_request_post_hook_fn post_hook;
+    void *post_hook_user_data;
     dcc_rest_result_t *result;
     dcc_rest_result_t fallback_result;
 #if !defined(_WIN32)
@@ -39,6 +47,8 @@ dcc_status_t dcc_rest_request_handle_create(
     dcc_client_t *client,
     dcc_rest_result_fn callback,
     void *callback_user_data,
+    dcc_rest_request_post_hook_fn post_hook,
+    void *post_hook_user_data,
     uint8_t caller_reference,
     dcc_rest_request_t **out
 );

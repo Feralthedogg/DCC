@@ -80,7 +80,6 @@ static void response_state_runner_stop(response_state_runner_t *runner) {
 #if !defined(_WIN32)
 typedef struct response_state_reentrant_seen {
   dcc_ctx_t *ctx;
-  dcc_app_auto_defer_t *auto_defer;
   atomic_uint nested_done;
   atomic_uint watchdog_timed_out;
   atomic_uint outer_callbacks;
@@ -143,8 +142,6 @@ static void *response_state_reentrant_watchdog(void *user_data) {
     usleep(1000U);
   }
   atomic_store_explicit(&seen->watchdog_timed_out, 1U, memory_order_release);
-  atomic_store_explicit(&seen->auto_defer->response_state,
-                        DCC_APP_RESPONSE_READY, memory_order_release);
   return NULL;
 }
 
@@ -177,15 +174,8 @@ static int app_smoke_check_same_context_reentry(void) {
   ctx.interaction = &interaction;
   if (dcc_flow_create(client, &interaction, &ctx.flow) != DCC_OK)
     return 1;
-  dcc_app_auto_defer_t auto_defer;
-  memset(&auto_defer, 0, sizeof(auto_defer));
-  atomic_init(&auto_defer.initial_response_admitted, false);
-  atomic_init(&auto_defer.response_state, DCC_APP_RESPONSE_READY);
-  ctx.auto_defer = &auto_defer;
-
   response_state_reentrant_seen_t seen = {
       .ctx = &ctx,
-      .auto_defer = &auto_defer,
   };
   atomic_init(&seen.nested_done, 0U);
   atomic_init(&seen.watchdog_timed_out, 0U);
@@ -194,7 +184,6 @@ static int app_smoke_check_same_context_reentry(void) {
   pthread_t watchdog;
   if (pthread_create(&watchdog, NULL, response_state_reentrant_watchdog,
                      &seen) != 0) {
-    ctx.auto_defer = NULL;
     dcc_flow_destroy(ctx.flow);
     response_state_runner_stop(&runner);
     dcc_client_destroy(client);
@@ -215,7 +204,6 @@ static int app_smoke_check_same_context_reentry(void) {
       atomic_load_explicit(&intercept_seen.requests, memory_order_acquire) ==
           2U &&
       dcc_ctx_response_sent(&ctx) && dcc_ctx_followed_up(&ctx);
-  ctx.auto_defer = NULL;
   dcc_flow_destroy(ctx.flow);
   response_state_runner_stop(&runner);
   dcc_client_destroy(client);
@@ -263,19 +251,13 @@ static int app_smoke_check_auto_defer_local_retry(void) {
   if (dcc_flow_create(client, &interaction, &ctx.flow) != DCC_OK)
     return 1;
 
-  dcc_app_auto_defer_t auto_defer;
-  memset(&auto_defer, 0, sizeof(auto_defer));
-  atomic_init(&auto_defer.initial_response_admitted, false);
-  atomic_init(&auto_defer.response_state, DCC_APP_RESPONSE_READY);
-  ctx.auto_defer = &auto_defer;
-
   dcc_message_builder_t invalid;
   dcc_message_builder_init(&invalid);
   invalid.present |= DCC_MESSAGE_BUILDER_PRESENT_CONTENT;
   dcc_status_t status = dcc_ctx_reply(&ctx, &invalid, NULL, NULL);
   int local_failure_ok =
       status == DCC_ERR_INVALID_ARG &&
-      dcc_ctx_response_state(&ctx) == DCC_INTERACTION_FLOW_FAILED &&
+      dcc_ctx_response_state(&ctx) == DCC_INTERACTION_FLOW_READY &&
       !dcc_ctx_response_sent(&ctx) &&
       atomic_load_explicit(&seen.requests, memory_order_acquire) == 0U;
 
@@ -299,10 +281,6 @@ static int app_smoke_check_auto_defer_local_retry(void) {
   interaction.token = "response-state-autocomplete-2";
   if (dcc_flow_create(client, &interaction, &ctx.flow) != DCC_OK)
     return 1;
-  atomic_store_explicit(&auto_defer.initial_response_admitted, false,
-                        memory_order_release);
-  atomic_store_explicit(&auto_defer.response_state, DCC_APP_RESPONSE_READY,
-                        memory_order_release);
   dcc_autocomplete_choice_t choice;
   dcc_autocomplete_choice_init(&choice, "Recovered");
   status = dcc_autocomplete_choice_set_string_value(&choice, "recovered");
@@ -319,13 +297,8 @@ static int app_smoke_check_auto_defer_local_retry(void) {
   int autocomplete_ok =
       status == DCC_OK && drain_status == DCC_OK &&
       atomic_load_explicit(&seen.requests, memory_order_acquire) == 2U &&
-      atomic_load_explicit(&auto_defer.initial_response_admitted,
-                           memory_order_acquire) &&
-      atomic_load_explicit(&auto_defer.response_state, memory_order_acquire) ==
-          DCC_APP_RESPONSE_REPLIED &&
       dcc_ctx_response_sent(&ctx) && dcc_ctx_replied(&ctx);
 
-  ctx.auto_defer = NULL;
   dcc_flow_destroy(ctx.flow);
   response_state_runner_stop(&runner);
   dcc_client_destroy(client);
@@ -389,7 +362,7 @@ int app_smoke_check_response_state(void) {
   dcc_flow_mark(ctx.flow, DCC_INTERACTION_FLOW_FOLLOWED_UP, DCC_OK);
   if (dcc_ctx_response_state(&ctx) != DCC_INTERACTION_FLOW_FOLLOWED_UP ||
       !dcc_ctx_replied(&ctx) || !dcc_ctx_followed_up(&ctx) ||
-      !dcc_ctx_can_followup(&ctx) || dcc_ctx_can_edit_original(&ctx)) {
+      !dcc_ctx_can_followup(&ctx) || !dcc_ctx_can_edit_original(&ctx)) {
     fprintf(stderr, "ctx response followup state mismatch\n");
     return 0;
   }
@@ -417,35 +390,30 @@ int app_smoke_check_response_state(void) {
   interaction.token = "state-auto";
   if (dcc_flow_create(state_client, &interaction, &ctx.flow) != DCC_OK)
     return 0;
-  atomic_init(&auto_defer.initial_response_admitted, true);
-  atomic_init(&auto_defer.response_state, DCC_APP_RESPONSE_DEFERRED);
   auto_defer.ephemeral = 1U;
   ctx.auto_defer = &auto_defer;
-  if (dcc_ctx_response_state(&ctx) != DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL ||
+  if (dcc_flow_mark_initial(ctx.flow,
+                            DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL,
+                            DCC_OK) != DCC_OK ||
+      dcc_ctx_response_state(&ctx) != DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL ||
       !dcc_ctx_response_sent(&ctx) || !dcc_ctx_deferred(&ctx) ||
       !dcc_ctx_can_edit_original(&ctx)) {
     fprintf(stderr, "ctx response auto defer state mismatch\n");
     return 0;
   }
 
-  atomic_store(&auto_defer.response_state, DCC_APP_RESPONSE_REPLIED);
-  if (dcc_ctx_response_state(&ctx) != DCC_INTERACTION_FLOW_REPLIED ||
+  if (dcc_flow_mark_initial(ctx.flow, DCC_INTERACTION_FLOW_REPLIED, DCC_OK) !=
+          DCC_OK ||
+      dcc_ctx_response_state(&ctx) != DCC_INTERACTION_FLOW_REPLIED ||
       !dcc_ctx_replied(&ctx) || !dcc_ctx_can_followup(&ctx)) {
     fprintf(stderr, "ctx response auto replied state mismatch\n");
     return 0;
   }
 
-  atomic_store(&auto_defer.response_state, DCC_APP_RESPONSE_FAILED);
+  dcc_flow_mark(ctx.flow, DCC_INTERACTION_FLOW_FAILED, DCC_ERR_RUNTIME);
   if (dcc_ctx_response_state(&ctx) != DCC_INTERACTION_FLOW_FAILED ||
       !dcc_ctx_response_failed(&ctx) || !dcc_ctx_response_sent(&ctx)) {
     fprintf(stderr, "ctx response post-admission failure mismatch\n");
-    return 0;
-  }
-
-  atomic_store(&auto_defer.initial_response_admitted, false);
-  if (dcc_ctx_response_state(&ctx) != DCC_INTERACTION_FLOW_FAILED ||
-      !dcc_ctx_response_failed(&ctx) || dcc_ctx_response_sent(&ctx)) {
-    fprintf(stderr, "ctx response auto admission failure mismatch\n");
     return 0;
   }
 

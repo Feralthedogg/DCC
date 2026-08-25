@@ -2,6 +2,8 @@
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"
 
 static uint8_t dcc_flow_can_edit_original(const dcc_interaction_flow_t *flow) {
+  if (flow != NULL && flow->queue != NULL)
+    return dcc_app_interaction_queue_can_edit_original(flow->queue);
   return flow != NULL &&
          (flow->state == DCC_INTERACTION_FLOW_DEFERRED ||
           flow->state == DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL ||
@@ -11,6 +13,8 @@ static uint8_t dcc_flow_can_edit_original(const dcc_interaction_flow_t *flow) {
 }
 
 static uint8_t dcc_flow_can_followup(const dcc_interaction_flow_t *flow) {
+  if (flow != NULL && flow->queue != NULL)
+    return dcc_app_interaction_queue_can_followup(flow->queue);
   return flow != NULL && dcc_flow_initial_sent(flow) &&
          flow->state != DCC_INTERACTION_FLOW_READY &&
          flow->state != DCC_INTERACTION_FLOW_FAILED;

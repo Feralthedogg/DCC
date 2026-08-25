@@ -109,11 +109,13 @@ static void dcc_rest_request_handle_release_unpublished(
     }
 }
 
-dcc_status_t dcc_rest_submit_operation(
+dcc_status_t dcc_rest_submit_operation_with_post_hook(
     dcc_client_t *client,
     const dcc_rest_request_desc_t *description,
     const char *operation,
     uint8_t sensitive_path,
+    dcc_rest_request_post_hook_fn post_hook,
+    void *post_hook_user_data,
     dcc_rest_request_t **out_request
 ) {
     if (out_request != NULL) {
@@ -158,6 +160,8 @@ dcc_status_t dcc_rest_submit_operation(
         client,
         options.callback,
         options.user_data,
+        post_hook,
+        post_hook_user_data,
         (uint8_t)caller_reference,
         &handle
     );
@@ -212,6 +216,24 @@ dcc_status_t dcc_rest_submit_operation(
     }
     dcc_rest_operation_end(client);
     return status;
+}
+
+dcc_status_t dcc_rest_submit_operation(
+    dcc_client_t *client,
+    const dcc_rest_request_desc_t *description,
+    const char *operation,
+    uint8_t sensitive_path,
+    dcc_rest_request_t **out_request
+) {
+    return dcc_rest_submit_operation_with_post_hook(
+        client,
+        description,
+        operation,
+        sensitive_path,
+        NULL,
+        NULL,
+        out_request
+    );
 }
 
 dcc_status_t dcc_rest_submit(

@@ -40,6 +40,8 @@ dcc_status_t dcc_rest_request_handle_create(
     dcc_client_t *client,
     dcc_rest_result_fn callback,
     void *callback_user_data,
+    dcc_rest_request_post_hook_fn post_hook,
+    void *post_hook_user_data,
     uint8_t caller_reference,
     dcc_rest_request_t **out
 ) {
@@ -59,6 +61,8 @@ dcc_status_t dcc_rest_request_handle_create(
     request->client = client;
     request->callback = callback;
     request->callback_user_data = callback_user_data;
+    request->post_hook = post_hook;
+    request->post_hook_user_data = post_hook_user_data;
 #if !defined(_WIN32)
     if (pthread_mutex_init(&request->wait_mutex, NULL) != 0) {
         free(request);
@@ -146,6 +150,14 @@ void dcc_rest_request_handle_finalize(
         request->callback_user_data
     );
     dcc_rest_request_delivery = frame.previous;
+
+    if (request->post_hook != NULL) {
+        request->post_hook(
+            request->client,
+            result,
+            request->post_hook_user_data
+        );
+    }
 
     atomic_store_explicit(&request->async_request, NULL, memory_order_release);
 #if !defined(_WIN32)

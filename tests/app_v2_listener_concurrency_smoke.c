@@ -1366,15 +1366,16 @@ static int test_auto_defer_claim_race_fails_fast(void) {
   atomic_store_explicit(&state.timer_request_release, true,
                         memory_order_release);
   int handler_result = test_thread_join(&handler_thread);
+  dcc_status_t drain_status = dcc_rest_async_wait(state.client, 2000U);
 
   uint64_t deadline = test_now_ms() + 2000U;
-  while (dcc_app_auto_defer_response_state(&state.ctx) ==
-             DCC_APP_RESPONSE_CLAIMED &&
+  while (dcc_ctx_response_state(&state.ctx) ==
+             DCC_INTERACTION_FLOW_DEFERRED_QUEUED &&
          test_now_ms() < deadline) {
     test_yield();
   }
-  dcc_app_response_state_t final_state =
-      dcc_app_auto_defer_response_state(&state.ctx);
+  dcc_interaction_flow_state_t final_state =
+      dcc_ctx_response_state(&state.ctx);
   dcc_app_auto_defer_finish(&state.ctx);
   dcc_status_t stop_status = dcc_client_stop(state.client);
   int runtime_result = test_thread_join(&runtime_thread);
@@ -1386,15 +1387,17 @@ static int test_auto_defer_claim_race_fails_fast(void) {
   uint64_t elapsed_ms =
       atomic_load_explicit(&state.handler_elapsed_ms, memory_order_acquire);
   if (!handler_failed_fast || handler_result != 0 || runtime_result != 0 ||
-      handler_status != DCC_ERR_STATE || elapsed_ms >= 100U ||
-      request_count != 1U || final_state != DCC_APP_RESPONSE_DEFERRED ||
+      drain_status != DCC_OK ||
+      handler_status != DCC_OK || elapsed_ms >= 100U ||
+      request_count != 2U ||
+      final_state != DCC_INTERACTION_FLOW_ORIGINAL_EDITED ||
       (stop_status != DCC_OK && stop_status != DCC_ERR_CANCELED) ||
       destroy_status != DCC_OK) {
     fprintf(stderr,
-            "auto-defer CLAIMED race did not fail fast: fast=%d status=%d "
-            "elapsed=%llu requests=%u state=%d\n",
-            handler_failed_fast, handler_status, (unsigned long long)elapsed_ms,
-            request_count, final_state);
+            "auto-defer queue race did not serialize: fast=%d status=%d "
+            "drain=%d elapsed=%llu requests=%u state=%d\n",
+            handler_failed_fast, handler_status, drain_status,
+            (unsigned long long)elapsed_ms, request_count, final_state);
     return 1;
   }
   return 0;

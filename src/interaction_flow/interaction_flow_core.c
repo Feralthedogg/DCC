@@ -121,6 +121,9 @@ uint8_t dcc_flow_initial_sent(const dcc_interaction_flow_t *flow) {
   if (flow == NULL) {
     return 0U;
   }
+  if (flow->queue != NULL) {
+    return dcc_app_interaction_queue_initial_admitted(flow->queue);
+  }
   if (dcc_flow_has_response_flags(flow)) {
     return (flow->response_flags &
             DCC_INTERACTION_FLOW_RESPONSE_INITIAL_ADMITTED) != 0U
@@ -169,6 +172,8 @@ dcc_status_t dcc_flow_mark_initial(dcc_interaction_flow_t *flow,
   if (flow == NULL) {
     return DCC_ERR_INVALID_ARG;
   }
+  if (flow->queue != NULL)
+    dcc_app_interaction_queue_mark(flow->queue, state, status, 1U);
   if (status == DCC_OK) {
     if (dcc_flow_has_response_flags(flow)) {
       flow->response_flags &= ~DCC_INTERACTION_FLOW_RESPONSE_INITIAL_CLAIMED;
@@ -206,6 +211,8 @@ dcc_status_t dcc_flow_require_context(const dcc_interaction_flow_t *flow) {
 void dcc_flow_mark(dcc_interaction_flow_t *flow,
                    dcc_interaction_flow_state_t state, dcc_status_t status) {
   if (flow != NULL) {
+    if (flow->queue != NULL)
+      dcc_app_interaction_queue_mark(flow->queue, state, status, 0U);
     flow->state = status == DCC_OK ? state : DCC_INTERACTION_FLOW_FAILED;
   }
 }
