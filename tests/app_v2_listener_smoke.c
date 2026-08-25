@@ -230,11 +230,18 @@ int main(void) {
         slash_listener("typed-listener-smoke", failing_handler, &state, NULL);
     typed_listener.handler.typed = failing_typed_handler;
     typed_listener.args_size = sizeof(typed_smoke_args_t);
-    typed_listener.bindings.kind = DCC_LISTENER_BIND_OPTIONS;
-    typed_listener.bindings.items.options = &typed_binding;
-    typed_listener.bindings.count = 1U;
+    dcc_listener_bindings_t typed_bindings = {
+        .size = sizeof(typed_bindings),
+        .version = DCC_LISTENER_BINDINGS_VERSION,
+        .kind = DCC_LISTENER_BIND_OPTIONS,
+        .items.options = &typed_binding,
+        .count = 1U,
+    };
+    typed_listener.bindings = &typed_bindings;
     invalid = typed_listener;
-    invalid.bindings.kind = DCC_LISTENER_BIND_NONE;
+    dcc_listener_bindings_t invalid_bindings = typed_bindings;
+    invalid_bindings.kind = DCC_LISTENER_BIND_NONE;
+    invalid.bindings = &invalid_bindings;
     if (dcc_app_listen(app, &invalid, NULL) != DCC_ERR_INVALID_ARG) {
         fprintf(stderr, "typed handler with incompatible binding metadata was accepted\n");
         dcc_app_destroy(app);
@@ -243,7 +250,9 @@ int main(void) {
     dcc_listener_binding_t out_of_bounds_binding = typed_binding;
     out_of_bounds_binding.field_offset = sizeof(typed_smoke_args_t) - 1U;
     invalid = typed_listener;
-    invalid.bindings.items.options = &out_of_bounds_binding;
+    invalid_bindings = typed_bindings;
+    invalid_bindings.items.options = &out_of_bounds_binding;
+    invalid.bindings = &invalid_bindings;
     if (dcc_app_listen(app, &invalid, NULL) != DCC_ERR_INVALID_ARG) {
         fprintf(stderr, "typed binding extending past args_size was accepted\n");
         dcc_app_destroy(app);
@@ -264,19 +273,21 @@ int main(void) {
         return 1;
     }
     invalid = listener;
-    invalid.policy.size = sizeof(invalid.policy);
-    invalid.policy.version = DCC_LISTENER_ROUTE_POLICY_VERSION + 1U;
+    dcc_listener_route_policy_t invalid_policy = {
+        .size = sizeof(invalid_policy),
+        .version = DCC_LISTENER_ROUTE_POLICY_VERSION + 1U,
+    };
+    invalid.policy = &invalid_policy;
     if (dcc_app_listen(app, &invalid, NULL) != DCC_ERR_INVALID_ARG) {
         fprintf(stderr, "unsupported nested policy version was accepted\n");
         dcc_app_destroy(app);
         return 1;
     }
     invalid = listener;
-    invalid.bindings.size = sizeof(invalid.bindings);
-    invalid.bindings.version = DCC_LISTENER_BINDINGS_VERSION;
-    invalid.bindings.kind = DCC_LISTENER_BIND_OPTIONS;
-    invalid.bindings.count = 1U;
-    invalid.bindings.items.options = NULL;
+    invalid_bindings = typed_bindings;
+    invalid_bindings.count = 1U;
+    invalid_bindings.items.options = NULL;
+    invalid.bindings = &invalid_bindings;
     if (dcc_app_listen(app, &invalid, NULL) != DCC_ERR_INVALID_ARG) {
         fprintf(stderr, "invalid typed bindings were accepted\n");
         dcc_app_destroy(app);
@@ -324,7 +335,12 @@ int main(void) {
     event_listener.cleanup = cleanup_event_listener;
     event_listener.target.event.type = DCC_EVENT_LOG;
     invalid = event_listener;
-    invalid.policy.guild_only = 1U;
+    invalid_policy = (dcc_listener_route_policy_t){
+        .size = sizeof(invalid_policy),
+        .version = DCC_LISTENER_ROUTE_POLICY_VERSION,
+        .guild_only = 1U,
+    };
+    invalid.policy = &invalid_policy;
     if (dcc_app_listen(app, &invalid, NULL) != DCC_ERR_INVALID_ARG) {
         fprintf(stderr, "route-only policy was accepted for an event listener\n");
         dcc_app_destroy(app);

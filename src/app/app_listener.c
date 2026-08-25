@@ -625,44 +625,11 @@ void dcc_app_listener_release(void *listener_state) {
   }
 }
 
-void dcc_listener_init(dcc_listener_t *listener, dcc_listener_kind_t kind) {
-  if (listener == NULL) {
-    return;
-  }
-  memset(listener, 0, sizeof(*listener));
-  listener->size = sizeof(*listener);
-  listener->version = DCC_LISTENER_VERSION;
-  listener->kind = kind;
-  listener->policy.size = sizeof(listener->policy);
-  listener->policy.version = DCC_LISTENER_ROUTE_POLICY_VERSION;
-  listener->policy.cooldown.size = sizeof(listener->policy.cooldown);
-  listener->policy.cooldown.version = DCC_LISTENER_COOLDOWN_VERSION;
-  listener->bindings.size = sizeof(listener->bindings);
-  listener->bindings.version = DCC_LISTENER_BINDINGS_VERSION;
-  listener->validators.size = sizeof(listener->validators);
-  listener->validators.version = DCC_LISTENER_VALIDATORS_VERSION;
-  listener->validation.size = sizeof(listener->validation);
-  listener->validation.version = DCC_LISTENER_VALIDATION_POLICY_VERSION;
-  if (dcc_app_listener_is_route_kind(kind)) {
-    listener->target.route.size = sizeof(listener->target.route);
-    listener->target.route.version = DCC_LISTENER_TARGET_VERSION;
-  } else if (kind == DCC_LISTENER_EVENT || kind == DCC_LISTENER_READY ||
-             (kind >= DCC_LISTENER_MESSAGE_CREATE &&
-              kind <= DCC_LISTENER_MESSAGE_DELETE)) {
-    listener->target.event.size = sizeof(listener->target.event);
-    listener->target.event.version = DCC_LISTENER_TARGET_VERSION;
-  } else if (kind == DCC_LISTENER_MESSAGE_COMMAND) {
-    listener->target.message_command.size =
-        sizeof(listener->target.message_command);
-    listener->target.message_command.version = DCC_LISTENER_TARGET_VERSION;
-  } else if (kind == DCC_LISTENER_TASK) {
-    listener->target.schedule.size = sizeof(listener->target.schedule);
-    listener->target.schedule.version = DCC_LISTENER_TARGET_VERSION;
-  }
-}
-
 static dcc_status_t
 dcc_app_listener_validate_policy(const dcc_listener_route_policy_t *policy) {
+  if (policy == NULL) {
+    return DCC_OK;
+  }
   if (!dcc_app_listener_has_full_value(policy->size, policy->version,
                                        sizeof(*policy),
                                        DCC_LISTENER_ROUTE_POLICY_VERSION) ||
@@ -682,7 +649,8 @@ dcc_app_listener_validate_policy(const dcc_listener_route_policy_t *policy) {
         policy->channel_type_count != 0U ||
         policy->required_role_id_count != 0U ||
         policy->any_role_id_count != 0U ||
-        policy->cooldown.bucket == DCC_LISTENER_COOLDOWN_GUILD))) {
+        (policy->cooldown != NULL &&
+         policy->cooldown->bucket == DCC_LISTENER_COOLDOWN_GUILD)))) {
     return DCC_ERR_INVALID_ARG;
   }
   if (policy->middleware_count > SIZE_MAX / sizeof(*policy->middlewares) ||
@@ -713,7 +681,10 @@ dcc_app_listener_validate_policy(const dcc_listener_route_policy_t *policy) {
       return DCC_ERR_INVALID_ARG;
     }
   }
-  const dcc_listener_cooldown_t *cooldown = &policy->cooldown;
+  const dcc_listener_cooldown_t *cooldown = policy->cooldown;
+  if (cooldown == NULL) {
+    return DCC_OK;
+  }
   if (!dcc_app_listener_has_full_value(cooldown->size, cooldown->version,
                                        sizeof(*cooldown),
                                        DCC_LISTENER_COOLDOWN_VERSION)) {
@@ -734,17 +705,17 @@ dcc_app_listener_validate_policy(const dcc_listener_route_policy_t *policy) {
 
 static uint8_t
 dcc_app_listener_policy_is_empty(const dcc_listener_route_policy_t *policy) {
-  return policy->middlewares == NULL && policy->middleware_count == 0U &&
+  return policy == NULL ||
+         (policy->middlewares == NULL && policy->middleware_count == 0U &&
          policy->owner_user_ids == NULL && policy->owner_user_id_count == 0U &&
          policy->required_permissions == 0U && policy->guild_only == 0U &&
-         policy->cooldown.bucket == DCC_LISTENER_COOLDOWN_NONE &&
-         policy->cooldown.limit == 0U && policy->cooldown.window_ms == 0U &&
+         policy->cooldown == NULL &&
          policy->checks == NULL && policy->check_count == 0U &&
          policy->dm_only == 0U && policy->nsfw_only == 0U &&
          policy->channel_types == NULL && policy->channel_type_count == 0U &&
          policy->required_role_ids == NULL &&
          policy->required_role_id_count == 0U && policy->any_role_ids == NULL &&
-         policy->any_role_id_count == 0U;
+         policy->any_role_id_count == 0U);
 }
 
 static uint8_t dcc_app_listener_binding_has_zero_scalar_fallbacks(
@@ -911,9 +882,19 @@ dcc_app_listener_validator_width(dcc_listener_validator_kind_t kind) {
 
 static dcc_status_t
 dcc_app_listener_validate_bindings(const dcc_listener_t *listener) {
-  const dcc_listener_bindings_t *bindings = &listener->bindings;
-  const dcc_listener_validators_t *validators = &listener->validators;
-  const dcc_listener_validation_policy_t *validation = &listener->validation;
+  const dcc_listener_bindings_t empty_bindings = {
+      sizeof(empty_bindings), DCC_LISTENER_BINDINGS_VERSION,
+      DCC_LISTENER_BIND_NONE, {.options = NULL}, 0U};
+  const dcc_listener_validators_t empty_validators = {
+      sizeof(empty_validators), DCC_LISTENER_VALIDATORS_VERSION, NULL, 0U};
+  const dcc_listener_validation_policy_t default_validation = {
+      sizeof(default_validation), DCC_LISTENER_VALIDATION_POLICY_VERSION, 0U};
+  const dcc_listener_bindings_t *bindings =
+      listener->bindings != NULL ? listener->bindings : &empty_bindings;
+  const dcc_listener_validators_t *validators =
+      listener->validators != NULL ? listener->validators : &empty_validators;
+  const dcc_listener_validation_policy_t *validation =
+      listener->validation != NULL ? listener->validation : &default_validation;
   if (!dcc_app_listener_has_full_value(bindings->size, bindings->version,
                                        sizeof(*bindings),
                                        DCC_LISTENER_BINDINGS_VERSION) ||
@@ -1237,7 +1218,7 @@ static dcc_status_t dcc_app_listener_validate(const dcc_listener_t *listener) {
       listener->kind > DCC_LISTENER_TASK) {
     return DCC_ERR_INVALID_ARG;
   }
-  dcc_status_t status = dcc_app_listener_validate_policy(&listener->policy);
+  dcc_status_t status = dcc_app_listener_validate_policy(listener->policy);
   if (status == DCC_OK) {
     status = dcc_app_listener_validate_bindings(listener);
   }
@@ -1251,13 +1232,10 @@ static dcc_status_t dcc_app_listener_validate(const dcc_listener_t *listener) {
     return DCC_ERR_INVALID_ARG;
   }
   if (!dcc_app_listener_is_route_kind(listener->kind) &&
-      (!dcc_app_listener_policy_is_empty(&listener->policy) ||
+      (!dcc_app_listener_policy_is_empty(listener->policy) ||
        listener->args_size != 0U ||
-       listener->bindings.kind != DCC_LISTENER_BIND_NONE ||
-       listener->bindings.items.options != NULL ||
-       listener->bindings.count != 0U || listener->validators.items != NULL ||
-       listener->validators.count != 0U ||
-       listener->validation.suppress_response != 0U)) {
+       listener->bindings != NULL || listener->validators != NULL ||
+       listener->validation != NULL)) {
     return DCC_ERR_INVALID_ARG;
   }
   return DCC_OK;
@@ -1269,12 +1247,16 @@ dcc_app_listener_copy_bindings(dcc_app_listener_entry_t *entry,
   if (listener->args_size == 0U) {
     return DCC_OK;
   }
+  const dcc_listener_bindings_t *bindings = listener->bindings;
+  const dcc_listener_validators_t *validators = listener->validators;
+  const dcc_listener_validation_policy_t *validation = listener->validation;
   entry->args_size = listener->args_size;
-  entry->binding_kind = listener->bindings.kind;
-  entry->binding_count = listener->bindings.count;
-  entry->suppress_validation_response = listener->validation.suppress_response;
-  size_t count = listener->bindings.count;
-  const dcc_listener_binding_t *items = listener->bindings.items.options;
+  entry->binding_kind = bindings->kind;
+  entry->binding_count = bindings->count;
+  entry->suppress_validation_response =
+      validation != NULL ? validation->suppress_response : 0U;
+  size_t count = bindings->count;
+  const dcc_listener_binding_t *items = bindings->items.options;
   if (entry->binding_kind == DCC_LISTENER_BIND_OPTIONS) {
     entry->option_bindings = (dcc_ctx_option_field_binding_t *)calloc(
         count, sizeof(*entry->option_bindings));
@@ -1379,17 +1361,17 @@ dcc_app_listener_copy_bindings(dcc_app_listener_entry_t *entry,
     }
   }
 
-  if (listener->validators.count == 0U) {
+  if (validators == NULL || validators->count == 0U) {
     return DCC_OK;
   }
   entry->validators = (dcc_ctx_field_validator_t *)calloc(
-      listener->validators.count, sizeof(*entry->validators));
+      validators->count, sizeof(*entry->validators));
   if (entry->validators == NULL) {
     return DCC_ERR_NOMEM;
   }
-  entry->validator_count = listener->validators.count;
+  entry->validator_count = validators->count;
   for (size_t i = 0U; i < entry->validator_count; ++i) {
-    const dcc_listener_validator_t *item = &listener->validators.items[i];
+    const dcc_listener_validator_t *item = &validators->items[i];
     entry->validators[i] = (dcc_ctx_field_validator_t){
         .size = sizeof(entry->validators[i]),
         .type = (dcc_ctx_field_validate_type_t)item->kind,
@@ -1474,6 +1456,9 @@ static dcc_status_t dcc_app_listener_route_dispatch(dcc_ctx_t *ctx,
 static dcc_status_t
 dcc_app_listener_apply_policy(dcc_app_t *app, dcc_app_route_id_t route_id,
                               const dcc_listener_route_policy_t *policy) {
+  if (policy == NULL) {
+    return DCC_OK;
+  }
   dcc_app_extension_middleware_t *middlewares = NULL;
   dcc_app_check_t *checks = NULL;
   if (app->listener_test_fail_policy_allocation) {
@@ -1529,12 +1514,13 @@ dcc_app_listener_apply_policy(dcc_app_t *app, dcc_app_route_id_t route_id,
       .any_role_ids = policy->any_role_ids,
       .any_role_id_count = policy->any_role_id_count,
   };
-  if (policy->cooldown.bucket != DCC_LISTENER_COOLDOWN_NONE) {
+  if (policy->cooldown != NULL &&
+      policy->cooldown->bucket != DCC_LISTENER_COOLDOWN_NONE) {
     legacy.cooldown = (dcc_app_cooldown_options_t){
         .size = sizeof(legacy.cooldown),
-        .bucket = (dcc_app_cooldown_bucket_t)policy->cooldown.bucket,
-        .limit = policy->cooldown.limit,
-        .window_ms = policy->cooldown.window_ms,
+        .bucket = (dcc_app_cooldown_bucket_t)policy->cooldown->bucket,
+        .limit = policy->cooldown->limit,
+        .window_ms = policy->cooldown->window_ms,
     };
   }
   dcc_status_t status =
@@ -1623,7 +1609,7 @@ dcc_app_listener_register_route(dcc_app_listener_entry_t *entry,
   }
   if (status == DCC_OK) {
     status = dcc_app_listener_apply_policy(entry->app, entry->route_id,
-                                           &listener->policy);
+                                           listener->policy);
   }
   if (status != DCC_OK && entry->route_id != DCC_APP_ROUTE_INVALID) {
     dcc_app_route_id_t failed_route_id = entry->route_id;

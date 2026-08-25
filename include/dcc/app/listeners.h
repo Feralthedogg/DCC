@@ -8,22 +8,25 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define DCC_LISTENER_VERSION 1U
-#define DCC_LISTENER_ROUTE_POLICY_VERSION 1U
-#define DCC_LISTENER_MIDDLEWARE_VERSION 1U
-#define DCC_LISTENER_CHECK_VERSION 1U
-#define DCC_LISTENER_COOLDOWN_VERSION 1U
-#define DCC_LISTENER_BINDINGS_VERSION 1U
-#define DCC_LISTENER_BINDING_VERSION 1U
-#define DCC_LISTENER_VALIDATORS_VERSION 1U
-#define DCC_LISTENER_VALIDATOR_VERSION 1U
-#define DCC_LISTENER_VALIDATION_POLICY_VERSION 1U
-#define DCC_LISTENER_TARGET_VERSION 1U
+enum {
+    DCC_LISTENER_VERSION = 1U,
+    DCC_LISTENER_ROUTE_POLICY_VERSION = 1U,
+    DCC_LISTENER_MIDDLEWARE_VERSION = 1U,
+    DCC_LISTENER_CHECK_VERSION = 1U,
+    DCC_LISTENER_COOLDOWN_VERSION = 1U,
+    DCC_LISTENER_BINDINGS_VERSION = 1U,
+    DCC_LISTENER_BINDING_VERSION = 1U,
+    DCC_LISTENER_VALIDATORS_VERSION = 1U,
+    DCC_LISTENER_VALIDATOR_VERSION = 1U,
+    DCC_LISTENER_VALIDATION_POLICY_VERSION = 1U,
+    DCC_LISTENER_TARGET_VERSION = 1U
+};
 
 typedef enum dcc_listener_kind {
     DCC_LISTENER_NONE = 0,
@@ -105,7 +108,7 @@ typedef struct dcc_listener_route_policy {
     size_t owner_user_id_count;
     dcc_permission_t required_permissions;
     uint8_t guild_only;
-    dcc_listener_cooldown_t cooldown;
+    const dcc_listener_cooldown_t *cooldown;
     const dcc_listener_check_t *checks;
     size_t check_count;
     uint8_t dm_only;
@@ -248,16 +251,43 @@ typedef struct dcc_listener {
     dcc_listener_handler_t handler;
     void *user_data;
     dcc_app_cleanup_fn cleanup;
-    dcc_listener_route_policy_t policy;
+    const dcc_listener_route_policy_t *policy;
     size_t args_size;
-    dcc_listener_bindings_t bindings;
-    dcc_listener_validators_t validators;
-    dcc_listener_validation_policy_t validation;
+    const dcc_listener_bindings_t *bindings;
+    const dcc_listener_validators_t *validators;
+    const dcc_listener_validation_policy_t *validation;
     dcc_listener_target_t target;
 } dcc_listener_t;
 
-/** Initializes a listener and all nested values for version 1. */
-DCC_API void dcc_listener_init(dcc_listener_t *listener, dcc_listener_kind_t kind);
+/** Initializes a complete listener and its selected frozen target tail. */
+static inline void dcc_listener_init(
+    dcc_listener_t *listener,
+    dcc_listener_kind_t kind
+) {
+    if (listener == NULL) {
+        return;
+    }
+    memset(listener, 0, sizeof(*listener));
+    listener->size = sizeof(*listener);
+    listener->version = DCC_LISTENER_VERSION;
+    listener->kind = kind;
+    if (kind >= DCC_LISTENER_SLASH && kind <= DCC_LISTENER_MODAL_PREFIX) {
+        listener->target.route.size = sizeof(listener->target.route);
+        listener->target.route.version = DCC_LISTENER_TARGET_VERSION;
+    } else if (kind == DCC_LISTENER_EVENT || kind == DCC_LISTENER_READY ||
+               (kind >= DCC_LISTENER_MESSAGE_CREATE &&
+                kind <= DCC_LISTENER_MESSAGE_DELETE)) {
+        listener->target.event.size = sizeof(listener->target.event);
+        listener->target.event.version = DCC_LISTENER_TARGET_VERSION;
+    } else if (kind == DCC_LISTENER_MESSAGE_COMMAND) {
+        listener->target.message_command.size =
+            sizeof(listener->target.message_command);
+        listener->target.message_command.version = DCC_LISTENER_TARGET_VERSION;
+    } else if (kind == DCC_LISTENER_TASK) {
+        listener->target.schedule.size = sizeof(listener->target.schedule);
+        listener->target.schedule.version = DCC_LISTENER_TARGET_VERSION;
+    }
+}
 
 /** Registers one validated listener and optionally returns its owned ID. */
 DCC_API dcc_status_t dcc_app_listen(

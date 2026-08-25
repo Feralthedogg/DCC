@@ -235,13 +235,20 @@ static int dispatch_slash(dcc_app_t *app, const char *name) {
 static int test_validation_matrix(dcc_app_t *app, contract_state_t *state) {
     dcc_listener_t listener = slash_listener("invalid", state);
     dcc_listener_t invalid = listener;
-    invalid.policy.guild_only = 2U;
+    dcc_listener_route_policy_t invalid_policy = {
+        .size = sizeof(invalid_policy),
+        .version = DCC_LISTENER_ROUTE_POLICY_VERSION,
+        .guild_only = 2U,
+    };
+    invalid.policy = &invalid_policy;
     if (expect_invalid_without_mutation(app, &invalid, "non-boolean guild_only") != 0) {
         return 1;
     }
     invalid = listener;
-    invalid.policy.dm_only = 1U;
-    invalid.policy.nsfw_only = 1U;
+    invalid_policy.guild_only = 0U;
+    invalid_policy.dm_only = 1U;
+    invalid_policy.nsfw_only = 1U;
+    invalid.policy = &invalid_policy;
     if (expect_invalid_without_mutation(app, &invalid, "dm_only + nsfw_only") != 0) {
         return 1;
     }
@@ -294,9 +301,14 @@ static int test_validation_matrix(dcc_app_t *app, contract_state_t *state) {
     invalid = listener;
     invalid.handler.typed = typed_owned_handler;
     invalid.args_size = sizeof(owned_args_t);
-    invalid.bindings.kind = DCC_LISTENER_BIND_OPTIONS;
-    invalid.bindings.items.options = &binding;
-    invalid.bindings.count = 1U;
+    dcc_listener_bindings_t bindings = {
+        .size = sizeof(bindings),
+        .version = DCC_LISTENER_BINDINGS_VERSION,
+        .kind = DCC_LISTENER_BIND_OPTIONS,
+        .items.options = &binding,
+        .count = 1U,
+    };
+    invalid.bindings = &bindings;
     if (expect_invalid_without_mutation(app, &invalid, "inactive option fallback_values") != 0) {
         return 1;
     }
@@ -715,8 +727,13 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     };
     dcc_listener_t policy_listener = slash_listener("policy-oom", state);
     policy_listener.cleanup = failed_listener_cleanup;
-    policy_listener.policy.middlewares = &middleware;
-    policy_listener.policy.middleware_count = 1U;
+    dcc_listener_route_policy_t policy = {
+        .size = sizeof(policy),
+        .version = DCC_LISTENER_ROUTE_POLICY_VERSION,
+        .middlewares = &middleware,
+        .middleware_count = 1U,
+    };
+    policy_listener.policy = &policy;
     unsigned cleanup_count = state->failed_cleanup_count;
     app->listener_test_fail_policy_allocation = 1U;
     if (expect_failed_listen_exact(
@@ -922,9 +939,14 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     partial_listener.user_data = state;
     partial_listener.cleanup = failed_listener_cleanup;
     partial_listener.args_size = sizeof(owned_values_args_t);
-    partial_listener.bindings.kind = DCC_LISTENER_BIND_FORM;
-    partial_listener.bindings.items.forms = &partial_binding;
-    partial_listener.bindings.count = 1U;
+    dcc_listener_bindings_t partial_bindings = {
+        .size = sizeof(partial_bindings),
+        .version = DCC_LISTENER_BINDINGS_VERSION,
+        .kind = DCC_LISTENER_BIND_FORM,
+        .items.forms = &partial_binding,
+        .count = 1U,
+    };
+    partial_listener.bindings = &partial_bindings;
     partial_listener.target.route.name = "partial-metadata-oom";
     cleanup_count = state->failed_cleanup_count;
     app->listener_test_fail_metadata_copy_after = 1U;
@@ -962,9 +984,14 @@ static int test_exact_failure_transactions(contract_state_t *state) {
     metadata_listener.user_data = state;
     metadata_listener.cleanup = failed_listener_cleanup;
     metadata_listener.args_size = sizeof(owned_values_args_t);
-    metadata_listener.bindings.kind = DCC_LISTENER_BIND_FORM;
-    metadata_listener.bindings.items.forms = &huge_binding;
-    metadata_listener.bindings.count = 1U;
+    dcc_listener_bindings_t metadata_bindings = {
+        .size = sizeof(metadata_bindings),
+        .version = DCC_LISTENER_BINDINGS_VERSION,
+        .kind = DCC_LISTENER_BIND_FORM,
+        .items.forms = &huge_binding,
+        .count = 1U,
+    };
+    metadata_listener.bindings = &metadata_bindings;
     metadata_listener.target.route.name = "metadata-oom";
     cleanup_count = state->failed_cleanup_count;
     if (expect_failed_listen_exact(
@@ -1198,9 +1225,14 @@ static int test_metadata_ownership(dcc_app_t *app, contract_state_t *state) {
     dcc_listener_t listener = slash_listener("owned-metadata", state);
     listener.handler.typed = typed_owned_handler;
     listener.args_size = sizeof(owned_args_t);
-    listener.bindings.kind = DCC_LISTENER_BIND_OPTIONS;
-    listener.bindings.items.options = &binding;
-    listener.bindings.count = 1U;
+    dcc_listener_bindings_t bindings = {
+        .size = sizeof(bindings),
+        .version = DCC_LISTENER_BINDINGS_VERSION,
+        .kind = DCC_LISTENER_BIND_OPTIONS,
+        .items.options = &binding,
+        .count = 1U,
+    };
+    listener.bindings = &bindings;
     char *validator_field = (char *)malloc(16U);
     if (validator_field == NULL) {
         return 1;
@@ -1213,8 +1245,13 @@ static int test_metadata_ownership(dcc_app_t *app, contract_state_t *state) {
         .kind = DCC_LISTENER_VALIDATE_STRING_REQUIRED,
         .field_offset = offsetof(owned_args_t, value),
     };
-    listener.validators.items = &validator;
-    listener.validators.count = 1U;
+    dcc_listener_validators_t validators = {
+        .size = sizeof(validators),
+        .version = DCC_LISTENER_VALIDATORS_VERSION,
+        .items = &validator,
+        .count = 1U,
+    };
+    listener.validators = &validators;
     dcc_listener_id_t id = 0U;
     if (dcc_app_listen(app, &listener, &id) != DCC_OK) {
         free(validator_field);
@@ -1247,9 +1284,14 @@ static int test_metadata_ownership(dcc_app_t *app, contract_state_t *state) {
     values_listener.handler.typed = typed_owned_values_handler;
     values_listener.user_data = state;
     values_listener.args_size = sizeof(owned_values_args_t);
-    values_listener.bindings.kind = DCC_LISTENER_BIND_COMPONENT;
-    values_listener.bindings.items.components = &values_binding;
-    values_listener.bindings.count = 1U;
+    dcc_listener_bindings_t values_bindings = {
+        .size = sizeof(values_bindings),
+        .version = DCC_LISTENER_BINDINGS_VERSION,
+        .kind = DCC_LISTENER_BIND_COMPONENT,
+        .items.components = &values_binding,
+        .count = 1U,
+    };
+    values_listener.bindings = &values_bindings;
     values_listener.target.route.name = "owned-values";
     dcc_listener_id_t values_id = 0U;
     if (dcc_app_listen(app, &values_listener, &values_id) != DCC_OK) {
