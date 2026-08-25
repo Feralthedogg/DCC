@@ -2462,6 +2462,16 @@ if(DCC_BUILD_TESTS)
             --binary ${CMAKE_CURRENT_BINARY_DIR}
             --llam-include ${DCC_V2_SURFACE_LLAM_INCLUDE}
     )
+    add_test(
+        NAME dcc_task12_component_v2_red_contract
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/task12_component_v2_red_contract.py
+            --compiler ${CMAKE_C_COMPILER}
+            --source ${CMAKE_CURRENT_SOURCE_DIR}
+            --binary ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(dcc_task12_component_v2_red_contract PROPERTIES
+        LABELS "red-contract;task12;component-v2")
 
     add_executable(
         dcc_interaction_flow_layout_smoke
