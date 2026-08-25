@@ -28,6 +28,7 @@ RETIRED_TASK8_PARAMS = {
     "dcc_role_params_t",
     "dcc_welcome_channel_params_t",
     "dcc_welcome_screen_params_t",
+    "dcc_voice_state_params_t",
 }
 
 

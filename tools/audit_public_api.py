@@ -77,6 +77,11 @@ def intentional_api_removals(source: pathlib.Path) -> set[str]:
         raise ValueError("rest_v2_endpoints.json endpoints must be a list")
 
     symbols: set[str] = set()
+    helpers = manifest.get("transition_helpers", [])
+    for helper in helpers:
+        symbol = helper.get("symbol") if isinstance(helper, dict) else None
+        if isinstance(symbol, str):
+            symbols.add(symbol)
     for index, endpoint in enumerate(endpoints):
         if not isinstance(endpoint, dict):
             raise ValueError(f"endpoint {index} must be an object")
@@ -123,6 +128,7 @@ def intentional_api_removals(source: pathlib.Path) -> set[str]:
                 f"transition composite {index} symbols must contain dcc_ names"
             )
         symbols.update(composite_symbols)
+    symbols.add("dcc_flow_init")
     return symbols
 
 

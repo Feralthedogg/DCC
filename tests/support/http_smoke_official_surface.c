@@ -19,8 +19,112 @@ static dcc_rest_call_options_t lobby_bearer_options(dcc_rest_cb cb,
   return options;
 }
 
+static void official_surface_params_compile_contract(void) {
+  const dcc_application_install_params_t application_install = {
+      .size = sizeof(application_install),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .scopes = NULL,
+      .scope_count = 0U,
+      .permissions = NULL,
+  };
+  const dcc_application_modify_params_t application_modify = {
+      .size = sizeof(application_modify),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .custom_install_url = NULL,
+      .description = NULL,
+      .role_connections_verification_url = NULL,
+      .install_params = NULL,
+      .integration_types_config = NULL,
+      .integration_type_config_count = 0U,
+      .flags = 0U,
+      .icon = NULL,
+      .cover_image = NULL,
+      .interactions_endpoint_url = NULL,
+      .tags = NULL,
+      .tag_count = 0U,
+      .event_webhooks_url = NULL,
+      .event_webhooks_status = DCC_APPLICATION_EVENT_WEBHOOK_DISABLED,
+      .event_webhooks_types = NULL,
+      .event_webhooks_type_count = 0U,
+  };
+  const dcc_soundboard_send_params_t soundboard_send = {
+      .size = sizeof(soundboard_send),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .sound_id = 0U,
+      .source_guild_id = 0U,
+  };
+  const dcc_lobby_create_or_join_params_t lobby_create_or_join = {
+      .size = sizeof(lobby_create_or_join),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .secret = NULL,
+      .idle_timeout_seconds = 0U,
+      .lobby_metadata = NULL,
+      .member_metadata = NULL,
+  };
+  const dcc_lobby_params_t lobby = {
+      .size = sizeof(lobby),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .metadata = NULL,
+      .members = NULL,
+      .member_count = 0U,
+      .idle_timeout_seconds = 0U,
+  };
+  const dcc_lobby_channel_link_params_t lobby_channel_link = {
+      .size = sizeof(lobby_channel_link),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .channel_id = 0U,
+  };
+  const dcc_lobby_member_params_t lobby_member = {
+      .size = sizeof(lobby_member),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .metadata = NULL,
+      .flags = 0U,
+      .additional_name = NULL,
+  };
+  const dcc_lobby_member_bulk_params_t lobby_member_bulk = {
+      .size = sizeof(lobby_member_bulk),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .items = NULL,
+      .item_count = 0U,
+  };
+  const dcc_lobby_message_params_t lobby_message = {
+      .size = sizeof(lobby_message),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .content = NULL,
+      .metadata = NULL,
+      .flags = 0U,
+  };
+  const dcc_lobby_message_moderation_metadata_params_t moderation_metadata = {
+      .size = sizeof(moderation_metadata),
+      .version = DCC_REST_TASK10_RECORD_VERSION,
+      .present = 0U,
+      .items = NULL,
+      .item_count = 0U,
+  };
+  (void)application_install;
+  (void)application_modify;
+  (void)soundboard_send;
+  (void)lobby_create_or_join;
+  (void)lobby;
+  (void)lobby_channel_link;
+  (void)lobby_member;
+  (void)lobby_member_bulk;
+  (void)lobby_message;
+  (void)moderation_metadata;
+}
+
 static dcc_status_t call_official_get_gateway(dcc_client_t *client,
                                               dcc_rest_cb cb, void *user_data) {
+  official_surface_params_compile_contract();
   dcc_rest_call_options_t options =
       rest_call_options_from_legacy(cb, user_data);
   return dcc_rest_get_gateway(client, &options, NULL);

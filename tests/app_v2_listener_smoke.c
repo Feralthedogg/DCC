@@ -127,12 +127,13 @@ static void cleanup_destroyed_listener(void *user_data) {
 }
 
 static dcc_status_t dispatch_slash(dcc_app_t *app, const char *name) {
+    static dcc_snowflake_t next_id = 1U;
     dcc_event_t event;
     memset(&event, 0, sizeof(event));
     event.type = DCC_EVENT_SLASH_COMMAND;
     event.data.interaction.name = name;
     event.data.interaction.token = "listener-smoke-token";
-    event.data.interaction.id = 1U;
+    event.data.interaction.id = next_id++;
     event.data.interaction.application_id = 2U;
     return dcc_event_bus_dispatch(&dcc_app_client(app)->events, dcc_app_client(app), &event);
 }

@@ -182,6 +182,7 @@ dcc_status_t call_rest_create_test_entitlement_params(dcc_client_t *client,
   const dcc_test_entitlement_params_t params = {
       .size = sizeof(params),
       .version = DCC_TEST_ENTITLEMENT_PARAMS_VERSION,
+      .present = 0U,
       .application_id = 123,
       .sku_id = 555,
       .owner_id = 444,
@@ -487,8 +488,19 @@ dcc_status_t call_rest_update_application_role_connection_metadata_params(
     dcc_client_t *client, dcc_rest_cb cb, void *user_data) {
   dcc_localization_t name_localizations[] = {{"ko", "Score KO"}};
   dcc_localization_t description_localizations[] = {{"ko", "Rank score KO"}};
-  dcc_application_role_connection_metadata_params_t metadata[] = {
-      DCC_APPLICATION_ROLE_CONNECTION_METADATA_PARAMS_INIT};
+  dcc_application_role_connection_metadata_params_t metadata[] = {{
+      .size = sizeof(metadata[0]),
+      .version = DCC_APPLICATION_ROLE_CONNECTION_METADATA_PARAMS_VERSION,
+      .present = 0U,
+      .type = 0,
+      .key = NULL,
+      .name = NULL,
+      .name_localizations = NULL,
+      .name_localization_count = 0U,
+      .description = NULL,
+      .description_localizations = NULL,
+      .description_localization_count = 0U,
+  }};
   metadata[0].present =
       DCC_ROLE_CONNECTION_METADATA_PRESENT_NAME_LOCALIZATIONS |
       DCC_ROLE_CONNECTION_METADATA_PRESENT_DESCRIPTION_LOCALIZATIONS;
@@ -540,8 +552,14 @@ dcc_status_t call_rest_update_current_user_application_role_connection_params(
   dcc_rest_string_map_t metadata = DCC_REST_STRING_MAP_INIT;
   metadata.entries = entries;
   metadata.entry_count = 2;
-  dcc_application_role_connection_params_t params =
-      DCC_APPLICATION_ROLE_CONNECTION_PARAMS_INIT;
+  dcc_application_role_connection_params_t params = {
+      .size = sizeof(params),
+      .version = DCC_APPLICATION_ROLE_CONNECTION_PARAMS_VERSION,
+      .present = 0U,
+      .platform_name = NULL,
+      .platform_username = NULL,
+      .metadata = NULL,
+  };
   params.present = DCC_ROLE_CONNECTION_PRESENT_PLATFORM_NAME |
                    DCC_ROLE_CONNECTION_PRESENT_PLATFORM_USERNAME |
                    DCC_ROLE_CONNECTION_PRESENT_METADATA;

@@ -303,10 +303,11 @@ static dcc_status_t dispatch_ready(dcc_app_t *app) {
 }
 
 static dcc_status_t dispatch_button(dcc_app_t *app, const char *custom_id) {
+    static dcc_snowflake_t next_id = 100U;
     dcc_event_t event;
     memset(&event, 0, sizeof(event));
     event.type = DCC_EVENT_BUTTON_CLICK;
-    event.data.interaction.id = 100U;
+    event.data.interaction.id = next_id++;
     event.data.interaction.application_id = 200U;
     event.data.interaction.guild_id = 300U;
     event.data.interaction.channel_id = 400U;
@@ -315,6 +316,7 @@ static dcc_status_t dispatch_button(dcc_app_t *app, const char *custom_id) {
     event.data.interaction.type = 3U;
     event.data.interaction.component_type = 2U;
     event.data.interaction.custom_id = custom_id;
+    event.data.interaction.token = custom_id;
     return dcc_event_bus_dispatch(&dcc_app_client(app)->events, dcc_app_client(app), &event);
 }
 
@@ -324,16 +326,18 @@ static dcc_status_t dispatch_context_menu(
     const char *name,
     dcc_snowflake_t target_id
 ) {
+    static dcc_snowflake_t next_id = 1000U;
     dcc_event_t event;
     memset(&event, 0, sizeof(event));
     event.type = type;
-    event.data.interaction.id = 101U;
+    event.data.interaction.id = next_id++;
     event.data.interaction.application_id = 200U;
     event.data.interaction.guild_id = 300U;
     event.data.interaction.channel_id = 400U;
     event.data.interaction.user_id = 600U;
     event.data.interaction.target_id = target_id;
     event.data.interaction.name = name;
+    event.data.interaction.token = name;
     event.data.interaction.type = 2U;
     event.data.interaction.command_type = type == DCC_EVENT_USER_CONTEXT_MENU
         ? DCC_APPLICATION_COMMAND_USER

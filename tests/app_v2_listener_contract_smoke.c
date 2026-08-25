@@ -221,12 +221,13 @@ static int expect_invalid_without_mutation(
 }
 
 static int dispatch_slash(dcc_app_t *app, const char *name) {
+    static dcc_snowflake_t next_id = 1U;
     dcc_event_t event;
     memset(&event, 0, sizeof(event));
     event.type = DCC_EVENT_SLASH_COMMAND;
     event.data.interaction.name = name;
     event.data.interaction.token = "contract-token";
-    event.data.interaction.id = 1U;
+    event.data.interaction.id = next_id++;
     event.data.interaction.application_id = 2U;
     return dcc_event_bus_dispatch(&app->client->events, app->client, &event) == DCC_OK ? 0 : 1;
 }
@@ -310,6 +311,7 @@ static int dispatch_interaction(
     const dcc_interaction_option_t *options,
     size_t option_count
 ) {
+    static dcc_snowflake_t next_id = 100U;
     dcc_event_t event;
     memset(&event, 0, sizeof(event));
     event.type = type;
@@ -318,7 +320,7 @@ static int dispatch_interaction(
     event.data.interaction.options = options;
     event.data.interaction.options_count = option_count;
     event.data.interaction.token = "contract-token";
-    event.data.interaction.id = 1U;
+    event.data.interaction.id = next_id++;
     event.data.interaction.application_id = 2U;
     return dcc_event_bus_dispatch(&app->client->events, app->client, &event) == DCC_OK ? 0 : 1;
 }

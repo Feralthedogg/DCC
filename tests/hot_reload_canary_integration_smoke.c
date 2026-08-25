@@ -196,26 +196,33 @@ static dcc_status_t canary_dispatch_rollback_smoke(void) {
     dcc_hot_reload_health_snapshot_t after = {
         .size = sizeof(after),
     };
+    const char *failed_stage = "none";
 
     if (status == DCC_OK) {
+        failed_stage = "client-create";
         status = dcc_client_create(&client_options, &client);
     }
     if (status == DCC_OK) {
+        failed_stage = "hot-reload-create";
         status = dcc_hot_reload_create(client, module_path, &options, &hot_reload);
     }
     if (status == DCC_OK) {
+        failed_stage = "initial-reload";
         status = dcc_hot_reload_reload(hot_reload);
     }
     if (status == DCC_OK && dcc_hot_reload_test_copy_file(DCC_HOT_RELOAD_ISOLATED_CRASH_MODULE, module_path) != 0) {
         status = DCC_ERR_RUNTIME;
     }
     if (status == DCC_OK) {
+        failed_stage = "candidate-reload";
         status = dcc_hot_reload_reload(hot_reload);
     }
     if (status == DCC_OK && dcc_hot_reload_test_dispatch_raw_slash(client, 88U) != 0) {
+        failed_stage = "dispatch";
         status = DCC_ERR_RUNTIME;
     }
     if (status == DCC_OK) {
+        failed_stage = "snapshot";
         status = dcc_hot_reload_health_snapshot(hot_reload, &after);
     }
     if (status == DCC_OK &&
@@ -236,16 +243,31 @@ static dcc_status_t canary_dispatch_rollback_smoke(void) {
     unlink(module_path);
     unsetenv("DCC_DISCORD_API_BASE");
 
-    if (status != DCC_OK ||
-        server.request_count != 2U ||
-        strstr(server.request[0], "POST /interactions/555/retry-token/callback HTTP/1.1") == NULL ||
-        strstr(server.request[0], "\"content\":\"worker slash\"") == NULL ||
-        strstr(server.request[1], "POST /channels/123/messages HTTP/1.1") == NULL ||
-        strstr(server.request[1], "\"content\":\"worker async\"") == NULL) {
+    const char *first_interaction =
+        strstr(server.request[0], "POST /interactions/555/retry-token/callback HTTP/1.1");
+    const char *second_interaction =
+        strstr(server.request[1], "POST /interactions/555/retry-token/callback HTTP/1.1");
+    const char *first_message =
+        strstr(server.request[0], "POST /channels/123/messages HTTP/1.1");
+    const char *second_message =
+        strstr(server.request[1], "POST /channels/123/messages HTTP/1.1");
+    const uint8_t interaction_request_ok =
+        (first_interaction != NULL &&
+         strstr(server.request[0], "\"content\":\"worker slash\"") != NULL) ||
+        (second_interaction != NULL &&
+         strstr(server.request[1], "\"content\":\"worker slash\"") != NULL);
+    const uint8_t message_request_ok =
+        (first_message != NULL &&
+         strstr(server.request[0], "\"content\":\"worker async\"") != NULL) ||
+        (second_message != NULL &&
+         strstr(server.request[1], "\"content\":\"worker async\"") != NULL);
+    if (status != DCC_OK || server.request_count != 2U ||
+        interaction_request_ok == 0U || message_request_ok == 0U) {
         fprintf(
             stderr,
-            "canary dispatch rollback failed: %s count=%zu active=%llu candidate=%llu "
+            "canary dispatch rollback failed at %s: %s count=%zu active=%llu candidate=%llu "
             "canary=%llu/%llu reason=%s\nfirst:\n%s\nsecond:\n%s\n",
+            failed_stage,
             dcc_status_string(status),
             server.request_count,
             (unsigned long long)after.active_worker_generation,
