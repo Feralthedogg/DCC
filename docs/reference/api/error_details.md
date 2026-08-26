@@ -2,7 +2,7 @@
 
 # `<dcc/error_details.h>`
 
-Source: [`include/dcc/error_details.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/error_details.h)
+Source: [`include/dcc/error_details.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/error_details.h)
 
 ## `DCC_ERROR_VERSION`
 

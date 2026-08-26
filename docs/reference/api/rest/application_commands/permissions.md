@@ -2,7 +2,7 @@
 
 # `<dcc/rest/application_commands/permissions.h>`
 
-Source: [`include/dcc/rest/application_commands/permissions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/application_commands/permissions.h)
+Source: [`include/dcc/rest/application_commands/permissions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/application_commands/permissions.h)
 
 ## `dcc_rest_edit_guild_command_permissions`
 

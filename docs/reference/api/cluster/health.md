@@ -2,7 +2,7 @@
 
 # `<dcc/cluster/health.h>`
 
-Source: [`include/dcc/cluster/health.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/cluster/health.h)
+Source: [`include/dcc/cluster/health.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/cluster/health.h)
 
 ## `dcc_cluster_get_restart_policy`
 

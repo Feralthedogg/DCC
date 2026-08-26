@@ -2,7 +2,7 @@
 
 # `<dcc/version.h>`
 
-Source: [`include/dcc/version.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/version.h)
+Source: [`include/dcc/version.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/version.h)
 
 ## `dcc_version_string`
 

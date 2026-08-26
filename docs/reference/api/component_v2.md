@@ -2,7 +2,7 @@
 
 # `<dcc/component_v2.h>`
 
-Source: [`include/dcc/component_v2.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/component_v2.h)
+Source: [`include/dcc/component_v2.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/component_v2.h)
 
 ## `DCC_COMPONENT_V2_BUILDER_INIT`
 

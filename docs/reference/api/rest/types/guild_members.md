@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/guild_members.h>`
 
-Source: [`include/dcc/rest/types/guild_members.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/types/guild_members.h)
+Source: [`include/dcc/rest/types/guild_members.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/types/guild_members.h)
 
 ## `DCC_GUILD_MEMBER_RECORD_INIT`
 

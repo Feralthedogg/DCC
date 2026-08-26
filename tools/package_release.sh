@@ -47,8 +47,8 @@ if [ -z "$version" ]; then
     echo "cannot determine release version" >&2
     exit 1
 fi
-if [ "$cmake_version" = "2.0.0" ] && [ "$version" != "2.0.0" ]; then
-    echo "DCC 2 Stable packages require the exact version 2.0.0" >&2
+if [ "$cmake_version" = "2.0.1" ] && [ "$version" != "2.0.1" ]; then
+    echo "DCC 2 Stable packages require the exact version 2.0.1" >&2
     exit 2
 fi
 version_base=${version%%-*}

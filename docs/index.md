@@ -1,6 +1,6 @@
 # DCC 2.0
 
-DCC is a C11 Discord runtime built on LLAM 2.2.0. DCC 2.0.0 Stable provides a
+DCC is a C11 Discord runtime built on LLAM 2.2.1. DCC 2.0.1 Stable provides a
 small Bot API for application code and focused headers for App, Gateway, REST,
 voice, cluster, replay, hot reload, and interaction-server integration.
 

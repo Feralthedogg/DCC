@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ github.repository_owner }}/LLAM
-          ref: 2808e99c0339b8b3d6ed5ef7fab3dc231927c568 # v2.2.0
+          ref: 7265b339a9364502e1e537a3aec072939e2bdcf9 # v2.2.1
           path: LLAM
 
       - name: Install Linux dependencies

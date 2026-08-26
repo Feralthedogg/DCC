@@ -2,7 +2,7 @@
 
 # `<dcc/modal.h>`
 
-Source: [`include/dcc/modal.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/modal.h)
+Source: [`include/dcc/modal.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/modal.h)
 
 ## `DCC_MODAL_BUILDER_INIT`
 

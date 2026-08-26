@@ -2,7 +2,7 @@
 
 # `<dcc/message_link.h>`
 
-Source: [`include/dcc/message_link.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/message_link.h)
+Source: [`include/dcc/message_link.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/message_link.h)
 
 ## `DCC_MESSAGE_LINK_MAX`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/interaction_server/request.h>`
 
-Source: [`include/dcc/interaction_server/request.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/interaction_server/request.h)
+Source: [`include/dcc/interaction_server/request.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/interaction_server/request.h)
 
 ## `dcc_interaction_request_body`
 

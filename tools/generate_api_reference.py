@@ -69,13 +69,13 @@ def expected_files(source: Path) -> dict[Path, str]:
         entries.sort(key=lambda item: item[0].encode("utf-8"))
         page = root / relative.with_suffix(".md")
         lines = [MARKER, "", f"# `<dcc/{relative.as_posix()}>`", "",
-                 f"Source: [`include/dcc/{relative.as_posix()}`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/{relative.as_posix()})", ""]
+                 f"Source: [`include/dcc/{relative.as_posix()}`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/{relative.as_posix()})", ""]
         for name, signature, description in entries:
             lines.extend((f"## `{name}`", "", description, "", "```c", signature, "```", ""))
         output[page] = "\n".join(lines).rstrip() + "\n"
         index_rows.append((relative.as_posix(), relative.with_suffix(".md").as_posix(), len(entries)))
     index = [MARKER, "", "# DCC 2 API Reference", "",
-             "Generated from the installed DCC 2.0.0 public header tree.", ""]
+             "Generated from the installed DCC 2.0.1 public header tree.", ""]
     for header, link, count in index_rows:
         index.append(f"- [`<dcc/{header}>`]({link}) — {count} public callable/macro entries")
     index.append("")

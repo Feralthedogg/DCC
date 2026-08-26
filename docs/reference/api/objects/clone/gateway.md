@@ -2,7 +2,7 @@
 
 # `<dcc/objects/clone/gateway.h>`
 
-Source: [`include/dcc/objects/clone/gateway.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/objects/clone/gateway.h)
+Source: [`include/dcc/objects/clone/gateway.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/objects/clone/gateway.h)
 
 ## `dcc_gateway_event_data_clone`
 

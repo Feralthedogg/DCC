@@ -2,7 +2,7 @@
 
 # `<dcc/objects/interactions.h>`
 
-Source: [`include/dcc/objects/interactions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/objects/interactions.h)
+Source: [`include/dcc/objects/interactions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/objects/interactions.h)
 
 ## `DCC_INTERACTION_DEFAULT_ATTACHMENT_SIZE_LIMIT`
 

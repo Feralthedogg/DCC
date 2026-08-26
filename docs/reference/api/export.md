@@ -2,7 +2,7 @@
 
 # `<dcc/export.h>`
 
-Source: [`include/dcc/export.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/export.h)
+Source: [`include/dcc/export.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/export.h)
 
 ## `DCC_API`
 

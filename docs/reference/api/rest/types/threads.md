@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/threads.h>`
 
-Source: [`include/dcc/rest/types/threads.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/types/threads.h)
+Source: [`include/dcc/rest/types/threads.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/types/threads.h)
 
 ## `DCC_REST_JOINED_THREAD_ARCHIVE_QUERY_INIT`
 

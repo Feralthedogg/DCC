@@ -2,7 +2,7 @@
 
 # `<dcc/cache.h>`
 
-Source: [`include/dcc/cache.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/cache.h)
+Source: [`include/dcc/cache.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/cache.h)
 
 ## `dcc_cache_clear`
 

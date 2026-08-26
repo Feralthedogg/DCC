@@ -2,7 +2,7 @@
 
 # `<dcc/rest/messages/edit.h>`
 
-Source: [`include/dcc/rest/messages/edit.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/messages/edit.h)
+Source: [`include/dcc/rest/messages/edit.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/messages/edit.h)
 
 ## `dcc_rest_bulk_delete_messages`
 

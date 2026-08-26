@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/entitlements.h>`
 
-Source: [`include/dcc/rest/types/entitlements.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/types/entitlements.h)
+Source: [`include/dcc/rest/types/entitlements.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/types/entitlements.h)
 
 ## `DCC_REST_ENTITLEMENT_QUERY_INIT`
 

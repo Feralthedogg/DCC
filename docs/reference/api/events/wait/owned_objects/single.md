@@ -2,7 +2,7 @@
 
 # `<dcc/events/wait/owned_objects/single.h>`
 
-Source: [`include/dcc/events/wait/owned_objects/single.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/events/wait/owned_objects/single.h)
+Source: [`include/dcc/events/wait/owned_objects/single.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/events/wait/owned_objects/single.h)
 
 ## `dcc_client_wait_for_channel`
 

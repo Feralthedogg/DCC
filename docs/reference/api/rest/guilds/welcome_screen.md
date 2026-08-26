@@ -2,7 +2,7 @@
 
 # `<dcc/rest/guilds/welcome_screen.h>`
 
-Source: [`include/dcc/rest/guilds/welcome_screen.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/guilds/welcome_screen.h)
+Source: [`include/dcc/rest/guilds/welcome_screen.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/guilds/welcome_screen.h)
 
 ## `dcc_rest_get_guild_welcome_screen`
 

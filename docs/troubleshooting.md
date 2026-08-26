@@ -27,7 +27,7 @@ cmake -S . -B build \
   -DDCC_LLAM_ROOT=../LLAM
 ```
 
-DCC 2.0.0 requires LLAM 2.2.0 or newer with ABI major 2. Remove an old CMake
+DCC 2.0.1 requires LLAM 2.2.1 or newer with ABI major 2. Remove an old CMake
 build directory, or explicitly update `DCC_LLAM_REQUIRED_VERSION`, when a cache
 still reports an earlier requirement.
 

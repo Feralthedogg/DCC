@@ -2,7 +2,7 @@
 
 # `<dcc/component_session.h>`
 
-Source: [`include/dcc/component_session.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/component_session.h)
+Source: [`include/dcc/component_session.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/component_session.h)
 
 ## `DCC_COMPONENT_SESSION_ACTION_MAX`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/rest/firewall.h>`
 
-Source: [`include/dcc/rest/firewall.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/firewall.h)
+Source: [`include/dcc/rest/firewall.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/firewall.h)
 
 ## `DCC_REST_FIREWALL_DEFAULT_INVALID_REQUEST_HARD_LIMIT`
 

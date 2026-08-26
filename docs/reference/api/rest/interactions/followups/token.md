@@ -2,7 +2,7 @@
 
 # `<dcc/rest/interactions/followups/token.h>`
 
-Source: [`include/dcc/rest/interactions/followups/token.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/interactions/followups/token.h)
+Source: [`include/dcc/rest/interactions/followups/token.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/interactions/followups/token.h)
 
 ## `dcc_rest_interaction_followup_create`
 

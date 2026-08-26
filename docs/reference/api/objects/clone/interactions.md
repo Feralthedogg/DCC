@@ -2,7 +2,7 @@
 
 # `<dcc/objects/clone/interactions.h>`
 
-Source: [`include/dcc/objects/clone/interactions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/objects/clone/interactions.h)
+Source: [`include/dcc/objects/clone/interactions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/objects/clone/interactions.h)
 
 ## `dcc_interaction_authorizing_integration_owner`
 

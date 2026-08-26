@@ -2,7 +2,7 @@
 
 # `<dcc/tasks.h>`
 
-Source: [`include/dcc/tasks.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/tasks.h)
+Source: [`include/dcc/tasks.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/tasks.h)
 
 ## `dcc_task_group_cancel`
 

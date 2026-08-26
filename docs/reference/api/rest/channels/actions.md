@@ -2,7 +2,7 @@
 
 # `<dcc/rest/channels/actions.h>`
 
-Source: [`include/dcc/rest/channels/actions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/channels/actions.h)
+Source: [`include/dcc/rest/channels/actions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/channels/actions.h)
 
 ## `dcc_rest_follow_news_channel`
 

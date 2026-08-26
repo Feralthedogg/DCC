@@ -2,7 +2,7 @@
 
 # `<dcc/embed.h>`
 
-Source: [`include/dcc/embed.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/embed.h)
+Source: [`include/dcc/embed.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/embed.h)
 
 ## `DCC_EMBED_BUILDER_INIT`
 

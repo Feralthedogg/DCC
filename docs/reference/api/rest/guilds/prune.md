@@ -2,7 +2,7 @@
 
 # `<dcc/rest/guilds/prune.h>`
 
-Source: [`include/dcc/rest/guilds/prune.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/guilds/prune.h)
+Source: [`include/dcc/rest/guilds/prune.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/guilds/prune.h)
 
 ## `dcc_rest_begin_guild_prune`
 

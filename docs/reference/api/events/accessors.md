@@ -2,7 +2,7 @@
 
 # `<dcc/events/accessors.h>`
 
-Source: [`include/dcc/events/accessors.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/events/accessors.h)
+Source: [`include/dcc/events/accessors.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/events/accessors.h)
 
 ## `dcc_event_application_command_permissions_update`
 

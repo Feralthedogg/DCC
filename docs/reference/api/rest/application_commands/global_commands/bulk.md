@@ -2,7 +2,7 @@
 
 # `<dcc/rest/application_commands/global_commands/bulk.h>`
 
-Source: [`include/dcc/rest/application_commands/global_commands/bulk.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/application_commands/global_commands/bulk.h)
+Source: [`include/dcc/rest/application_commands/global_commands/bulk.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/application_commands/global_commands/bulk.h)
 
 ## `dcc_rest_bulk_overwrite_global_commands`
 

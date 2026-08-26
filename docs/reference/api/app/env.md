@@ -2,7 +2,7 @@
 
 # `<dcc/app/env.h>`
 
-Source: [`include/dcc/app/env.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/app/env.h)
+Source: [`include/dcc/app/env.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/app/env.h)
 
 ## `dcc_app_env_bind`
 

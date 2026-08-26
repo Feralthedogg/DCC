@@ -2,7 +2,7 @@
 
 # `<dcc/bot/main.h>`
 
-Source: [`include/dcc/bot/main.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/bot/main.h)
+Source: [`include/dcc/bot/main.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/bot/main.h)
 
 ## `DCC_BOT_CONFIG`
 

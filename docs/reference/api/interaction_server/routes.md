@@ -2,7 +2,7 @@
 
 # `<dcc/interaction_server/routes.h>`
 
-Source: [`include/dcc/interaction_server/routes.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/interaction_server/routes.h)
+Source: [`include/dcc/interaction_server/routes.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/interaction_server/routes.h)
 
 ## `dcc_interaction_server_add_health_route`
 

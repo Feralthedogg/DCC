@@ -2,7 +2,7 @@
 
 # `<dcc/rest/messages/reactions.h>`
 
-Source: [`include/dcc/rest/messages/reactions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/messages/reactions.h)
+Source: [`include/dcc/rest/messages/reactions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/messages/reactions.h)
 
 ## `dcc_rest_add_message_reaction`
 

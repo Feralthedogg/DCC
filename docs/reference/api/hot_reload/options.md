@@ -2,7 +2,7 @@
 
 # `<dcc/hot_reload/options.h>`
 
-Source: [`include/dcc/hot_reload/options.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/hot_reload/options.h)
+Source: [`include/dcc/hot_reload/options.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/hot_reload/options.h)
 
 ## `DCC_HOT_RELOAD_DEFAULT_WORKER`
 

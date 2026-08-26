@@ -2,7 +2,7 @@
 
 # `<dcc/voice/dave.h>`
 
-Source: [`include/dcc/voice/dave.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/voice/dave.h)
+Source: [`include/dcc/voice/dave.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/voice/dave.h)
 
 ## `dcc_voice_build_dave_mls_gateway_frame`
 

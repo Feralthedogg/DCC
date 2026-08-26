@@ -2,7 +2,7 @@
 
 # `<dcc/permissions.h>`
 
-Source: [`include/dcc/permissions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/permissions.h)
+Source: [`include/dcc/permissions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/permissions.h)
 
 ## `DCC_PERMISSION_ADD_REACTIONS`
 

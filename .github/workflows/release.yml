@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example v2.0.0
+        description: Release version, for example v2.0.1
         required: false
-        default: v2.0.0
+        default: v2.0.1
         type: string
   push:
     tags:
-      - 'v2.0.0'
+      - 'v2.0.1'
 
 concurrency:
   group: release-${{ github.ref }}
@@ -48,7 +48,7 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ github.repository_owner }}/LLAM
-          ref: 2808e99c0339b8b3d6ed5ef7fab3dc231927c568 # v2.2.0
+          ref: 7265b339a9364502e1e537a3aec072939e2bdcf9 # v2.2.1
           path: LLAM
 
       - name: Install Linux dependencies
@@ -79,8 +79,8 @@ jobs:
         env:
           DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
         run: |
-          test "$DCC_RELEASE_VERSION" = "v2.0.0" || {
-            echo "release identity must be exactly v2.0.0" >&2
+          test "$DCC_RELEASE_VERSION" = "v2.0.1" || {
+            echo "release identity must be exactly v2.0.1" >&2
             exit 1
           }
 
@@ -166,7 +166,7 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ github.repository_owner }}/LLAM
-          ref: 2808e99c0339b8b3d6ed5ef7fab3dc231927c568 # v2.2.0
+          ref: 7265b339a9364502e1e537a3aec072939e2bdcf9 # v2.2.1
           path: LLAM
 
       - name: Start BSD VM
@@ -306,7 +306,7 @@ jobs:
             echo
             echo "## Highlights"
             echo
-            echo "- LLAM 2.2.0 runtime baseline with generated version metadata and public API/legacy ABI release gates."
+            echo "- LLAM 2.2.1 runtime baseline with generated version metadata and public API/legacy ABI release gates."
             echo "- Components V2 validation and serialization updates, callback response type 12, REST \`with_response\`, and interaction overload/replay/deadline protection."
             echo "- Runtime-loaded official Discord libdave backend for MLS state, key ratchets, and fail-closed Opus frame encryption/decryption."
             echo "- Production-safe bot presets, explicit development auto-sync aliases, and signal-safe graceful shutdown runners."
@@ -379,7 +379,7 @@ jobs:
             echo "Invoke-WebRequest \"${base_url}/install.ps1\" -OutFile install.ps1; .\\install.ps1 -Version ${version} -BaseUrl \"${base_url}\" -Prefix \"\$env:LOCALAPPDATA\\DCC\""
             echo "\`\`\`"
             echo
-            echo "Install LLAM separately before installing DCC, or pass --install-llam to the POSIX installer / -InstallLlam to the PowerShell installer to fetch the DCC-tested LLAM 2.2.0 runtime into the same prefix. FreeBSD, OpenBSD, and NetBSD release archives are published for x86_64; DragonFlyBSD is available as an experimental source/package-script target."
+            echo "Install LLAM separately before installing DCC, or pass --install-llam to the POSIX installer / -InstallLlam to the PowerShell installer to fetch the DCC-tested LLAM 2.2.1 runtime into the same prefix. FreeBSD, OpenBSD, and NetBSD release archives are published for x86_64; DragonFlyBSD is available as an experimental source/package-script target."
             echo
             echo "## Verification"
             echo

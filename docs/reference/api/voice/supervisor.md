@@ -2,7 +2,7 @@
 
 # `<dcc/voice/supervisor.h>`
 
-Source: [`include/dcc/voice/supervisor.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/voice/supervisor.h)
+Source: [`include/dcc/voice/supervisor.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/voice/supervisor.h)
 
 ## `dcc_voice_client_connect_and_wait_until_ready`
 

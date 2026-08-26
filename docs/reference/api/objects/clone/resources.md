@@ -2,7 +2,7 @@
 
 # `<dcc/objects/clone/resources.h>`
 
-Source: [`include/dcc/objects/clone/resources.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/objects/clone/resources.h)
+Source: [`include/dcc/objects/clone/resources.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/objects/clone/resources.h)
 
 ## `dcc_channel_clone`
 

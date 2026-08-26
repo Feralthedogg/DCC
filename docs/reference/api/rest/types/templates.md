@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/templates.h>`
 
-Source: [`include/dcc/rest/types/templates.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/types/templates.h)
+Source: [`include/dcc/rest/types/templates.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/types/templates.h)
 
 ## `DCC_TEMPLATE_PARAMS_INIT`
 

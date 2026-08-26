@@ -33,5 +33,5 @@ stable release.
 
 ## LLAM compatibility
 
-DCC 2.0.0 requires LLAM 2.2.0 or newer with ABI major 2. Configure-time checks run
+DCC 2.0.1 requires LLAM 2.2.1 or newer with ABI major 2. Configure-time checks run
 for package, source-subdirectory, and prebuilt-library consumption paths.

@@ -2,7 +2,7 @@
 
 # `<dcc/snowflake.h>`
 
-Source: [`include/dcc/snowflake.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/snowflake.h)
+Source: [`include/dcc/snowflake.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/snowflake.h)
 
 ## `DCC_SNOWFLAKE_DISCORD_EPOCH_MS`
 

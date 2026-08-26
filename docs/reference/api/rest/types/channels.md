@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/channels.h>`
 
-Source: [`include/dcc/rest/types/channels.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/types/channels.h)
+Source: [`include/dcc/rest/types/channels.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/types/channels.h)
 
 ## `DCC_CHANNEL_FORUM_TAG_PARAMS_INIT`
 

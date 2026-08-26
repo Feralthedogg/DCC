@@ -2,7 +2,7 @@
 
 # `<dcc/objects/clone/base.h>`
 
-Source: [`include/dcc/objects/clone/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/objects/clone/base.h)
+Source: [`include/dcc/objects/clone/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/objects/clone/base.h)
 
 ## `dcc_attachment_clone`
 

@@ -1,10 +1,10 @@
 # DCC
 
-DCC is a C11 Discord client runtime built on LLAM 2.2.0. It covers Gateway,
+DCC is a C11 Discord client runtime built on LLAM 2.2.1. It covers Gateway,
 REST, interaction webhooks, Components V2, voice with the official libdave
 backend, sharding, replay tests, and isolated hot reload.
 
-DCC 2.0.0 Stable separates safe production behavior from development
+DCC 2.0.1 Stable separates safe production behavior from development
 convenience: production runners never mutate commands on READY, while
 development runners opt into local dotenv loading and command synchronization.
 
@@ -57,7 +57,7 @@ with `dcc_command_sync --plan` and `--apply`.
 
 ```sh
 git clone https://github.com/Feralthedogg/LLAM.git
-git -C LLAM checkout 2808e99c0339b8b3d6ed5ef7fab3dc231927c568
+git -C LLAM checkout 7265b339a9364502e1e537a3aec072939e2bdcf9
 git clone https://github.com/Feralthedogg/DCC.git
 cmake -S DCC -B DCC/build \
   -DDCC_LLAM_USE_SUBDIRECTORY=ON \

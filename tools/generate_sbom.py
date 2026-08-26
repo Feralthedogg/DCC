@@ -54,10 +54,10 @@ def main() -> int:
     dependencies = [
         {
             "type": "library",
-            "bom-ref": "pkg:github/Feralthedogg/LLAM@2.2.0",
+            "bom-ref": "pkg:github/Feralthedogg/LLAM@2.2.1",
             "name": "LLAM",
-            "version": "2.2.0",
-            "purl": "pkg:github/Feralthedogg/LLAM@2.2.0",
+            "version": "2.2.1",
+            "purl": "pkg:github/Feralthedogg/LLAM@2.2.1",
         },
         {
             "type": "library",

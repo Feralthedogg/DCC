@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/users.h>`
 
-Source: [`include/dcc/rest/types/users.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/types/users.h)
+Source: [`include/dcc/rest/types/users.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/types/users.h)
 
 ## `DCC_CURRENT_USER_PARAMS_INIT`
 

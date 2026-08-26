@@ -2,7 +2,7 @@
 
 # `<dcc/cluster/supervisor.h>`
 
-Source: [`include/dcc/cluster/supervisor.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/cluster/supervisor.h)
+Source: [`include/dcc/cluster/supervisor.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/cluster/supervisor.h)
 
 ## `dcc_cluster_get_supervisor_decision_callback`
 

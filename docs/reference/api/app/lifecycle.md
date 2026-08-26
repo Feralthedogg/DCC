@@ -2,7 +2,7 @@
 
 # `<dcc/app/lifecycle.h>`
 
-Source: [`include/dcc/app/lifecycle.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/app/lifecycle.h)
+Source: [`include/dcc/app/lifecycle.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/app/lifecycle.h)
 
 ## `dcc_app_client`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/hot_reload/module/macros.h>`
 
-Source: [`include/dcc/hot_reload/module/macros.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/hot_reload/module/macros.h)
+Source: [`include/dcc/hot_reload/module/macros.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/hot_reload/module/macros.h)
 
 ## `DCC_BOT_MODULE`
 

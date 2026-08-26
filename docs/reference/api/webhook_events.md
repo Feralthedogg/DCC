@@ -2,7 +2,7 @@
 
 # `<dcc/webhook_events.h>`
 
-Source: [`include/dcc/webhook_events.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/webhook_events.h)
+Source: [`include/dcc/webhook_events.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/webhook_events.h)
 
 ## `dcc_status_t`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/rest/messages/polls.h>`
 
-Source: [`include/dcc/rest/messages/polls.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/messages/polls.h)
+Source: [`include/dcc/rest/messages/polls.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/messages/polls.h)
 
 ## `dcc_rest_end_poll`
 

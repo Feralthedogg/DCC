@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/scheduled_events.h>`
 
-Source: [`include/dcc/rest/types/scheduled_events.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/types/scheduled_events.h)
+Source: [`include/dcc/rest/types/scheduled_events.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/types/scheduled_events.h)
 
 ## `DCC_REST_SCHEDULED_EVENT_QUERY_INIT`
 

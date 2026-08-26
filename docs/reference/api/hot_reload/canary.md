@@ -2,7 +2,7 @@
 
 # `<dcc/hot_reload/canary.h>`
 
-Source: [`include/dcc/hot_reload/canary.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/hot_reload/canary.h)
+Source: [`include/dcc/hot_reload/canary.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/hot_reload/canary.h)
 
 ## `dcc_hot_reload_canary_decide`
 

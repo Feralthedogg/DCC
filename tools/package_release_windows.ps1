@@ -75,8 +75,8 @@ $VersionBase = $Version -replace '-.*$', ''
 Assert-ReleaseComponent "version" $Version
 Assert-ReleaseComponent "target" $Target
 
-if (($ProjectVersion -eq "2.0.0") -and ($Version -ne "2.0.0")) {
-    throw "DCC 2 Stable packages require the exact version 2.0.0"
+if (($ProjectVersion -eq "2.0.1") -and ($Version -ne "2.0.1")) {
+    throw "DCC 2 Stable packages require the exact version 2.0.1"
 }
 
 if ($Target -ne "windows-x86_64") {

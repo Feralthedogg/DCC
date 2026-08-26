@@ -276,7 +276,7 @@ dcc_doctor --json
 dcc_doctor --require-token --require-dave
 ```
 
-It verifies the DCC compile/runtime version, LLAM 2.2.0+, LLAM ABI, OpenSSL,
+It verifies the DCC compile/runtime version, LLAM 2.2.1+, LLAM ABI, OpenSSL,
 token discovery without printing the token, certificate environment paths, and
 the complete official libdave ABI. Token and DAVE absence are warnings unless
 made required.

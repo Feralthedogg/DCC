@@ -2,7 +2,7 @@
 
 # `<dcc/store.h>`
 
-Source: [`include/dcc/store.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/store.h)
+Source: [`include/dcc/store.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/store.h)
 
 ## `dcc_store_deinit`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/interactions.h>`
 
-Source: [`include/dcc/rest/types/interactions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/types/interactions.h)
+Source: [`include/dcc/rest/types/interactions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/types/interactions.h)
 
 ## `DCC_REST_INTERACTION_RESPONSE_INIT`
 

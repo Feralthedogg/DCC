@@ -2,7 +2,7 @@
 
 # `<dcc/voice/transport.h>`
 
-Source: [`include/dcc/voice/transport.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/voice/transport.h)
+Source: [`include/dcc/voice/transport.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/voice/transport.h)
 
 ## `dcc_voice_client_build_ip_discovery_packet`
 

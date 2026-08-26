@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.1 - 2026-08-26
+
+Patch release preserving the DCC 2 public API and ABI major 2.
+
+- Updated the tested runtime baseline, installers, SBOM, packages, CI, and
+  documentation to the immutable LLAM 2.2.1 release commit.
+- Stabilized hosted release checks and restored FreeBSD, OpenBSD, and NetBSD
+  build/package validation.
+- Closed interaction-flow ownership leaks in sanitizer smoke tests.
+
 ## 2.0.0 - 2026-08-25
 
 Stable major release with the canonical five-leaf Bot API, status-returning

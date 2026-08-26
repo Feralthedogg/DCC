@@ -2,7 +2,7 @@
 
 # `<dcc/app/base.h>`
 
-Source: [`include/dcc/app/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/app/base.h)
+Source: [`include/dcc/app/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/app/base.h)
 
 ## `dcc_app_on_error`
 

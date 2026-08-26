@@ -2,7 +2,7 @@
 
 # `<dcc/rest/base.h>`
 
-Source: [`include/dcc/rest/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/base.h)
+Source: [`include/dcc/rest/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/base.h)
 
 ## `dcc_rest_method_name`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/oauth2.h>`
 
-Source: [`include/dcc/oauth2.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/oauth2.h)
+Source: [`include/dcc/oauth2.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/oauth2.h)
 
 ## `dcc_oauth2_exchange_code`
 

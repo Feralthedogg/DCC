@@ -2,7 +2,7 @@
 
 # `<dcc/replay.h>`
 
-Source: [`include/dcc/replay.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/replay.h)
+Source: [`include/dcc/replay.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/replay.h)
 
 ## `dcc_replay_kind_from_string`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/client.h>`
 
-Source: [`include/dcc/client.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/client.h)
+Source: [`include/dcc/client.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/client.h)
 
 ## `DCC_GATEWAY_INFO_HAS_SESSION_STATE`
 

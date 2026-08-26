@@ -2,7 +2,7 @@
 
 # `<dcc/rest/emojis_stickers/guild_stickers.h>`
 
-Source: [`include/dcc/rest/emojis_stickers/guild_stickers.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/emojis_stickers/guild_stickers.h)
+Source: [`include/dcc/rest/emojis_stickers/guild_stickers.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/emojis_stickers/guild_stickers.h)
 
 ## `dcc_rest_create_guild_sticker`
 

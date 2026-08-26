@@ -2,7 +2,7 @@
 
 # `<dcc/intents.h>`
 
-Source: [`include/dcc/intents.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/intents.h)
+Source: [`include/dcc/intents.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/intents.h)
 
 ## `DCC_INTENTS_ALL`
 

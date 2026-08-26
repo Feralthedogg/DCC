@@ -2,7 +2,7 @@
 
 # `<dcc/voice/base.h>`
 
-Source: [`include/dcc/voice/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/voice/base.h)
+Source: [`include/dcc/voice/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/voice/base.h)
 
 ## `DCC_VOICE_CLIENT_TYPEDEF`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/error.h>`
 
-Source: [`include/dcc/error.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/error.h)
+Source: [`include/dcc/error.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/error.h)
 
 ## `dcc_status_string`
 

@@ -326,7 +326,7 @@ def read_all(paths: list[Path]) -> str:
 
 def main() -> int:
     cmake_text = CMAKE_FILE.read_text(encoding="utf-8")
-    if "VERSION 2.0.0" in cmake_text:
+    if "VERSION 2.0.1" in cmake_text:
         missing = []
         for path in [*PUBLIC_FILES, *OBJECT_PUBLIC_FILES, *SOURCE_FILES]:
             if not path.is_file():

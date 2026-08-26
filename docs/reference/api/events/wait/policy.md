@@ -2,7 +2,7 @@
 
 # `<dcc/events/wait/policy.h>`
 
-Source: [`include/dcc/events/wait/policy.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/events/wait/policy.h)
+Source: [`include/dcc/events/wait/policy.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/events/wait/policy.h)
 
 ## `dcc_event_wait_policy_init`
 

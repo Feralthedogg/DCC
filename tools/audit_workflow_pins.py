@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SHA = r"[0-9a-f]{40}"
-LLAM_220_COMMIT = "2808e99c0339b8b3d6ed5ef7fab3dc231927c568"
+LLAM_221_COMMIT = "7265b339a9364502e1e537a3aec072939e2bdcf9"
 
 
 def main() -> int:
@@ -24,10 +24,10 @@ def main() -> int:
         blocks = text.split("- name: Checkout LLAM")
         for block_index, block in enumerate(blocks[1:], 1):
             checkout_block = block.split("- name:", 1)[0]
-            if f"ref: {LLAM_220_COMMIT}" not in checkout_block:
+            if f"ref: {LLAM_221_COMMIT}" not in checkout_block:
                 errors.append(
                     f"{path.relative_to(ROOT)}: Checkout LLAM block {block_index} is not pinned to "
-                    f"the v2.2.0 commit"
+                    f"the v2.2.1 commit"
                 )
     if errors:
         print("DCC workflow pin audit failed:")

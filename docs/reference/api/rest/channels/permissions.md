@@ -2,7 +2,7 @@
 
 # `<dcc/rest/channels/permissions.h>`
 
-Source: [`include/dcc/rest/channels/permissions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/channels/permissions.h)
+Source: [`include/dcc/rest/channels/permissions.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/channels/permissions.h)
 
 ## `dcc_rest_delete_channel_permission`
 

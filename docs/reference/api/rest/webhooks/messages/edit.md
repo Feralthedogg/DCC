@@ -2,7 +2,7 @@
 
 # `<dcc/rest/webhooks/messages/edit.h>`
 
-Source: [`include/dcc/rest/webhooks/messages/edit.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/webhooks/messages/edit.h)
+Source: [`include/dcc/rest/webhooks/messages/edit.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/webhooks/messages/edit.h)
 
 ## `dcc_rest_modify_webhook_message`
 

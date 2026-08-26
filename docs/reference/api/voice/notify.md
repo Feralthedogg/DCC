@@ -2,7 +2,7 @@
 
 # `<dcc/voice/notify.h>`
 
-Source: [`include/dcc/voice/notify.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/voice/notify.h)
+Source: [`include/dcc/voice/notify.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/voice/notify.h)
 
 ## `dcc_voice_client_notify_buffer_send`
 

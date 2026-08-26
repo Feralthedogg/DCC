@@ -2,7 +2,7 @@
 
 # `<dcc/rest/threads/create.h>`
 
-Source: [`include/dcc/rest/threads/create.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/threads/create.h)
+Source: [`include/dcc/rest/threads/create.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/threads/create.h)
 
 ## `dcc_rest_create_forum_thread`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/interaction_server/crypto.h>`
 
-Source: [`include/dcc/interaction_server/crypto.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/interaction_server/crypto.h)
+Source: [`include/dcc/interaction_server/crypto.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/interaction_server/crypto.h)
 
 ## `dcc_interaction_verify_signature`
 

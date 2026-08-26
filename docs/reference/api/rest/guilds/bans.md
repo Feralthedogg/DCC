@@ -2,7 +2,7 @@
 
 # `<dcc/rest/guilds/bans.h>`
 
-Source: [`include/dcc/rest/guilds/bans.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/guilds/bans.h)
+Source: [`include/dcc/rest/guilds/bans.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/guilds/bans.h)
 
 ## `dcc_rest_create_guild_ban`
 

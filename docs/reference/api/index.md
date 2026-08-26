@@ -2,7 +2,7 @@
 
 # DCC 2 API Reference
 
-Generated from the installed DCC 2.0.0 public header tree.
+Generated from the installed DCC 2.0.1 public header tree.
 
 - [`<dcc/app/base.h>`](app/base.md) — 2 public callable/macro entries
 - [`<dcc/app/context.h>`](app/context.md) — 83 public callable/macro entries

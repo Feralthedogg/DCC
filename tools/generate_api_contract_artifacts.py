@@ -90,17 +90,17 @@ def artifacts(source: Path) -> dict[Path, str]:
                              "macros": sorted(macro_names)})
     key = lambda row: (row.get("name", ""), row.get("owner", ""))
     payloads = {
-        "api_v2_declarations.json": {"schema": 1, "version": "2.0.0", "declarations": sorted(declarations, key=key)},
-        "api_v2_function_inventory.json": {"schema": 1, "version": "2.0.0", "functions": sorted(functions, key=key)},
-        "api_v2_inline_api.json": {"schema": 1, "version": "2.0.0", "inline": sorted(inline, key=key)},
-        "api_v2_types.json": {"schema": 1, "version": "2.0.0", "types": sorted(types, key=key)},
-        "api_v2_records.json": {"schema": 1, "version": "2.0.0", "records": sorted(records, key=key)},
-        "api_v2_macro_sources.json": {"schema": 1, "version": "2.0.0", "macros": sorted(macros, key=key)},
-        "api_v2_header_reachability.json": {"schema": 1, "version": "2.0.0", "headers": sorted(reachability, key=lambda row: row["header"])},
+        "api_v2_declarations.json": {"schema": 1, "version": "2.0.1", "declarations": sorted(declarations, key=key)},
+        "api_v2_function_inventory.json": {"schema": 1, "version": "2.0.1", "functions": sorted(functions, key=key)},
+        "api_v2_inline_api.json": {"schema": 1, "version": "2.0.1", "inline": sorted(inline, key=key)},
+        "api_v2_types.json": {"schema": 1, "version": "2.0.1", "types": sorted(types, key=key)},
+        "api_v2_records.json": {"schema": 1, "version": "2.0.1", "records": sorted(records, key=key)},
+        "api_v2_macro_sources.json": {"schema": 1, "version": "2.0.1", "macros": sorted(macros, key=key)},
+        "api_v2_header_reachability.json": {"schema": 1, "version": "2.0.1", "headers": sorted(reachability, key=lambda row: row["header"])},
         "api_v2_package_contract.json": {
-            "schema": 1, "version": "2.0.0", "cmake_package": "dcc",
+            "schema": 1, "version": "2.0.1", "cmake_package": "dcc",
             "target": "dcc::dcc", "c_standard": 11,
-            "llam_minimum": "2.2.0", "llam_abi_major": 2,
+            "llam_minimum": "2.2.1", "llam_abi_major": 2,
             "pkg_config": {"module": "dcc", "name": "DCC"},
         },
     }

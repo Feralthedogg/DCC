@@ -2,7 +2,7 @@
 
 # `<dcc/rest/interactions/responses.h>`
 
-Source: [`include/dcc/rest/interactions/responses.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/interactions/responses.h)
+Source: [`include/dcc/rest/interactions/responses.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/interactions/responses.h)
 
 ## `dcc_rest_interaction_response_create`
 

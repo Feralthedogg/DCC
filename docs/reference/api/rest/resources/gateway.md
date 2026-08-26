@@ -2,7 +2,7 @@
 
 # `<dcc/rest/resources/gateway.h>`
 
-Source: [`include/dcc/rest/resources/gateway.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/resources/gateway.h)
+Source: [`include/dcc/rest/resources/gateway.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/resources/gateway.h)
 
 ## `dcc_rest_get_gateway_bot`
 

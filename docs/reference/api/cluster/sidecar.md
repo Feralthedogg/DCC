@@ -2,7 +2,7 @@
 
 # `<dcc/cluster/sidecar.h>`
 
-Source: [`include/dcc/cluster/sidecar.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/cluster/sidecar.h)
+Source: [`include/dcc/cluster/sidecar.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/cluster/sidecar.h)
 
 ## `dcc_cluster_add_status_route`
 

@@ -20,7 +20,7 @@ int main(void) {
     dcc_component_v2_builder_t card = DCC_UI_CARD_ARRAY(card_children, 2U);
     dcc_component_v2_validation_error_t error =
         DCC_COMPONENT_V2_VALIDATION_ERROR_INIT;
-    if (strcmp(dcc_version_string(), "2.0.0") != 0 ||
+    if (strcmp(dcc_version_string(), "2.0.1") != 0 ||
         listener.kind != DCC_LISTENER_SLASH ||
         dcc_component_v2_validate(
             &card, 1U, DCC_COMPONENT_V2_CONTEXT_MESSAGE_V2, &error) != DCC_OK) {

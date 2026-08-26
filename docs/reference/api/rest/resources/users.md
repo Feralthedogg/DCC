@@ -2,7 +2,7 @@
 
 # `<dcc/rest/resources/users.h>`
 
-Source: [`include/dcc/rest/resources/users.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/resources/users.h)
+Source: [`include/dcc/rest/resources/users.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/resources/users.h)
 
 ## `dcc_rest_create_dm_channel`
 

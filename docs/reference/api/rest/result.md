@@ -2,7 +2,7 @@
 
 # `<dcc/rest/result.h>`
 
-Source: [`include/dcc/rest/result.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/result.h)
+Source: [`include/dcc/rest/result.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/result.h)
 
 ## `DCC_REST_RESULT_VERSION`
 

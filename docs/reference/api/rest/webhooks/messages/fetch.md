@@ -2,7 +2,7 @@
 
 # `<dcc/rest/webhooks/messages/fetch.h>`
 
-Source: [`include/dcc/rest/webhooks/messages/fetch.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.0/include/dcc/rest/webhooks/messages/fetch.h)
+Source: [`include/dcc/rest/webhooks/messages/fetch.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/webhooks/messages/fetch.h)
 
 ## `dcc_rest_get_webhook_message`
 

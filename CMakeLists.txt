@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 2.0.0
+    VERSION 2.0.1
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )
@@ -48,10 +48,10 @@ option(DCC_BUNDLE_LLAM "Install LLAM runtime files with DCC packages when LLAM i
 option(DCC_WITH_OPUS "Build the optional libopus voice codec backend when libopus is available" ON)
 option(DCC_WITH_DAVE "Enable the runtime-loaded official libdave backend" ON)
 if(DEFINED DCC_LLAM_REQUIRED_VERSION AND
-   NOT DCC_LLAM_REQUIRED_VERSION STREQUAL "2.2.0")
-    message(FATAL_ERROR "DCC 2.0 requires the exact LLAM floor 2.2.0")
+   NOT DCC_LLAM_REQUIRED_VERSION STREQUAL "2.2.1")
+    message(FATAL_ERROR "DCC 2.0 requires the exact LLAM floor 2.2.1")
 endif()
-set(DCC_LLAM_REQUIRED_VERSION "2.2.0")
+set(DCC_LLAM_REQUIRED_VERSION "2.2.1")
 set(DCC_LLAM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../LLAM" CACHE PATH "Path to the LLAM runtime source tree")
 set(DCC_LLAM_LIBRARY "${DCC_LLAM_ROOT}/libllam_runtime.a" CACHE FILEPATH "Path to a prebuilt LLAM static library")
 set(DCC_OPUS_ROOT "" CACHE PATH "Path to a libopus installation")
@@ -3014,7 +3014,7 @@ if(DCC_BUILD_TESTS)
         set_tests_properties(dcc_doctor_help PROPERTIES PASS_REGULAR_EXPRESSION "--require-dave")
         add_test(NAME dcc_doctor_json COMMAND dcc_doctor --json)
         set_tests_properties(dcc_doctor_json PROPERTIES
-            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"2.0.0\""
+            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"2.0.1\",\"dcc_version_ok\":true"
         )
         add_test(NAME dcc_doctor_require_token COMMAND dcc_doctor --json --require-token)
         set_tests_properties(dcc_doctor_require_token PROPERTIES

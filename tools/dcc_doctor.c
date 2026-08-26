@@ -42,7 +42,7 @@ static void dcc_doctor_usage(FILE *stream, const char *argv0) {
         stream,
         "usage: %s [--json] [--require-token] [--require-dave]\n"
         "\n"
-        "Runs local, no-network checks for DCC, LLAM 2.2.0+, OpenSSL, token\n"
+        "Runs local, no-network checks for DCC, LLAM 2.2.1+, OpenSSL, token\n"
         "discovery, certificate environment paths, and the official libdave ABI.\n"
         "Optional token/DAVE checks become fatal only with --require-* flags.\n",
         argv0
@@ -123,7 +123,7 @@ static void dcc_doctor_print_json(const dcc_doctor_result_t *result) {
 
 static void dcc_doctor_print_text(const dcc_doctor_result_t *result, const dcc_doctor_options_t *options) {
     printf("[%s] DCC headers/runtime %s\n", result->dcc_ok ? "ok" : "fail", result->dcc_version);
-    printf("[%s] LLAM runtime %s (ABI %u; required >= 2.2.0)\n",
+    printf("[%s] LLAM runtime %s (ABI %u; required >= 2.2.1)\n",
         result->llam_ok ? "ok" : "fail", result->llam_version, result->llam_abi);
     printf("[ok] OpenSSL %s\n", result->openssl_version);
     printf("[%s] Discord token %s\n",
@@ -162,8 +162,8 @@ int main(int argc, char **argv) {
         .cert_dir_ok = dcc_doctor_path_ok("SSL_CERT_DIR"),
     };
     result.dcc_ok = strcmp(result.dcc_version, DCC_VERSION_STRING) == 0 &&
-        DCC_VERSION_MAJOR == 2 && DCC_VERSION_MINOR == 0 && DCC_VERSION_PATCH == 0;
-    result.llam_ok = dcc_doctor_version_at_least(result.llam_version, 2U, 2U, 0U);
+        DCC_VERSION_MAJOR == 2 && DCC_VERSION_MINOR == 0 && DCC_VERSION_PATCH == 1;
+    result.llam_ok = dcc_doctor_version_at_least(result.llam_version, 2U, 2U, 1U);
     result.token_present = dcc_app_env_get_token(NULL, &token) == DCC_OK;
     result.dave_available = dcc_doctor_check_dave();
     result.required_ok = result.dcc_ok && result.llam_ok && result.cert_file_ok && result.cert_dir_ok &&
