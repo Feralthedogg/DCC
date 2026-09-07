@@ -14,6 +14,18 @@ SNIPPETS = (
         Path("examples/docs/rest_ownership.c"),
         Path("docs/concepts/ownership-and-async.md"),
     ),
+    ("interaction-flows", Path("examples/docs/guide_flows.c"),
+     Path("docs/guides/interaction-flows.md")),
+    ("component-sessions", Path("examples/docs/guide_sessions.c"),
+     Path("docs/guides/component-sessions.md")),
+    ("command-registry", Path("examples/docs/guide_configuration.c"),
+     Path("docs/guides/command-registry.md")),
+    ("replay-records", Path("examples/docs/guide_configuration.c"),
+     Path("docs/guides/replay.md")),
+    ("rest-firewall", Path("examples/docs/guide_configuration.c"),
+     Path("docs/guides/rate-limit-firewall.md")),
+    ("hot-reload-canary", Path("examples/docs/guide_configuration.c"),
+     Path("docs/guides/hot-reload.md")),
 )
 
 

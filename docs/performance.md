@@ -36,6 +36,13 @@ failure terminates the benchmark with an error. CPU time uses the process CPU cl
 ten times this count. All runtime stages have 128 untimed warm-up operations.
 The legacy `dcc_json_gateway_bench` remains available unchanged.
 
+Source `commit` and `dirty` are JSON `null` when Git metadata is unavailable
+(for example in a source archive or without Git installed). A `null` dirty
+state means unknown, not clean; Git checkouts retain their real revision and
+boolean dirty state. An archive nested inside some other Git checkout does not
+inherit that enclosing repository's identity. Missing metadata does not skip measurements or relax
+benchmark execution and JSON validation errors.
+
 The runner emits schema-version-1 JSON with source revision/dirty state,
 fixture-source SHA256 values (including the shared clock header), machine/platform, CMake options, command, all raw
 samples, stderr, and median summaries. `--library` records the linked library's

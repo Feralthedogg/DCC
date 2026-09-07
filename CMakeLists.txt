@@ -4306,31 +4306,6 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
 set(CPACK_PACKAGE_VENDOR "DCC")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-set(CPACK_SOURCE_IGNORE_FILES
-    "/build[^/]*/"
-    "/CMakeFiles/"
-    "/CMakeCache[.]txt$"
-    "/cmake_install[.]cmake$"
-    "/install_manifest[.]txt$"
-    "/Testing/"
-    "/site/"
-    "/target/"
-    "/dist/"
-    "/[.]venv/"
-    "/compile_commands[.]json$"
-    "/__pycache__/"
-    "[.]pyc$"
-    "/[.]DS_Store$"
-    "/[.]env($|[.])"
-    "/[.]git/"
-    "/[.]git$"
-    "/[.]superpowers/"
-    "/[.]worktrees/"
-    "/include/dcc/sugar[.]h$"
-    "/include/dcc/sugar/"
-    "/include/dcc/app/legacy[.]h$"
-    "/include/dcc/rest/core[.]h$"
-    "/include/dcc/rest/core/"
-    "/include/dcc/rest/response_helpers[.]h$"
-)
+include(cmake/SourcePackageIgnore.cmake)
+dcc_source_package_ignore_files("${CMAKE_CURRENT_SOURCE_DIR}" CPACK_SOURCE_IGNORE_FILES)
 include(CPack)

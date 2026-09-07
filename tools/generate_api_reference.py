@@ -34,7 +34,7 @@ def installed_headers(source: Path) -> list[Path]:
 
 
 def normalize_signature(text: str) -> str:
-    text = re.sub(r"/\*\*[\s\S]*?\*/", "", text)
+    text = re.sub(r"/\*[\s\S]*?\*/|//[^\n]*", "", text)
     return " ".join(text.split())
 
 
@@ -57,10 +57,11 @@ def expected_files(source: Path) -> dict[Path, str]:
         text = header.read_text(encoding="utf-8")
         entries: list[tuple[str, str, str]] = []
         for match in DECLARATION.finditer(text):
-            name_match = NAME.search(match.group(0))
+            signature = normalize_signature(match.group(0))
+            name_match = NAME.search(signature)
             if name_match is not None:
                 name = name_match.group(1)
-                entries.append((name, normalize_signature(match.group(0)),
+                entries.append((name, signature,
                                 summary(match.group(0), name)))
         for name in sorted(set(MACRO.findall(text))):
             if name.endswith("_H"):

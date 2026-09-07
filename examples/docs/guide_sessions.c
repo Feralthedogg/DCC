@@ -1,27 +1,4 @@
-# Component Sessions
-
-Component sessions turn buttons, selects, and modals into signed stateful UI
-flows. Application code should not hand-build `custom_id` strings.
-
-## Signature And User Binding
-
-```text
-dcc:v1:<session_id>:<action>:<nonce>:<sig>
-```
-
-The signature authenticates the session id, action, nonce, and secret. Reject
-all verification statuses other than `DCC_COMPONENT_SESSION_VERIFY_OK` before
-performing an action; user/channel/guild locks additionally bind the UI to its
-intended audience. The example takes a guild id for a guild interaction; omit
-the guild lock for a DM-only UI.
-
-## Create, Reply, Route, And Release
-
-These functions are compiled from `examples/docs/guide_sessions.c` against the
-installed package. Their parameters supply all handler inputs and ownership.
-
-<!-- DCC_DOC_SNIPPET_BEGIN(component-sessions) -->
-```c
+/* DCC_DOC_SNIPPET_BEGIN(component-sessions) */
 #include <dcc/component_session.h>
 #include <dcc/events/accessors.h>
 #include <dcc/interaction_flow.h>
@@ -109,40 +86,4 @@ dcc_status_t dcc_example_session_stop(dcc_client_t *client,
     if (status == DCC_OK) dcc_component_session_deinit(session);
     return status;
 }
-```
-<!-- DCC_DOC_SNIPPET_END(component-sessions) -->
-
-Pass `dcc_example_session_action` as the callback to
-`dcc_example_session_listen`. It checks the verification result before acting
-and uses an ephemeral Flow reply. On expiry, an application can send a private
-expired-UI message; bad signatures and wrong-user results must never authorize
-an action. The old app-owned session registration/context helpers are not part
-of the installed canonical API; this example uses the installed client listener.
-
-Keep session owners and callback state alive through listener teardown. The
-example's `dcc_example_session_stop` removes the client listener before
-deinitializing the session. Legacy button layouts can use
-`dcc_component_session_button`; the v2 example above retains the signed button,
-row array, and session-backed strings through REST admission. Do not return a
-builder that points to local arrays which have left scope.
-
-## Multiple Sessions And Persistence
-
-Initialize a `dcc_component_session_store_t` with
-`dcc_component_session_store_init`, add sessions using
-`dcc_component_session_store_add`, and route with
-`dcc_client_on_component_session_store`.
-Periodically call `dcc_component_session_store_sweep` with the same millisecond
-clock used to create sessions. Remove listeners before
-`dcc_component_session_store_deinit`.
-
-For restart persistence, `dcc_component_session_store_export_json` returns an
-allocated JSON buffer; save its bytes and release it with
-`dcc_component_session_store_json_free`. On startup initialize a store, import
-saved bytes with `dcc_component_session_store_import_json`, sweep expired
-sessions, then register the restored store. Check every status before proceeding.
-
-Exported JSON includes the secret in hex so old signed buttons remain verifiable.
-Treat it as secret material, never public logs or source-controlled fixtures.
-See the [installed session/store API](../reference/api/component_session.md)
-for callback signatures and persistence operations.
+/* DCC_DOC_SNIPPET_END(component-sessions) */

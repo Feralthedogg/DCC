@@ -33,6 +33,7 @@ def main() -> int:
     errors: list[str] = []
     gitignore = read(".gitignore", errors)
     cmake = read("CMakeLists.txt", errors)
+    source_package = read("cmake/SourcePackageIgnore.cmake", errors)
     release_check = read("tools/release_check.sh", errors)
     package_release = read("tools/package_release.sh", errors)
     bsd_workflow = read(".github/workflows/bsd.yml", errors)
@@ -64,10 +65,18 @@ def main() -> int:
         '"/[.]DS_Store$"': ".DS_Store files",
         '"/[.]env($|[.])"': "hidden .env files",
         '"/[.]git/"': ".git directories",
+        '"/[.]git$"': ".git worktree files",
+        '"/[.]superpowers/"': "local agent reports",
+        '"/[.]worktrees/"': "nested worktrees",
     }
     for needle, label in required_cpack_excludes.items():
-        if needle not in cmake:
-            errors.append(f"CMakeLists.txt CPACK_SOURCE_IGNORE_FILES must exclude {label}")
+        if needle not in source_package:
+            errors.append(f"cmake/SourcePackageIgnore.cmake must exclude {label}")
+    require_line("CMakeLists.txt", cmake,
+                 'include(cmake/SourcePackageIgnore.cmake)', errors)
+    require_line("CMakeLists.txt", cmake,
+                 'dcc_source_package_ignore_files("${CMAKE_CURRENT_SOURCE_DIR}" CPACK_SOURCE_IGNORE_FILES)',
+                 errors)
 
     require_text(
         ".github/workflows/bsd.yml",

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -25,9 +26,12 @@ class SyncDocExamplesTests(unittest.TestCase):
         )
 
     def write_fixture(self, root: Path, source: str, document: str) -> Path:
+        # Preserve all unrelated source-owned snippets in this integration tree.
+        shutil.copytree(ROOT / "examples/docs", root / "examples/docs", dirs_exist_ok=True)
+        shutil.copytree(ROOT / "docs/guides", root / "docs/guides", dirs_exist_ok=True)
         source_path = root / "examples/docs/rest_ownership.c"
         document_path = root / "docs/concepts/ownership-and-async.md"
-        source_path.parent.mkdir(parents=True)
+        source_path.parent.mkdir(parents=True, exist_ok=True)
         document_path.parent.mkdir(parents=True)
         source_path.write_text(source, encoding="utf-8")
         document_path.write_text(document, encoding="utf-8")

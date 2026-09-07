@@ -16,7 +16,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def git(*args):
-    return subprocess.check_output(["git", "-C", str(ROOT), *args], text=True).strip()
+    try:
+        return subprocess.check_output(
+            ["git", "-C", str(ROOT), *args], text=True,
+            stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
 
 
 def validate(sample):
@@ -102,9 +107,13 @@ def main():
                                 "DCC_", "CMAKE_OSX_ARCHITECTURES:")) and "=" in line:
                 key, value = line.split("=", 1)
                 build[key] = value
+    toplevel = git("rev-parse", "--show-toplevel")
+    own_checkout = toplevel is not None and Path(toplevel).resolve() == ROOT
+    commit = git("rev-parse", "HEAD") if own_checkout else None
+    dirty = git("status", "--porcelain") if own_checkout else None
     report = {"schema_version": 1, "created_utc": datetime.now(timezone.utc).isoformat(),
-              "source": {"commit": git("rev-parse", "HEAD"),
-                         "dirty": bool(git("status", "--porcelain")),
+              "source": {"commit": commit,
+                         "dirty": None if dirty is None else bool(dirty),
                          "fixture_sha256": metadata},
               "environment": {"platform": platform.platform(), "machine": platform.machine(),
                               "processor": platform.processor(), "python": platform.python_version(),

@@ -42,15 +42,38 @@ legacy captures, but deterministic fixtures should normally be sorted.
 
 ## API Records
 
-When recording from a custom harness, use the sugar record literals:
+Use the installed record layout. This function is compiled from
+`examples/docs/guide_configuration.c`; the caller supplies an open recorder and
+valid payload JSON bytes. Keep those bytes alive through each write and close
+the recorder with `dcc_replay_recorder_close` when finished.
 
+<!-- DCC_DOC_SNIPPET_BEGIN(replay-records) -->
 ```c
-dcc_replay_record_t gateway =
-    DCC_REPLAY_GATEWAY_RECORD("MESSAGE_CREATE", now_ms, payload, payload_len);
+#include <dcc/replay.h>
 
-dcc_replay_record_t interaction =
-    DCC_REPLAY_INTERACTION_RECORD(now_ms, payload, payload_len);
+dcc_status_t dcc_example_record_pair(dcc_replay_recorder_t *recorder,
+    uint64_t now_ms, const char *message_json, size_t message_len,
+    const char *interaction_json, size_t interaction_len
+) {
+    dcc_replay_record_t gateway = {
+        .size = sizeof(gateway), .kind = DCC_REPLAY_GATEWAY,
+        .ts_ms = now_ms, .event = "MESSAGE_CREATE",
+        .payload = message_json, .payload_len = message_len,
+    };
+    dcc_replay_record_t interaction = {
+        .size = sizeof(interaction), .kind = DCC_REPLAY_INTERACTION,
+        .ts_ms = now_ms, .event = NULL,
+        .payload = interaction_json, .payload_len = interaction_len,
+    };
+    dcc_status_t status = dcc_replay_recorder_write(recorder, &gateway);
+    if (status == DCC_OK)
+        status = dcc_replay_recorder_write(recorder, &interaction);
+    /* These records borrow caller payloads; do not record_deinit them.
+     * Deinit records returned by dcc_replay_player_next instead. */
+    return status;
+}
 ```
+<!-- DCC_DOC_SNIPPET_END(replay-records) -->
 
 ## Replay Into A Module
 

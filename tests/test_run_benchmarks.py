@@ -1,8 +1,10 @@
 """Runner regressions: dropped samples, invented allocation data, bad input."""
 import json
 import hashlib
+import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -12,6 +14,61 @@ TOOL = ROOT / "tools/run_benchmarks.py"
 
 
 class BenchmarkRunnerTests(unittest.TestCase):
+    def test_source_archive_without_git_metadata_still_reports_samples(self):
+        self.check_source_archive(no_git=False)
+
+    def test_source_archive_without_git_executable_still_reports_samples(self):
+        self.check_source_archive(no_git=True)
+
+    @unittest.skipUnless(shutil.which("git"), "requires git to create the enclosing checkout")
+    def test_source_archive_does_not_claim_enclosing_repository_metadata(self):
+        self.check_source_archive(no_git=False, enclosing_git=True)
+
+    def check_source_archive(self, no_git, enclosing_git=False):
+        record = {"fixture": "archive", "stage": "parse", "iterations": 2,
+                  "cpu_seconds": 0.01, "elapsed_seconds": 0.02}
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)
+            if enclosing_git:
+                subprocess.run(["git", "init", "-q", str(source)], check=True)
+                subprocess.run(["git", "-C", str(source), "-c", "user.name=Test",
+                                "-c", "user.email=test@example.invalid", "commit",
+                                "--allow-empty", "-qm", "enclosing repository"], check=True)
+                source = source / "archive"
+                source.mkdir()
+            (source / "tools").mkdir()
+            copied = source / "tools/run_benchmarks.py"
+            shutil.copy2(TOOL, copied)
+            env = os.environ.copy()
+            if no_git:
+                env["PATH"] = str(source / "empty-path")
+            result = subprocess.run(
+                [sys.executable, str(copied), "--repeat", "1", "--",
+                 sys.executable, "-c", "print(" + repr(json.dumps(record)) + ")"],
+                cwd=source, env=env, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            report = json.loads(result.stdout)
+            self.assertEqual(report["runs"][0]["samples"], [record])
+            self.assertIsNone(report["source"]["commit"])
+            self.assertIsNone(report["source"]["dirty"])
+
+    @unittest.skipUnless(shutil.which("git"), "requires git metadata")
+    def test_checkout_reports_real_commit_and_dirty_state(self):
+        revision = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+                                  capture_output=True, text=True)
+        top = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--show-toplevel"],
+                             capture_output=True, text=True)
+        if revision.returncode or top.returncode or Path(top.stdout.strip()).resolve() != ROOT:
+            self.skipTest("source tree is not its own Git checkout")
+        dirty = subprocess.check_output(["git", "-C", str(ROOT), "status", "--porcelain"], text=True)
+        record = {"fixture": "checkout", "stage": "parse", "iterations": 2,
+                  "cpu_seconds": 0.01, "elapsed_seconds": 0.02}
+        result = self.run_fixture(json.dumps(record))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        source = json.loads(result.stdout)["source"]
+        self.assertEqual(source["commit"], revision.stdout.strip())
+        self.assertEqual(source["dirty"], bool(dirty.strip()))
+
     def run_fixture(self, output, *args):
         with tempfile.TemporaryDirectory() as directory:
             fixture = Path(directory) / "fixture.py"

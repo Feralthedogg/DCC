@@ -36,7 +36,7 @@ Creates an owned deep copy of a full version-1 result. out is set to NULL before
 DCC_API dcc_status_t dcc_rest_result_clone( const dcc_rest_result_t *source, dcc_rest_result_t **out );
 ```
 
-## `dcc_rest_result_clone`
+## `dcc_rest_result_free`
 
 Releases a result returned by dcc_rest_result_clone(); NULL is allowed.
 

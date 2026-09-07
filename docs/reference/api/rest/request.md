@@ -76,7 +76,7 @@ Requests cancellation and releases the caller reference without waiting. NULL is
 DCC_API void dcc_rest_request_destroy(dcc_rest_request_t *request);
 ```
 
-## `dcc_rest_result_status`
+## `dcc_rest_request_wait`
 
 Waits for callback and observer delivery, then returns the retained result. Zero waits indefinitely. A non-zero timeout returns DCC_ERR_TIMEOUT and leaves the handle usable. Any terminal HTTP or transport outcome returns DCC_OK; inspect it with dcc_rest_result_status(). out_result is set to NULL before waiting and receives a view valid until request destruction.
 

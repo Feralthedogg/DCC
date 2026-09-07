@@ -140,7 +140,7 @@ DCC_API dcc_status_t dcc_rest_get_default_soundboard_sounds( dcc_client_t *clien
 DCC_API dcc_status_t dcc_rest_get_entitlement( dcc_client_t *client, dcc_snowflake_t application_id, dcc_snowflake_t entitlement_id, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
 ```
 
-## `dcc_rest_get_gateway_bot`
+## `dcc_rest_get_gateway`
 
 @brief Submits GET /gateway. This endpoint returns the base Gateway URL without the bot session-start limit metadata returned by dcc_rest_get_gateway_bot().
 
