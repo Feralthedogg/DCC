@@ -25,7 +25,9 @@ dcc_status_t dcc_rest_async_wait(dcc_client_t *client, uint32_t timeout_ms) {
 #endif
     for (;;) {
         uint64_t now = dcc_rest_now_ms();
+#if !defined(_WIN32)
         uint64_t next_wake_ms = 0;
+#endif
         dcc_rest_lock(client);
         size_t pending = dcc_rest_async_pending_count_locked(client);
         size_t active = client->rest_async_active;
@@ -34,9 +36,11 @@ dcc_status_t dcc_rest_async_wait(dcc_client_t *client, uint32_t timeout_ms) {
             pending = dcc_rest_async_pending_count_locked(client);
             active = client->rest_async_active;
         }
+#if !defined(_WIN32)
         if (pending != 0) {
             next_wake_ms = dcc_rest_async_next_wake_ms_locked(client, now);
         }
+#endif
         dcc_rest_unlock(client);
 
         if (pending == 0 && active == 0) {
