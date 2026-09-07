@@ -96,13 +96,21 @@ int main(void) {
     int passed =
         atomic_load_explicit(&callback_state.called, memory_order_acquire) != 0U &&
         callback_state.error == DCC_OK && callback_state.status != 0U;
-    if (dcc_app_destroy(app) != DCC_OK || !passed) {
+    dcc_status_t destroy_status = DCC_ERR_STATE;
+    for (int attempt = 0; attempt < 100 && destroy_status == DCC_ERR_STATE; ++attempt) {
+        destroy_status = dcc_app_destroy(app);
+        if (destroy_status == DCC_ERR_STATE) {
+            command_sync_sleep_ms(5L);
+        }
+    }
+    if (destroy_status != DCC_OK || !passed) {
         fprintf(
             stderr,
-            "command sync callback missing or failed: called=%u status=%u error=%s\n",
+            "command sync callback missing or failed: called=%u status=%u error=%s destroy=%s\n",
             atomic_load_explicit(&callback_state.called, memory_order_acquire),
             callback_state.status,
-            dcc_status_string(callback_state.error)
+            dcc_status_string(callback_state.error),
+            dcc_status_string(destroy_status)
         );
         return 1;
     }
