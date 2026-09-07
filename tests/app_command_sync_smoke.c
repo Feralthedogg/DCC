@@ -1,11 +1,14 @@
 #include <dcc/app/legacy.h>
 #include <dcc/app/lifecycle.h>
 
-#include <llam/runtime.h>
-
 #include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <time.h>
+#endif
 
 typedef struct command_sync_callback_state {
     atomic_uint called;
@@ -30,9 +33,16 @@ static void command_sync_callback(
 }
 
 static void command_sync_sleep_ms(long milliseconds) {
-    if (milliseconds > 0L) {
-        (void)llam_sleep_ns((uint64_t)milliseconds * UINT64_C(1000000));
-    }
+    if (milliseconds <= 0L) return;
+#if defined(_WIN32)
+    Sleep((DWORD)milliseconds);
+#else
+    struct timespec delay = {
+        .tv_sec = milliseconds / 1000L,
+        .tv_nsec = (milliseconds % 1000L) * 1000000L,
+    };
+    (void)nanosleep(&delay, NULL);
+#endif
 }
 
 int main(void) {
@@ -93,9 +103,11 @@ int main(void) {
          ++attempt) {
         command_sync_sleep_ms(5L);
     }
-    int passed =
-        atomic_load_explicit(&callback_state.called, memory_order_acquire) != 0U &&
-        callback_state.error == DCC_OK && callback_state.status != 0U;
+    unsigned callback_called =
+        atomic_load_explicit(&callback_state.called, memory_order_acquire);
+    int callback_error_ok = callback_state.error == DCC_OK;
+    int callback_status_ok = callback_state.status != 0U;
+    int passed = callback_called != 0U && callback_error_ok && callback_status_ok;
     dcc_status_t destroy_status = DCC_ERR_STATE;
     for (int attempt = 0; attempt < 100 && destroy_status == DCC_ERR_STATE; ++attempt) {
         destroy_status = dcc_app_destroy(app);
@@ -106,11 +118,14 @@ int main(void) {
     if (destroy_status != DCC_OK || !passed) {
         fprintf(
             stderr,
-            "command sync callback missing or failed: called=%u status=%u error=%s destroy=%s\n",
-            atomic_load_explicit(&callback_state.called, memory_order_acquire),
+            "command sync callback missing or failed: called=%u status=%u error=%s destroy=%s checks=%u/%d/%d\n",
+            callback_called,
             callback_state.status,
             dcc_status_string(callback_state.error),
-            dcc_status_string(destroy_status)
+            dcc_status_string(destroy_status),
+            callback_called,
+            callback_error_ok,
+            callback_status_ok
         );
         return 1;
     }
