@@ -952,7 +952,8 @@ dcc_app_interaction_queue_reply(dcc_interaction_flow_t *flow,
     return DCC_ERR_INVALID_ARG;
   dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
   options.callback = callback;
-  options.user_data = user_data;
+  /* Legacy callback-only APIs ignore user_data when no callback is supplied. */
+  options.user_data = callback != NULL ? user_data : NULL;
   return dcc_app_interaction_queue_enqueue(
       flow, message, &options, NULL, UINT8_MAX,
       DCC_INTERACTION_FLOW_READY);
@@ -963,7 +964,7 @@ dcc_status_t dcc_app_interaction_queue_edit_original(
     dcc_rest_result_fn callback, void *user_data) {
   dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
   options.callback = callback;
-  options.user_data = user_data;
+  options.user_data = callback != NULL ? user_data : NULL;
   return dcc_app_interaction_queue_enqueue(
       flow, message, &options, NULL, 1U,
       DCC_INTERACTION_FLOW_ORIGINAL_EDITED);
@@ -974,7 +975,7 @@ dcc_status_t dcc_app_interaction_queue_followup(
     dcc_rest_result_fn callback, void *user_data) {
   dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
   options.callback = callback;
-  options.user_data = user_data;
+  options.user_data = callback != NULL ? user_data : NULL;
   return dcc_app_interaction_queue_enqueue(
       flow, message, &options, NULL, 2U, DCC_INTERACTION_FLOW_FOLLOWED_UP);
 }
@@ -992,7 +993,7 @@ dcc_status_t dcc_app_interaction_queue_defer(dcc_interaction_flow_t *flow,
                                       : DCC_INTERACTION_FLOW_DEFERRED);
   dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
   options.callback = callback;
-  options.user_data = user_data;
+  options.user_data = callback != NULL ? user_data : NULL;
   return dcc_app_interaction_queue_enqueue(
       flow, NULL, &options, NULL, kind, projected);
 }

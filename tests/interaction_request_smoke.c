@@ -256,6 +256,74 @@ typedef struct order {
   atomic_uint release;
   char path[3][128];
 } order_t;
+
+/* Catches imposing strict options validation on legacy callback-only calls:
+ * unused user_data must be ignored, while all eight _ex APIs stay strict. */
+static int legacy_unused_userdata(unsigned variant) {
+  http_server_t server;
+  pthread_t server_thread, runtime;
+  CHECK(start_server_mode(&server, &server_thread, 7) == 0);
+  set_api_base_for_server(&server);
+  dcc_client_options_t config = {.size = sizeof(config), .token = "", .rest_concurrency = 2U};
+  dcc_client_t *client = NULL;
+  CHECK(dcc_client_create(&config, &client) == DCC_OK);
+  CHECK(dcc_client_start(client) == DCC_OK);
+  CHECK(pthread_create(&runtime, NULL, run, client) == 0);
+  dcc_interaction_t interaction = {.id = 740U, .application_id = 741U, .token = "legacy-token"};
+  dcc_interaction_flow_t *flow = NULL;
+  CHECK(dcc_flow_create(client, &interaction, &flow) == DCC_OK);
+  dcc_ctx_t ctx = {.flow = flow, .client = client, .interaction = &interaction};
+  dcc_message_builder_t message = DCC_MESSAGE_BUILDER_INIT;
+  CHECK(dcc_message_builder_set_content(&message, "legacy") == DCC_OK);
+  int unused = 42;
+  dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+  options.user_data = &unused;
+  dcc_rest_request_t *out = NULL;
+#define REJECT_UNUSED(call) do { out = (dcc_rest_request_t *)1; CHECK((call) == DCC_ERR_INVALID_ARG && out == NULL); } while (0)
+  REJECT_UNUSED(dcc_flow_reply_ex(flow, &message, &options, &out));
+  REJECT_UNUSED(dcc_ctx_reply_ex(&ctx, &message, &options, &out));
+  REJECT_UNUSED(dcc_flow_defer_ex(flow, &options, &out));
+  REJECT_UNUSED(dcc_ctx_defer_ex(&ctx, &options, &out));
+  REJECT_UNUSED(dcc_flow_edit_original_ex(flow, &message, &options, &out));
+  REJECT_UNUSED(dcc_ctx_edit_original_ex(&ctx, &message, &options, &out));
+  REJECT_UNUSED(dcc_flow_followup_ex(flow, &message, &options, &out));
+  REJECT_UNUSED(dcc_ctx_followup_ex(&ctx, &message, &options, &out));
+#undef REJECT_UNUSED
+  dcc_status_t first = variant == 0U ? dcc_flow_reply(flow, &message, NULL, &unused)
+      : variant == 1U ? dcc_ctx_reply(&ctx, &message, NULL, &unused)
+      : variant == 2U ? dcc_flow_defer(flow, NULL, &unused)
+      : variant == 3U ? dcc_ctx_defer(&ctx, NULL, &unused)
+      : variant == 4U ? dcc_flow_defer_ephemeral(flow, NULL, &unused)
+      : variant == 5U ? dcc_ctx_defer_ephemeral(&ctx, NULL, &unused)
+      : dcc_flow_defer_update(flow, NULL, &unused);
+  CHECK(first == DCC_OK);
+  dcc_status_t second = variant == 0U ? dcc_flow_followup(flow, &message, NULL, &unused)
+      : variant == 1U ? dcc_ctx_followup(&ctx, &message, NULL, &unused)
+      : variant == 3U ? dcc_ctx_edit_original(&ctx, &message, NULL, &unused)
+      : variant == 4U ? dcc_flow_reply(flow, &message, NULL, &unused)
+      : variant == 5U ? dcc_ctx_reply(&ctx, &message, NULL, &unused)
+      : dcc_flow_edit_original(flow, &message, NULL, &unused);
+  CHECK(second == DCC_OK);
+  CHECK(dcc_rest_async_wait(client, 5000U) == DCC_OK);
+  CHECK(dcc_flow_state(flow) == (variant < 2U ? DCC_INTERACTION_FLOW_FOLLOWED_UP : DCC_INTERACTION_FLOW_ORIGINAL_EDITED));
+  dcc_flow_destroy(flow);
+  CHECK(pthread_join(server_thread, NULL) == 0);
+  close(server.fd);
+  CHECK(server.request_count == 2U);
+  const char *initial_body = variant < 2U ? "{\"type\":4,\"data\":{\"content\":\"legacy\"}}"
+      : variant < 4U ? "{\"type\":5}"
+      : variant < 6U ? "{\"type\":5,\"data\":{\"flags\":64}}" : "{\"type\":6}";
+  CHECK(strcmp(server.bodies[0], initial_body) == 0);
+  CHECK(strcmp(server.bodies[1], "{\"content\":\"legacy\"}") == 0);
+  CHECK(strcmp(server.methods[1], variant < 2U ? "POST" : "PATCH") == 0);
+  CHECK(strcmp(server.paths[1], variant < 2U ? "/webhooks/741/legacy-token" : "/webhooks/741/legacy-token/messages/@original") == 0);
+  CHECK(unused == 42);
+  CHECK(dcc_client_stop(client) == DCC_OK);
+  CHECK(pthread_join(runtime, NULL) == 0);
+  dcc_client_destroy(client);
+  return 0;
+}
+
 static dcc_status_t ordered_transport(dcc_client_t *client, const char *method,
     const char *path, const void *body, size_t len, const char *type,
     dcc_rest_cb cb, void *data, void *context) {
@@ -352,6 +420,7 @@ static int rejected_admission(void) {
 }
 int main(void) {
   signal(SIGPIPE, SIG_IGN);
+  for (unsigned variant = 0U; variant < 7U; ++variant) CHECK(legacy_unused_userdata(variant) == 0);
   CHECK(queued(0U, 0U, 0U) == 0);
   CHECK(queued(1U, 0U, 0U) == 0);
   CHECK(queued(2U, 1U, 0U) == 0);
