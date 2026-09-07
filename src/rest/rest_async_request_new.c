@@ -26,16 +26,43 @@ dcc_rest_async_request_t *dcc_rest_async_request_new(
     void *user_data,
     dcc_rest_request_t *request_handle
 ) {
-    dcc_rest_async_request_t *request = (dcc_rest_async_request_t *)calloc(1, sizeof(*request));
+    const char *strings[] = {method, operation, path, content_type, audit_log_reason, auth_token};
+    size_t lengths[sizeof(strings) / sizeof(strings[0])] = {0};
+    size_t allocation_size = sizeof(dcc_rest_async_request_t);
+    if (method == NULL || operation == NULL || path == NULL) {
+        dcc_rest_request_handle_release(request_handle);
+        return NULL;
+    }
+    for (size_t i = 0U; i < sizeof(strings) / sizeof(strings[0]); ++i) {
+        if (strings[i] == NULL) {
+            continue;
+        }
+        size_t length = strlen(strings[i]);
+        if (length >= SIZE_MAX - allocation_size) {
+            dcc_rest_request_handle_release(request_handle);
+            return NULL;
+        }
+        lengths[i] = length + 1U;
+        allocation_size += lengths[i];
+    }
+    dcc_rest_async_request_t *request = (dcc_rest_async_request_t *)calloc(1, allocation_size);
     if (request == NULL) {
         dcc_rest_request_handle_release(request_handle);
         return NULL;
     }
 
     request->client = client;
-    request->method = dcc_strdup(method);
-    request->operation = dcc_strdup(operation);
-    request->wire_path = dcc_strdup(path);
+    request->metadata_len = allocation_size - sizeof(*request);
+    char **destinations[] = {&request->method, &request->operation, &request->wire_path,
+                            &request->content_type, &request->audit_log_reason, &request->auth_token};
+    char *cursor = (char *)(request + 1);
+    for (size_t i = 0U; i < sizeof(strings) / sizeof(strings[0]); ++i) {
+        if (lengths[i] != 0U) {
+            *destinations[i] = cursor;
+            memcpy(cursor, strings[i], lengths[i]);
+            cursor += lengths[i];
+        }
+    }
     if (body_len != 0U) {
         request->body = (char *)malloc(body_len);
         if (request->body != NULL) {
@@ -43,11 +70,6 @@ dcc_rest_async_request_t *dcc_rest_async_request_new(
         }
     }
     request->body_len = body_len;
-    request->content_type = content_type != NULL ? dcc_strdup(content_type) : NULL;
-    request->audit_log_reason = audit_log_reason != NULL
-        ? dcc_strdup(audit_log_reason)
-        : NULL;
-    request->auth_token = auth_token != NULL ? dcc_strdup(auth_token) : NULL;
     request->auth_mode = auth_mode;
     request->flags = flags;
     request->sensitive_path = sensitive_path;
@@ -59,11 +81,7 @@ dcc_rest_async_request_t *dcc_rest_async_request_new(
     atomic_init(&request->cancel_requested, false);
     atomic_init(&request->active_fd, LLAM_INVALID_FD);
 
-    if (request->method == NULL || request->operation == NULL || request->wire_path == NULL ||
-        (body_len != 0U && request->body == NULL) ||
-        (content_type != NULL && request->content_type == NULL) ||
-        (audit_log_reason != NULL && request->audit_log_reason == NULL) ||
-        (auth_token != NULL && request->auth_token == NULL)) {
+    if (body_len != 0U && request->body == NULL) {
         dcc_rest_async_request_free(request);
         return NULL;
     }

@@ -2012,6 +2012,15 @@ if(DCC_BUILD_TESTS)
     endif()
     enable_language(CXX)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME dcc_benchmark_runner_smoke
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_run_benchmarks.py)
+    foreach(test_name IN ITEMS json_gateway_reuse_smoke request_allocation_smoke)
+        add_executable(dcc_${test_name} tests/${test_name}.c)
+        dcc_target_use_private_headers(dcc_${test_name})
+        target_link_libraries(dcc_${test_name} PRIVATE dcc::dcc)
+        dcc_target_enable_sanitizers(dcc_${test_name})
+        add_test(NAME dcc_${test_name} COMMAND dcc_${test_name})
+    endforeach()
     dcc_resolve_llam_include(DCC_V2_SURFACE_LLAM_INCLUDE)
     add_test(
         NAME dcc_v2_surface_audit
@@ -3956,6 +3965,28 @@ if(DCC_BUILD_TESTS)
 endif()
 
 if(DCC_BUILD_BENCHMARKS)
+    if(NOT WIN32)
+        add_executable(dcc_operation_bench tests/operation_bench.c)
+        dcc_target_use_private_headers(dcc_operation_bench)
+        target_link_libraries(dcc_operation_bench PRIVATE dcc::dcc)
+        dcc_target_enable_sanitizers(dcc_operation_bench)
+    endif()
+    add_executable(dcc_runtime_bench tests/runtime_bench.c)
+    dcc_target_use_private_headers(dcc_runtime_bench)
+    target_link_libraries(dcc_runtime_bench PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_runtime_bench)
+    if(DCC_BUILD_TESTS)
+        add_test(NAME dcc_runtime_benchmark_report_smoke
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/run_benchmarks.py
+                --repeat 1 -- $<TARGET_FILE:dcc_runtime_bench>)
+        set_tests_properties(dcc_runtime_benchmark_report_smoke PROPERTIES
+            ENVIRONMENT "DCC_BENCH_ITERS=10")
+        if(TARGET dcc_operation_bench)
+            add_test(NAME dcc_operation_benchmark_report_smoke
+                COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/run_benchmarks.py
+                    --repeat 1 -- $<TARGET_FILE:dcc_operation_bench>)
+        endif()
+    endif()
     add_executable(dcc_json_gateway_bench tests/json_gateway_bench.c)
     dcc_target_use_private_headers(dcc_json_gateway_bench)
     target_link_libraries(dcc_json_gateway_bench PRIVATE dcc::dcc)

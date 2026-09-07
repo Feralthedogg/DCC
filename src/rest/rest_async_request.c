@@ -11,30 +11,15 @@ void dcc_rest_async_request_free(dcc_rest_async_request_t *request) {
         return;
     }
     dcc_rest_resource_release_request(request);
-    free(request->method);
-    free(request->operation);
-    dcc_rest_sensitive_free(
-        request->wire_path,
-        request->wire_path != NULL ? strlen(request->wire_path) + 1U : 0U
-    );
     if ((request->flags & DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY) != 0U) {
         dcc_rest_sensitive_free(request->body, request->body_len);
     } else {
         free(request->body);
     }
-    free(request->content_type);
-    dcc_rest_sensitive_free(
-        request->audit_log_reason,
-        request->audit_log_reason != NULL
-            ? strlen(request->audit_log_reason) + 1U
-            : 0U
-    );
-    dcc_rest_sensitive_free(
-        request->auth_token,
-        request->auth_token != NULL ? strlen(request->auth_token) + 1U : 0U
-    );
     dcc_rest_request_handle_release(request->request_handle);
-    dcc_endpoint_secure_zero(request, sizeof(*request));
+    /* Wipe all metadata, including path, audit reason and auth token, before
+     * releasing the owning block. No interior string pointer is freed. */
+    dcc_endpoint_secure_zero(request, sizeof(*request) + request->metadata_len);
     free(request);
 }
 
