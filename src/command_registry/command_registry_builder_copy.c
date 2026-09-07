@@ -6,7 +6,7 @@
 #include <string.h>
 
 static atomic_size_t dcc_command_registry_copy_allocations_before_failure =
-    ATOMIC_VAR_INIT(SIZE_MAX);
+    SIZE_MAX;
 
 void dcc_command_registry_test_fail_copy_after(size_t successful_allocations) {
     atomic_store_explicit(
