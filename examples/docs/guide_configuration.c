@@ -78,7 +78,7 @@ dcc_status_t dcc_example_firewall_attach(dcc_client_t *client) {
 
 dcc_status_t dcc_example_firewall_json(dcc_client_t *client,
                                       char *json, size_t capacity, size_t *length) {
-    dcc_rest_firewall_snapshot_t snapshot;
+    dcc_rest_firewall_snapshot_t snapshot = { .size = sizeof(snapshot) };
     dcc_status_t status = dcc_rest_firewall_snapshot(client, &snapshot);
     if (status == DCC_OK)
         status = dcc_rest_firewall_snapshot_json(&snapshot, json, capacity, length);
@@ -108,13 +108,40 @@ dcc_hot_reload_options_t dcc_example_canary_options(const char *worker_path) {
 }
 /* DCC_DOC_SNIPPET_END(hot-reload-canary) */
 
-/* Offline link/ownership harness: does not create a client or worker. */
+#include <dcc/client.h>
+#include <stdio.h>
+#include <string.h>
+
+/* Offline ownership harness: never starts the client or a worker. */
 int main(void) {
     dcc_command_registry_plan_t plan;
     dcc_status_t status = dcc_example_command_plan(0U, &plan);
     if (status != DCC_OK) return 1;
     dcc_command_registry_plan_deinit(&plan);
     dcc_hot_reload_options_t options = dcc_example_canary_options("dcc_hot_reload_worker");
-    return dcc_hot_reload_canary_options_validate(&options.worker_canary_options) == DCC_OK
-        ? 0 : 1;
+    if (dcc_hot_reload_canary_options_validate(&options.worker_canary_options) != DCC_OK)
+        return 1;
+
+    dcc_client_options_t client_options = {
+        .size = sizeof(client_options),
+        .token = "offline-example-token",
+    };
+    dcc_client_t *client = NULL;
+    status = dcc_client_create(&client_options, &client);
+    if (status != DCC_OK) return 1;
+    status = dcc_example_firewall_attach(client);
+    char json[4096] = {0};
+    size_t length = 0U;
+    if (status == DCC_OK)
+        status = dcc_example_firewall_json(client, json, sizeof(json), &length);
+    int valid = status == DCC_OK && length > 1U && length < sizeof(json) &&
+        json[0] == '{' && json[length - 1U] == '}' &&
+        json[length] == '\0' && strlen(json) == length &&
+        strstr(json, "\"attached\":true") != NULL;
+    if (!valid)
+        fprintf(stderr, "offline firewall snapshot failed: status=%d length=%zu\n",
+                (int)status, length);
+    dcc_rest_firewall_detach(client);
+    dcc_client_destroy(client);
+    return valid ? 0 : 1;
 }

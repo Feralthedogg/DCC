@@ -24,7 +24,7 @@ dcc_status_t dcc_example_firewall_attach(dcc_client_t *client) {
 
 dcc_status_t dcc_example_firewall_json(dcc_client_t *client,
                                       char *json, size_t capacity, size_t *length) {
-    dcc_rest_firewall_snapshot_t snapshot;
+    dcc_rest_firewall_snapshot_t snapshot = { .size = sizeof(snapshot) };
     dcc_status_t status = dcc_rest_firewall_snapshot(client, &snapshot);
     if (status == DCC_OK)
         status = dcc_rest_firewall_snapshot_json(&snapshot, json, capacity, length);
