@@ -83,6 +83,8 @@ dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out) {
         return status;
     }
     atomic_init(&app->stopping, false);
+    atomic_init(&app->command_operations, 0U);
+    atomic_init(&app->command_callbacks, 0U);
     dcc_command_registry_init(&app->registry);
     if (dcc_app_options_has_field(
             options,
@@ -181,6 +183,12 @@ dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out) {
         return status;
     }
 
+    if (llam_task_local_key_create(&app->callback_frame_key) != 0) {
+        (void)dcc_app_destroy(app);
+        return DCC_ERR_RUNTIME;
+    }
+    app->callback_frame_key_ready = 1U;
+
     *out = app;
     return DCC_OK;
 }
@@ -193,7 +201,8 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
         return DCC_ERR_STATE;
     }
     if (dcc_app_callback_frame_active(app) ||
-        dcc_rest_terminal_callback_active(app->client)) {
+        dcc_rest_terminal_callback_active(app->client) ||
+        atomic_load_explicit(&app->command_callbacks, memory_order_acquire) != 0U) {
         return DCC_ERR_STATE;
     }
     dcc_status_t status = dcc_app_stop(app);
@@ -203,6 +212,14 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     }
     dcc_app_listener_lock(app);
     app->tearing_down = 1U;
+    dcc_app_listener_unlock(app);
+
+    dcc_app_listener_lock(app);
+    while (atomic_load_explicit(
+               &app->command_operations, memory_order_acquire
+           ) != 0U) {
+        dcc_app_listener_wait(app);
+    }
     dcc_app_listener_unlock(app);
 
     /* Close REST admission, cancel queued work, and wait until every accepted
@@ -281,6 +298,10 @@ dcc_status_t dcc_app_destroy(dcc_app_t *app) {
     dcc_app_clear_state(app);
     dcc_app_store_close(app);
     dcc_app_callback_frame_leave(&cleanup_frame);
+    if (app->callback_frame_key_ready) {
+        (void)llam_task_local_key_delete(app->callback_frame_key);
+        app->callback_frame_key_ready = 0U;
+    }
     dcc_client_destroy(app->client);
     dcc_app_listener_sync_deinit(app);
     free(app);

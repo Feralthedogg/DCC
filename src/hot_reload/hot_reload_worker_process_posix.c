@@ -1,6 +1,7 @@
 #include "internal/hot_reload/dcc_hot_reload_internal.h"
 
 #if !defined(_WIN32)
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -36,19 +37,21 @@ dcc_status_t dcc_hot_reload_worker_process_spawn(
         return DCC_ERR_RUNTIME;
     }
 
-    pid_t pid = fork();
-    if (pid < 0) {
+    pid_t pid = (pid_t)-1;
+    int spawn_status = dcc_hot_reload_worker_spawn_posix(
+        hot_reload, exec_path, to_child, from_child, generation, &pid
+    );
+    if (spawn_status != 0) {
+        (void)snprintf(
+            out->last_error, sizeof(out->last_error),
+            "posix_spawn failed (%d): %s", spawn_status, strerror(spawn_status)
+        );
         dcc_hot_reload_worker_close_fd_posix(&to_child[0]);
         dcc_hot_reload_worker_close_fd_posix(&to_child[1]);
         dcc_hot_reload_worker_close_fd_posix(&from_child[0]);
         dcc_hot_reload_worker_close_fd_posix(&from_child[1]);
         free(exec_path);
         return DCC_ERR_RUNTIME;
-    }
-    if (pid == 0) {
-        close(to_child[1]);
-        close(from_child[0]);
-        dcc_hot_reload_worker_child_exec_posix(hot_reload, exec_path, to_child[0], from_child[1], generation);
     }
     free(exec_path);
 

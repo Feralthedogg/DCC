@@ -31,8 +31,8 @@ def main() -> int:
         version = ""
     else:
         version = match.group(1)
-        if version != "2.0.1":
-            errors.append(f"Stable release version must be exactly 2.0.1, found {version}")
+        if version != "2.0.2":
+            errors.append(f"Stable release version must be exactly 2.0.2, found {version}")
 
     if "SOVERSION ${PROJECT_VERSION_MAJOR}" not in cmake:
         errors.append("shared library SOVERSION must follow ABI major 2")
@@ -52,23 +52,23 @@ def main() -> int:
         errors.append("<dcc/dcc.h> must include <dcc/bot.h>")
     if "dcc/sugar" in dcc_aggregate or "dcc/app/legacy.h" in dcc_aggregate:
         errors.append("DCC 2 aggregate contains a removed compatibility edge")
-    if "DCC 2.0.1 Stable" not in read(source / "README.md"):
-        errors.append("README does not identify DCC 2.0.1 Stable")
-    if "## 2.0.1" not in read(source / "CHANGELOG.md"):
-        errors.append("CHANGELOG does not contain a DCC 2.0.1 release entry")
+    if "DCC 2.0.2 Stable" not in read(source / "README.md"):
+        errors.append("README does not identify DCC 2.0.2 Stable")
+    if "## 2.0.2" not in read(source / "CHANGELOG.md"):
+        errors.append("CHANGELOG does not contain a DCC 2.0.2 release entry")
     if not (source / "docs/reference/api/index.md").is_file():
         errors.append("generated DCC 2 API reference is missing")
     if not (source / "tools/api_v2_symbols.txt").is_file():
         errors.append("DCC 2 symbol baseline is missing")
     workflow = read(source / ".github/workflows/release.yml")
-    if "- 'v2.0.1'" not in workflow or "prerelease: false" not in workflow:
-        errors.append("release workflow must publish only v2.0.1 as non-prerelease")
+    if "- 'v2.0.2'" not in workflow or "prerelease: false" not in workflow:
+        errors.append("release workflow must publish only v2.0.2 as non-prerelease")
 
     compat = json.loads(read(source / "tools/release_compat_base.json"))
     expected_compat = {
-        "current_version": "2.0.1",
-        "previous_stable_tag": "v2.0.0",
-        "compat_base": "5d5a6bb51f4e29a7fa145b88fbb293777558e754",
+        "current_version": "2.0.2",
+        "previous_stable_tag": "v2.0.1",
+        "compat_base": "9300efb3b59adedfa133bde981465c2e483aa99b",
         "comparison_mode": "same_major",
     }
     for key, expected in expected_compat.items():
@@ -100,7 +100,7 @@ def main() -> int:
 
     doctor = read(source / "tools/dcc_doctor.c")
     for fragment in (
-        "DCC_VERSION_PATCH == 1",
+        "DCC_VERSION_PATCH == 2",
         "dcc_doctor_version_at_least(result.llam_version, 2U, 2U, 1U)",
     ):
         if fragment not in doctor:

@@ -7,6 +7,7 @@
 #include "internal/rest/dcc_rest_rate_limit_internal.h"
 
 #include <limits.h>
+#include <llam/runtime.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
@@ -28,34 +29,82 @@ typedef struct dcc_rest_terminal_frame {
     struct dcc_rest_terminal_frame *previous;
 } dcc_rest_terminal_frame_t;
 
-static _Thread_local dcc_rest_terminal_frame_t *dcc_rest_current_terminal_frame;
+static _Thread_local dcc_rest_terminal_frame_t *dcc_rest_host_terminal_frame;
+static atomic_flag dcc_rest_terminal_key_lock = ATOMIC_FLAG_INIT;
+static llam_task_local_key_t dcc_rest_terminal_key =
+    LLAM_TASK_LOCAL_INVALID_KEY;
+
+static llam_task_local_key_t dcc_rest_terminal_key_get(void) {
+    llam_task_local_key_t key = dcc_rest_terminal_key;
+    if (key != LLAM_TASK_LOCAL_INVALID_KEY) {
+        return key;
+    }
+    while (atomic_flag_test_and_set_explicit(
+        &dcc_rest_terminal_key_lock, memory_order_acquire)) {
+    }
+    key = dcc_rest_terminal_key;
+    if (key == LLAM_TASK_LOCAL_INVALID_KEY) {
+        if (llam_task_local_key_create(&key) != 0) {
+            key = LLAM_TASK_LOCAL_INVALID_KEY;
+        } else {
+            dcc_rest_terminal_key = key;
+        }
+    }
+    atomic_flag_clear_explicit(
+        &dcc_rest_terminal_key_lock, memory_order_release
+    );
+    return key;
+}
 
 static int dcc_rest_terminal_enter(
     dcc_rest_terminal_frame_t *frame,
     dcc_client_t *client
 ) {
+    if (frame == NULL) {
+        return 0;
+    }
     dcc_rest_lock(client);
     if (!client->rest_initialized || client->rest_terminal_closed) {
         dcc_rest_unlock(client);
         return 0;
     }
     frame->client = client;
-    frame->previous = dcc_rest_current_terminal_frame;
+    llam_task_t *task = llam_current_task();
+    if (task != NULL) {
+        llam_task_local_key_t key = dcc_rest_terminal_key_get();
+        if (key != LLAM_TASK_LOCAL_INVALID_KEY) {
+            frame->previous = (dcc_rest_terminal_frame_t *)llam_task_local_get(key);
+            if (llam_task_local_set(key, frame) != 0) {
+                frame->previous = NULL;
+                dcc_rest_host_terminal_frame = frame;
+            }
+        } else {
+            frame->previous = NULL;
+            dcc_rest_host_terminal_frame = frame;
+        }
+    } else {
+        frame->previous = dcc_rest_host_terminal_frame;
+        dcc_rest_host_terminal_frame = frame;
+    }
     atomic_fetch_add_explicit(
-        &client->rest_terminal_in_flight,
-        1U,
-        memory_order_acq_rel
+        &client->rest_terminal_in_flight, 1U, memory_order_acq_rel
     );
     dcc_rest_unlock(client);
-    dcc_rest_current_terminal_frame = frame;
     return 1;
 }
 
 static void dcc_rest_terminal_leave(dcc_rest_terminal_frame_t *frame) {
-    if (frame == NULL || dcc_rest_current_terminal_frame != frame) {
+    if (frame == NULL || frame->client == NULL) {
         return;
     }
-    dcc_rest_current_terminal_frame = frame->previous;
+    llam_task_t *task = llam_current_task();
+    llam_task_local_key_t key = dcc_rest_terminal_key;
+    if (task != NULL && key != LLAM_TASK_LOCAL_INVALID_KEY &&
+        (dcc_rest_terminal_frame_t *)llam_task_local_get(key) == frame) {
+        (void)llam_task_local_set(key, frame->previous);
+    } else if (dcc_rest_host_terminal_frame == frame) {
+        dcc_rest_host_terminal_frame = frame->previous;
+    }
     atomic_fetch_sub_explicit(
         &frame->client->rest_terminal_in_flight,
         1U,
@@ -64,9 +113,16 @@ static void dcc_rest_terminal_leave(dcc_rest_terminal_frame_t *frame) {
 }
 
 uint8_t dcc_rest_terminal_callback_active(const dcc_client_t *client) {
-    for (dcc_rest_terminal_frame_t *frame = dcc_rest_current_terminal_frame;
-         frame != NULL;
-         frame = frame->previous) {
+    dcc_rest_terminal_frame_t *frame = NULL;
+    if (llam_current_task() != NULL &&
+        dcc_rest_terminal_key != LLAM_TASK_LOCAL_INVALID_KEY) {
+        frame = (dcc_rest_terminal_frame_t *)llam_task_local_get(
+            dcc_rest_terminal_key
+        );
+    } else {
+        frame = dcc_rest_host_terminal_frame;
+    }
+    for (; frame != NULL; frame = frame->previous) {
         if (client == NULL || frame->client == client) {
             return 1U;
         }

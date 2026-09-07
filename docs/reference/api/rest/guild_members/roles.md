@@ -2,7 +2,7 @@
 
 # `<dcc/rest/guild_members/roles.h>`
 
-Source: [`include/dcc/rest/guild_members/roles.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.1/include/dcc/rest/guild_members/roles.h)
+Source: [`include/dcc/rest/guild_members/roles.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/guild_members/roles.h)
 
 ## `dcc_rest_add_guild_member_role`
 

@@ -94,6 +94,7 @@ void dcc_interaction_request_free(dcc_interaction_request_t *request) {
     }
     free(request->header_block);
     free(request->body);
+    free(request->payload);
     free(request->response_content_type);
     free(request->response_body);
     free(request);

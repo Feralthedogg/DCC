@@ -25,5 +25,7 @@ Keep implementation files grouped by feature under `src/`: `gateway`, `json`, `r
 
 ## Memory
 
-Gateway parse paths should avoid allocation and use bounded scratch storage. Public clone APIs own
-their result and must deep-copy any nested pointer fields.
+Gateway parse paths should avoid allocation and use bounded scratch storage. The scratch arena is
+owned by the active gateway session (or replay runtime), while interaction requests own their
+parsed payload until the request is released. Public clone APIs own their result and must deep-copy
+any nested pointer fields.

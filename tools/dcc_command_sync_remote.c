@@ -3,6 +3,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void dcc_command_sync_fetch_result_cb(
+    dcc_client_t *client,
+    const dcc_rest_result_t *result,
+    void *user_data
+) {
+    dcc_rest_response_t response = {
+        .size = sizeof(response),
+        .status = result != NULL ? result->http_status : 0U,
+        .error = result != NULL ? dcc_rest_result_status(result) : DCC_ERR_RUNTIME,
+        .body = result != NULL ? result->body : NULL,
+        .body_len = result != NULL ? result->body_len : 0U,
+    };
+    dcc_command_sync_fetch_cb(client, &response, user_data);
+}
+
 void dcc_command_sync_fetch_cb(
     dcc_client_t *client,
     const dcc_rest_response_t *response,
@@ -80,12 +95,15 @@ dcc_status_t dcc_command_sync_read_remote_snapshot(
             return option_status;
         }
         dcc_command_sync_remote_body_t body = {0};
+        dcc_rest_call_options_t rest_options = DCC_REST_CALL_OPTIONS_INIT;
+        rest_options.callback = dcc_command_sync_fetch_result_cb;
+        rest_options.user_data = &body;
         status = dcc_command_registry_fetch_remote(
             client,
             options->application_id,
             &registry_options,
-            dcc_command_sync_fetch_cb,
-            &body
+            &rest_options,
+            NULL
         );
         if (status == DCC_OK &&
             (!body.called || body.error != DCC_OK || body.status < 200U || body.status >= 300U)) {

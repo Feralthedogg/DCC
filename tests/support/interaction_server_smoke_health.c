@@ -28,8 +28,8 @@ static int interaction_validate_ready_health(dcc_interaction_server_t *server) {
         health.ready != 1U ||
         health.accepting != 1U ||
         health.drain_complete != 0U ||
-        health.state.accepted_connections != 18U ||
-        health.stats.completed_requests != 18U ||
+        health.state.accepted_connections != 19U ||
+        health.stats.completed_requests != 19U ||
         strcmp(dcc_interaction_server_health_string(health.health), "ready") != 0 ||
         strcmp(dcc_interaction_server_health_string((dcc_interaction_server_health_t)999), "unknown") != 0 ||
         dcc_interaction_server_health_snapshot_json(NULL, health_json, sizeof(health_json), NULL) !=
@@ -164,7 +164,7 @@ static int interaction_run_slow_drain_smoke(
         server_state.listening != 0U ||
         server_state.draining != 0U ||
         server_state.active_requests != 0U ||
-        server_state.completed_requests != 19U) {
+        server_state.completed_requests != 20U) {
         fprintf(
             stderr,
             "interaction drain completion mismatch: status=%s stopping=%u listening=%u draining=%u "
@@ -209,18 +209,18 @@ static int interaction_validate_final_stats(dcc_interaction_server_t *server) {
         dcc_interaction_server_stats(server, NULL) != DCC_ERR_INVALID_ARG ||
         dcc_interaction_server_stats(server, &stats) != DCC_OK ||
         dcc_interaction_server_protection_stats(server, &protection) != DCC_OK ||
-        stats.accepted_connections != 19U ||
+        stats.accepted_connections != 20U ||
         stats.active_requests != 0U ||
-        stats.completed_requests != 19U ||
+        stats.completed_requests != 20U ||
         stats.read_errors != 3U ||
         stats.write_errors != 0U ||
         stats.spawn_errors != 0U ||
         stats.response_2xx != 10U ||
         stats.response_3xx != 0U ||
-        stats.response_4xx != 9U ||
+        stats.response_4xx != 10U ||
         stats.response_5xx != 0U ||
         stats.bad_request_responses != 2U ||
-        stats.unauthorized_responses != 2U ||
+        stats.unauthorized_responses != 3U ||
         stats.not_found_responses != 1U ||
         stats.method_not_allowed_responses != 1U ||
         stats.payload_too_large_responses != 2U ||
@@ -256,9 +256,9 @@ static int interaction_validate_final_stats(dcc_interaction_server_t *server) {
         server_state.stopping != 1U ||
         server_state.listening != 0U ||
         server_state.draining != 0U ||
-        server_state.accepted_connections != 19U ||
+        server_state.accepted_connections != 20U ||
         server_state.active_requests != 0U ||
-        server_state.completed_requests != 19U) {
+        server_state.completed_requests != 20U) {
         fprintf(
             stderr,
             "interaction drained state mismatch: started=%u stopping=%u listening=%u draining=%u "

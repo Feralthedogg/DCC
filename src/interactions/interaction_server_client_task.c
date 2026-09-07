@@ -34,6 +34,8 @@ void dcc_interaction_client_task_run(void *arg) {
             (void)dcc_interaction_request_reply_text(request, 504, "Interaction response deadline exceeded");
         } else if (st == DCC_ERR_INVALID_ARG) {
             (void)dcc_interaction_request_reply_text(request, 413, "Payload too large");
+        } else if (st == DCC_ERR_NOMEM) {
+            (void)dcc_interaction_request_reply_text(request, 503, "Interaction payload capacity exhausted");
         } else {
             (void)dcc_interaction_request_reply_text(request, 400, "Bad request");
         }

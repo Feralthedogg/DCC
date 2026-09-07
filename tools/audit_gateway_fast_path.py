@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Audit invariants for the gateway JSON hot path.
 
-The gateway direct parser is intentionally a static-buffer parser:
+The gateway direct parser is intentionally an owning fixed-arena parser:
 - it must not allocate through malloc/calloc/realloc/free,
 - it must not run the stage1 scanner by default,
+- gateway/session code owns the arena for the duration of dispatch, and
 - gateway dispatch events must reference payload->gateway instead of copying it.
 """
 
@@ -421,6 +422,7 @@ GATEWAY_CONTRACT_SOURCES = [
     ROOT / "src/gateway/gateway_dispatch.c",
     ROOT / "src/gateway/gateway_emit_core.c",
     ROOT / "src/gateway/gateway_session.c",
+    ROOT / "src/gateway/gateway_session_lifecycle.c",
     ROOT / "src/gateway/gateway_session_receive.c",
 ]
 JSON_H = ROOT / "src/internal/json/dcc_json.h"
@@ -638,7 +640,8 @@ def audit_static_storage_contract() -> list[str]:
     payload_state_header = "\n".join(path.read_text() for path in PAYLOAD_CONTRACT_SOURCES if path.is_file())
 
     required_gateway_snippets = [
-        "_Thread_local dcc_json_gateway_payload_t dcc_gateway_payload_scratch",
+        "dcc_gateway_session_payload_scratch(session)",
+        "session->payload_scratch",
         "event->gateway = payload != NULL ? &payload->gateway : NULL;",
     ]
     for snippet in required_gateway_snippets:

@@ -29,6 +29,16 @@ dcc_status_t dcc_interaction_request_set_response_copy(
     const void *body,
     size_t body_len
 );
+enum {
+    DCC_INTERACTION_REPLAY_NEW = 0,
+    DCC_INTERACTION_REPLAY_SEEN = 1,
+    DCC_INTERACTION_REPLAY_CAPACITY = 2
+};
+
+int dcc_interaction_server_timestamp_fresh(
+    const dcc_interaction_server_t *server,
+    const char *timestamp
+);
 int dcc_interaction_server_replay_seen(
     dcc_interaction_server_t *server,
     const char *timestamp,

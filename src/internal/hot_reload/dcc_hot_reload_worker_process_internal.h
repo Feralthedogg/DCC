@@ -3,6 +3,10 @@
 
 #include "internal/hot_reload/dcc_hot_reload_worker_types_internal.h"
 
+#if !defined(_WIN32)
+#include <sys/types.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,12 +34,13 @@ char *dcc_hot_reload_worker_resolve_exec_path_posix(
 );
 void dcc_hot_reload_worker_close_fd_posix(int *fd);
 int dcc_hot_reload_worker_socketpair_posix(int fds[2]);
-void dcc_hot_reload_worker_child_exec_posix(
-    dcc_hot_reload_t *hot_reload,
+int dcc_hot_reload_worker_spawn_posix(
+    const dcc_hot_reload_t *hot_reload,
     const char *exec_path,
-    int in_fd,
-    int out_fd,
-    uint64_t generation
+    int to_child[2],
+    int from_child[2],
+    uint64_t generation,
+    pid_t *out_pid
 );
 #else
 void dcc_hot_reload_worker_close_fd_windows(int *fd);

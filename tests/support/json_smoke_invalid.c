@@ -53,5 +53,23 @@ int dcc_json_smoke_invalid_inputs(void) {
         return 1;
     }
 
+    const char populated_payload[] =
+        "{\"t\":\"READY\",\"s\":1,\"op\":0,\"d\":{"\
+        "\"session_id\":\"stale\",\"guilds\":[{\"id\":\"1\"}]}}";
+    const char empty_payload[] = "{\"t\":\"READY\",\"s\":2,\"op\":0,\"d\":{}}";
+    if (dcc_json_parse_gateway_payload(
+            populated_payload, sizeof(populated_payload) - 1U, payload
+        ) != DCC_OK ||
+        dcc_json_parse_gateway_payload(
+            empty_payload, sizeof(empty_payload) - 1U, payload
+        ) != DCC_OK ||
+        payload->has_session_id != 0 ||
+        payload->ready_guild_ids_count != 0U ||
+        payload->ready_guild_ids_truncated != 0U ||
+        payload->interaction.attachment_size_limit == 0U) {
+        fprintf(stderr, "gateway payload reuse reset failed\n");
+        return 1;
+    }
+
     return 0;
 }

@@ -3,13 +3,12 @@
 #include "internal/gateway/dcc_gateway_dispatch_internal.h"
 #include "internal/gateway/dcc_gateway_identify_internal.h"
 #include "internal/gateway/dcc_gateway_runtime_internal.h"
+#include "internal/gateway/dcc_gateway_session_lifecycle_internal.h"
 #include "internal/gateway/dcc_gateway_session_receive_internal.h"
 #include "internal/json/dcc_json.h"
 #include "internal/ws/dcc_ws.h"
 
 #include <string.h>
-
-static _Thread_local dcc_json_gateway_payload_t dcc_gateway_payload_scratch;
 
 dcc_status_t dcc_gateway_session_receive_loop(dcc_gateway_session_t *session) {
     dcc_client_t *client = session->client;
@@ -48,7 +47,15 @@ dcc_status_t dcc_gateway_session_receive_loop(dcc_gateway_session_t *session) {
             break;
         }
 
-        dcc_json_gateway_payload_t *payload = &dcc_gateway_payload_scratch;
+        dcc_json_gateway_payload_t *payload =
+            dcc_gateway_session_payload_scratch(session);
+        if (payload == NULL) {
+            dcc_ws_message_deinit(&message);
+            dcc_set_error(client, "gateway payload allocation failed");
+            session->next = DCC_GATEWAY_NEXT_FATAL;
+            status = DCC_ERR_NOMEM;
+            break;
+        }
 
         status = dcc_json_parse_gateway_payload((const char *)message.data, message.len, payload);
         if (status != DCC_OK) {

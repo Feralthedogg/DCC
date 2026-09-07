@@ -46,28 +46,6 @@ static dcc_status_t dcc_rest_path_snowflake(char *path, size_t path_size,
                  : DCC_ERR_INVALID_ARG;
 }
 
-static dcc_status_t
-dcc_rest_json_append_nullable_raw_member(dcc_rest_buffer_t *body, int *first,
-                                         const char *key, const char *value) {
-  return dcc_rest_json_append_raw_member(body, first, key,
-                                         value != NULL ? value : "null");
-}
-
-static dcc_status_t dcc_rest_json_append_escaped_key_string_member(
-    dcc_rest_buffer_t *body, int *first, const char *key, const char *value) {
-  dcc_status_t status = dcc_rest_json_member_sep(body, first);
-  if (status == DCC_OK) {
-    status = dcc_rest_buffer_append_json_string(body, key);
-  }
-  if (status == DCC_OK) {
-    status = dcc_rest_buffer_append_cstr(body, ":");
-  }
-  if (status == DCC_OK) {
-    status = dcc_rest_buffer_append_json_string(body, value);
-  }
-  return status;
-}
-
 #if 0 /* Task 10 removed legacy application/soundboard serializers. */
 static int dcc_rest_string_array_valid(const char *const *values, size_t count,
                                        size_t max_count, size_t max_len) {

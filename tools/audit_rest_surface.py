@@ -56,6 +56,14 @@ DPP_CLUSTER_NON_REST_FILES = {
 }
 
 DPP_REST_NON_ENDPOINT_METHODS = {
+    # DCC 2.x deliberately keeps guild creation/deletion and integration
+    # mutation out of the canonical typed REST surface.  The deprecated
+    # application shortcuts still expose the integration operations through
+    # their raw JSON compatibility wrappers.
+    "guild_create",
+    "guild_delete",
+    "guild_modify_integration",
+    "guild_sync_integration",
     "user_get_cached",
 }
 

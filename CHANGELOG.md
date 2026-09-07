@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.0.2 - 2026-09-07
+
+Patch release preserving the DCC 2 public API and ABI major 2.
+
+- Hardened the legacy REST bridge with correct options/callback ownership and
+  completed the previously unsupported integration, onboarding, emoji, sticker,
+  scheduled-event, and current-user DM operations.
+- Restored command synchronization callbacks and option validation, and added
+  regression coverage for the legacy REST and command-sync surfaces.
+- Made interaction replay validation timestamp-aware and capacity-bounded, and
+  moved gateway, REST, and callback scratch state to request/session/task-owned
+  storage for safe concurrent use.
+- Replaced hot-reload fork/exec spawning with sanitized `posix_spawn` process
+  isolation, removed reachable heap work from the gateway fast path, and made
+  JSON payload resets deterministic.
+- Enabled warnings-as-errors for the DCC library by default and expanded the
+  operational, API, security, and release documentation.
+
 ## 2.0.1 - 2026-08-26
 
 Patch release preserving the DCC 2 public API and ABI major 2.

@@ -5,6 +5,8 @@
 
 #include <dcc/rest/request.h>
 
+#include <llam/runtime.h>
+
 #include <stdatomic.h>
 #include <stdint.h>
 #if !defined(_WIN32)
@@ -27,6 +29,7 @@ struct dcc_rest_request {
     atomic_uint references;
     atomic_bool terminal_claimed;
     atomic_bool completed;
+    _Atomic(llam_task_t *) callback_task;
     atomic_bool caller_reference_released;
     _Atomic(struct dcc_rest_async_request *) async_request;
     dcc_client_t *client;

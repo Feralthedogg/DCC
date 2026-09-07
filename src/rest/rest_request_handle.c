@@ -17,12 +17,7 @@
 #include <windows.h>
 #endif
 
-typedef struct dcc_rest_request_delivery_frame {
-    const dcc_rest_request_t *request;
-    struct dcc_rest_request_delivery_frame *previous;
-} dcc_rest_request_delivery_frame_t;
-
-static _Thread_local dcc_rest_request_delivery_frame_t *dcc_rest_request_delivery;
+static _Thread_local dcc_rest_request_t *dcc_rest_host_request_delivery;
 
 dcc_status_t dcc_rest_request_handle_create(
     dcc_client_t *client,
@@ -44,6 +39,7 @@ dcc_status_t dcc_rest_request_handle_create(
     atomic_init(&request->references, caller_reference ? 2U : 1U);
     atomic_init(&request->terminal_claimed, false);
     atomic_init(&request->completed, false);
+    atomic_init(&request->callback_task, NULL);
     atomic_init(&request->caller_reference_released, !caller_reference);
     atomic_init(&request->async_request, NULL);
     request->client = client;
@@ -122,11 +118,14 @@ void dcc_rest_request_handle_finalize(
         ? request->result
         : &request->fallback_result;
 
-    dcc_rest_request_delivery_frame_t frame = {
-        .request = request,
-        .previous = dcc_rest_request_delivery,
-    };
-    dcc_rest_request_delivery = &frame;
+    llam_task_t *callback_task = llam_current_task();
+    if (callback_task != NULL) {
+        atomic_store_explicit(
+            &request->callback_task, callback_task, memory_order_release
+        );
+    } else {
+        dcc_rest_host_request_delivery = request;
+    }
     dcc_rest_deliver_terminal_result(
         request->client,
         completion->operation,
@@ -137,7 +136,11 @@ void dcc_rest_request_handle_finalize(
         request->callback,
         request->callback_user_data
     );
-    dcc_rest_request_delivery = frame.previous;
+    if (callback_task != NULL) {
+        atomic_store_explicit(&request->callback_task, NULL, memory_order_release);
+    } else if (dcc_rest_host_request_delivery == request) {
+        dcc_rest_host_request_delivery = NULL;
+    }
 
     if (request->post_hook != NULL) {
         request->post_hook(
@@ -161,14 +164,16 @@ void dcc_rest_request_handle_finalize(
 }
 
 static int dcc_rest_request_delivery_active(const dcc_rest_request_t *request) {
-    for (dcc_rest_request_delivery_frame_t *frame = dcc_rest_request_delivery;
-         frame != NULL;
-         frame = frame->previous) {
-        if (frame->request == request) {
-            return 1;
-        }
+    if (request == NULL) {
+        return 0;
     }
-    return 0;
+    llam_task_t *task = llam_current_task();
+    if (task != NULL) {
+        return atomic_load_explicit(
+            &request->callback_task, memory_order_acquire
+        ) == task;
+    }
+    return dcc_rest_host_request_delivery == request;
 }
 
 dcc_status_t dcc_rest_request_wait(

@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 int interaction_configure_smoke_routes(dcc_interaction_server_t *server, interaction_seen_t *seen) {
@@ -146,7 +147,13 @@ int interaction_run_request_smoke(
     interaction_seen_t *seen
 ) {
     interaction_http_response_t response;
-    const char *timestamp = "1700000000";
+    char timestamp[32];
+    time_t now = time(NULL);
+    if (now < (time_t)0 ||
+        snprintf(timestamp, sizeof(timestamp), "%llu", (unsigned long long)now) < 0) {
+        fprintf(stderr, "failed to create current interaction timestamp\n");
+        return 0;
+    }
     const char *ping_body = "{\"type\":1}";
 
     if (!interaction_send_request(port, "GET", "/healthz", "", NULL, NULL, &response) ||
@@ -219,6 +226,15 @@ int interaction_run_request_smoke(
     }
     if (!interaction_send_interaction_request(port, ping_body, timestamp, signature, &response) ||
         !expect_response_contains("replayed ping", &response, 409, "replayed")) {
+        return 0;
+    }
+
+    const char *stale_timestamp = "1700000000";
+    if (!interaction_sign(key, stale_timestamp, ping_body, signature) ||
+        !interaction_send_interaction_request(
+            port, ping_body, stale_timestamp, signature, &response
+        ) ||
+        !expect_response_contains("stale timestamp", &response, 401, "stale")) {
         return 0;
     }
 
@@ -325,9 +341,9 @@ int interaction_run_request_smoke(
         server_state.stopping != 0U ||
         server_state.listening != 1U ||
         server_state.draining != 0U ||
-        server_state.accepted_connections != 18U ||
+        server_state.accepted_connections != 19U ||
         server_state.active_requests != 0U ||
-        server_state.completed_requests != 18U ||
+        server_state.completed_requests != 19U ||
         protection.max_active_requests != 1024U ||
         protection.response_deadline_ms != 2800U ||
         protection.replay_window_ms != 300000U) {

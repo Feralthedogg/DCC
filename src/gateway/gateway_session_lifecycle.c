@@ -21,6 +21,29 @@ void dcc_gateway_session_init(dcc_gateway_session_t *session, dcc_client_t *clie
     session->next = DCC_GATEWAY_NEXT_FATAL;
     session->heartbeat = NULL;
     session->heartbeat_failed = false;
+    session->payload_scratch = NULL;
+}
+
+void dcc_gateway_session_deinit(dcc_gateway_session_t *session) {
+    if (session == NULL) {
+        return;
+    }
+    free(session->payload_scratch);
+    session->payload_scratch = NULL;
+}
+
+dcc_json_gateway_payload_t *dcc_gateway_session_payload_scratch(
+    dcc_gateway_session_t *session
+) {
+    if (session == NULL) {
+        return NULL;
+    }
+    if (session->payload_scratch == NULL) {
+        session->payload_scratch = (dcc_json_gateway_payload_t *)calloc(
+            1U, sizeof(*session->payload_scratch)
+        );
+    }
+    return session->payload_scratch;
 }
 
 dcc_status_t dcc_gateway_session_start_heartbeat(dcc_gateway_session_t *session, llam_task_t **out_heartbeat) {

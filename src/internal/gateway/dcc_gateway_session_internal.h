@@ -2,6 +2,7 @@
 #define DCC_GATEWAY_SESSION_INTERNAL_H
 
 #include "internal/client/dcc_client_state_internal.h"
+#include "internal/json/dcc_json.h"
 #include "internal/ws/dcc_ws.h"
 
 #include <stdatomic.h>
@@ -41,6 +42,7 @@ typedef struct dcc_gateway_session {
     uint32_t heartbeat_interval_ms;
     bool resume;
     dcc_gateway_next_t next;
+    dcc_json_gateway_payload_t *payload_scratch;
 } dcc_gateway_session_t;
 
 #ifdef __cplusplus

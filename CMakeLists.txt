@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 2.0.1
+    VERSION 2.0.2
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )
@@ -42,6 +42,7 @@ option(DCC_BUILD_TOOLS "Build and install DCC command-line tools" ON)
 option(DCC_BUILD_BENCHMARKS "Build DCC micro benchmarks" OFF)
 option(DCC_BUILD_FUZZERS "Build libFuzzer harnesses" OFF)
 option(DCC_ENABLE_SANITIZERS "Build DCC targets with AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+option(DCC_WARNINGS_AS_ERRORS "Treat DCC library compiler warnings as errors" ON)
 option(DCC_LLAM_USE_SUBDIRECTORY "Build LLAM from source through add_subdirectory" OFF)
 option(DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS "Keep LLAM tests enabled when LLAM is added as a subdirectory" OFF)
 option(DCC_BUNDLE_LLAM "Install LLAM runtime files with DCC packages when LLAM is built as a subdirectory" OFF)
@@ -1698,6 +1699,13 @@ if(MSVC)
 else()
     target_compile_options(dcc PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+if(DCC_WARNINGS_AS_ERRORS)
+    if(MSVC)
+        target_compile_options(dcc PRIVATE /WX)
+    else()
+        target_compile_options(dcc PRIVATE -Werror)
+    endif()
+endif()
 dcc_target_enable_sanitizers(dcc)
 
 function(dcc_target_export_hot_reload_symbols target)
@@ -2271,6 +2279,17 @@ if(DCC_BUILD_TESTS)
     dcc_target_enable_sanitizers(dcc_app_v2_context_header_smoke)
     add_test(NAME dcc_app_v2_context_header_smoke COMMAND dcc_app_v2_context_header_smoke)
 
+    add_executable(dcc_app_legacy_rest_smoke tests/app_legacy_rest_smoke.c)
+    target_link_libraries(dcc_app_legacy_rest_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_app_legacy_rest_smoke)
+    dcc_target_enable_sanitizers(dcc_app_legacy_rest_smoke)
+    add_test(NAME dcc_app_legacy_rest_smoke COMMAND dcc_app_legacy_rest_smoke)
+
+    add_executable(dcc_app_command_sync_smoke tests/app_command_sync_smoke.c)
+    target_link_libraries(dcc_app_command_sync_smoke PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_app_command_sync_smoke)
+    add_test(NAME dcc_app_command_sync_smoke COMMAND dcc_app_command_sync_smoke)
+
     add_executable(dcc_app_windows_include_order_smoke tests/app_windows_include_order_smoke.c)
     target_link_libraries(dcc_app_windows_include_order_smoke PRIVATE dcc::dcc)
     dcc_target_use_private_headers(dcc_app_windows_include_order_smoke)
@@ -2356,6 +2375,17 @@ if(DCC_BUILD_TESTS)
     target_link_libraries(dcc_interaction_server_smoke PRIVATE dcc::dcc OpenSSL::Crypto)
     dcc_target_enable_sanitizers(dcc_interaction_server_smoke)
     add_test(NAME dcc_interaction_server_smoke COMMAND dcc_interaction_server_smoke)
+
+    add_executable(dcc_interaction_replay_capacity_smoke
+        tests/interaction_replay_capacity_smoke.c
+    )
+    target_link_libraries(dcc_interaction_replay_capacity_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_interaction_replay_capacity_smoke)
+    dcc_target_enable_sanitizers(dcc_interaction_replay_capacity_smoke)
+    add_test(
+        NAME dcc_interaction_replay_capacity_smoke
+        COMMAND dcc_interaction_replay_capacity_smoke
+    )
 
     add_executable(dcc_ws_smoke tests/ws_smoke.c)
     dcc_target_use_private_headers(dcc_ws_smoke)
@@ -3014,7 +3044,7 @@ if(DCC_BUILD_TESTS)
         set_tests_properties(dcc_doctor_help PROPERTIES PASS_REGULAR_EXPRESSION "--require-dave")
         add_test(NAME dcc_doctor_json COMMAND dcc_doctor --json)
         set_tests_properties(dcc_doctor_json PROPERTIES
-            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"2.0.1\",\"dcc_version_ok\":true"
+            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"2.0.2\",\"dcc_version_ok\":true"
         )
         add_test(NAME dcc_doctor_require_token COMMAND dcc_doctor --json --require-token)
         set_tests_properties(dcc_doctor_require_token PROPERTIES

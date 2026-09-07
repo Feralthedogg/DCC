@@ -11,6 +11,7 @@ DCC is configured through CMake.
 | `DCC_BUILD_BENCHMARKS` | `OFF` | Build micro benchmarks. |
 | `DCC_BUILD_FUZZERS` | `OFF` | Build JSON fuzz harnesses. |
 | `DCC_ENABLE_SANITIZERS` | `OFF` | Enable ASAN/UBSAN for supported compilers. |
+| `DCC_WARNINGS_AS_ERRORS` | `ON` | Build the DCC library with `-Werror` (or `/WX`). |
 | `DCC_LLAM_USE_SUBDIRECTORY` | `OFF` | Build LLAM from source through `add_subdirectory`. |
 | `DCC_LLAM_ENABLE_SUBDIRECTORY_TESTS` | `OFF` | Keep LLAM's own tests enabled when LLAM is added as a subdirectory. |
 | `DCC_BUNDLE_LLAM` | `OFF` | Install LLAM runtime package files with DCC when LLAM is built as a subdirectory. |

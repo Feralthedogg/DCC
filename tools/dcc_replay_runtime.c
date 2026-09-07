@@ -44,7 +44,7 @@ dcc_status_t dcc_replay_tool_runtime_init(
         dcc_replay_tool_runtime_deinit(runtime);
         return status;
     }
-    runtime->gateway_session.client = runtime->client;
+    dcc_gateway_session_init(&runtime->gateway_session, runtime->client, false);
     return DCC_OK;
 }
 
@@ -52,6 +52,7 @@ void dcc_replay_tool_runtime_deinit(dcc_replay_tool_runtime_t *runtime) {
     if (runtime == NULL) {
         return;
     }
+    dcc_gateway_session_deinit(&runtime->gateway_session);
     dcc_hot_reload_destroy(runtime->hot_reload);
     dcc_client_destroy(runtime->client);
     memset(runtime, 0, sizeof(*runtime));
@@ -65,14 +66,18 @@ dcc_status_t dcc_replay_tool_dispatch_frame(
     if (runtime == NULL || runtime->client == NULL || json == NULL || json_len == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    static _Thread_local dcc_json_gateway_payload_t payload;
-    dcc_status_t status = dcc_json_parse_gateway_payload(json, json_len, &payload);
+    dcc_json_gateway_payload_t *payload =
+        dcc_gateway_session_payload_scratch(&runtime->gateway_session);
+    if (payload == NULL) {
+        return DCC_ERR_NOMEM;
+    }
+    dcc_status_t status = dcc_json_parse_gateway_payload(json, json_len, payload);
     if (status != DCC_OK) {
         return status;
     }
     return dcc_gateway_session_handle_payload(
         &runtime->gateway_session,
-        &payload,
+        payload,
         json,
         json_len
     );

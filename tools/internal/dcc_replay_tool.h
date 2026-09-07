@@ -4,6 +4,7 @@
 #include <dcc/dcc.h>
 
 #include "internal/gateway/dcc_gateway_session_receive_internal.h"
+#include "internal/gateway/dcc_gateway_session_lifecycle_internal.h"
 
 #include <stddef.h>
 #include <stdint.h>

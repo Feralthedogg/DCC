@@ -12,7 +12,9 @@ dcc_status_t dcc_event_bus_dispatch(dcc_event_bus_t *bus, dcc_client_t *client, 
     mutable_event->shard_id = client->shard_id;
     mutable_event->cancelled = 0;
 
-    dcc_event_listener_t *snapshot = NULL;
+    enum { DCC_EVENT_INLINE_SNAPSHOT_CAP = 8U };
+    dcc_event_listener_t inline_snapshot[DCC_EVENT_INLINE_SNAPSHOT_CAP];
+    dcc_event_listener_t *snapshot = inline_snapshot;
     size_t snapshot_len = 0;
 
     dcc_event_bus_lock(bus);
@@ -20,10 +22,14 @@ dcc_status_t dcc_event_bus_dispatch(dcc_event_bus_t *bus, dcc_client_t *client, 
     dcc_event_bus_signal_waiters_locked(bus, event);
     snapshot_len = list->len;
     if (snapshot_len > 0) {
-        snapshot = (dcc_event_listener_t *)malloc(snapshot_len * sizeof(*snapshot));
-        if (snapshot == NULL) {
-            dcc_event_bus_unlock(bus);
-            return DCC_ERR_NOMEM;
+        if (snapshot_len > DCC_EVENT_INLINE_SNAPSHOT_CAP) {
+            snapshot = (dcc_event_listener_t *)malloc(
+                snapshot_len * sizeof(*snapshot)
+            );
+            if (snapshot == NULL) {
+                dcc_event_bus_unlock(bus);
+                return DCC_ERR_NOMEM;
+            }
         }
         memcpy(snapshot, list->items, snapshot_len * sizeof(*snapshot));
     }
@@ -37,6 +43,8 @@ dcc_status_t dcc_event_bus_dispatch(dcc_event_bus_t *bus, dcc_client_t *client, 
         }
     }
 
-    free(snapshot);
+    if (snapshot != inline_snapshot) {
+        free(snapshot);
+    }
     return DCC_OK;
 }

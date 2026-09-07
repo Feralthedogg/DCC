@@ -4,7 +4,7 @@ DCC's direction after 2.0.0 is stability-first. New surface area should make
 existing bots easier to operate, test, or upgrade rather than duplicate Discord
 objects without a demonstrated use case.
 
-## 1. Stabilize the 1.x Contract
+## 1. Stabilize the 2.x Contract
 
 - Keep ABI-safe, size-versioned public structs and automated symbol/header gates.
 - Publish migration notes and deprecation windows before removal.
@@ -32,7 +32,7 @@ objects without a demonstrated use case.
 
 - Keep the sugar API learnable while preserving lower-level escape hatches.
 - Improve examples, issue triage, contribution guidance, and release provenance.
-- Consider integrations only when they can be supported across the 1.x line.
+- Consider integrations only when they can be supported across the 2.x line.
 
 Milestones are accepted when implementation, tests, operational documentation,
 and compatibility impact land together. This file describes priorities, not a

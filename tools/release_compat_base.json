@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "current_version": "2.0.1",
-  "previous_stable_tag": "v2.0.0",
-  "compat_base": "5d5a6bb51f4e29a7fa145b88fbb293777558e754",
+  "current_version": "2.0.2",
+  "previous_stable_tag": "v2.0.1",
+  "compat_base": "9300efb3b59adedfa133bde981465c2e483aa99b",
   "comparison_mode": "same_major"
 }

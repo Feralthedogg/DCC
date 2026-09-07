@@ -47,6 +47,7 @@ typedef struct dcc_interaction_server_protection_stats {
     size_t size;
     uint64_t max_active_requests;
     uint32_t response_deadline_ms;
+    /* Accepted signed-timestamp skew and replay retention window. */
     uint32_t replay_window_ms;
     uint64_t overloaded_responses;
     uint64_t replayed_requests;

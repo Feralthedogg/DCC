@@ -1570,8 +1570,10 @@ not hard-code paths to `../LLAM`.
 
 ## Ownership
 
-Gateway event payloads use scratch storage for hot-path parsing. User-retained objects must be
-cloned with the public clone APIs, which deep-copy strings and owned arrays.
+Gateway event payloads use session-owned scratch storage for hot-path parsing. Interaction payloads
+are request-owned for the callback lifetime. User-retained objects must be cloned with the public
+clone APIs, which deep-copy strings and owned arrays; raw event/payload pointers must not outlive
+their callback.
 
 For public API ownership rules and operational use, see `api.md` and
 `production-playbooks.md`.

@@ -1,12 +1,11 @@
 #include "internal/dcc_core_internal.h"
+#include "internal/gateway/dcc_gateway_session_lifecycle_internal.h"
 #include "internal/gateway/dcc_gateway_session_receive_internal.h"
 #include "internal/ws/dcc_ws.h"
 
 #include <limits.h>
 #include <stdint.h>
 #include <string.h>
-
-static _Thread_local dcc_json_gateway_payload_t dcc_gateway_hello_payload_scratch;
 
 static int dcc_gateway_read_timeout_for_heartbeat(uint32_t heartbeat_interval_ms) {
     const uint64_t minimum_timeout_ms = UINT64_C(90000);
@@ -31,7 +30,13 @@ dcc_status_t dcc_gateway_read_hello(dcc_gateway_session_t *session) {
         return status;
     }
 
-    dcc_json_gateway_payload_t *payload = &dcc_gateway_hello_payload_scratch;
+    dcc_json_gateway_payload_t *payload =
+        dcc_gateway_session_payload_scratch(session);
+    if (payload == NULL) {
+        dcc_ws_message_deinit(&message);
+        dcc_set_error(session->client, "gateway payload allocation failed");
+        return DCC_ERR_NOMEM;
+    }
 
     status = dcc_json_parse_gateway_payload((const char *)message.data, message.len, payload);
     if (status != DCC_OK) {

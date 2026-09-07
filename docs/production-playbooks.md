@@ -139,6 +139,12 @@ Alert on:
 - response 5xx growth
 - active requests not draining during shutdown
 
+Interaction signatures are accepted only when the strict Unix-seconds
+`X-Signature-Timestamp` is within `replay_window_ms` (five minutes by default).
+The bounded replay set uses a SHA-256 digest of the timestamp/signature pair and
+fails closed with HTTP 503 when every slot is still live; a live entry is never
+evicted to make room for a new request.
+
 First response:
 
 1. Verify reverse-proxy body buffering and header forwarding.

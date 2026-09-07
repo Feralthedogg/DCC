@@ -47,7 +47,22 @@ struct dcc_app_listener_entry {
   struct dcc_app_listener_entry *next_retired;
 };
 
-static _Thread_local dcc_app_callback_frame_t *dcc_app_current_callback_frame;
+static _Thread_local dcc_app_callback_frame_t *dcc_app_host_callback_frame;
+
+static dcc_app_callback_frame_t *dcc_app_callback_frame_current(
+    dcc_app_t *app
+) {
+  if (app == NULL) {
+    return llam_current_task() == NULL ? dcc_app_host_callback_frame : NULL;
+  }
+  if (llam_current_task() != NULL && app->callback_frame_key_ready) {
+    return (dcc_app_callback_frame_t *)llam_task_local_get(
+        app->callback_frame_key
+    );
+  }
+  (void)app;
+  return dcc_app_host_callback_frame;
+}
 
 dcc_status_t dcc_app_listener_sync_init(dcc_app_t *app) {
   if (app == NULL) {
@@ -416,7 +431,8 @@ static void dcc_app_listener_finish_schedule_array(
 
 static uint8_t
 dcc_app_listener_is_current(const dcc_app_listener_entry_t *entry) {
-  for (dcc_app_callback_frame_t *frame = dcc_app_current_callback_frame;
+  dcc_app_t *app = entry != NULL ? entry->app : NULL;
+  for (dcc_app_callback_frame_t *frame = dcc_app_callback_frame_current(app);
        frame != NULL; frame = frame->previous) {
     if (frame->listener_state == entry) {
       return 1U;
@@ -432,18 +448,34 @@ void dcc_app_callback_frame_enter(dcc_app_callback_frame_t *frame,
   }
   frame->app = app;
   frame->listener_state = listener_state;
-  frame->previous = dcc_app_current_callback_frame;
-  dcc_app_current_callback_frame = frame;
+  frame->previous = dcc_app_callback_frame_current(app);
+  if (app != NULL && llam_current_task() != NULL &&
+      app->callback_frame_key_ready) {
+    (void)llam_task_local_set(app->callback_frame_key, frame);
+  } else if (app != NULL) {
+    dcc_app_host_callback_frame = frame;
+  }
 }
 
 void dcc_app_callback_frame_leave(dcc_app_callback_frame_t *frame) {
-  if (dcc_app_current_callback_frame == frame) {
-    dcc_app_current_callback_frame = frame->previous;
+  if (frame == NULL || frame->app == NULL) {
+    return;
+  }
+  dcc_app_t *app = frame->app;
+  if (dcc_app_callback_frame_current(app) != frame) {
+    return;
+  }
+  if (llam_current_task() != NULL && app->callback_frame_key_ready) {
+    (void)llam_task_local_set(app->callback_frame_key, frame->previous);
+  } else {
+    dcc_app_host_callback_frame = frame->previous;
   }
 }
 
 uint8_t dcc_app_callback_frame_active(const dcc_app_t *app) {
-  for (dcc_app_callback_frame_t *frame = dcc_app_current_callback_frame;
+  dcc_app_t *mutable_app = (dcc_app_t *)app;
+  for (dcc_app_callback_frame_t *frame =
+           dcc_app_callback_frame_current(mutable_app);
        frame != NULL; frame = frame->previous) {
     if (app == NULL || frame->app == app) {
       return 1U;

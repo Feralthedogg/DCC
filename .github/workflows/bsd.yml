@@ -157,7 +157,7 @@ jobs:
             FreeBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/local" ;;
             NetBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/pkg" ;;
           esac
-          DCC_RELEASE_VERSION=2.0.1 \
+          DCC_RELEASE_VERSION=2.0.2 \
             DCC_ALLOW_VERSION_MISMATCH=1 \
             DCC_SKIP_RELEASE_TESTS=1 \
             DCC_BUILD_PARALLEL=2 \
@@ -170,5 +170,5 @@ jobs:
             --dry-run \
             --skip-llam \
             --target "${{ matrix.package_target }}" \
-            --version 2.0.1 \
+            --version 2.0.2 \
             --base-url https://example.invalid

@@ -392,10 +392,12 @@ dcc_status_t dcc_app_get_current_user_guilds(dcc_app_t *app, const char *query,
 
 dcc_status_t dcc_app_get_current_user_dms(dcc_app_t *app, dcc_rest_cb cb,
                                           void *user_data) {
-  (void)app;
-  (void)cb;
-  (void)user_data;
-  return DCC_ERR_INVALID_ARG;
+  if (app == NULL) {
+    return DCC_ERR_INVALID_ARG;
+  }
+  return dcc_endpoint_submit_legacy_raw(
+      dcc_app_client(app), DCC_REST_GET, "/users/@me/channels", NULL, NULL,
+      NULL, 0U, cb, user_data);
 }
 
 dcc_status_t dcc_app_create_dm_channel(dcc_app_t *app, const char *json_body,

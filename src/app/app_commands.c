@@ -11,6 +11,52 @@ typedef struct dcc_app_command_sync_state {
     dcc_app_command_sync_options_t options;
 } dcc_app_command_sync_state_t;
 
+typedef struct dcc_app_legacy_command_callback {
+    dcc_app_t *app;
+    dcc_rest_cb callback;
+    void *user_data;
+} dcc_app_legacy_command_callback_t;
+
+static void dcc_app_legacy_command_result(
+    dcc_client_t *client,
+    const dcc_command_registry_operation_result_t *result,
+    void *user_data
+) {
+    dcc_app_legacy_command_callback_t *callback =
+        (dcc_app_legacy_command_callback_t *)user_data;
+    if (callback == NULL) {
+        return;
+    }
+    dcc_app_t *app = callback->app;
+    if (callback->callback != NULL && app != NULL) {
+        atomic_fetch_add_explicit(
+            &app->command_callbacks, 1U, memory_order_acq_rel
+        );
+        const dcc_rest_result_t *failed =
+            result != NULL ? result->failed_rest_result : NULL;
+        dcc_rest_response_t response = {
+            .size = sizeof(response),
+            .status = failed != NULL && failed->http_status != 0U
+                ? failed->http_status
+                : result != NULL && result->status == DCC_OK ? 204U : 0U,
+            .error = result != NULL ? result->status : DCC_ERR_RUNTIME,
+            .body = failed != NULL ? failed->body : NULL,
+            .body_len = failed != NULL ? failed->body_len : 0U,
+        };
+        callback->callback(client, &response, callback->user_data);
+        atomic_fetch_sub_explicit(
+            &app->command_callbacks, 1U, memory_order_acq_rel
+        );
+    }
+    if (app != NULL) {
+        atomic_fetch_sub_explicit(
+            &app->command_operations, 1U, memory_order_acq_rel
+        );
+        dcc_app_listener_wake_all(app);
+    }
+    free(callback);
+}
+
 static int dcc_app_command_sync_options_has_field(
     const dcc_app_command_sync_options_t *options,
     size_t offset,
@@ -209,10 +255,82 @@ dcc_status_t dcc_app_apply_command_plan(
     if (app == NULL || application_id == 0U || plan == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    (void)options;
-    (void)cb;
-    (void)user_data;
-    return dcc_command_registry_apply(app->client, application_id, plan, NULL, NULL);
+    if (options != NULL) {
+        const size_t present_end = offsetof(
+            dcc_command_registry_options_t, present
+        ) + sizeof(options->present);
+        const uint64_t known =
+            DCC_COMMAND_REGISTRY_OPTIONS_PRESENT_GUILD_ID |
+            DCC_COMMAND_REGISTRY_OPTIONS_PRESENT_DELETE_STALE |
+            DCC_COMMAND_REGISTRY_OPTIONS_PRESENT_DRY_RUN;
+        if (options->size < present_end ||
+            options->version != DCC_COMMAND_REGISTRY_OPTIONS_VERSION) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        if ((options->present & ~known) != 0U) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        if ((options->present & DCC_COMMAND_REGISTRY_OPTIONS_PRESENT_GUILD_ID) != 0U) {
+            const size_t end = offsetof(
+                dcc_command_registry_options_t, guild_id
+            ) + sizeof(options->guild_id);
+            if (options->size < end || options->guild_id == 0U ||
+                options->guild_id != plan->guild_id) {
+                return DCC_ERR_INVALID_ARG;
+            }
+        } else if (plan->guild_id != 0U) {
+            return DCC_ERR_INVALID_ARG;
+        }
+        if ((options->present & DCC_COMMAND_REGISTRY_OPTIONS_PRESENT_DELETE_STALE) != 0U) {
+            const size_t end = offsetof(
+                dcc_command_registry_options_t, delete_stale
+            ) + sizeof(options->delete_stale);
+            if (options->size < end || options->delete_stale > 1U ||
+                options->delete_stale != plan->delete_stale) {
+                return DCC_ERR_INVALID_ARG;
+            }
+        }
+        if ((options->present & DCC_COMMAND_REGISTRY_OPTIONS_PRESENT_DRY_RUN) != 0U) {
+            const size_t end = offsetof(
+                dcc_command_registry_options_t, dry_run
+            ) + sizeof(options->dry_run);
+            if (options->size < end || options->dry_run > 1U ||
+                options->dry_run != plan->dry_run) {
+                return DCC_ERR_INVALID_ARG;
+            }
+        }
+    }
+
+    dcc_app_legacy_command_callback_t *callback =
+        (dcc_app_legacy_command_callback_t *)calloc(1U, sizeof(*callback));
+    if (callback == NULL) {
+        return DCC_ERR_NOMEM;
+    }
+    callback->app = app;
+    callback->callback = cb;
+    callback->user_data = user_data;
+    dcc_app_listener_lock(app);
+    if (app->tearing_down) {
+        dcc_app_listener_unlock(app);
+        free(callback);
+        return DCC_ERR_STATE;
+    }
+    atomic_fetch_add_explicit(&app->command_operations, 1U, memory_order_acq_rel);
+    dcc_app_listener_unlock(app);
+    dcc_command_registry_operation_options_t operation_options =
+        DCC_COMMAND_REGISTRY_OPERATION_OPTIONS_INIT;
+    operation_options.callback = dcc_app_legacy_command_result;
+    operation_options.user_data = callback;
+    dcc_status_t status = dcc_command_registry_apply(
+        app->client, application_id, plan, &operation_options, NULL
+    );
+    if (status != DCC_OK) {
+        free(callback);
+        atomic_fetch_sub_explicit(
+            &app->command_operations, 1U, memory_order_acq_rel
+        );
+    }
+    return status;
 }
 
 dcc_status_t dcc_app_sync_commands_from_json(

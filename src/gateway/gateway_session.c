@@ -24,6 +24,7 @@ dcc_status_t dcc_gateway_run_once(
             *next = dcc_gateway_should_stop(client)
                 ? DCC_GATEWAY_NEXT_STOP
                 : DCC_GATEWAY_NEXT_RECONNECT_IDENTIFY;
+            dcc_gateway_session_deinit(&session);
             return slot_status;
         }
     }
@@ -32,6 +33,7 @@ dcc_status_t dcc_gateway_run_once(
     if (status != DCC_OK) {
         dcc_set_error(client, "gateway websocket connect failed");
         *next = dcc_gateway_reconnect_next(client);
+        dcc_gateway_session_deinit(&session);
         return status;
     }
     dcc_gateway_bind_ws(client, session.ws);
@@ -47,6 +49,7 @@ dcc_status_t dcc_gateway_run_once(
             *next = dcc_gateway_reconnect_next(client);
         }
         dcc_gateway_session_drop_ws(&session);
+        dcc_gateway_session_deinit(&session);
         return status;
     }
 
@@ -56,6 +59,7 @@ dcc_status_t dcc_gateway_run_once(
         dcc_gateway_session_drop_ws(&session);
         dcc_set_error(client, "failed to spawn gateway heartbeat");
         *next = DCC_GATEWAY_NEXT_FATAL;
+        dcc_gateway_session_deinit(&session);
         return status;
     }
 
@@ -71,6 +75,7 @@ dcc_status_t dcc_gateway_run_once(
             } else {
                 *next = DCC_GATEWAY_NEXT_STOP;
             }
+            dcc_gateway_session_deinit(&session);
             return DCC_OK;
         }
     }
@@ -82,13 +87,16 @@ dcc_status_t dcc_gateway_run_once(
         dcc_set_error(client, session.resume ? "gateway RESUME failed" : "gateway IDENTIFY failed");
         if (dcc_gateway_should_stop(client)) {
             *next = DCC_GATEWAY_NEXT_STOP;
+            dcc_gateway_session_deinit(&session);
             return DCC_OK;
         }
         if (dcc_gateway_reconnect_requested(client)) {
             *next = dcc_gateway_take_reconnect_request(client);
+            dcc_gateway_session_deinit(&session);
             return status;
         }
         *next = dcc_gateway_reconnect_next(client);
+        dcc_gateway_session_deinit(&session);
         return status;
     }
     if (!session.resume) {
@@ -102,5 +110,6 @@ dcc_status_t dcc_gateway_run_once(
     dcc_gateway_session_finish_ws(&session);
 
     *next = session.next;
+    dcc_gateway_session_deinit(&session);
     return status;
 }

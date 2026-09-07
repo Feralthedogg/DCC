@@ -8,6 +8,8 @@
 #include <dcc/app/legacy.h>
 #include <dcc/tasks.h>
 
+#include <llam/runtime.h>
+
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -152,6 +154,10 @@ struct dcc_app {
   uint8_t listener_destroying;
   uint8_t tearing_down;
   uint8_t task_reaping;
+  llam_task_local_key_t callback_frame_key;
+  uint8_t callback_frame_key_ready;
+  atomic_size_t command_operations;
+  atomic_uint command_callbacks;
   void (*listener_test_before_route_remove)(void *user_data);
   void *listener_test_before_route_remove_data;
   uint8_t listener_test_fail_policy_allocation;

@@ -495,7 +495,7 @@ normal_bot_deploy_template_check() {
     grep -q 'stop_grace_period: 30s' "$deploy_dir/docker-compose.yaml"
     grep -q 'terminationGracePeriodSeconds: 30' "$deploy_dir/kubernetes.yaml"
     check_output=$(DCC_TOKEN=release-check "$doctor" --json --require-token)
-    printf '%s\n' "$check_output" | grep -q '"dcc_version":"2.0.1"'
+    printf '%s\n' "$check_output" | grep -q '"dcc_version":"2.0.2"'
     printf '%s\n' "$check_output" | grep -q '"token_present":true'
 }
 

@@ -13,16 +13,23 @@ static dcc_status_t dcc_worker_dispatch_json(
     const char *json,
     size_t json_len
 ) {
-    static _Thread_local dcc_json_gateway_payload_t payload;
-    dcc_status_t status = dcc_json_parse_gateway_payload(json, json_len, &payload);
+    dcc_json_gateway_payload_t *payload =
+        (dcc_json_gateway_payload_t *)calloc(1U, sizeof(*payload));
+    if (payload == NULL) {
+        return DCC_ERR_NOMEM;
+    }
+    dcc_status_t status = dcc_json_parse_gateway_payload(json, json_len, payload);
     if (status != DCC_OK) {
+        free(payload);
         return status;
     }
 
     dcc_gateway_session_t session;
     memset(&session, 0, sizeof(session));
     session.client = client;
-    return dcc_gateway_session_handle_payload(&session, &payload, json, json_len);
+    status = dcc_gateway_session_handle_payload(&session, payload, json, json_len);
+    free(payload);
+    return status;
 }
 
 static int dcc_worker_send_health(dcc_hot_reload_t *hot_reload) {

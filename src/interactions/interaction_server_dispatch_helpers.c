@@ -2,18 +2,79 @@
 
 #include <llam/runtime.h>
 
-static uint64_t dcc_interaction_replay_hash(const char *timestamp, const char *signature) {
-    uint64_t hash = UINT64_C(1469598103934665603);
-    const char *parts[2] = {timestamp, signature};
-    for (size_t part = 0; part < 2U; ++part) {
-        for (const unsigned char *cursor = (const unsigned char *)parts[part]; *cursor != '\0'; ++cursor) {
-            hash ^= (uint64_t)*cursor;
-            hash *= UINT64_C(1099511628211);
-        }
-        hash ^= UINT64_C(255);
-        hash *= UINT64_C(1099511628211);
+#include <openssl/sha.h>
+#include <stdint.h>
+#include <string.h>
+#include <time.h>
+
+static int dcc_interaction_parse_unix_timestamp(
+    const char *timestamp,
+    uint64_t *out_timestamp
+) {
+    if (timestamp == NULL || out_timestamp == NULL || timestamp[0] == '\0') {
+        return 0;
     }
-    return hash != 0U ? hash : 1U;
+    uint64_t value = 0U;
+    for (const unsigned char *cursor = (const unsigned char *)timestamp;
+         *cursor != '\0'; ++cursor) {
+        if (*cursor < (unsigned char)'0' || *cursor > (unsigned char)'9') {
+            return 0;
+        }
+        uint64_t digit = (uint64_t)(*cursor - (unsigned char)'0');
+        if (value > (UINT64_MAX - digit) / UINT64_C(10)) {
+            return 0;
+        }
+        value = value * UINT64_C(10) + digit;
+    }
+    *out_timestamp = value;
+    return 1;
+}
+
+int dcc_interaction_server_timestamp_fresh(
+    const dcc_interaction_server_t *server,
+    const char *timestamp
+) {
+    if (server == NULL || timestamp == NULL || server->replay_window_ms == 0U) {
+        return 0;
+    }
+    uint64_t signed_at = 0U;
+    if (!dcc_interaction_parse_unix_timestamp(timestamp, &signed_at)) {
+        return 0;
+    }
+    time_t current_time = time(NULL);
+    if (current_time < (time_t)0) {
+        return 0;
+    }
+    uint64_t current = (uint64_t)current_time;
+    uint64_t delta_seconds = signed_at > current
+        ? signed_at - current
+        : current - signed_at;
+    if (delta_seconds > UINT64_MAX / UINT64_C(1000)) {
+        return 0;
+    }
+    return delta_seconds * UINT64_C(1000) <= (uint64_t)server->replay_window_ms;
+}
+
+static int dcc_interaction_replay_digest(
+    const char *timestamp,
+    const char *signature,
+    unsigned char out_digest[32]
+) {
+    if (timestamp == NULL || signature == NULL || out_digest == NULL) {
+        return 0;
+    }
+    size_t timestamp_len = strlen(timestamp);
+    size_t signature_len = strlen(signature);
+    if (timestamp_len > 32U || signature_len > 128U ||
+        timestamp_len > SIZE_MAX - signature_len - 1U) {
+        return 0;
+    }
+    unsigned char material[32U + 1U + 128U];
+    memcpy(material, timestamp, timestamp_len);
+    material[timestamp_len] = 0U;
+    memcpy(material + timestamp_len + 1U, signature, signature_len);
+    (void)SHA256(material, timestamp_len + 1U + signature_len, out_digest);
+    return 1;
 }
 
 int dcc_interaction_server_replay_seen(
@@ -22,29 +83,47 @@ int dcc_interaction_server_replay_seen(
     const char *signature
 ) {
     if (server == NULL || timestamp == NULL || signature == NULL || server->replay_window_ms == 0U) {
-        return 0;
+        return DCC_INTERACTION_REPLAY_NEW;
     }
-    uint64_t hash = dcc_interaction_replay_hash(timestamp, signature);
+    unsigned char digest[32];
+    if (!dcc_interaction_replay_digest(timestamp, signature, digest)) {
+        return DCC_INTERACTION_REPLAY_NEW;
+    }
     uint64_t now_ns = llam_now_ns();
     uint64_t window_ns = (uint64_t)server->replay_window_ms * UINT64_C(1000000);
     while (atomic_flag_test_and_set_explicit(&server->replay_lock, memory_order_acquire)) {
     }
-    int seen = 0;
+    dcc_interaction_replay_entry_t *free_entry = NULL;
     for (size_t i = 0; i < DCC_INTERACTION_REPLAY_CAP; ++i) {
         dcc_interaction_replay_entry_t *entry = &server->replay_entries[i];
-        if (entry->hash == hash && now_ns - entry->seen_at_ns <= window_ns) {
-            seen = 1;
-            break;
+        if (entry->occupied == 0U) {
+            if (free_entry == NULL) {
+                free_entry = entry;
+            }
+            continue;
+        }
+        if (now_ns >= entry->seen_at_ns &&
+            now_ns - entry->seen_at_ns > window_ns) {
+            entry->occupied = 0U;
+            if (free_entry == NULL) {
+                free_entry = entry;
+            }
+            continue;
+        }
+        if (memcmp(entry->digest, digest, sizeof(digest)) == 0) {
+            atomic_flag_clear_explicit(&server->replay_lock, memory_order_release);
+            return DCC_INTERACTION_REPLAY_SEEN;
         }
     }
-    if (!seen) {
-        dcc_interaction_replay_entry_t *entry = &server->replay_entries[server->replay_next];
-        entry->hash = hash;
-        entry->seen_at_ns = now_ns;
-        server->replay_next = (server->replay_next + 1U) % DCC_INTERACTION_REPLAY_CAP;
+    if (free_entry == NULL) {
+        atomic_flag_clear_explicit(&server->replay_lock, memory_order_release);
+        return DCC_INTERACTION_REPLAY_CAPACITY;
     }
+    memcpy(free_entry->digest, digest, sizeof(digest));
+    free_entry->seen_at_ns = now_ns;
+    free_entry->occupied = 1U;
     atomic_flag_clear_explicit(&server->replay_lock, memory_order_release);
-    return seen;
+    return DCC_INTERACTION_REPLAY_NEW;
 }
 
 static int dcc_interaction_component_is_select(uint32_t component_type) {

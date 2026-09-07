@@ -34,6 +34,7 @@
 #include <dcc/rest/resources/templates.h>
 
 #include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
 #include <dcc/rest/resources/users.h>
 #include <dcc/rest/resources/voice_states.h>
@@ -62,6 +63,23 @@ typedef struct dcc_app_infer_guild_state {
     dcc_app_infer_guild_cb cb;
     void *user_data;
 } dcc_app_infer_guild_state_t;
+
+static dcc_status_t dcc_app_submit_json_path(
+    dcc_app_t *app,
+    dcc_rest_method_t method,
+    const char *path,
+    const char *json_body,
+    dcc_rest_cb callback,
+    void *user_data
+) {
+    if (app == NULL || path == NULL || json_body == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    return dcc_endpoint_submit_legacy_raw(
+        dcc_app_client(app), method, path, NULL, "application/json",
+        json_body, strlen(json_body), callback, user_data
+    );
+}
 
 static void dcc_app_infer_guild_id_from_channel_rest_cb(
     dcc_client_t *client,
@@ -306,7 +324,10 @@ dcc_status_t dcc_app_get_current_user_voice_state(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_current_user_voice_state(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_current_user_voice_state,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_modify_current_user_voice_state(
@@ -319,7 +340,14 @@ dcc_status_t dcc_app_modify_current_user_voice_state(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_current_user_voice_state(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[112];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_CURRENT_USER_SET_VOICE_STATE,
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? dcc_app_submit_json_path(
+        app, DCC_REST_PATCH, path, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_current_user_voice_state_params(
@@ -351,7 +379,10 @@ dcc_status_t dcc_app_get_user_voice_state(
     if (app == NULL || guild_id == 0U || user_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_user_voice_state(dcc_app_client(app), guild_id, user_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_user_voice_state,
+        dcc_app_client(app), guild_id, user_id
+    );
 }
 
 dcc_status_t dcc_app_modify_user_voice_state(
@@ -365,7 +396,14 @@ dcc_status_t dcc_app_modify_user_voice_state(
     if (app == NULL || guild_id == 0U || user_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_user_voice_state(dcc_app_client(app), guild_id, user_id, json_body, cb, user_data);
+    char path[128];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_USER_SET_VOICE_STATE,
+        (unsigned long long)guild_id, (unsigned long long)user_id
+    );
+    return status == DCC_OK ? dcc_app_submit_json_path(
+        app, DCC_REST_PATCH, path, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_user_voice_state_params(
@@ -393,7 +431,9 @@ dcc_status_t dcc_app_get_voice_regions(
     if (app == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_voice_regions(dcc_app_client(app), cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_voice_regions, dcc_app_client(app)
+    );
 }
 
 dcc_status_t dcc_app_get_guild_voice_regions(

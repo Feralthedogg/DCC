@@ -41,6 +41,13 @@ also time out partial event bodies after accepting an EVENT frame.
 Worker shutdown is bounded as well. The parent sends STOP, waits for the drain
 window, then escalates termination instead of waiting forever for a stuck module.
 
+POSIX workers are started with `posix_spawn()` and an explicit file-action
+mapping for the IPC sockets. The worker receives a sanitized environment: basic
+runtime/locale variables and the documented `DCC_DISCORD_API_BASE` and
+`DCC_ISOLATED_TEST_URL` overrides are retained, while token variables and other
+unlisted secrets are not inherited. Treat this as process/fault isolation, not
+as a substitute for OS sandboxing.
+
 ## Canary Promotion
 
 Candidate workers can receive a small percentage of requests before promotion.

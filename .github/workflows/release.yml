@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example v2.0.1
+        description: Release version, for example v2.0.2
         required: false
-        default: v2.0.1
+        default: v2.0.2
         type: string
   push:
     tags:
-      - 'v2.0.1'
+      - 'v2.0.2'
 
 concurrency:
   group: release-${{ github.ref }}
@@ -79,8 +79,8 @@ jobs:
         env:
           DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
         run: |
-          test "$DCC_RELEASE_VERSION" = "v2.0.1" || {
-            echo "release identity must be exactly v2.0.1" >&2
+          test "$DCC_RELEASE_VERSION" = "v2.0.2" || {
+            echo "release identity must be exactly v2.0.2" >&2
             exit 1
           }
 

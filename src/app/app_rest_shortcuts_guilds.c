@@ -47,6 +47,7 @@
 #include <dcc/rest/webhooks/messages/fetch.h>
 
 #include "internal/rest/dcc_rest_endpoint_internal.h"
+#include "internal/rest/dcc_rest_endpoint_routes_internal.h"
 #include "internal/rest/dcc_rest_paths_internal.h"
 
 #include <stdlib.h>
@@ -547,13 +548,18 @@ dcc_status_t dcc_app_modify_guild_integration(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    (void)app;
-    (void)guild_id;
-    (void)integration_id;
-    (void)json_body;
-    (void)cb;
-    (void)user_data;
-    return DCC_ERR_INVALID_ARG;
+    if (app == NULL || guild_id == 0U || integration_id == 0U ||
+        json_body == NULL) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    char path[128];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_MODIFY_INTEGRATION,
+        (unsigned long long)guild_id, (unsigned long long)integration_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PATCH, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_delete_guild_integration(
@@ -579,12 +585,17 @@ dcc_status_t dcc_app_sync_guild_integration(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    (void)app;
-    (void)guild_id;
-    (void)integration_id;
-    (void)cb;
-    (void)user_data;
-    return DCC_ERR_INVALID_ARG;
+    if (app == NULL || guild_id == 0U || integration_id == 0U) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    char path[128];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_SYNC_INTEGRATION,
+        (unsigned long long)guild_id, (unsigned long long)integration_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_POST, path, NULL, NULL, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_get_guild_widget(
@@ -669,7 +680,10 @@ dcc_status_t dcc_app_get_guild_onboarding(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_onboarding(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_onboarding,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_onboarding(
@@ -682,7 +696,14 @@ dcc_status_t dcc_app_modify_guild_onboarding(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_onboarding(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[96];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_EDIT_ONBOARDING,
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PUT, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_guild_onboarding_params(
@@ -691,10 +712,13 @@ dcc_status_t dcc_app_modify_guild_onboarding_params(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || params == NULL) {
+    if (app == NULL || params == NULL || params->guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return DCC_ERR_INVALID_ARG;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_guild_onboarding,
+        dcc_app_client(app), params->guild_id, params
+    );
 }
 
 dcc_status_t dcc_app_get_guild_welcome_screen(
@@ -791,7 +815,10 @@ dcc_status_t dcc_app_get_auto_moderation_rules(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_auto_moderation_rules(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_auto_moderation_rules,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_get_auto_moderation_rule(
@@ -804,7 +831,10 @@ dcc_status_t dcc_app_get_auto_moderation_rule(
     if (app == NULL || guild_id == 0U || rule_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_auto_moderation_rule(dcc_app_client(app), guild_id, rule_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_auto_moderation_rule,
+        dcc_app_client(app), guild_id, rule_id
+    );
 }
 
 dcc_status_t dcc_app_create_auto_moderation_rule(
@@ -817,7 +847,14 @@ dcc_status_t dcc_app_create_auto_moderation_rule(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_auto_moderation_rule(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[128];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_AUTOMOD_RULE_CREATE,
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_POST, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_create_auto_moderation_rule_params(
@@ -847,14 +884,14 @@ dcc_status_t dcc_app_modify_auto_moderation_rule(
     if (app == NULL || guild_id == 0U || rule_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_auto_moderation_rule(
-        dcc_app_client(app),
-        guild_id,
-        rule_id,
-        json_body,
-        cb,
-        user_data
+    char path[160];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_AUTOMOD_RULE_EDIT,
+        (unsigned long long)guild_id, (unsigned long long)rule_id
     );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PATCH, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_auto_moderation_rule_params(
@@ -884,7 +921,10 @@ dcc_status_t dcc_app_delete_auto_moderation_rule(
     if (app == NULL || guild_id == 0U || rule_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_auto_moderation_rule(dcc_app_client(app), guild_id, rule_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_auto_moderation_rule,
+        dcc_app_client(app), guild_id, rule_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_emojis(
@@ -896,7 +936,10 @@ dcc_status_t dcc_app_get_guild_emojis(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_emojis(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_emojis,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_emoji(
@@ -909,7 +952,10 @@ dcc_status_t dcc_app_get_guild_emoji(
     if (app == NULL || guild_id == 0U || emoji_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_emoji(dcc_app_client(app), guild_id, emoji_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_emoji,
+        dcc_app_client(app), guild_id, emoji_id
+    );
 }
 
 dcc_status_t dcc_app_create_guild_emoji(
@@ -922,7 +968,14 @@ dcc_status_t dcc_app_create_guild_emoji(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_emoji(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[128];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_EMOJI_CREATE,
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_POST, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_create_guild_emoji_params(
@@ -952,7 +1005,14 @@ dcc_status_t dcc_app_modify_guild_emoji(
     if (app == NULL || guild_id == 0U || emoji_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_emoji(dcc_app_client(app), guild_id, emoji_id, json_body, cb, user_data);
+    char path[160];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_EMOJI_EDIT,
+        (unsigned long long)guild_id, (unsigned long long)emoji_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PATCH, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_guild_emoji_params(
@@ -962,10 +1022,14 @@ dcc_status_t dcc_app_modify_guild_emoji_params(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || guild_id == 0U || params == NULL) {
+    if (app == NULL || guild_id == 0U || params == NULL ||
+        params->emoji_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return DCC_ERR_INVALID_ARG;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_guild_emoji,
+        dcc_app_client(app), guild_id, params->emoji_id, params
+    );
 }
 
 dcc_status_t dcc_app_delete_guild_emoji(
@@ -978,7 +1042,10 @@ dcc_status_t dcc_app_delete_guild_emoji(
     if (app == NULL || guild_id == 0U || emoji_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_guild_emoji(dcc_app_client(app), guild_id, emoji_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_guild_emoji,
+        dcc_app_client(app), guild_id, emoji_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_stickers(
@@ -990,7 +1057,10 @@ dcc_status_t dcc_app_get_guild_stickers(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_stickers(dcc_app_client(app), guild_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_stickers,
+        dcc_app_client(app), guild_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_sticker(
@@ -1003,7 +1073,10 @@ dcc_status_t dcc_app_get_guild_sticker(
     if (app == NULL || guild_id == 0U || sticker_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_sticker(dcc_app_client(app), guild_id, sticker_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_guild_sticker,
+        dcc_app_client(app), guild_id, sticker_id
+    );
 }
 
 dcc_status_t dcc_app_create_guild_sticker_multipart(
@@ -1048,10 +1121,13 @@ dcc_status_t dcc_app_create_guild_sticker_params(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || params == NULL) {
+    if (app == NULL || params == NULL || params->guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return DCC_ERR_INVALID_ARG;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_guild_sticker,
+        dcc_app_client(app), params->guild_id, params
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_sticker(
@@ -1065,7 +1141,14 @@ dcc_status_t dcc_app_modify_guild_sticker(
     if (app == NULL || guild_id == 0U || sticker_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_sticker(dcc_app_client(app), guild_id, sticker_id, json_body, cb, user_data);
+    char path[160];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_STICKER_MODIFY,
+        (unsigned long long)guild_id, (unsigned long long)sticker_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PATCH, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_delete_guild_sticker(
@@ -1078,7 +1161,10 @@ dcc_status_t dcc_app_delete_guild_sticker(
     if (app == NULL || guild_id == 0U || sticker_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_guild_sticker(dcc_app_client(app), guild_id, sticker_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_guild_sticker,
+        dcc_app_client(app), guild_id, sticker_id
+    );
 }
 
 dcc_status_t dcc_app_get_sticker(
@@ -1090,7 +1176,10 @@ dcc_status_t dcc_app_get_sticker(
     if (app == NULL || sticker_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_sticker(dcc_app_client(app), sticker_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_sticker,
+        dcc_app_client(app), sticker_id
+    );
 }
 
 dcc_status_t dcc_app_get_sticker_packs(
@@ -1101,7 +1190,9 @@ dcc_status_t dcc_app_get_sticker_packs(
     if (app == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_sticker_packs(dcc_app_client(app), cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_get_sticker_packs, dcc_app_client(app)
+    );
 }
 
 dcc_status_t dcc_app_guild_message_search(
@@ -1114,7 +1205,14 @@ dcc_status_t dcc_app_guild_message_search(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_guild_message_search(dcc_app_client(app), guild_id, query, cb, user_data);
+    char path[128];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_MESSAGES_SEARCH,
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_GET, path, query, NULL, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_guild_message_search_params(
@@ -1143,7 +1241,14 @@ dcc_status_t dcc_app_get_guild_scheduled_events(
     if (app == NULL || guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_scheduled_events(dcc_app_client(app), guild_id, query, cb, user_data);
+    char path[128];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_EVENTS_GET,
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_GET, path, query, NULL, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_get_guild_scheduled_events_with_user_count(
@@ -1175,7 +1280,14 @@ dcc_status_t dcc_app_get_guild_scheduled_event(
     if (app == NULL || guild_id == 0U || event_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_scheduled_event(dcc_app_client(app), guild_id, event_id, query, cb, user_data);
+    char path[160];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_EVENT_GET,
+        (unsigned long long)guild_id, (unsigned long long)event_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_GET, path, query, NULL, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_get_guild_scheduled_event_with_user_count(
@@ -1207,7 +1319,14 @@ dcc_status_t dcc_app_create_guild_scheduled_event(
     if (app == NULL || guild_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_create_guild_scheduled_event(dcc_app_client(app), guild_id, json_body, cb, user_data);
+    char path[128];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_EVENT_CREATE,
+        (unsigned long long)guild_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_POST, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_create_guild_scheduled_event_params(
@@ -1216,10 +1335,13 @@ dcc_status_t dcc_app_create_guild_scheduled_event_params(
     dcc_rest_cb cb,
     void *user_data
 ) {
-    if (app == NULL || params == NULL) {
+    if (app == NULL || params == NULL || params->guild_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return DCC_ERR_INVALID_ARG;
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_create_guild_scheduled_event,
+        dcc_app_client(app), params->guild_id, params
+    );
 }
 
 dcc_status_t dcc_app_modify_guild_scheduled_event(
@@ -1233,7 +1355,14 @@ dcc_status_t dcc_app_modify_guild_scheduled_event(
     if (app == NULL || guild_id == 0U || event_id == 0U || json_body == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_modify_guild_scheduled_event(dcc_app_client(app), guild_id, event_id, json_body, cb, user_data);
+    char path[160];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_EVENT_EDIT,
+        (unsigned long long)guild_id, (unsigned long long)event_id
+    );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_PATCH, path, NULL, json_body, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_modify_guild_scheduled_event_params(
@@ -1245,7 +1374,13 @@ dcc_status_t dcc_app_modify_guild_scheduled_event_params(
     if (app == NULL || params == NULL) {
         return DCC_ERR_INVALID_ARG;
     }
-    return DCC_ERR_INVALID_ARG;
+    if (params->guild_id == 0U || params->event_id == 0U) {
+        return DCC_ERR_INVALID_ARG;
+    }
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_modify_guild_scheduled_event,
+        dcc_app_client(app), params->guild_id, params->event_id, params
+    );
 }
 
 dcc_status_t dcc_app_delete_guild_scheduled_event(
@@ -1258,7 +1393,10 @@ dcc_status_t dcc_app_delete_guild_scheduled_event(
     if (app == NULL || guild_id == 0U || event_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_delete_guild_scheduled_event(dcc_app_client(app), guild_id, event_id, cb, user_data);
+    DCC_ENDPOINT_LEGACY_RETURN(
+        cb, user_data, dcc_rest_delete_guild_scheduled_event,
+        dcc_app_client(app), guild_id, event_id
+    );
 }
 
 dcc_status_t dcc_app_get_guild_scheduled_event_users(
@@ -1272,14 +1410,14 @@ dcc_status_t dcc_app_get_guild_scheduled_event_users(
     if (app == NULL || guild_id == 0U || event_id == 0U) {
         return DCC_ERR_INVALID_ARG;
     }
-    return dcc_rest_get_guild_scheduled_event_users(
-        dcc_app_client(app),
-        guild_id,
-        event_id,
-        query,
-        cb,
-        user_data
+    char path[192];
+    dcc_status_t status = dcc_rest_format_path(
+        path, sizeof(path), DCC_REST_ROUTE_DPP_GUILD_EVENT_USERS_GET,
+        (unsigned long long)guild_id, (unsigned long long)event_id
     );
+    return status == DCC_OK ? app_raw_json(
+        app, DCC_REST_GET, path, query, NULL, cb, user_data
+    ) : status;
 }
 
 dcc_status_t dcc_app_get_guild_scheduled_event_users_page(

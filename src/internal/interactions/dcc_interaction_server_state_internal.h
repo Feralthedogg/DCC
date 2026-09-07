@@ -14,8 +14,9 @@
 #include <stdint.h>
 
 typedef struct dcc_interaction_replay_entry {
-    uint64_t hash;
+    unsigned char digest[32];
     uint64_t seen_at_ns;
+    uint8_t occupied;
 } dcc_interaction_replay_entry_t;
 
 struct dcc_interaction_server {
@@ -58,7 +59,6 @@ struct dcc_interaction_server {
     atomic_uint_fast64_t deadline_exceeded_requests;
     atomic_flag replay_lock;
     dcc_interaction_replay_entry_t replay_entries[DCC_INTERACTION_REPLAY_CAP];
-    size_t replay_next;
     char last_error[256];
 };
 
