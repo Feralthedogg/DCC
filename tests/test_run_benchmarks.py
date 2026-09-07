@@ -1,5 +1,6 @@
 """Runner regressions: dropped samples, invented allocation data, bad input."""
 import json
+import hashlib
 from pathlib import Path
 import subprocess
 import sys
@@ -31,6 +32,9 @@ class BenchmarkRunnerTests(unittest.TestCase):
         self.assertEqual(len(report["runs"]), 3)
         self.assertEqual(report["runs"][2]["samples"], [record])
         self.assertIn("commit", report["source"])
+        clock = ROOT / "tests/support/benchmark_clock.h"
+        self.assertEqual(report["source"]["fixture_sha256"].get(
+            "tests/support/benchmark_clock.h"), hashlib.sha256(clock.read_bytes()).hexdigest())
         self.assertIn("platform", report["environment"])
         self.assertEqual(report["summary"][0]["median_cpu_ns_per_op"], 1000000)
         self.assertIsNone(report["summary"][0]["allocations"])

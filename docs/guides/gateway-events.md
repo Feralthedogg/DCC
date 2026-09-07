@@ -1,97 +1,52 @@
-# Gateway And Events
+# Gateway and Events
 
-Event accessor results are borrowed unless a helper explicitly returns an
-owned result. Read [Ownership And Async](../concepts/ownership-and-async.md)
-before moving event data to another task or retaining it after a callback.
-
-DCC keeps Gateway ownership inside the app runtime by default. Application code
-usually registers typed listener handlers through `<dcc/sugar.h>` and lets the
-runtime own the underlying `dcc_client_t`.
-
-## Register A Listener
-
-Use `DCC_READY_FN`, `DCC_MESSAGE_CREATE_FN`, and the matching `DCC_LISTEN_*`
-entry in a `DCC_SIMPLE_BOT_MAIN()` or feature definition:
+The App runtime owns Gateway connections by default. Application code includes
+`<dcc/bot.h>` and registers typed, status-returning listeners.
 
 ```c
-#include <dcc/sugar.h>
-
+#include <dcc/bot.h>
 #include <stdio.h>
-#include <string.h>
 
 DCC_READY_FN(on_ready) {
     (void)app;
     (void)user_data;
-    printf(
-        "ready shard=%u/%u session=%s\n",
-        ready->shard_id,
-        ready->shard_count,
-        ready->session_id
-    );
+    printf("ready shard=%u/%u\n", ready->shard_id, ready->shard_count);
+    return DCC_OK;
 }
 
-DCC_MESSAGE_CREATE_FN(on_message) {
-    (void)event;
-    (void)user_data;
-    if (message->content != NULL && strcmp(message->content, "!ping") == 0) {
-        (void)DCC_APP_SEND_TEXT(app, message->channel_id, "pong");
-    }
-}
-
-DCC_SIMPLE_BOT_MAIN(
-    "gateway-events",
-    DCC_LISTEN_READY_ONCE(on_ready),
-    DCC_LISTEN_MESSAGE_CREATE(on_message)
-)
+DCC_BOT_MAIN(DCC_LISTEN_READY(on_ready))
 ```
 
-Typed event views are borrowed for the callback. Clone values that need to live
-after the handler returns.
+Use `DCC_MESSAGE_FN` with `DCC_LISTEN_MESSAGE_CREATE` for messages.
+Once behavior, middleware, cleanup, and user data belong in
+`dcc_listener_config_t`, passed through the matching `_WITH` constructor.
+See [handler declarations](../reference/api/bot/handlers.md) and
+[listener constructors](../reference/api/bot/listeners.md).
 
-When you are writing a low-level runtime, register directly on `dcc_client_t`:
+Event/accessor results are borrowed for the callback unless explicitly
+documented as owned. Clone the supported object type before retaining it;
+never keep pointers into the event after the callback. Read
+[ownership and async](../concepts/ownership-and-async.md).
 
-```c
-static void on_raw_ready(dcc_client_t *client, const dcc_event_t *event, void *data) {
-    const dcc_ready_event_t *ready = dcc_event_ready(event);
-    (void)client;
-    (void)data;
-    if (ready != NULL) {
-        /* ready->session_id is borrowed for this callback. */
-    }
-}
+## Low-level integration
 
-dcc_listener_id_t id = 0;
-dcc_client_on(client, DCC_EVENT_READY, on_raw_ready, user_data, &id);
-dcc_client_off(client, DCC_EVENT_READY, id);
-```
+Focused `<dcc/client.h>` and `<dcc/events.h>` headers expose raw client
+listeners. Register with `dcc_client_on`, check its status, retain the returned
+listener ID, and unregister with `dcc_client_off`. The raw callback receives
+a `dcc_client_t *`, `const dcc_event_t *`, and user data; it returns void,
+unlike Bot handlers.
 
-## Interaction Subtypes
+Use [typed event accessors](../reference/api/events/accessors.md), not unchecked
+casts. The [client declarations](../reference/api/client.md) define the current
+client control surface.
 
-`INTERACTION_CREATE` is normalized into subtype events:
+## Interaction subtypes
 
-- `DCC_EVENT_SLASH_COMMAND`
-- `DCC_EVENT_AUTOCOMPLETE`
-- `DCC_EVENT_BUTTON_CLICK`
-- `DCC_EVENT_SELECT_CLICK`
-- `DCC_EVENT_FORM_SUBMIT`
-- `DCC_EVENT_USER_CONTEXT_MENU`
-- `DCC_EVENT_MESSAGE_CONTEXT_MENU`
+The runtime normalizes interaction dispatch into slash command, autocomplete,
+button, select, form-submit, and user/message context-menu events. Use the
+matching Bot listener for application routing, or `dcc_event_interaction`
+for a borrowed low-level interaction view.
 
-Use `dcc_event_interaction(event)` for the borrowed interaction view.
-
-## Wait Helpers
-
-Use event waits when supervisor code needs deterministic admission:
-
-```c
-dcc_event_wait_result_t result;
-dcc_client_wait_for_gateway_ready_or_resumed(client, 30000, &result);
-```
-
-Owned wait helpers clone the event payload when it must outlive the callback.
-
-## Cache
-
-When enabled, Gateway dispatch updates the client-owned cache for guilds,
-channels, roles, members, users, messages, and voice states. Cache accessors
-return DCC-owned data; clone values that need independent lifetime.
+Use [replay testing](replay.md) for offline validation.
+[Offline performance](../performance.md) describes Gateway parsing and dispatch
+microbenchmarks; they do not measure network latency.

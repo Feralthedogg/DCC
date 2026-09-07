@@ -2,7 +2,7 @@
 
 # `<dcc/bot/handlers.h>`
 
-Source: [`include/dcc/bot/handlers.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/bot/handlers.h)
+Source: [`include/dcc/bot/handlers.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/bot/handlers.h)
 
 ## `DCC_AUTOCOMPLETE_FN`
 

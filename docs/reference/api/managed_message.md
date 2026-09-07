@@ -2,7 +2,7 @@
 
 # `<dcc/managed_message.h>`
 
-Source: [`include/dcc/managed_message.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/managed_message.h)
+Source: [`include/dcc/managed_message.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/managed_message.h)
 
 ## `DCC_MANAGED_MESSAGE_PUBLISH_RESULT_VERSION`
 

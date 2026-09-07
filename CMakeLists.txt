@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 2.0.2
+    VERSION 2.1.0
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )
@@ -2012,6 +2012,16 @@ if(DCC_BUILD_TESTS)
     endif()
     enable_language(CXX)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME dcc_release_version_tests
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_release_version.py)
+    add_test(NAME dcc_api_reference_generator_tests
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_generate_api_reference.py)
+    add_test(NAME dcc_benchmark_clock_tests
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_benchmark_clock.py)
+    add_test(NAME dcc_source_package_metadata_tests
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_source_package.py
+            --config ${CMAKE_CURRENT_BINARY_DIR}/CPackSourceConfig.cmake
+            --cpack ${CMAKE_CPACK_COMMAND})
     add_test(NAME dcc_benchmark_runner_smoke
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_run_benchmarks.py)
     foreach(test_name IN ITEMS json_gateway_reuse_smoke request_allocation_smoke)
@@ -3064,7 +3074,7 @@ if(DCC_BUILD_TESTS)
         set_tests_properties(dcc_doctor_help PROPERTIES PASS_REGULAR_EXPRESSION "--require-dave")
         add_test(NAME dcc_doctor_json COMMAND dcc_doctor --json)
         set_tests_properties(dcc_doctor_json PROPERTIES
-            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"2.0.2\",\"dcc_version_ok\":true"
+            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"${PROJECT_VERSION}\",\"dcc_version_ok\":true"
         )
         add_test(NAME dcc_doctor_require_token COMMAND dcc_doctor --json --require-token)
         set_tests_properties(dcc_doctor_require_token PROPERTIES
@@ -4313,6 +4323,9 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/[.]DS_Store$"
     "/[.]env($|[.])"
     "/[.]git/"
+    "/[.]git$"
+    "/[.]superpowers/"
+    "/[.]worktrees/"
     "/include/dcc/sugar[.]h$"
     "/include/dcc/sugar/"
     "/include/dcc/app/legacy[.]h$"

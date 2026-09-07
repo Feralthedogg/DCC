@@ -2,7 +2,7 @@
 
 # `<dcc/rest/messages/pins.h>`
 
-Source: [`include/dcc/rest/messages/pins.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/messages/pins.h)
+Source: [`include/dcc/rest/messages/pins.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/messages/pins.h)
 
 ## `dcc_rest_get_channel_pins`
 
@@ -38,10 +38,10 @@ DCC_API dcc_status_t dcc_rest_legacy_unpin_message( dcc_client_t *client, dcc_sn
 
 ## `dcc_rest_pin_message`
 
-@file include/dcc/rest/messages/pins.h @brief Public DCC rest messages pins declarations.
+@brief Submits a REST request to pin message. @details Uses the @ref dcc_rest_endpoint_call_contract.
 
 ```c
-#ifndef DCC_REST_MESSAGES_PINS_H #define DCC_REST_MESSAGES_PINS_H #include <dcc/rest/request.h> #include <dcc/rest/types.h> #ifdef __cplusplus extern "C" { #endif DCC_API dcc_status_t dcc_rest_pin_message( dcc_client_t *client, dcc_snowflake_t channel_id, dcc_snowflake_t message_id, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request );
+DCC_API dcc_status_t dcc_rest_pin_message( dcc_client_t *client, dcc_snowflake_t channel_id, dcc_snowflake_t message_id, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request );
 ```
 
 ## `dcc_rest_unpin_message`

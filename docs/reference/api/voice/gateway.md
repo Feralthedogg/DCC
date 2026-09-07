@@ -2,7 +2,7 @@
 
 # `<dcc/voice/gateway.h>`
 
-Source: [`include/dcc/voice/gateway.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/voice/gateway.h)
+Source: [`include/dcc/voice/gateway.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/voice/gateway.h)
 
 ## `dcc_voice_client_build_heartbeat_payload`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/rest/official_surface.h>`
 
-Source: [`include/dcc/rest/official_surface.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/official_surface.h)
+Source: [`include/dcc/rest/official_surface.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/official_surface.h)
 
 ## `dcc_rest_add_lobby_member`
 
@@ -142,10 +142,10 @@ DCC_API dcc_status_t dcc_rest_get_entitlement( dcc_client_t *client, dcc_snowfla
 
 ## `dcc_rest_get_gateway_bot`
 
-@file include/dcc/rest/official_surface.h @brief Public wrappers for Discord API endpoints not covered by the legacy DPP parity layer.
+@brief Submits GET /gateway. This endpoint returns the base Gateway URL without the bot session-start limit metadata returned by dcc_rest_get_gateway_bot().
 
 ```c
-#ifndef DCC_REST_OFFICIAL_SURFACE_H #define DCC_REST_OFFICIAL_SURFACE_H #include <dcc/rest/base.h> #include <dcc/application_types.h> #include <dcc/rest/request.h> #include <dcc/rest/types/guild_members.h> #include <dcc/rest/types/guilds.h> #include <dcc/rest/types/invites.h> #include <dcc/rest/types/official_surface.h> #include <dcc/rest/types/webhooks.h> #ifdef __cplusplus extern "C" { #endif DCC_API dcc_status_t dcc_rest_get_gateway( dcc_client_t *client, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+DCC_API dcc_status_t dcc_rest_get_gateway( dcc_client_t *client, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
 ```
 
 ## `dcc_rest_get_guild_role`
@@ -270,7 +270,7 @@ DCC_API dcc_status_t dcc_rest_link_lobby_channel( dcc_client_t *client, dcc_snow
 
 ## `dcc_rest_modify_current_application`
 
-@brief Submits GET /applications/@me.
+@brief Submits PATCH /applications/@me. @param json_body JSON application edit payload.
 
 ```c
 DCC_API dcc_status_t dcc_rest_modify_current_application( dcc_client_t *client, const dcc_application_modify_params_t *params, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);

@@ -2,7 +2,7 @@
 
 # `<dcc/rest/resources/group_dms.h>`
 
-Source: [`include/dcc/rest/resources/group_dms.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/resources/group_dms.h)
+Source: [`include/dcc/rest/resources/group_dms.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/resources/group_dms.h)
 
 ## `dcc_rest_add_group_dm_recipient`
 

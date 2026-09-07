@@ -2,10 +2,10 @@
 
 # DCC 2 API Reference
 
-Generated from the installed DCC 2.0.2 public header tree.
+Generated from the installed DCC 2.1.0 public header tree (development/unreleased).
 
 - [`<dcc/app/base.h>`](app/base.md) — 2 public callable/macro entries
-- [`<dcc/app/context.h>`](app/context.md) — 83 public callable/macro entries
+- [`<dcc/app/context.h>`](app/context.md) — 87 public callable/macro entries
 - [`<dcc/app/env.h>`](app/env.md) — 29 public callable/macro entries
 - [`<dcc/app/lifecycle.h>`](app/lifecycle.md) — 8 public callable/macro entries
 - [`<dcc/app/listeners.h>`](app/listeners.md) — 3 public callable/macro entries
@@ -56,7 +56,7 @@ Generated from the installed DCC 2.0.2 public header tree.
 - [`<dcc/hot_reload/sidecar.h>`](hot_reload/sidecar.md) — 1 public callable/macro entries
 - [`<dcc/hot_reload/state.h>`](hot_reload/state.md) — 7 public callable/macro entries
 - [`<dcc/intents.h>`](intents.md) — 1 public callable/macro entries
-- [`<dcc/interaction_flow.h>`](interaction_flow.md) — 15 public callable/macro entries
+- [`<dcc/interaction_flow.h>`](interaction_flow.md) — 19 public callable/macro entries
 - [`<dcc/interaction_helpers.h>`](interaction_helpers.md) — 10 public callable/macro entries
 - [`<dcc/interaction_server/crypto.h>`](interaction_server/crypto.md) — 1 public callable/macro entries
 - [`<dcc/interaction_server/health.h>`](interaction_server/health.md) — 7 public callable/macro entries

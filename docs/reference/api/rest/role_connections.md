@@ -2,7 +2,7 @@
 
 # `<dcc/rest/role_connections.h>`
 
-Source: [`include/dcc/rest/role_connections.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/role_connections.h)
+Source: [`include/dcc/rest/role_connections.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/role_connections.h)
 
 ## `dcc_rest_get_application_role_connection_metadata`
 

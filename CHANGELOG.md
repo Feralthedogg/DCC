@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.1.0 - Unreleased
+
+Additive minor update preserving existing public signatures and record layouts,
+ABI major 2, and the LLAM 2.2.1 minimum.
+
+- Added eight Context/Flow `_ex` operations with explicit REST call options and
+  optional owned request handles for wait, cancellation, and completion.
+- Clarified borrowed inputs, callback results, queue admission, and ownership;
+  refreshed current guides and generated installed-header API reference.
+- Reduced request metadata allocations in measured offline fixtures; published
+  scoped before/after evidence without claiming end-to-end latency gains.
+- Added reproducible benchmark reporting and monotonic elapsed clocks, and
+  derived version tooling from the canonical CMake project version.
+
 ## 2.0.2 - 2026-09-07
 
 Patch release preserving the DCC 2 public API and ABI major 2.

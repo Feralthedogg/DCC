@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import sys
+import re
 from pathlib import Path
 
 
@@ -326,7 +327,7 @@ def read_all(paths: list[Path]) -> str:
 
 def main() -> int:
     cmake_text = CMAKE_FILE.read_text(encoding="utf-8")
-    if "VERSION 2.0.2" in cmake_text:
+    if re.search(r"\bVERSION\s+2\.[0-9]+\.[0-9]+\b", cmake_text):
         missing = []
         for path in [*PUBLIC_FILES, *OBJECT_PUBLIC_FILES, *SOURCE_FILES]:
             if not path.is_file():

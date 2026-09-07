@@ -2,7 +2,7 @@
 
 # `<dcc/events/base.h>`
 
-Source: [`include/dcc/events/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/events/base.h)
+Source: [`include/dcc/events/base.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/events/base.h)
 
 ## `DCC_VOICE_CLIENT_TYPEDEF`
 

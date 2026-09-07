@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/guilds.h>`
 
-Source: [`include/dcc/rest/types/guilds.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/types/guilds.h)
+Source: [`include/dcc/rest/types/guilds.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/types/guilds.h)
 
 ## `DCC_GUILD_RECORD_INIT`
 

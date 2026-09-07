@@ -64,7 +64,7 @@ nav:
       - Troubleshooting: troubleshooting.md
       - Build Options: reference/build-options.md
       - Project Layout: architecture.md
-  - Guides:
+  - Advanced Control:
       - Migrate From DCC 1: migration-1-to-2.md
       - App Runtime: guides/app-runtime.md
       - Gateway And Events: guides/gateway-events.md
@@ -82,6 +82,7 @@ nav:
       - CLI Tools: reference/cli.md
       - Runtime Modules: reference/runtime-modules.md
   - Operations:
+      - Offline Performance: performance.md
       - Production Playbooks: production-playbooks.md
       - Live Validation: live-validation.md
       - Release Checklist: release.md

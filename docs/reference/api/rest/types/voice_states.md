@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/voice_states.h>`
 
-Source: [`include/dcc/rest/types/voice_states.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/types/voice_states.h)
+Source: [`include/dcc/rest/types/voice_states.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/types/voice_states.h)
 
 ## `DCC_CURRENT_USER_VOICE_STATE_PARAMS_INIT`
 

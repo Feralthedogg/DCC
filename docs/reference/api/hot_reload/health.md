@@ -2,7 +2,7 @@
 
 # `<dcc/hot_reload/health.h>`
 
-Source: [`include/dcc/hot_reload/health.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/hot_reload/health.h)
+Source: [`include/dcc/hot_reload/health.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/hot_reload/health.h)
 
 ## `dcc_hot_reload_health_snapshot`
 

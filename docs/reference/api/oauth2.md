@@ -2,7 +2,7 @@
 
 # `<dcc/oauth2.h>`
 
-Source: [`include/dcc/oauth2.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/oauth2.h)
+Source: [`include/dcc/oauth2.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/oauth2.h)
 
 ## `dcc_oauth2_exchange_code`
 
@@ -14,10 +14,10 @@ DCC_API dcc_status_t dcc_oauth2_exchange_code( const dcc_oauth2_exchange_code_op
 
 ## `dcc_oauth2_get_current_authorization`
 
-@file include/dcc/oauth2.h @brief Public Discord OAuth2 helper declarations.
+@brief Submits GET /oauth2/@me using Bearer authorization.
 
 ```c
-#ifndef DCC_OAUTH2_H #define DCC_OAUTH2_H #include <dcc/rest/base.h> #ifdef __cplusplus extern "C" { #endif typedef void (*dcc_oauth2_cb)(const dcc_rest_response_t *response, void *user_data); typedef struct dcc_oauth2_exchange_code_options { size_t size; const char *client_id; const char *client_secret; const char *code; const char *redirect_uri; } dcc_oauth2_exchange_code_options_t; typedef struct dcc_oauth2_refresh_token_options { size_t size; const char *client_id; const char *client_secret; const char *refresh_token; } dcc_oauth2_refresh_token_options_t; typedef struct dcc_oauth2_revoke_token_options { size_t size; const char *client_id; const char *client_secret; const char *token; const char *token_type_hint; } dcc_oauth2_revoke_token_options_t; DCC_API dcc_status_t dcc_oauth2_get_current_authorization( const char *access_token, dcc_oauth2_cb cb, void *user_data );
+DCC_API dcc_status_t dcc_oauth2_get_current_authorization( const char *access_token, dcc_oauth2_cb cb, void *user_data );
 ```
 
 ## `dcc_oauth2_get_current_bot_application`

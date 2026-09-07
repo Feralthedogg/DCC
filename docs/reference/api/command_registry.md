@@ -2,7 +2,7 @@
 
 # `<dcc/command_registry.h>`
 
-Source: [`include/dcc/command_registry.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/command_registry.h)
+Source: [`include/dcc/command_registry.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/command_registry.h)
 
 ## `DCC_COMMAND_REGISTRY_OPERATION_OPTIONS_INIT`
 

@@ -1,5 +1,8 @@
 # DCC Release Checklist
 
+DCC 2.1.0 is development/unreleased. This checklist prepares a release; it does
+not imply that a tag, package, or GitHub Release has been published.
+
 Run the release check from the repository root:
 
 ```sh
@@ -13,7 +16,10 @@ tools/package_release.sh
 ```
 
 This writes normalized archives and checksum files to `target/dist/`, for
-example `dcc-2.0.2-macos-aarch64.tar.gz`.
+example `dcc-2.1.0-macos-aarch64.tar.gz`. Packaging requires Python 3.10+;
+`DCC_PYTHON` can select its executable. Numeric version identity comes only from
+`project(dcc VERSION ...)` in `CMakeLists.txt`. Package overrides must be valid
+semantic versions with that same numeric core; mismatches cannot be bypassed.
 
 Binary release archives include:
 
@@ -21,7 +27,8 @@ Binary release archives include:
 - DCC command-line tools, examples, deployment templates, and docs.
 
 Users install LLAM separately before installing DCC, or explicitly ask the DCC
-installer to fetch LLAM. The public POSIX install path is:
+installer to fetch LLAM. The following are examples for the existing 2.0.2
+release, not download links for unreleased 2.1.0:
 
 ```sh
 curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
@@ -45,18 +52,22 @@ On POSIX, `--target` is normally detected from the host. Manually selecting a
 different target is allowed for staging, but the installer warns because the
 resulting binaries and libraries may not run on the current machine.
 
-GitHub Actions publishes releases automatically from version tags:
+Only when release approval and verification are complete, a maintainer may
+publish a matching semantic version tag. For the future 2.1.0 release:
 
 ```sh
-git tag v2.0.2
-git push origin v2.0.2
+git tag v2.1.0
+git push origin v2.1.0
 ```
 
 The `Release` workflow checks out `DCC` and `LLAM` side by side, builds against
 LLAM through `DCC_LLAM_USE_SUBDIRECTORY=ON`, keeps LLAM's install rules out of
 the DCC package, runs the DCC test suite, creates CPack binary/source archives,
 uploads artifacts, builds `SHA256SUMS`, and creates the GitHub Release. Tag
-versions must match `project(dcc VERSION ...)`. The workflow also publishes a
+versions must match `project(dcc VERSION ...)`. Prerelease tags such as
+`v2.1.0-rc.1` are validated and marked prerelease; stable tags are not.
+The Windows packaging job also compiles the runtime benchmark; timing is not
+a performance pass/fail gate. The workflow also publishes a
 CycloneDX SBOM and signs artifact provenance through GitHub attestations.
 Windows archives are built with the Visual Studio 2022 generator and its
 ClangCL toolset. This preserves the MSVC-compatible Windows ABI while compiling

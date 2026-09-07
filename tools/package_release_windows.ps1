@@ -18,16 +18,6 @@ function Assert-ReleaseComponent {
     }
 }
 
-function Get-ProjectVersion {
-    param([string]$Root)
-
-    $cmake = Get-Content -LiteralPath (Join-Path $Root "CMakeLists.txt") -Raw
-    if ($cmake -notmatch '(?ms)project\s*\(\s*dcc\s+VERSION\s+([0-9][0-9A-Za-z.+-]*)') {
-        throw "cannot determine CMake project version"
-    }
-    return $Matches[1]
-}
-
 function Write-Sha256Sidecar {
     param([string]$Path)
 
@@ -64,26 +54,21 @@ function Test-Truthy {
 
 $Root = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")
 $Root = $Root.Path
-$ProjectVersion = Get-ProjectVersion $Root
+$Python = if ($env:DCC_PYTHON) { $env:DCC_PYTHON } else { "python" }
+$ProjectVersion = & $Python (Join-Path $Root "tools/release_version.py") --source $Root
+if ($LASTEXITCODE -ne 0) { throw "invalid CMake project version" }
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
     $Version = if ($env:GITHUB_REF_NAME) { $env:GITHUB_REF_NAME } else { $ProjectVersion }
 }
-$Version = $Version -replace '^v', ''
-$VersionBase = $Version -replace '-.*$', ''
+$Version = & $Python (Join-Path $Root "tools/release_version.py") --source $Root --tag $Version
+if ($LASTEXITCODE -ne 0) { throw "invalid release identity" }
 
 Assert-ReleaseComponent "version" $Version
 Assert-ReleaseComponent "target" $Target
 
-if (($ProjectVersion -eq "2.0.2") -and ($Version -ne "2.0.2")) {
-    throw "DCC 2 Stable packages require the exact version 2.0.2"
-}
-
 if ($Target -ne "windows-x86_64") {
     throw "unsupported Windows release target: $Target"
-}
-if (($VersionBase -ne $ProjectVersion) -and ($env:DCC_ALLOW_VERSION_MISMATCH -ne "1")) {
-    throw "release version $Version does not match CMake project version $ProjectVersion"
 }
 
 if ([System.IO.Path]::IsPathRooted($BuildDir)) {
@@ -106,6 +91,7 @@ $configureArgs = @(
     "-B", $BuildRoot,
     "-G", $generator,
     "-DCMAKE_BUILD_TYPE=$Configuration",
+    "-DDCC_BUILD_BENCHMARKS=ON",
     "-DDCC_LLAM_ROOT=$LlamRoot",
     "-DDCC_LLAM_USE_SUBDIRECTORY=ON",
     "-DDCC_BUNDLE_LLAM=$BundleLlam",

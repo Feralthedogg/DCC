@@ -2,7 +2,7 @@
 
 # `<dcc/rest/guild_members/lifecycle.h>`
 
-Source: [`include/dcc/rest/guild_members/lifecycle.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/guild_members/lifecycle.h)
+Source: [`include/dcc/rest/guild_members/lifecycle.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/guild_members/lifecycle.h)
 
 ## `dcc_rest_add_guild_member`
 

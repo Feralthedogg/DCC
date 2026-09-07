@@ -2,7 +2,7 @@
 
 # `<dcc/hot_reload/module/context.h>`
 
-Source: [`include/dcc/hot_reload/module/context.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/hot_reload/module/context.h)
+Source: [`include/dcc/hot_reload/module/context.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/hot_reload/module/context.h)
 
 ## `dcc_bot_module_aligned_state`
 

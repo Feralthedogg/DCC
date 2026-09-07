@@ -2,7 +2,7 @@
 
 # `<dcc/rest/result.h>`
 
-Source: [`include/dcc/rest/result.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/result.h)
+Source: [`include/dcc/rest/result.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/result.h)
 
 ## `DCC_REST_RESULT_VERSION`
 
@@ -26,14 +26,6 @@ Extracts the top-level channel ID.
 
 ```c
 DCC_API dcc_status_t dcc_rest_result_channel_id( const dcc_rest_result_t *result, dcc_snowflake_t *out_channel_id);
-```
-
-## `dcc_rest_result_clone`
-
-@file include/dcc/rest/result.h @brief Versioned REST completion results and ownership helpers.
-
-```c
-#ifndef DCC_REST_RESULT_H #define DCC_REST_RESULT_H #include <dcc/error.h> #include <dcc/export.h> #include <dcc/snowflake.h> #include <stddef.h> #include <stdint.h> #ifdef __cplusplus extern "C" { #endif #define DCC_REST_RESULT_VERSION 1U enum { DCC_REST_RESULT_FLAG_SENSITIVE_BODY = UINT64_C(1) }; typedef struct dcc_rest_result { size_t size; uint32_t version; dcc_status_t transport_status; uint16_t http_status; int32_t discord_code; const char *discord_message; const char *body; size_t body_len; uint64_t retry_after_ms; uint64_t flags; } dcc_rest_result_t; DCC_API uint8_t dcc_rest_result_ok(const dcc_rest_result_t *result);
 ```
 
 ## `dcc_rest_result_clone`
@@ -74,6 +66,14 @@ Extracts the top-level message ID.
 
 ```c
 DCC_API dcc_status_t dcc_rest_result_message_id( const dcc_rest_result_t *result, dcc_snowflake_t *out_message_id);
+```
+
+## `dcc_rest_result_ok`
+
+Returns non-zero only for a valid transport-successful 2xx result.
+
+```c
+DCC_API uint8_t dcc_rest_result_ok(const dcc_rest_result_t *result);
 ```
 
 ## `dcc_rest_result_snowflake_field`

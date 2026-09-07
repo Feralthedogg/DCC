@@ -28,15 +28,16 @@ python3 tools/run_benchmarks.py --repeat 7 --build-dir /tmp/dcc-perf \
 ```
 
 `dcc_operation_bench` is currently POSIX-only. `dcc_runtime_bench` uses monotonic
-elapsed time on POSIX and UTC elapsed time on Windows; avoid clock adjustments
-when using the Windows fallback. CPU time uses the process CPU clock. Set
+elapsed time: `clock_gettime(CLOCK_MONOTONIC)` on POSIX and
+`QueryPerformanceCounter`/`QueryPerformanceFrequency` on Windows. A clock-query
+failure terminates the benchmark with an error. CPU time uses the process CPU clock. Set
 `DCC_BENCH_ITERS` to change the runtime benchmark's base iteration count
 (default 20,000). Dispatch, small request, and identity-admission stages run
 ten times this count. All runtime stages have 128 untimed warm-up operations.
 The legacy `dcc_json_gateway_bench` remains available unchanged.
 
 The runner emits schema-version-1 JSON with source revision/dirty state,
-fixture-source SHA256 values, machine/platform, CMake options, command, all raw
+fixture-source SHA256 values (including the shared clock header), machine/platform, CMake options, command, all raw
 samples, stderr, and median summaries. `--library` records the linked library's
 SHA256; `--library-commit` can identify a separately built baseline library.
 Commit metadata describes the working source, not an automatically verified
@@ -52,6 +53,11 @@ library argument and output executable. Do not compare unrelated legacy/new
 fixtures. Run serially, with other builds stopped, and retain raw repeated data.
 
 ## Measured request allocation change
+
+The recorded tables isolate allocation commit
+`713901bbdf076b44a256583d4cb46dfd185ad798` against pre-optimization source.
+They are not measurements of all subsequent 2.1.0 changes. Final integration
+benchmark smoke checks establish usability only, not a new before/after claim.
 
 The September 8, 2026 measurement used AppleClang 21.0.0.21000101, Apple M4 arm64
 macOS, Release `-O3 -DNDEBUG`, LLAM 2.2.1, Opus off, and seven interleaved pairs

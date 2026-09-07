@@ -1,6 +1,8 @@
 # DCC Roadmap
 
-DCC's direction after 2.0.0 is stability-first. New surface area should make
+DCC 2.1.0 is in development (unreleased), focused on ownership clarity,
+additive Context/Flow operation control, and measured allocation reductions.
+DCC's direction through the 2.x line is stability-first. New surface area should make
 existing bots easier to operate, test, or upgrade rather than duplicate Discord
 objects without a demonstrated use case.
 
@@ -30,7 +32,7 @@ objects without a demonstrated use case.
 
 ## 5. Grow a Maintainable Ecosystem
 
-- Keep the sugar API learnable while preserving lower-level escape hatches.
+- Keep the Bot API learnable while preserving lower-level escape hatches.
 - Improve examples, issue triage, contribution guidance, and release provenance.
 - Consider integrations only when they can be supported across the 2.x line.
 

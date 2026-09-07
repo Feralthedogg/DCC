@@ -2,15 +2,7 @@
 
 # `<dcc/webhook_events.h>`
 
-Source: [`include/dcc/webhook_events.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/webhook_events.h)
-
-## `dcc_status_t`
-
-@file include/dcc/webhook_events.h @brief Public Discord outgoing Webhook Events declarations.
-
-```c
-#ifndef DCC_WEBHOOK_EVENTS_H #define DCC_WEBHOOK_EVENTS_H #include <dcc/interaction_server.h> #include <dcc/rest/base.h> #include <stddef.h> #include <stdint.h> #ifdef __cplusplus extern "C" { #endif typedef enum dcc_webhook_event_type { DCC_WEBHOOK_EVENT_UNKNOWN = 0, DCC_WEBHOOK_EVENT_PING, DCC_WEBHOOK_EVENT_APPLICATION_AUTHORIZED, DCC_WEBHOOK_EVENT_APPLICATION_DEAUTHORIZED, DCC_WEBHOOK_EVENT_ENTITLEMENT_CREATE, DCC_WEBHOOK_EVENT_ENTITLEMENT_UPDATE, DCC_WEBHOOK_EVENT_ENTITLEMENT_DELETE, DCC_WEBHOOK_EVENT_QUEST_USER_ENROLLMENT, DCC_WEBHOOK_EVENT_LOBBY_MESSAGE_CREATE, DCC_WEBHOOK_EVENT_LOBBY_MESSAGE_UPDATE, DCC_WEBHOOK_EVENT_LOBBY_MESSAGE_DELETE, DCC_WEBHOOK_EVENT_GAME_DIRECT_MESSAGE_CREATE, DCC_WEBHOOK_EVENT_GAME_DIRECT_MESSAGE_UPDATE, DCC_WEBHOOK_EVENT_GAME_DIRECT_MESSAGE_DELETE } dcc_webhook_event_type_t; typedef struct dcc_webhook_event { size_t size; dcc_webhook_event_type_t type; const char *type_name; const char *timestamp; size_t timestamp_len; dcc_snowflake_t application_id; const char *event_json; size_t event_json_len; const char *data_json; size_t data_json_len; const char *raw_body; size_t raw_body_len; } dcc_webhook_event_t; typedef dcc_status_t (*dcc_webhook_event_cb)( dcc_interaction_server_t *server, dcc_interaction_request_t *request, const dcc_webhook_event_t *event, void *user_data ); typedef struct dcc_webhook_event_route { size_t size; uint32_t flags; dcc_webhook_event_cb callback; void *user_data; } dcc_webhook_event_route_t; DCC_API const char *dcc_webhook_event_type_name(dcc_webhook_event_type_t type);
-```
+Source: [`include/dcc/webhook_events.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/webhook_events.h)
 
 ## `dcc_webhook_event_parse`
 
@@ -26,6 +18,14 @@ DCC_API dcc_status_t dcc_webhook_event_parse( const char *body, size_t body_len,
 
 ```c
 DCC_API dcc_webhook_event_type_t dcc_webhook_event_type_from_string(const char *name);
+```
+
+## `dcc_webhook_event_type_name`
+
+@brief Returns the Discord string name for a Webhook Event type.
+
+```c
+DCC_API const char *dcc_webhook_event_type_name(dcc_webhook_event_type_t type);
 ```
 
 ## `dcc_webhook_events_add_route`

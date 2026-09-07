@@ -2,14 +2,14 @@
 
 # `<dcc/bot/listeners.h>`
 
-Source: [`include/dcc/bot/listeners.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/bot/listeners.h)
+Source: [`include/dcc/bot/listeners.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/bot/listeners.h)
 
 ## `DCC_LISTENER_CONFIG`
 
-Initializes an empty borrowed listener configuration.
+Returns an empty listener configuration by value.
 
 ```c
-#define DCC_LISTENER_CONFIG_INIT \ {sizeof(dcc_listener_config_t), DCC_LISTENER_CONFIG_VERSION, NULL, NULL, \ NULL, NULL, 0U, NULL, NULL, NULL, 0U} static inline dcc_listener_config_t DCC_LISTENER_CONFIG(void) { dcc_listener_config_t value = DCC_LISTENER_CONFIG_INIT; return value; }
+static inline dcc_listener_config_t DCC_LISTENER_CONFIG(void) { dcc_listener_config_t value = DCC_LISTENER_CONFIG_INIT; return value; }
 ```
 
 ## `DCC_LISTENER_CONFIG_INIT`

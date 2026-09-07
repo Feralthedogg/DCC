@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "support/benchmark_clock.h"
 
 static volatile uint64_t sink;
 static dcc_client_t *client;
@@ -15,13 +16,6 @@ static const char message[] = "{\"op\":0,\"s\":43,\"t\":\"MESSAGE_CREATE\",\"d\"
 
 static double elapsed(struct timespec a, struct timespec b) {
     return (double)(b.tv_sec - a.tv_sec) + (double)(b.tv_nsec - a.tv_nsec) / 1e9;
-}
-static int now(struct timespec *value) {
-#if defined(_WIN32)
-    return timespec_get(value, TIME_UTC) == TIME_UTC ? 0 : 1;
-#else
-    return clock_gettime(CLOCK_MONOTONIC, value);
-#endif
 }
 static void listener(dcc_client_t *c, const dcc_event_t *event, void *data) {
     (void)c; (void)event; (void)data; ++sink;
@@ -62,11 +56,17 @@ static int run(const char *fixture, const char *stage, size_t parameter,
                size_t iterations, int (*fn)(size_t)) {
     for (size_t i = 0; i < 128U; ++i) if (fn(parameter)) return 1;
     struct timespec start, end;
-    if (now(&start)) return 1;
+    if (dcc_benchmark_now(&start)) {
+        fputs("monotonic benchmark clock failed\n", stderr);
+        return 1;
+    }
     clock_t cpu_start = clock();
     for (size_t i = 0; i < iterations; ++i) if (fn(parameter)) return 1;
     clock_t cpu_end = clock();
-    if (now(&end)) return 1;
+    if (dcc_benchmark_now(&end)) {
+        fputs("monotonic benchmark clock failed\n", stderr);
+        return 1;
+    }
     printf("{\"fixture\":\"%s\",\"stage\":\"%s\",\"iterations\":%zu,"
            "\"cpu_seconds\":%.9f,\"elapsed_seconds\":%.9f,\"allocations\":null}\n",
            fixture, stage, iterations, (double)(cpu_end - cpu_start) / CLOCKS_PER_SEC,

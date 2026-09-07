@@ -2,7 +2,7 @@
 
 # `<dcc/rest/resources/invites.h>`
 
-Source: [`include/dcc/rest/resources/invites.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/resources/invites.h)
+Source: [`include/dcc/rest/resources/invites.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/resources/invites.h)
 
 ## `dcc_rest_get_guild_invites`
 

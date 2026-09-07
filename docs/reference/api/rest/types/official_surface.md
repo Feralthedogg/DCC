@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/official_surface.h>`
 
-Source: [`include/dcc/rest/types/official_surface.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/types/official_surface.h)
+Source: [`include/dcc/rest/types/official_surface.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/types/official_surface.h)
 
 ## `DCC_APPLICATION_INSTALL_PARAMS_INIT`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/voice/media.h>`
 
-Source: [`include/dcc/voice/media.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/voice/media.h)
+Source: [`include/dcc/voice/media.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/voice/media.h)
 
 ## `dcc_voice_client_clear_mixed_pcm`
 

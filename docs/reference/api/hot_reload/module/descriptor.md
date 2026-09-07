@@ -2,7 +2,7 @@
 
 # `<dcc/hot_reload/module/descriptor.h>`
 
-Source: [`include/dcc/hot_reload/module/descriptor.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/hot_reload/module/descriptor.h)
+Source: [`include/dcc/hot_reload/module/descriptor.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/hot_reload/module/descriptor.h)
 
 ## `dcc_bot_module_deinit_from_descriptor`
 

@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/messages.h>`
 
-Source: [`include/dcc/rest/types/messages.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/types/messages.h)
+Source: [`include/dcc/rest/types/messages.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/types/messages.h)
 
 ## `DCC_REST_ID_PAGE_INIT`
 
