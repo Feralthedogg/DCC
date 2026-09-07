@@ -18,6 +18,30 @@ extern "C" {
 
 typedef struct dcc_app_modal_flow dcc_app_modal_flow_t;
 
+/** Queue-aware operation; accepted work completes once. NULL output auto-releases.
+ * Only default authentication and no audit reason are supported. */
+DCC_API dcc_status_t dcc_ctx_reply_ex(
+    dcc_ctx_t *ctx, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+
+/** Queue-aware operation; accepted work completes once. NULL output auto-releases.
+ * Only default authentication and no audit reason are supported. */
+DCC_API dcc_status_t dcc_ctx_defer_ex(
+    dcc_ctx_t *ctx, const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request);
+
+/** Queue-aware operation; accepted work completes once. NULL output auto-releases.
+ * Only default authentication and no audit reason are supported. */
+DCC_API dcc_status_t dcc_ctx_edit_original_ex(
+    dcc_ctx_t *ctx, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+
+/** Queue-aware operation; accepted work completes once. NULL output auto-releases.
+ * Only default authentication and no audit reason are supported. */
+DCC_API dcc_status_t dcc_ctx_followup_ex(
+    dcc_ctx_t *ctx, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+
 /** Returns the borrowed context interaction ID, or zero when unavailable. */
 DCC_API dcc_snowflake_t dcc_ctx_interaction_id(const dcc_ctx_t *ctx);
 /** Returns the client borrowed from the context, or null when unavailable. */

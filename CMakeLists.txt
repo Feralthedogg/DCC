@@ -2305,6 +2305,15 @@ if(DCC_BUILD_TESTS)
     target_link_libraries(dcc_app_windows_include_order_smoke PRIVATE dcc::dcc)
     dcc_target_use_private_headers(dcc_app_windows_include_order_smoke)
 
+    add_executable(dcc_interaction_request_smoke
+        tests/interaction_request_smoke.c
+        tests/support/http_smoke_server.c
+    )
+    target_link_libraries(dcc_interaction_request_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_interaction_request_smoke)
+    dcc_target_enable_sanitizers(dcc_interaction_request_smoke)
+    add_test(NAME dcc_interaction_request_smoke COMMAND dcc_interaction_request_smoke)
+
     add_executable(dcc_interaction_flow_smoke
         tests/interaction_flow_smoke.c
         tests/support/http_smoke_server.c

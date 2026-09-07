@@ -29,6 +29,30 @@ typedef enum dcc_interaction_flow_state {
 
 typedef struct dcc_interaction_flow dcc_interaction_flow_t;
 
+/** Queue-aware operation; accepted work completes once. NULL output auto-releases.
+ * Only default authentication and no audit reason are supported. */
+DCC_API dcc_status_t dcc_flow_reply_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+
+/** Queue-aware operation; accepted work completes once. NULL output auto-releases.
+ * Only default authentication and no audit reason are supported. */
+DCC_API dcc_status_t dcc_flow_defer_ex(
+    dcc_interaction_flow_t *flow, const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request);
+
+/** Queue-aware operation; accepted work completes once. NULL output auto-releases.
+ * Only default authentication and no audit reason are supported. */
+DCC_API dcc_status_t dcc_flow_edit_original_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+
+/** Queue-aware operation; accepted work completes once. NULL output auto-releases.
+ * Only default authentication and no audit reason are supported. */
+DCC_API dcc_status_t dcc_flow_followup_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+
 DCC_API dcc_status_t dcc_flow_create(dcc_client_t *client,
                                      const dcc_interaction_t *interaction,
                                      dcc_interaction_flow_t **out_flow);

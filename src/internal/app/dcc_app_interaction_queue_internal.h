@@ -6,6 +6,22 @@
 
 typedef struct dcc_app_interaction_queue dcc_app_interaction_queue_t;
 
+dcc_status_t dcc_app_interaction_queue_reply_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+
+dcc_status_t dcc_app_interaction_queue_defer_ex(
+    dcc_interaction_flow_t *flow, const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request);
+
+dcc_status_t dcc_app_interaction_queue_edit_original_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+
+dcc_status_t dcc_app_interaction_queue_followup_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+
 dcc_app_interaction_queue_t *
 dcc_app_interaction_queue_create(dcc_client_t *client,
                                  size_t identity_charge,

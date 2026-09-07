@@ -1,5 +1,6 @@
 /* DCC_DOC_SNIPPET_BEGIN(rest-ownership) */
 #include <dcc/client.h>
+#include <dcc/interaction_flow.h>
 #include <dcc/rest/request.h>
 #include <dcc/rest/result.h>
 
@@ -38,6 +39,47 @@ static void on_result(
         memory_order_relaxed
     );
     atomic_fetch_add_explicit(&state->completions, 1U, memory_order_release);
+}
+
+/* Call from an owner thread while another thread runs dcc_client_wait().
+ * The caller keeps callback_state alive through completion (including errors).
+ * Context handlers can use dcc_ctx_defer_ex/dcc_ctx_edit_original_ex with the
+ * same options/output pattern, then hand the handle to their owner thread. */
+dcc_status_t dcc_example_queued_reply(
+    dcc_client_t *client,
+    const dcc_interaction_t *interaction,
+    rest_example_state_t *callback_state
+) {
+    dcc_interaction_flow_t *flow = NULL;
+    dcc_status_t status = dcc_flow_create(client, interaction, &flow);
+    if (status != DCC_OK) return status;
+
+    /* Default defer is non-ephemeral; NULL output auto-releases its handle. */
+    status = dcc_flow_defer_ex(flow, NULL, NULL);
+    dcc_rest_request_t *edit = NULL;
+    if (status == DCC_OK) {
+        char text[] = "Work finished";
+        dcc_message_builder_t message = DCC_MESSAGE_BUILDER_INIT;
+        status = dcc_message_builder_set_content(&message, text);
+        dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+        options.priority = DCC_REST_PRIORITY_HIGH;
+        options.flags = DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY |
+            DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY;
+        options.callback = on_result;
+        options.user_data = callback_state;
+        if (status == DCC_OK)
+            status = dcc_flow_edit_original_ex(flow, &message, &options, &edit);
+        /* message, text and options may now leave scope: admission copied them.
+         * edit already exists even while the defer is still in flight. */
+    }
+    dcc_flow_destroy(flow); /* Accepted work and the result survive this. */
+    if (status != DCC_OK) return status; /* Rejected edit: NULL handle, no callback. */
+
+    const dcc_rest_result_t *result = NULL;
+    status = dcc_rest_request_wait(edit, 0U, &result);
+    if (status == DCC_OK) status = dcc_rest_result_status(result);
+    dcc_rest_request_destroy(edit);
+    return status;
 }
 
 static void run_client(runtime_thread_state_t *state) {

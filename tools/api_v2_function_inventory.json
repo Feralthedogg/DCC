@@ -5035,6 +5035,15 @@
       "class": "public_external",
       "dcc_api": true,
       "definition": false,
+      "fingerprint": "7cf889405c05fc7fb8652e7eaea1a5310fa53bbb96f7b70917e1f7afae356f87",
+      "name": "dcc_ctx_defer_ex",
+      "owner": "dcc/app/context.h",
+      "signature": "dcc_status_t dcc_ctx_defer_ex( dcc_ctx_t *ctx, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);"
+    },
+    {
+      "class": "public_external",
+      "dcc_api": true,
+      "definition": false,
       "fingerprint": "f811be81be5d160b7451ea9988fd5c88462b055fdff1ede4e855124303957a28",
       "name": "dcc_ctx_delete_original",
       "owner": "dcc/app/context.h",
@@ -5048,6 +5057,15 @@
       "name": "dcc_ctx_edit_original",
       "owner": "dcc/app/context.h",
       "signature": "dcc_status_t dcc_ctx_edit_original(dcc_ctx_t *ctx, const dcc_message_builder_t *message, dcc_rest_result_fn cb, void *user_data);"
+    },
+    {
+      "class": "public_external",
+      "dcc_api": true,
+      "definition": false,
+      "fingerprint": "aa3d5e2254cbcf8436c4f608e5e0cef773bdb6270465dcaad47a36a99fff9db8",
+      "name": "dcc_ctx_edit_original_ex",
+      "owner": "dcc/app/context.h",
+      "signature": "dcc_status_t dcc_ctx_edit_original_ex( dcc_ctx_t *ctx, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);"
     },
     {
       "class": "public_external",
@@ -5102,6 +5120,15 @@
       "name": "dcc_ctx_followup_ephemeral_text",
       "owner": "dcc/app/context.h",
       "signature": "dcc_status_t dcc_ctx_followup_ephemeral_text(dcc_ctx_t *ctx, const char *content, dcc_rest_result_fn cb, void *user_data);"
+    },
+    {
+      "class": "public_external",
+      "dcc_api": true,
+      "definition": false,
+      "fingerprint": "290327cd721cd099b7b0e00bc6323d7c7ee35577af82df4ffc17343fa4b5358a",
+      "name": "dcc_ctx_followup_ex",
+      "owner": "dcc/app/context.h",
+      "signature": "dcc_status_t dcc_ctx_followup_ex( dcc_ctx_t *ctx, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);"
     },
     {
       "class": "public_external",
@@ -5435,6 +5462,15 @@
       "name": "dcc_ctx_reply_error",
       "owner": "dcc/app/context.h",
       "signature": "dcc_status_t dcc_ctx_reply_error(dcc_ctx_t *ctx, const char *title, const char *description, dcc_rest_result_fn cb, void *user_data);"
+    },
+    {
+      "class": "public_external",
+      "dcc_api": true,
+      "definition": false,
+      "fingerprint": "48573089bd4e99db4dcd98997dd268b6ee9046f656122d2d5d128184868157f7",
+      "name": "dcc_ctx_reply_ex",
+      "owner": "dcc/app/context.h",
+      "signature": "dcc_status_t dcc_ctx_reply_ex( dcc_ctx_t *ctx, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);"
     },
     {
       "class": "public_external",
@@ -6520,6 +6556,15 @@
       "class": "public_external",
       "dcc_api": true,
       "definition": false,
+      "fingerprint": "30ba55f5a68b0f84209674815a20b9d7c2a3b01d795fd1516fec5d09e785b848",
+      "name": "dcc_flow_defer_ex",
+      "owner": "dcc/interaction_flow.h",
+      "signature": "dcc_status_t dcc_flow_defer_ex( dcc_interaction_flow_t *flow, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);"
+    },
+    {
+      "class": "public_external",
+      "dcc_api": true,
+      "definition": false,
       "fingerprint": "55a29e16b42c40b8d4d50d7b3e81f33668919d9c0b60fbd50731f9733555e920",
       "name": "dcc_flow_defer_update",
       "owner": "dcc/interaction_flow.h",
@@ -6547,10 +6592,28 @@
       "class": "public_external",
       "dcc_api": true,
       "definition": false,
+      "fingerprint": "ba5de658e20a7ccf9ebd778f016557b159cc55bcc0c626589e4fee0e6f89d247",
+      "name": "dcc_flow_edit_original_ex",
+      "owner": "dcc/interaction_flow.h",
+      "signature": "dcc_status_t dcc_flow_edit_original_ex( dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);"
+    },
+    {
+      "class": "public_external",
+      "dcc_api": true,
+      "definition": false,
       "fingerprint": "6047e6b7b722ff32cfee66ef019890d19bb3c8b714f41052eff3f315ac65bfc1",
       "name": "dcc_flow_followup",
       "owner": "dcc/interaction_flow.h",
       "signature": "dcc_status_t dcc_flow_followup(dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, dcc_rest_result_fn cb, void *user_data);"
+    },
+    {
+      "class": "public_external",
+      "dcc_api": true,
+      "definition": false,
+      "fingerprint": "f2a79dc23855439ac52c2422f4fa384015bf81930205fa0a27e92b25b37cc680",
+      "name": "dcc_flow_followup_ex",
+      "owner": "dcc/interaction_flow.h",
+      "signature": "dcc_status_t dcc_flow_followup_ex( dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);"
     },
     {
       "class": "public_external",
@@ -6569,6 +6632,15 @@
       "name": "dcc_flow_reply",
       "owner": "dcc/interaction_flow.h",
       "signature": "dcc_status_t dcc_flow_reply(dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, dcc_rest_result_fn cb, void *user_data);"
+    },
+    {
+      "class": "public_external",
+      "dcc_api": true,
+      "definition": false,
+      "fingerprint": "09a843922b05c6bb483653e8ba39a3bd1a80e71d53322c8c9bd1c7341ef74299",
+      "name": "dcc_flow_reply_ex",
+      "owner": "dcc/interaction_flow.h",
+      "signature": "dcc_status_t dcc_flow_reply_ex( dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);"
     },
     {
       "class": "public_external",

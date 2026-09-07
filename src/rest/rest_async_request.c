@@ -16,6 +16,8 @@ void dcc_rest_async_request_free(dcc_rest_async_request_t *request) {
     } else {
         free(request->body);
     }
+    /* Rejected queued logical handles can outlive this transport allocation. */
+    dcc_rest_request_handle_attach(request->request_handle, NULL);
     dcc_rest_request_handle_release(request->request_handle);
     /* Wipe all metadata, including path, audit reason and auth token, before
      * releasing the owning block. No interior string pointer is freed. */

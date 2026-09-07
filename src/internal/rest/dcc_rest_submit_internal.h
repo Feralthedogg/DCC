@@ -32,6 +32,12 @@ dcc_status_t dcc_rest_call_options_normalize(
     dcc_rest_call_options_t *out
 );
 
+/* Retains a separate transport reference; consumes no caller/action reference
+ * on either success or failure. Existing handle callback/post-hook are used. */
+dcc_status_t dcc_rest_submit_existing_handle(
+    dcc_client_t *client, const dcc_rest_request_desc_t *description,
+    const char *operation, uint8_t sensitive_path, dcc_rest_request_t *handle);
+
 #ifdef __cplusplus
 }
 #endif

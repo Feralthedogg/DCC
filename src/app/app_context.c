@@ -461,6 +461,45 @@ dcc_ctx_finish_initial_auto_claim(dcc_ctx_t *ctx,
   (void)response_state;
   (void)status;
 }
+dcc_status_t dcc_ctx_reply_ex(
+    dcc_ctx_t *ctx, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  if (out_request != NULL)
+    *out_request = NULL;
+  if (ctx == NULL)
+    return DCC_ERR_INVALID_ARG;
+  return dcc_flow_reply_ex(ctx->flow, message, options, out_request);
+}
+
+dcc_status_t dcc_ctx_defer_ex(
+    dcc_ctx_t *ctx, const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request) {
+  if (out_request != NULL)
+    *out_request = NULL;
+  if (ctx == NULL)
+    return DCC_ERR_INVALID_ARG;
+  return dcc_flow_defer_ex(ctx->flow, options, out_request);
+}
+
+dcc_status_t dcc_ctx_edit_original_ex(
+    dcc_ctx_t *ctx, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  if (out_request != NULL)
+    *out_request = NULL;
+  if (ctx == NULL)
+    return DCC_ERR_INVALID_ARG;
+  return dcc_flow_edit_original_ex(ctx->flow, message, options, out_request);
+}
+
+dcc_status_t dcc_ctx_followup_ex(
+    dcc_ctx_t *ctx, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  if (out_request != NULL)
+    *out_request = NULL;
+  if (ctx == NULL)
+    return DCC_ERR_INVALID_ARG;
+  return dcc_flow_followup_ex(ctx->flow, message, options, out_request);
+}
 
 dcc_status_t dcc_ctx_reply(dcc_ctx_t *ctx, const dcc_message_builder_t *message,
                            dcc_rest_result_fn cb, void *user_data) {

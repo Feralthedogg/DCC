@@ -75,15 +75,60 @@ client shutdown has drained the operation, even if the handle was destroyed.
 Use `dcc_rest_result_clone()` when result bytes must outlive the callback or
 request handle.
 
+## Queue-Aware Context And Flow Requests
+
+The Context and Flow `reply_ex`, `defer_ex`, `edit_original_ex`, and `followup_ex`
+operations accept `dcc_rest_call_options_t` and return the same opaque
+`dcc_rest_request_t` used by REST. A successful admission returns a handle even
+when an earlier interaction action has not finished. The queue preserves Discord
+response ordering; `reply_ex` selects the initial reply, deferred original edit,
+or followup from the projected queue state. Default defer is non-ephemeral.
+
+| Option | Queue-aware operations |
+| --- | --- |
+| NULL options, callback, user data | Supported; callback/user data stay borrowed through completion |
+| Priority | Copied and applied when actual transport is admitted; never reorders the interaction queue |
+| Sensitive request/result flags | Copied; retained request-body copies are wiped and result flags preserved |
+| Authentication | Only `DCC_REST_AUTH_DEFAULT`, without an auth token |
+| Audit-log reason | Unsupported; any non-NULL reason is rejected |
+| Invalid version, partial option field, unknown flag | Rejected with `DCC_ERR_INVALID_ARG` |
+
+Rejection clears a supplied output and runs no callback. Accepted work gets one
+terminal completion, including synthetic failure when an earlier response fails.
+Cancellation is nonblocking and never runs a callback inline on the cancel or
+handle-destroy call stack. A cancellation made while queued can wait for its
+predecessor, but that cancelled action will not be sent. When cancellation races
+dispatch or terminal delivery, cancellation or the transport result can win once.
+An initial failure fails the queue and prevents invalid dependent followups.
+
+Destroying a request handle requests cancellation and releases only the caller's
+reference; it does not suppress callbacks. Keep callback state alive. A NULL
+output auto-releases the caller side. Destroying the Flow does not discard
+accepted work, and a retained request result stays valid until request destruction.
+Queue action/byte admission limits include retained logical handle storage.
+
+Wait from an operation's own callback/observer returns `DCC_ERR_STATE`. Do not
+wait there for a later action in the **same ordered queue** either: later work
+starts only after current callback/observer delivery finishes, so this would
+deadlock. General dependency cycles are not detected. Use nonblocking callback
+chaining or owner-thread waits, and perform stop, runtime join, and client/app
+destruction on the owner thread after callback work drains.
+
 ## Complete REST Ownership Example
 
 This example is compiled against an installed DCC package during documentation
 checks. It is not run by the test suite and contacts Discord only when a user
 runs it with `DCC_TOKEN` set.
 
+`dcc_example_queued_reply()` additionally demonstrates an admitted defer followed
+by a queued edit with copied stack inputs and a retained result. Call this helper
+from an owner thread with a live interaction and a separately running client
+runtime; the callback state belongs to that caller.
+
 <!-- DCC_DOC_SNIPPET_BEGIN(rest-ownership) -->
 ```c
 #include <dcc/client.h>
+#include <dcc/interaction_flow.h>
 #include <dcc/rest/request.h>
 #include <dcc/rest/result.h>
 
@@ -122,6 +167,47 @@ static void on_result(
         memory_order_relaxed
     );
     atomic_fetch_add_explicit(&state->completions, 1U, memory_order_release);
+}
+
+/* Call from an owner thread while another thread runs dcc_client_wait().
+ * The caller keeps callback_state alive through completion (including errors).
+ * Context handlers can use dcc_ctx_defer_ex/dcc_ctx_edit_original_ex with the
+ * same options/output pattern, then hand the handle to their owner thread. */
+dcc_status_t dcc_example_queued_reply(
+    dcc_client_t *client,
+    const dcc_interaction_t *interaction,
+    rest_example_state_t *callback_state
+) {
+    dcc_interaction_flow_t *flow = NULL;
+    dcc_status_t status = dcc_flow_create(client, interaction, &flow);
+    if (status != DCC_OK) return status;
+
+    /* Default defer is non-ephemeral; NULL output auto-releases its handle. */
+    status = dcc_flow_defer_ex(flow, NULL, NULL);
+    dcc_rest_request_t *edit = NULL;
+    if (status == DCC_OK) {
+        char text[] = "Work finished";
+        dcc_message_builder_t message = DCC_MESSAGE_BUILDER_INIT;
+        status = dcc_message_builder_set_content(&message, text);
+        dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+        options.priority = DCC_REST_PRIORITY_HIGH;
+        options.flags = DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY |
+            DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY;
+        options.callback = on_result;
+        options.user_data = callback_state;
+        if (status == DCC_OK)
+            status = dcc_flow_edit_original_ex(flow, &message, &options, &edit);
+        /* message, text and options may now leave scope: admission copied them.
+         * edit already exists even while the defer is still in flight. */
+    }
+    dcc_flow_destroy(flow); /* Accepted work and the result survive this. */
+    if (status != DCC_OK) return status; /* Rejected edit: NULL handle, no callback. */
+
+    const dcc_rest_result_t *result = NULL;
+    status = dcc_rest_request_wait(edit, 0U, &result);
+    if (status == DCC_OK) status = dcc_rest_result_status(result);
+    dcc_rest_request_destroy(edit);
+    return status;
 }
 
 static void run_client(runtime_thread_state_t *state) {

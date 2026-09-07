@@ -1,6 +1,36 @@
 #include "internal/app/dcc_app_interaction_queue_internal.h"
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"
 
+dcc_status_t dcc_flow_reply_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  if (out_request != NULL)
+    *out_request = NULL;
+  if (message == NULL)
+    return DCC_ERR_INVALID_ARG;
+  return dcc_app_interaction_queue_reply_ex(flow, message, options, out_request);
+}
+
+dcc_status_t dcc_flow_edit_original_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  if (out_request != NULL)
+    *out_request = NULL;
+  if (message == NULL)
+    return DCC_ERR_INVALID_ARG;
+  return dcc_app_interaction_queue_edit_original_ex(flow, message, options, out_request);
+}
+
+dcc_status_t dcc_flow_followup_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  if (out_request != NULL)
+    *out_request = NULL;
+  if (message == NULL)
+    return DCC_ERR_INVALID_ARG;
+  return dcc_app_interaction_queue_followup_ex(flow, message, options, out_request);
+}
+
 static uint8_t dcc_flow_can_edit_original(const dcc_interaction_flow_t *flow) {
   if (flow != NULL && flow->queue != NULL)
     return dcc_app_interaction_queue_can_edit_original(flow->queue);
