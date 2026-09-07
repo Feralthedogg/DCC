@@ -1,10 +1,11 @@
 #include <dcc/app/legacy.h>
 #include <dcc/app/lifecycle.h>
 
+#include <llam/runtime.h>
+
 #include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 typedef struct command_sync_callback_state {
     atomic_uint called;
@@ -29,11 +30,9 @@ static void command_sync_callback(
 }
 
 static void command_sync_sleep_ms(long milliseconds) {
-    struct timespec delay = {
-        .tv_sec = milliseconds / 1000L,
-        .tv_nsec = (milliseconds % 1000L) * 1000000L,
-    };
-    (void)nanosleep(&delay, NULL);
+    if (milliseconds > 0L) {
+        (void)llam_sleep_ns((uint64_t)milliseconds * UINT64_C(1000000));
+    }
 }
 
 int main(void) {
