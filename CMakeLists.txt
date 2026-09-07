@@ -3789,6 +3789,13 @@ if(DCC_BUILD_TESTS)
 
     if(Python3_Interpreter_FOUND)
         add_test(
+            NAME dcc_doc_examples_sync
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/sync_doc_examples.py --check
+        )
+        set_tests_properties(dcc_doc_examples_sync PROPERTIES
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+        add_test(
             NAME dcc_gateway_fast_path_audit
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_gateway_fast_path.py
         )
@@ -4197,6 +4204,7 @@ install(
         PATTERN "*.h"
         PATTERN "*.sh"
         PATTERN "Makefile"
+        PATTERN "CMakeLists.txt"
         PATTERN "README.md"
 )
 

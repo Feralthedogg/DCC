@@ -205,8 +205,11 @@ be kept on explicit capped budgets so they cannot grow silently:
   `rest_async_wait.c` owns async wait APIs. REST async internals keep
   `dcc_rest_async_internal.h` as the compatibility aggregate, while request,
   queue, signal, drain, retry, worker, status, wait, and cancel declarations live in focused
-  `src/internal/rest/dcc_rest_async_*_internal.h` headers. Future lifecycle,
-  request wrappers, and wait/destroy APIs live in `rest_future_lifecycle.c`,
+  `src/internal/rest/dcc_rest_async_*_internal.h` headers. Canonical request
+  submission lives in `rest_submit.c`, request ownership and terminal delivery
+  live in `rest_request_handle.c`, and result ownership and interpretation live
+  in `rest_result.c` and `rest_result_fields.c`. Compatibility future lifecycle,
+  wrappers, and wait APIs remain in `rest_future_lifecycle.c`,
   `rest_future_request.c`, and `rest_future_wait.c`. Platform
   wait/time helpers, common buffer, JSON,
   query, method,
@@ -1575,5 +1578,5 @@ are request-owned for the callback lifetime. User-retained objects must be clone
 clone APIs, which deep-copy strings and owned arrays; raw event/payload pointers must not outlive
 their callback.
 
-For public API ownership rules and operational use, see `api.md` and
-`production-playbooks.md`.
+For public API ownership rules and operational use, see
+`concepts/ownership-and-async.md`, `api.md`, and `production-playbooks.md`.
