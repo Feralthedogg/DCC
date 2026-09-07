@@ -202,7 +202,8 @@ dcc_status_t dcc_task9_emoji_body(
 
 dcc_status_t dcc_task9_template_body(
     const dcc_template_params_t *params, int create, char **out) {
-  if (out == NULL) return DCC_ERR_INVALID_ARG; *out = NULL;
+  if (out == NULL) return DCC_ERR_INVALID_ARG;
+  *out = NULL;
   const uint64_t known = DCC_TEMPLATE_PARAMS_PRESENT_NAME |
       DCC_TEMPLATE_PARAMS_PRESENT_DESCRIPTION;
   dcc_endpoint_record_view_t view;
@@ -227,7 +228,8 @@ dcc_status_t dcc_task9_template_body(
 
 dcc_status_t dcc_task9_stage_body(
     const dcc_stage_instance_params_t *params, int create, char **out) {
-  if (out == NULL) return DCC_ERR_INVALID_ARG; *out = NULL;
+  if (out == NULL) return DCC_ERR_INVALID_ARG;
+  *out = NULL;
   const uint64_t known = DCC_STAGE_INSTANCE_PARAMS_PRESENT_CHANNEL_ID |
       DCC_STAGE_INSTANCE_PARAMS_PRESENT_TOPIC |
       DCC_STAGE_INSTANCE_PARAMS_PRESENT_PRIVACY_LEVEL |
@@ -261,7 +263,8 @@ dcc_status_t dcc_task9_stage_body(
 
 dcc_status_t dcc_task9_scheduled_body(
     const dcc_scheduled_event_params_t *params, int create, char **out) {
-  if (out == NULL) return DCC_ERR_INVALID_ARG; *out = NULL;
+  if (out == NULL) return DCC_ERR_INVALID_ARG;
+  *out = NULL;
   const uint64_t known = DCC_SCHEDULED_EVENT_PARAMS_PRESENT_CHANNEL_ID |
       DCC_SCHEDULED_EVENT_PARAMS_PRESENT_NAME |
       DCC_SCHEDULED_EVENT_PARAMS_PRESENT_DESCRIPTION |
@@ -365,7 +368,8 @@ dcc_status_t dcc_task9_scheduled_body(
 
 dcc_status_t dcc_task9_sticker_modify_body(
     const dcc_guild_sticker_params_t *params, char **out) {
-  if (out == NULL) return DCC_ERR_INVALID_ARG; *out = NULL;
+  if (out == NULL) return DCC_ERR_INVALID_ARG;
+  *out = NULL;
   if (params == NULL || params->size < sizeof(dcc_endpoint_record_view_t) ||
       params->version != DCC_GUILD_STICKER_PARAMS_VERSION ||
       (params->present & DCC_GUILD_STICKER_PARAMS_PRESENT_FILE) != 0U ||
@@ -407,7 +411,8 @@ dcc_status_t dcc_task9_sticker_multipart(
 
 dcc_status_t dcc_task9_permissions_body(
     const dcc_guild_command_permissions_params_t *params, char **out) {
-  if (out == NULL) return DCC_ERR_INVALID_ARG; *out = NULL;
+  if (out == NULL) return DCC_ERR_INVALID_ARG;
+  *out = NULL;
   if (params == NULL || params->size < sizeof(*params) ||
       params->version != DCC_GUILD_COMMAND_PERMISSIONS_PARAMS_VERSION ||
       params->present != DCC_GUILD_COMMAND_PERMISSIONS_PARAMS_PRESENT_PERMISSIONS ||

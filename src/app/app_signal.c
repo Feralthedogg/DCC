@@ -51,7 +51,8 @@ static void dcc_app_signal_handler(int signal_number) {
     int saved_errno = errno;
     if (dcc_app_signal_write_fd >= 0) {
         const unsigned char byte = 's';
-        (void)write((int)dcc_app_signal_write_fd, &byte, 1U);
+        const ssize_t ignored = write((int)dcc_app_signal_write_fd, &byte, 1U);
+        (void)ignored;
     }
     errno = saved_errno;
 }
@@ -100,7 +101,8 @@ dcc_status_t dcc_app_run_with_signals(dcc_app_t *app) {
 
     dcc_status_t status = dcc_app_run(app);
     const unsigned char stop_byte = 'x';
-    (void)write(pipe_fds[1], &stop_byte, 1U);
+    const ssize_t ignored = write(pipe_fds[1], &stop_byte, 1U);
+    (void)ignored;
     (void)pthread_join(thread, NULL);
     dcc_app_signal_write_fd = -1;
     (void)sigaction(SIGINT, &old_int, NULL);
