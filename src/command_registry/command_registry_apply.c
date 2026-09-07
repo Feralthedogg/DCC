@@ -1,4 +1,5 @@
 #include "internal/command_registry/dcc_command_registry_internal.h"
+#include "internal/dcc_core_internal.h"
 #include "internal/dcc_windows_internal.h"
 
 #include <dcc/rest.h>
@@ -391,7 +392,7 @@ dcc_status_t dcc_command_registry_apply(
         DCC_COMMAND_REGISTRY_OPERATION_RESULT_INIT;
     operation->result.noop_count = plan->noop_count;
     if (options.auth_token != NULL) {
-        operation->auth_token = strdup(options.auth_token);
+        operation->auth_token = dcc_strdup(options.auth_token);
         if (operation->auth_token == NULL) {
             dcc_command_registry_operation_free(operation); return DCC_ERR_NOMEM;
         }
@@ -411,7 +412,7 @@ dcc_status_t dcc_command_registry_apply(
             if (diff->local_json == NULL) {
                 dcc_command_registry_operation_free(operation); return DCC_ERR_INVALID_ARG;
             }
-            owned->json = strdup(diff->local_json);
+            owned->json = dcc_strdup(diff->local_json);
             if (owned->json == NULL) {
                 dcc_command_registry_operation_free(operation); return DCC_ERR_NOMEM;
             }
