@@ -141,3 +141,49 @@ python3 -m py_compile tools/sync_doc_examples.py tests/test_sync_doc_examples.py
   repository's pre-existing pages omitted from nav; strict rendering still
   exited successfully.
 - No live Discord call was made, by design.
+
+## Review fix round 1
+
+Corrected the example's non-2xx diagnostic to print
+`result->transport_status` as the transport outcome while continuing to print
+`result->http_status` separately. The previous expression used
+`dcc_rest_result_status(result)`, whose contract maps non-2xx HTTP completion to
+`DCC_ERR_DISCORD` and therefore was mislabeled as transport status. Regenerated
+the ownership guide from the corrected source.
+
+Added a behavioral CRLF fixture before changing the synchronizer. RED evidence:
+
+```text
+python3 -m unittest discover -s tests -p test_sync_doc_examples.py
+...F.
+Ran 5 tests in 0.141s
+FAILED (failures=1)
+```
+
+The literal byte assertion showed all unmarked document CRLF bytes had been
+normalized to LF by text-mode `read_text()`. The implementation now decodes
+explicit UTF-8 bytes, preserves all bytes outside the declared marker range,
+and emits the generated region using the destination document's newline style.
+
+GREEN and final verification:
+
+```text
+python3 -m unittest discover -s tests -p test_sync_doc_examples.py
+.....
+Ran 5 tests in 0.127s
+OK
+
+python3 tools/sync_doc_examples.py --check
+# exit 0, no output
+
+cmake --build /tmp/dcc-task1-example --clean-first --verbose
+[100%] Built target dcc_rest_ownership
+
+git diff --check
+# exit 0
+```
+
+The verbose installed-package build again compiled with
+`-Wall -Wextra -Wpedantic -Werror` against `/tmp/dcc-task1-install/include` and
+linked `/tmp/dcc-task1-install/lib/libdcc.a`. The executable was not run and no
+Discord request was made.

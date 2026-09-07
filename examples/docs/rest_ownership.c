@@ -162,7 +162,7 @@ int main(void) {
         fprintf(
             stderr,
             "completion: transport=%s http=%u\n",
-            dcc_status_string(dcc_rest_result_status(result)),
+            dcc_status_string(result->transport_status),
             (unsigned)result->http_status
         );
         exit_code = 1;

@@ -54,7 +54,12 @@ def _render_document(name: str, source: str, document: str, source_path: Path,
         raise SyncError(
             f"{document_path}: end marker appears before begin marker {document_begin}"
         )
-    rendered = f"{document_begin}\n```c\n{snippet}\n```\n{document_end}"
+    newline = "\r\n" if "\r\n" in document else "\n"
+    snippet = snippet.replace("\r\n", "\n").replace("\r", "\n")
+    snippet = snippet.replace("\n", newline)
+    rendered = newline.join(
+        (document_begin, "```c", snippet, "```", document_end)
+    )
     return document[:begin_at] + rendered + document[replace_end:]
 
 
@@ -64,8 +69,8 @@ def sync(source_root: Path, check: bool) -> int:
         source_path = source_root / source_relative
         document_path = source_root / document_relative
         try:
-            source = source_path.read_text(encoding="utf-8")
-            document = document_path.read_text(encoding="utf-8")
+            source = source_path.read_bytes().decode("utf-8")
+            document = document_path.read_bytes().decode("utf-8")
         except OSError as error:
             raise SyncError(str(error)) from error
         rendered = _render_document(
@@ -81,7 +86,7 @@ def sync(source_root: Path, check: bool) -> int:
         return 1 if pending else 0
 
     for path, rendered in pending:
-        path.write_text(rendered, encoding="utf-8")
+        path.write_bytes(rendered.encode("utf-8"))
         print(f"updated {path.relative_to(source_root)}")
     return 0
 

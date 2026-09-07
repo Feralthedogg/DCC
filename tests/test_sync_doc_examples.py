@@ -90,6 +90,40 @@ class SyncDocExamplesTests(unittest.TestCase):
             self.assertIn("out of date", result.stderr)
             self.assertEqual(document_path.read_text(encoding="utf-8"), original)
 
+    def test_update_preserves_crlf_in_unmarked_document_bytes(self) -> None:
+        # Catches text-mode universal-newline reads that silently rewrite
+        # prose outside the declared destination region from CRLF to LF.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            document_path = self.write_fixture(
+                root,
+                "/* DCC_DOC_SNIPPET_BEGIN(rest-ownership) */\n"
+                "new();\n"
+                "/* DCC_DOC_SNIPPET_END(rest-ownership) */\n",
+                "placeholder\n",
+            )
+            document_path.write_bytes(
+                b"prose before\r\n"
+                b"<!-- DCC_DOC_SNIPPET_BEGIN(rest-ownership) -->\r\n"
+                b"stale\r\n"
+                b"<!-- DCC_DOC_SNIPPET_END(rest-ownership) -->\r\n"
+                b"prose after\r\n"
+            )
+
+            result = self.run_tool(root)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                document_path.read_bytes(),
+                b"prose before\r\n"
+                b"<!-- DCC_DOC_SNIPPET_BEGIN(rest-ownership) -->\r\n"
+                b"```c\r\n"
+                b"new();\r\n"
+                b"```\r\n"
+                b"<!-- DCC_DOC_SNIPPET_END(rest-ownership) -->\r\n"
+                b"prose after\r\n",
+            )
+
     def test_missing_marker_is_an_error_with_the_file_and_marker_name(self) -> None:
         # Catches accidental broad replacement when either declaration is
         # incomplete instead of refusing to update an ambiguous document.
