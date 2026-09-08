@@ -4,7 +4,9 @@ function(dcc_source_package_ignore_files source_root output)
     # CPack matches absolute paths. Normalize both slash styles in the source
     # root before escaping regex metacharacters so Windows paths match the
     # same anchored patterns as POSIX paths.
-    string(REGEX REPLACE "([][+.*()^$?|])" "[\\1]" root_regex "${source_root}")
+    set(normalized_root "${source_root}")
+    string(REPLACE "\\" "/" normalized_root "${normalized_root}")
+    string(REGEX REPLACE "([][+.*()^$?|])" "[\\1]" root_regex "${normalized_root}")
     string(REPLACE "/" "${separator}" root_regex "${root_regex}")
     set(patterns
         "${separator}build${non_separator}*${separator}"
