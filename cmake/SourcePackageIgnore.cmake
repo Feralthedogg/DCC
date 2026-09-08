@@ -1,9 +1,11 @@
 function(dcc_source_package_ignore_files source_root output)
-    # CPack matches absolute paths. Escape the source root using character
-    # classes so generated CPack config needs no extra backslash escaping.
-    string(REGEX REPLACE "([][+.*()^$?|])" "[\\1]" root_regex "${source_root}")
     set(separator "[/\\\\]")
     set(non_separator "[^/\\\\]")
+    # CPack matches absolute paths. Normalize both slash styles in the source
+    # root before escaping regex metacharacters so Windows paths match the
+    # same anchored patterns as POSIX paths.
+    string(REGEX REPLACE "([][+.*()^$?|])" "[\\1]" root_regex "${source_root}")
+    string(REPLACE "/" "${separator}" root_regex "${root_regex}")
     set(patterns
         "${separator}build${non_separator}*${separator}"
         "${separator}CMakeFiles${separator}"
