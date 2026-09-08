@@ -2,36 +2,38 @@ function(dcc_source_package_ignore_files source_root output)
     # CPack matches absolute paths. Escape the source root using character
     # classes so generated CPack config needs no extra backslash escaping.
     string(REGEX REPLACE "([][+.*()^$?|])" "[\\1]" root_regex "${source_root}")
+    set(separator "[/\\\\]")
+    set(non_separator "[^/\\\\]")
     set(patterns
-        "/build[^/]*/"
-        "/CMakeFiles/"
-        "/CMakeCache[.]txt$"
-        "/cmake_install[.]cmake$"
-        "/install_manifest[.]txt$"
-        "/Testing/"
-        "/site/"
-        "/target/"
-        "/dist/"
-        "/[.]venv/"
-        "/compile_commands[.]json$"
-        "/__pycache__/"
+        "${separator}build${non_separator}*${separator}"
+        "${separator}CMakeFiles${separator}"
+        "${separator}CMakeCache[.]txt$"
+        "${separator}cmake_install[.]cmake$"
+        "${separator}install_manifest[.]txt$"
+        "${separator}Testing${separator}"
+        "${separator}site${separator}"
+        "${separator}target${separator}"
+        "${separator}dist${separator}"
+        "${separator}[.]venv${separator}"
+        "${separator}compile_commands[.]json$"
+        "${separator}__pycache__${separator}"
         "[.]pyc$"
-        "/[.]DS_Store$"
-        "/[.]env($|[.])"
-        "/[.]git/"
-        "/[.]git$"
-        "/[.]superpowers/"
-        "/[.]worktrees/"
-        "/include/dcc/sugar[.]h$"
-        "/include/dcc/sugar/"
-        "/include/dcc/app/legacy[.]h$"
-        "/include/dcc/rest/core[.]h$"
-        "/include/dcc/rest/core/"
-        "/include/dcc/rest/response_helpers[.]h$"
+        "${separator}[.]DS_Store$"
+        "${separator}[.]env($|[.])"
+        "${separator}[.]git${separator}"
+        "${separator}[.]git$"
+        "${separator}[.]superpowers${separator}"
+        "${separator}[.]worktrees${separator}"
+        "${separator}include${separator}dcc${separator}sugar[.]h$"
+        "${separator}include${separator}dcc${separator}sugar${separator}"
+        "${separator}include${separator}dcc${separator}app${separator}legacy[.]h$"
+        "${separator}include${separator}dcc${separator}rest${separator}core[.]h$"
+        "${separator}include${separator}dcc${separator}rest${separator}core${separator}"
+        "${separator}include${separator}dcc${separator}rest${separator}response_helpers[.]h$"
     )
     set(anchored)
     foreach(pattern IN LISTS patterns)
-        list(APPEND anchored "^${root_regex}(/.*)?${pattern}")
+        list(APPEND anchored "^${root_regex}(${separator}.*)?${pattern}")
     endforeach()
     set(${output} "${anchored}" PARENT_SCOPE)
 endfunction()

@@ -97,7 +97,7 @@ def main():
         summary.append(item)
     fixture_sources = sorted((ROOT / "tests").glob("*bench*.c"))
     fixture_sources.extend(sorted((ROOT / "tests/support").glob("benchmark*.h")))
-    metadata = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
+    metadata = {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in fixture_sources}
     cache = args.build_dir / "CMakeCache.txt" if args.build_dir else None
     build = {}

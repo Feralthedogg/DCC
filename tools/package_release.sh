@@ -35,7 +35,22 @@ if [ -z "$target" ]; then
     target=$(detect_target)
 fi
 
-python=${DCC_PYTHON:-python3}
+python=${DCC_PYTHON:-}
+if [ -n "$python" ] && ! command -v "$python" >/dev/null 2>&1 && [ ! -x "$python" ]; then
+    python=""
+fi
+if [ -z "$python" ]; then
+    for candidate in python3 python3.12 python312; do
+        if command -v "$candidate" >/dev/null 2>&1; then
+            python=$(command -v "$candidate")
+            break
+        fi
+    done
+fi
+if [ -z "$python" ]; then
+    echo "Python 3 interpreter is required for release packaging" >&2
+    exit 127
+fi
 cmake_version=$("$python" "$script_dir/release_version.py" --source "$source_dir")
 version=${DCC_RELEASE_VERSION:-${GITHUB_REF_NAME:-$cmake_version}}
 version=$("$python" "$script_dir/release_version.py" --source "$source_dir" --tag "$version")
