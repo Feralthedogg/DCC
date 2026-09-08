@@ -2,7 +2,7 @@
 
 # `<dcc/component.h>`
 
-Source: [`include/dcc/component.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/component.h)
+Source: [`include/dcc/component.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/component.h)
 
 ## `dcc_component_builder_build_array_json`
 

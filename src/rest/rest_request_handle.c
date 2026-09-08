@@ -39,6 +39,7 @@ dcc_status_t dcc_rest_request_handle_create(
     atomic_init(&request->references, caller_reference ? 2U : 1U);
     atomic_init(&request->terminal_claimed, false);
     atomic_init(&request->completed, false);
+    atomic_init(&request->cancel_requested, false);
     atomic_init(&request->callback_task, NULL);
     atomic_init(&request->caller_reference_released, !caller_reference);
     atomic_init(&request->async_request, NULL);
@@ -70,6 +71,11 @@ void dcc_rest_request_handle_attach(
     if (request != NULL) {
         atomic_store_explicit(&request->async_request, async_request, memory_order_release);
     }
+}
+
+void dcc_rest_request_handle_retain(dcc_rest_request_t *request) {
+    if (request != NULL)
+        (void)atomic_fetch_add_explicit(&request->references, 1U, memory_order_relaxed);
 }
 
 void dcc_rest_request_handle_release(dcc_rest_request_t *request) {
@@ -107,6 +113,9 @@ void dcc_rest_request_handle_finalize(
         return;
     }
 
+    /* A post-hook may drop the action's last reference (including after a
+     * callback destroys its caller reference). Keep finalization alive. */
+    dcc_rest_request_handle_retain(request);
     if (dcc_rest_terminal_result_clone(completion, &request->result) != DCC_OK) {
         request->fallback_result = (dcc_rest_result_t){
             .size = sizeof(request->fallback_result),
@@ -161,6 +170,7 @@ void dcc_rest_request_handle_finalize(
     {
         atomic_store_explicit(&request->completed, true, memory_order_release);
     }
+    dcc_rest_request_handle_release(request);
 }
 
 static int dcc_rest_request_delivery_active(const dcc_rest_request_t *request) {
@@ -301,12 +311,9 @@ dcc_status_t dcc_rest_request_cancel(dcc_rest_request_t *request) {
         return DCC_OK;
     }
 
+    atomic_store_explicit(&request->cancel_requested, true, memory_order_release);
     dcc_client_t *client = request->client;
-    dcc_rest_async_request_t *async_request = atomic_load_explicit(
-        &request->async_request,
-        memory_order_acquire
-    );
-    if (client == NULL || async_request == NULL) {
+    if (client == NULL) {
         return DCC_OK;
     }
 
@@ -314,6 +321,8 @@ dcc_status_t dcc_rest_request_cancel(dcc_rest_request_t *request) {
     size_t fd_count = 0U;
     int pending = 0;
     dcc_rest_lock(client);
+    dcc_rest_async_request_t *async_request = atomic_load_explicit(
+        &request->async_request, memory_order_acquire);
     if (!atomic_load_explicit(&request->terminal_claimed, memory_order_acquire)) {
         pending = dcc_rest_request_is_pending_locked(client, async_request);
         if (pending || dcc_rest_request_is_active_locked(client, async_request)) {

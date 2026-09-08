@@ -2,7 +2,7 @@
 
 # `<dcc/client.h>`
 
-Source: [`include/dcc/client.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/client.h)
+Source: [`include/dcc/client.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/client.h)
 
 ## `DCC_GATEWAY_INFO_HAS_SESSION_STATE`
 
@@ -12,12 +12,12 @@ Public macro `DCC_GATEWAY_INFO_HAS_SESSION_STATE`; arguments follow the owner he
 #define DCC_GATEWAY_INFO_HAS_SESSION_STATE ...
 ```
 
-## `dcc_client_destroy`
+## `dcc_client_create`
 
-@file include/dcc/client.h @brief Public DCC client declarations.
+@brief Creates a client from the supplied options. @param options Client options. size must cover at least the token field. @param out Receives the created client on success. @return DCC_OK on success, otherwise a status code describing the failure.
 
 ```c
-#ifndef DCC_CLIENT_H #define DCC_CLIENT_H #include <dcc/error.h> #include <dcc/error_details.h> #include <dcc/events.h> #include <dcc/export.h> #include <dcc/intents.h> #include <dcc/snowflake.h> #include <stddef.h> #include <stdint.h> #define DCC_GATEWAY_INFO_HAS_SESSION_STATE 1 #ifdef __cplusplus extern "C" { #endif typedef void (*dcc_log_fn)(dcc_log_level_t level, const char *message, void *user_data); typedef void (*dcc_client_error_fn)(dcc_client_t *client, const dcc_error_t *error, void *user_data); typedef struct dcc_client_options { size_t size; const char *token; dcc_intents_t intents; uint32_t shard_id; uint32_t shard_count; uint32_t rest_concurrency; uint32_t enable_cache; dcc_log_fn log_fn; void *log_user_data; const char *gateway_url; size_t cache_max_guilds; size_t cache_max_channels; size_t cache_max_roles; size_t cache_max_members; size_t cache_max_users; size_t cache_max_messages; size_t cache_max_voice_states; uint32_t gateway_max_concurrency; uint32_t infer_guild_id_from_channel; size_t rest_max_queued_requests; size_t rest_max_request_bytes; size_t rest_max_queued_bytes; size_t rest_max_active_bytes; size_t rest_max_response_bytes; size_t interaction_max_live_queues; size_t interaction_max_tombstones; uint64_t interaction_tombstone_ttl_ms; size_t interaction_max_actions_per_queue; size_t interaction_max_reserved_bytes_per_queue; size_t interaction_max_reserved_bytes_total; } dcc_client_options_t; typedef struct dcc_runtime_stats { size_t size; uint64_t tasks_spawned; uint64_t events_dispatched; } dcc_runtime_stats_t; typedef struct dcc_gateway_info { size_t size; const char *url; const char *resume_url; uint32_t recommended_shards; uint32_t max_concurrency; uint32_t remaining_identifies; uint32_t total_identifies; uint64_t reset_after_ms; uint64_t reset_at_ms; const char *session_id; uint64_t seq; uint32_t identify_delay_ms; dcc_status_t last_status; uint8_t has_seq; uint8_t can_resume; uint8_t task_running; uint8_t reconnect_requested; uint8_t reconnect_resume; } dcc_gateway_info_t; typedef struct dcc_gateway_request_guild_members_options { size_t size; dcc_snowflake_t guild_id; const char *query; uint32_t limit; uint8_t presences; const dcc_snowflake_t *user_ids; size_t user_id_count; const char *nonce; } dcc_gateway_request_guild_members_options_t; typedef struct dcc_gateway_presence_update { size_t size; const char * status; int64_t since_ms; uint8_t has_since; uint8_t afk; const char *activities_json; } dcc_gateway_presence_update_t; DCC_API dcc_status_t dcc_client_create(const dcc_client_options_t *options, dcc_client_t **out);
+DCC_API dcc_status_t dcc_client_create(const dcc_client_options_t *options, dcc_client_t **out);
 ```
 
 ## `dcc_client_destroy`

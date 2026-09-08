@@ -2,7 +2,7 @@
 
 # `<dcc/rest/guilds/scheduled_events.h>`
 
-Source: [`include/dcc/rest/guilds/scheduled_events.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/guilds/scheduled_events.h)
+Source: [`include/dcc/rest/guilds/scheduled_events.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/guilds/scheduled_events.h)
 
 ## `dcc_rest_create_guild_scheduled_event`
 

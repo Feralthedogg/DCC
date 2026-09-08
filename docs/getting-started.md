@@ -2,7 +2,9 @@
 
 ## Install
 
-Install LLAM 2.2.1 and DCC 2.0.2 into the same prefix, then verify the runtime:
+For the current development tree, build DCC 2.1.0 from source with LLAM 2.2.1
+or newer. The installer below fetches the latest published release, not
+unreleased 2.1.0. Install both libraries into the same prefix, then verify:
 
 ```sh
 sh dcc-install.sh --prefix "$HOME/.local" --install-llam

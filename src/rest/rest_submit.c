@@ -1,5 +1,6 @@
 #include "internal/client/dcc_client_state_internal.h"
 #include "internal/rest/dcc_rest_async_drain_internal.h"
+#include "internal/rest/dcc_rest_async_cancel_internal.h"
 #include "internal/rest/dcc_rest_async_queue_internal.h"
 #include "internal/rest/dcc_rest_async_request_internal.h"
 #include "internal/rest/dcc_rest_async_signal_internal.h"
@@ -141,14 +142,15 @@ static void dcc_rest_request_handle_release_unpublished(
     }
 }
 
-dcc_status_t dcc_rest_submit_operation_with_post_hook(
+static dcc_status_t dcc_rest_submit_core(
     dcc_client_t *client,
     const dcc_rest_request_desc_t *description,
     const char *operation,
     uint8_t sensitive_path,
     dcc_rest_request_post_hook_fn post_hook,
     void *post_hook_user_data,
-    dcc_rest_request_t **out_request
+    dcc_rest_request_t **out_request,
+    dcc_rest_request_t *existing_handle
 ) {
     if (out_request != NULL) {
         *out_request = NULL;
@@ -197,16 +199,20 @@ dcc_status_t dcc_rest_submit_operation_with_post_hook(
     }
 
     const int caller_reference = out_request != NULL;
-    dcc_rest_request_t *handle = NULL;
-    status = dcc_rest_request_handle_create(
-        client,
-        options.callback,
-        options.user_data,
-        post_hook,
-        post_hook_user_data,
-        (uint8_t)caller_reference,
-        &handle
-    );
+    dcc_rest_request_t *handle = existing_handle;
+    if (handle != NULL) {
+        dcc_rest_request_handle_retain(handle);
+    } else {
+        status = dcc_rest_request_handle_create(
+            client,
+            options.callback,
+            options.user_data,
+            post_hook,
+            post_hook_user_data,
+            (uint8_t)caller_reference,
+            &handle
+        );
+    }
     if (status != DCC_OK) {
         dcc_rest_resource_release_unpublished(client, resource_charge);
         dcc_rest_operation_end(client);
@@ -248,6 +254,13 @@ dcc_status_t dcc_rest_submit_operation_with_post_hook(
     }
 
     dcc_rest_lock(client);
+    /* Cancel and enqueue serialize here. A cancellation before attach is
+     * remembered on the logical handle, and cannot be lost during dispatch. */
+    if (atomic_load_explicit(&handle->cancel_requested, memory_order_acquire)) {
+        llam_fd_t ignored_fd = LLAM_INVALID_FD;
+        size_t ignored_count = 0U;
+        (void)dcc_rest_async_request_cancel(request, &ignored_fd, &ignored_count);
+    }
     dcc_rest_async_push_tail_locked(client, request);
     dcc_rest_async_request_t *rejected = NULL;
     status = dcc_rest_async_drain_admission_locked(client, request, &rejected);
@@ -264,6 +277,25 @@ dcc_status_t dcc_rest_submit_operation_with_post_hook(
     }
     dcc_rest_operation_end(client);
     return status;
+}
+
+dcc_status_t dcc_rest_submit_existing_handle(
+    dcc_client_t *client, const dcc_rest_request_desc_t *description,
+    const char *operation, uint8_t sensitive_path, dcc_rest_request_t *handle
+) {
+    if (handle == NULL) return DCC_ERR_INVALID_ARG;
+    return dcc_rest_submit_core(client, description, operation, sensitive_path,
+                                NULL, NULL, NULL, handle);
+}
+
+dcc_status_t dcc_rest_submit_operation_with_post_hook(
+    dcc_client_t *client, const dcc_rest_request_desc_t *description,
+    const char *operation, uint8_t sensitive_path,
+    dcc_rest_request_post_hook_fn post_hook, void *post_hook_user_data,
+    dcc_rest_request_t **out_request
+) {
+    return dcc_rest_submit_core(client, description, operation, sensitive_path,
+                                post_hook, post_hook_user_data, out_request, NULL);
 }
 
 dcc_status_t dcc_rest_submit_operation(

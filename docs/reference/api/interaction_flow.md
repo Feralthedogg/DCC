@@ -2,7 +2,7 @@
 
 # `<dcc/interaction_flow.h>`
 
-Source: [`include/dcc/interaction_flow.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/interaction_flow.h)
+Source: [`include/dcc/interaction_flow.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/interaction_flow.h)
 
 ## `dcc_flow_auto_defer`
 
@@ -44,6 +44,14 @@ Public DCC API declaration for `dcc_flow_defer_ephemeral`.
 DCC_API dcc_status_t dcc_flow_defer_ephemeral(dcc_interaction_flow_t *flow, dcc_rest_result_fn cb, void *user_data);
 ```
 
+## `dcc_flow_defer_ex`
+
+Queue-aware operation; accepted work completes once. NULL output auto-releases. Only default authentication and no audit reason are supported.
+
+```c
+DCC_API dcc_status_t dcc_flow_defer_ex( dcc_interaction_flow_t *flow, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+```
+
 ## `dcc_flow_defer_update`
 
 Public DCC API declaration for `dcc_flow_defer_update`.
@@ -68,12 +76,28 @@ Public DCC API declaration for `dcc_flow_edit_original`.
 DCC_API dcc_status_t dcc_flow_edit_original( dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, dcc_rest_result_fn cb, void *user_data);
 ```
 
+## `dcc_flow_edit_original_ex`
+
+Queue-aware operation; accepted work completes once. NULL output auto-releases. Only default authentication and no audit reason are supported.
+
+```c
+DCC_API dcc_status_t dcc_flow_edit_original_ex( dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+```
+
 ## `dcc_flow_followup`
 
 Public DCC API declaration for `dcc_flow_followup`.
 
 ```c
 DCC_API dcc_status_t dcc_flow_followup(dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, dcc_rest_result_fn cb, void *user_data);
+```
+
+## `dcc_flow_followup_ex`
+
+Queue-aware operation; accepted work completes once. NULL output auto-releases. Only default authentication and no audit reason are supported.
+
+```c
+DCC_API dcc_status_t dcc_flow_followup_ex( dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
 ```
 
 ## `dcc_flow_maybe_auto_defer`
@@ -90,6 +114,14 @@ Public DCC API declaration for `dcc_flow_reply`.
 
 ```c
 DCC_API dcc_status_t dcc_flow_reply(dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, dcc_rest_result_fn cb, void *user_data);
+```
+
+## `dcc_flow_reply_ex`
+
+Queue-aware operation; accepted work completes once. NULL output auto-releases. Only default authentication and no audit reason are supported.
+
+```c
+DCC_API dcc_status_t dcc_flow_reply_ex( dcc_interaction_flow_t *flow, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
 ```
 
 ## `dcc_flow_set_started_at`

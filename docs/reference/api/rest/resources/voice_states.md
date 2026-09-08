@@ -2,7 +2,7 @@
 
 # `<dcc/rest/resources/voice_states.h>`
 
-Source: [`include/dcc/rest/resources/voice_states.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/resources/voice_states.h)
+Source: [`include/dcc/rest/resources/voice_states.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/resources/voice_states.h)
 
 ## `dcc_rest_get_current_user_voice_state`
 

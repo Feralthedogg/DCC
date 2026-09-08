@@ -2,7 +2,7 @@
 
 # `<dcc/cluster/shard_types.h>`
 
-Source: [`include/dcc/cluster/shard_types.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/cluster/shard_types.h)
+Source: [`include/dcc/cluster/shard_types.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/cluster/shard_types.h)
 
 ## `DCC_CLUSTER_NO_SHARD_INDEX`
 

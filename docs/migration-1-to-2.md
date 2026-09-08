@@ -55,8 +55,12 @@ component grammar.
 Endpoint calls return an owned `dcc_rest_request_t *`. Completion is delivered
 as `dcc_rest_result_t`; callers cancel, wait, and destroy individual requests.
 Use `dcc_rest_submit()` for arbitrary routes. App REST mirrors, raw JSON
-overloads, callback/future suffix matrices, global bulk-cancel/wait controls,
-and `dcc_rest_response_t` are removed.
+overloads and callback/future suffix matrices are not the canonical endpoint API.
+`dcc_rest_response_t` and `dcc_rest_cb` remain public ABI names in
+`<dcc/rest/base.h>` for compatibility; standalone OAuth2 helpers still use
+`dcc_oauth2_cb(const dcc_rest_response_t *, void *)`. General REST endpoints and
+Context callbacks use `dcc_rest_result_fn` and `dcc_rest_result_t`, not that
+OAuth2 compatibility callback shape.
 
 ## Builders and records
 

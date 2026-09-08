@@ -29,6 +29,7 @@ struct dcc_rest_request {
     atomic_uint references;
     atomic_bool terminal_claimed;
     atomic_bool completed;
+    atomic_bool cancel_requested;
     _Atomic(llam_task_t *) callback_task;
     atomic_bool caller_reference_released;
     _Atomic(struct dcc_rest_async_request *) async_request;
@@ -60,6 +61,7 @@ void dcc_rest_request_handle_attach(
     struct dcc_rest_async_request *async_request
 );
 void dcc_rest_request_handle_release(dcc_rest_request_t *request);
+void dcc_rest_request_handle_retain(dcc_rest_request_t *request);
 void dcc_rest_request_handle_finalize(
     dcc_rest_request_t *request,
     const dcc_rest_terminal_completion_t *completion

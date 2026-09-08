@@ -2,7 +2,7 @@
 
 # `<dcc/autocomplete.h>`
 
-Source: [`include/dcc/autocomplete.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/autocomplete.h)
+Source: [`include/dcc/autocomplete.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/autocomplete.h)
 
 ## `DCC_AUTOCOMPLETE_BUILDER_INIT`
 

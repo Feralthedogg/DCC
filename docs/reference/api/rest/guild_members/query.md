@@ -2,7 +2,7 @@
 
 # `<dcc/rest/guild_members/query.h>`
 
-Source: [`include/dcc/rest/guild_members/query.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/guild_members/query.h)
+Source: [`include/dcc/rest/guild_members/query.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/guild_members/query.h)
 
 ## `dcc_rest_get_guild_member`
 

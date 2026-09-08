@@ -2,7 +2,7 @@
 
 # `<dcc/rest/guilds/audit_log.h>`
 
-Source: [`include/dcc/rest/guilds/audit_log.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/guilds/audit_log.h)
+Source: [`include/dcc/rest/guilds/audit_log.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/guilds/audit_log.h)
 
 ## `dcc_rest_get_guild_audit_log`
 

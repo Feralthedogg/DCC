@@ -2,7 +2,7 @@
 
 # `<dcc/rest/types/stage.h>`
 
-Source: [`include/dcc/rest/types/stage.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/types/stage.h)
+Source: [`include/dcc/rest/types/stage.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/types/stage.h)
 
 ## `DCC_STAGE_INSTANCE_PARAMS_INIT`
 

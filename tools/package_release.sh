@@ -31,32 +31,14 @@ detect_target() {
     printf '%s-%s\n' "$os_name" "$arch_name"
 }
 
-project_version() {
-    sed -n 's/^[[:space:]]*VERSION[[:space:]]\{1,\}\([0-9][0-9A-Za-z.+-]*\).*/\1/p' \
-        "$source_dir/CMakeLists.txt" | head -n 1
-}
-
 if [ -z "$target" ]; then
     target=$(detect_target)
 fi
 
-cmake_version=$(project_version)
+python=${DCC_PYTHON:-python3}
+cmake_version=$("$python" "$script_dir/release_version.py" --source "$source_dir")
 version=${DCC_RELEASE_VERSION:-${GITHUB_REF_NAME:-$cmake_version}}
-version=${version#v}
-if [ -z "$version" ]; then
-    echo "cannot determine release version" >&2
-    exit 1
-fi
-if [ "$cmake_version" = "2.0.2" ] && [ "$version" != "2.0.2" ]; then
-    echo "DCC 2 Stable packages require the exact version 2.0.2" >&2
-    exit 2
-fi
-version_base=${version%%-*}
-if [ "$version_base" != "$cmake_version" ] && [ "${DCC_ALLOW_VERSION_MISMATCH:-0}" != "1" ]; then
-    echo "release version $version does not match CMake project version $cmake_version" >&2
-    echo "update CMakeLists.txt or set DCC_ALLOW_VERSION_MISMATCH=1 for an explicit development package" >&2
-    exit 2
-fi
+version=$("$python" "$script_dir/release_version.py" --source "$source_dir" --tag "$version")
 
 case "$version" in
     *[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-]*|"")

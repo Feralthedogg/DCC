@@ -2,7 +2,7 @@
 
 # `<dcc/rest/emojis_stickers/message_search.h>`
 
-Source: [`include/dcc/rest/emojis_stickers/message_search.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/emojis_stickers/message_search.h)
+Source: [`include/dcc/rest/emojis_stickers/message_search.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/emojis_stickers/message_search.h)
 
 ## `dcc_rest_guild_message_search`
 

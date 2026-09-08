@@ -2,7 +2,7 @@
 
 # `<dcc/rest/resources/templates.h>`
 
-Source: [`include/dcc/rest/resources/templates.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/resources/templates.h)
+Source: [`include/dcc/rest/resources/templates.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/resources/templates.h)
 
 ## `dcc_rest_create_guild_template`
 

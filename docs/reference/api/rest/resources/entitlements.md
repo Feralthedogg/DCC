@@ -2,7 +2,7 @@
 
 # `<dcc/rest/resources/entitlements.h>`
 
-Source: [`include/dcc/rest/resources/entitlements.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/resources/entitlements.h)
+Source: [`include/dcc/rest/resources/entitlements.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/resources/entitlements.h)
 
 ## `dcc_rest_consume_entitlement`
 

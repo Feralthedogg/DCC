@@ -1,6 +1,12 @@
 #include "internal/app/dcc_app_interaction_queue_internal.h"
 #include "internal/interaction_flow/dcc_interaction_flow_internal.h"
 
+dcc_status_t dcc_flow_defer_ex(
+    dcc_interaction_flow_t *flow, const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request) {
+  return dcc_app_interaction_queue_defer_ex(flow, options, out_request);
+}
+
 dcc_status_t dcc_flow_defer(dcc_interaction_flow_t *flow, dcc_rest_result_fn cb,
                             void *user_data) {
   if (flow != NULL && flow->queue != NULL)

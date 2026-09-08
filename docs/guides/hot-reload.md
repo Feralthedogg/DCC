@@ -54,13 +54,34 @@ Candidate workers can receive a small percentage of requests before promotion.
 The canary policy tracks failures and promotes only after the configured window
 stays healthy.
 
-```c
-dcc_hot_reload_canary_options_t canary =
-    DCC_HOT_RELOAD_CANARY_OPTIONS_DEFAULT();
+Use the installed initializer and option structs. This configuration function
+is compiled from `examples/docs/guide_configuration.c`; it does not start a
+worker. Pass the returned options to the
+[hot-reload lifecycle API](../reference/api/hot_reload/lifecycle.md).
 
-dcc_hot_reload_options_t options =
-    DCC_HOT_RELOAD_ISOLATED_CANARY_OPTIONS("dcc_hot_reload_worker", canary);
+<!-- DCC_DOC_SNIPPET_BEGIN(hot-reload-canary) -->
+```c
+#include <dcc/hot_reload.h>
+
+/* worker_path must remain valid while the caller uses these options. */
+dcc_hot_reload_options_t dcc_example_canary_options(const char *worker_path) {
+    dcc_hot_reload_canary_options_t canary;
+    dcc_hot_reload_canary_options_init(&canary);
+    canary.canary_percent = 5U;
+    canary.promote_after_ms = 30000U;
+    dcc_hot_reload_options_t options = {
+        .size = sizeof(options),
+        .backend = DCC_HOT_RELOAD_BACKEND_ISOLATED_WORKER,
+        .worker_path = worker_path,
+        .worker_health_timeout_ms = 5000U,
+        .worker_drain_timeout_ms = 1000U,
+        .worker_canary_enabled = 1U,
+        .worker_canary_options = canary,
+    };
+    return options;
+}
 ```
+<!-- DCC_DOC_SNIPPET_END(hot-reload-canary) -->
 
 ## Host CLI
 

@@ -2,7 +2,7 @@
 
 # `<dcc/app/context.h>`
 
-Source: [`include/dcc/app/context.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/app/context.h)
+Source: [`include/dcc/app/context.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/app/context.h)
 
 ## `dcc_ctx_add_author_role`
 
@@ -156,6 +156,14 @@ Public DCC API declaration for `dcc_ctx_defer_ephemeral`.
 DCC_API dcc_status_t dcc_ctx_defer_ephemeral(dcc_ctx_t *ctx, dcc_rest_result_fn cb, void *user_data);
 ```
 
+## `dcc_ctx_defer_ex`
+
+Queue-aware operation; accepted work completes once. NULL output auto-releases. Only default authentication and no audit reason are supported.
+
+```c
+DCC_API dcc_status_t dcc_ctx_defer_ex( dcc_ctx_t *ctx, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
+```
+
 ## `dcc_ctx_delete_original`
 
 Public DCC API declaration for `dcc_ctx_delete_original`.
@@ -170,6 +178,14 @@ Public DCC API declaration for `dcc_ctx_edit_original`.
 
 ```c
 DCC_API dcc_status_t dcc_ctx_edit_original(dcc_ctx_t *ctx, const dcc_message_builder_t *message, dcc_rest_result_fn cb, void *user_data);
+```
+
+## `dcc_ctx_edit_original_ex`
+
+Queue-aware operation; accepted work completes once. NULL output auto-releases. Only default authentication and no audit reason are supported.
+
+```c
+DCC_API dcc_status_t dcc_ctx_edit_original_ex( dcc_ctx_t *ctx, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
 ```
 
 ## `dcc_ctx_fail`
@@ -218,6 +234,14 @@ Public DCC API declaration for `dcc_ctx_followup_ephemeral_text`.
 
 ```c
 DCC_API dcc_status_t dcc_ctx_followup_ephemeral_text(dcc_ctx_t *ctx, const char *content, dcc_rest_result_fn cb, void *user_data);
+```
+
+## `dcc_ctx_followup_ex`
+
+Queue-aware operation; accepted work completes once. NULL output auto-releases. Only default authentication and no audit reason are supported.
+
+```c
+DCC_API dcc_status_t dcc_ctx_followup_ex( dcc_ctx_t *ctx, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
 ```
 
 ## `dcc_ctx_followup_text`
@@ -514,6 +538,14 @@ Public DCC API declaration for `dcc_ctx_reply_error`.
 
 ```c
 DCC_API dcc_status_t dcc_ctx_reply_error(dcc_ctx_t *ctx, const char *title, const char *description, dcc_rest_result_fn cb, void *user_data);
+```
+
+## `dcc_ctx_reply_ex`
+
+Queue-aware operation; accepted work completes once. NULL output auto-releases. Only default authentication and no audit reason are supported.
+
+```c
+DCC_API dcc_status_t dcc_ctx_reply_ex( dcc_ctx_t *ctx, const dcc_message_builder_t *message, const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request);
 ```
 
 ## `dcc_ctx_reply_success`

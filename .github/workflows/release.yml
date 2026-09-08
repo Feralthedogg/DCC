@@ -7,13 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example v2.0.2
-        required: false
-        default: v2.0.2
+        description: Semantic version tag matching CMake VERSION (for example v2.1.0-rc.1)
+        required: true
         type: string
   push:
     tags:
-      - 'v2.0.2'
+      - 'v[0-9]*.[0-9]*.[0-9]*'
 
 concurrency:
   group: release-${{ github.ref }}
@@ -74,15 +73,12 @@ jobs:
           vcpkg install openssl:x64-windows
           "DCC_WINDOWS_CMAKE_TOOLCHAIN=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" >> $env:GITHUB_ENV
 
-      - name: Validate Stable release identity
+      - name: Validate release identity against source
         shell: bash
         env:
           DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
         run: |
-          test "$DCC_RELEASE_VERSION" = "v2.0.2" || {
-            echo "release identity must be exactly v2.0.2" >&2
-            exit 1
-          }
+          python3 DCC/tools/release_version.py --source DCC --tag "$DCC_RELEASE_VERSION"
 
       - name: Build, test, and package POSIX
         if: runner.os != 'Windows'
@@ -197,20 +193,29 @@ jobs:
           }
           case "$(uname -s)" in
             FreeBSD)
-              retry sudo pkg install -y cmake openssl pkgconf
+              retry sudo pkg install -y cmake openssl pkgconf python3
               ;;
             OpenBSD)
               sudo sh -c 'echo https://cdn.openbsd.org/pub/OpenBSD > /etc/installurl'
               retry sudo pkg_add cmake pkgconf
+              retry sudo pkg_add 'python%3.11'
               ;;
             NetBSD)
-              retry sudo pkgin -y install cmake openssl pkgconf
+              retry sudo pkgin -y install cmake openssl pkgconf python312
               ;;
           esac
           command -v cc
           command -v cmake
+          for candidate in python3 python3.12; do
+            if command -v "$candidate" >/dev/null 2>&1; then
+              echo "DCC_PYTHON=$(command -v "$candidate")" >> "$GITHUB_ENV"
+              break
+            fi
+          done
 
       - name: Build and package BSD
+        env:
+          DCC_RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name || 'dev' }}
         run: |
           set -eu
           extra_args="-DDCC_WITH_OPUS=OFF -DDCC_BUILD_EXAMPLES=OFF -DDCC_BUILD_TESTS=OFF"
@@ -218,9 +223,7 @@ jobs:
             FreeBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/local" ;;
             NetBSD) extra_args="$extra_args -DOPENSSL_ROOT_DIR=/usr/pkg" ;;
           esac
-          DCC_RELEASE_VERSION="${{ github.event.inputs.version || github.ref_name || 'dev' }}" \
-            DCC_ALLOW_VERSION_MISMATCH=1 \
-            DCC_SKIP_RELEASE_TESTS=1 \
+          DCC_SKIP_RELEASE_TESTS=1 \
             DCC_BUILD_PARALLEL=2 \
             DCC_LLAM_USE_SUBDIRECTORY=ON \
             DCC_BUNDLE_LLAM=OFF \
@@ -250,6 +253,15 @@ jobs:
       attestations: write
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Validate and classify publication identity
+        id: identity
+        env:
+          RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name }}
+        run: |
+          python3 tools/release_version.py --source . --tag "$RELEASE_VERSION"
+          prerelease=$(python3 tools/release_version.py --source . --tag "$RELEASE_VERSION" --prerelease)
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
 
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
@@ -405,7 +417,7 @@ jobs:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.event.inputs.version }}
           name: DCC ${{ github.event.inputs.version || github.ref_name }}
           body_path: release-artifacts/RELEASE_NOTES.md
-          prerelease: false
+          prerelease: ${{ steps.identity.outputs.prerelease == 'true' }}
           fail_on_unmatched_files: true
           files: |
             release-artifacts/*.tar.gz

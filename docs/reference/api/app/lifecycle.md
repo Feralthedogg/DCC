@@ -2,7 +2,7 @@
 
 # `<dcc/app/lifecycle.h>`
 
-Source: [`include/dcc/app/lifecycle.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/app/lifecycle.h)
+Source: [`include/dcc/app/lifecycle.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/app/lifecycle.h)
 
 ## `dcc_app_client`
 
@@ -18,6 +18,14 @@ Creates an application that owns its client until destruction.
 
 ```c
 DCC_API dcc_status_t dcc_app_create(const dcc_app_options_t *options, dcc_app_t **out);
+```
+
+## `dcc_app_destroy`
+
+Stops and destroys an application; null is accepted. Returns DCC_ERR_STATE without mutation when called from any managed LLAM task, an App-owned callback or cleanup, or any REST terminal callback running on the App's client. Such callers should request dcc_app_stop() and let the owning unmanaged thread destroy the application after the task or callback returns. DCC_OK means the application was consumed. Any non-OK result leaves the application alive and owned by the caller so destruction may be retried.
+
+```c
+DCC_API dcc_status_t dcc_app_destroy(dcc_app_t *app);
 ```
 
 ## `dcc_app_run`
@@ -45,14 +53,6 @@ DCC_API dcc_status_t dcc_app_start(dcc_app_t *app);
 ```
 
 ## `dcc_app_stop`
-
-Stops and destroys an application; null is accepted. Returns DCC_ERR_STATE without mutation when called from any managed LLAM task, an App-owned callback or cleanup, or any REST terminal callback running on the App's client. Such callers should request dcc_app_stop() and let the owning unmanaged thread destroy the application after the task or callback returns. DCC_OK means the application was consumed. Any non-OK result leaves the application alive and owned by the caller so destruction may be retried.
-
-```c
-DCC_API dcc_status_t dcc_app_destroy(dcc_app_t *app);
-```
-
-## `dcc_app_wait`
 
 Requests application shutdown without waiting for callbacks or schedules. This operation is idempotent and may be called from any App-owned callback, including scheduled task callbacks. The owner must subsequently call dcc_app_wait() or dcc_app_destroy() to join and release schedule workers.
 

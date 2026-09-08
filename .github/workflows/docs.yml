@@ -22,6 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
+      - name: Checkout LLAM
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          repository: ${{ github.repository_owner }}/LLAM
+          ref: 7265b339a9364502e1e537a3aec072939e2bdcf9 # v2.2.1
+          path: LLAM
+
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.13'
@@ -29,7 +36,27 @@ jobs:
           cache-dependency-path: docs/requirements.txt
 
       - name: Install documentation dependencies
-        run: python -m pip install -r docs/requirements.txt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev liburing-dev ninja-build
+          python -m pip install -r docs/requirements.txt
+
+      - name: Check generated examples
+        run: python tools/sync_doc_examples.py --check
+
+      - name: Build installed-package example
+        run: |
+          cmake -S . -B build/docs-package -G Ninja \
+            -DDCC_LLAM_USE_SUBDIRECTORY=ON \
+            -DDCC_LLAM_ROOT="${{ github.workspace }}/LLAM" \
+            -DDCC_BUNDLE_LLAM=ON \
+            -DDCC_BUILD_TOOLS=OFF \
+            -DDCC_WITH_OPUS=OFF
+          cmake --build build/docs-package --target dcc
+          cmake --install build/docs-package --prefix build/docs-install
+          cmake -S examples/docs -B build/docs-example -G Ninja \
+            -DCMAKE_PREFIX_PATH="$PWD/build/docs-install"
+          cmake --build build/docs-example
 
       - name: Build documentation
         run: mkdocs build --strict

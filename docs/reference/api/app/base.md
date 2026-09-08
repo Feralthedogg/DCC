@@ -2,14 +2,14 @@
 
 # `<dcc/app/base.h>`
 
-Source: [`include/dcc/app/base.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/app/base.h)
+Source: [`include/dcc/app/base.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/app/base.h)
 
 ## `dcc_app_on_error`
 
-Receives one borrowed structured App error. The view and all pointed-to data remain valid only until the callback returns. Replacing or clearing an observer does not revoke a callback that another thread already copied, so old user data must outlive in-flight calls. The observer may clear or replace itself. App destruction from this callback is rejected; request stop and destroy from an owner thread.
+Installs or clears the App structured error observer. (NULL, NULL) clears the observer. A NULL callback with non-NULL user data is invalid. Telemetry registration is independent from default responses.
 
 ```c
-typedef void (*dcc_app_error_fn)( dcc_app_t *app, const dcc_error_t *error, void *user_data ); DCC_API dcc_status_t dcc_app_on_error( dcc_app_t *app, dcc_app_error_fn handler, void *user_data );
+DCC_API dcc_status_t dcc_app_on_error( dcc_app_t *app, dcc_app_error_fn handler, void *user_data );
 ```
 
 ## `dcc_app_use_default_error_responses`

@@ -299,17 +299,25 @@ depend on.
 
 ## Process Shutdown And Presets
 
-`DCC_RUN_APP*`, `DCC_*_MAIN`, and the bot run aliases install SIGINT/SIGTERM
-handlers on POSIX and console-control handlers on Windows. Signal handlers only
-wake a monitor thread; `dcc_app_stop()` and cleanup execute outside signal
-context. Lower-level hosts can call `dcc_app_run_with_signals()` or
-`dcc_app_run_defined_with_signals()` directly.
+The installed `<dcc/bot.h>` entrypoints are `DCC_BOT_MAIN(...)` for production
+and `DCC_DEV_BOT_MAIN(...)` for development, with their `_WITH` variants for
+explicit configuration. Both delegate to `dcc_bot_run`, which owns the App
+through cleanup. Default bot configuration enables signal handling and default
+error responses. `handle_signals = 0U` opts out for an embedding host.
 
-Use `DCC_BOT(...)`, `DCC_GUILD_BOT(...)`, or `DCC_PROD_APP(...)` in deployed
-processes. These presets auto-defer and provide default errors but never sync
-commands on READY. Use `DCC_DEV_BOT(...)` and `DCC_DEV_GUILD_BOT(...)` only in
-development. Production command changes should pass an explicit
-`dcc_command_sync --plan` review before `--apply`.
+With signal handling enabled, SIGINT/SIGTERM on POSIX and console-control
+handlers on Windows wake a monitor; `dcc_app_stop()` and cleanup run outside
+signal context. Lower-level hosts can call `dcc_app_run_with_signals(app)`, or
+manage `dcc_app_start`, `dcc_app_stop`, `dcc_app_wait`, and `dcc_app_destroy`
+explicitly. Check lifecycle status and do not release the App while its runtime
+or callbacks still use it. See the [lifecycle contract](reference/api/app/lifecycle.md).
+
+Production Bot mode disables command sync on READY. Development mode loads
+`.env` and enables one-time command reconciliation on READY, so keep it out of
+deployed processes. Configure guild scope and auto-defer explicitly through
+`dcc_app_options_t` when needed; the old Sugar bot/app presets are not installed.
+Production command changes should pass an explicit `dcc_command_sync --plan`
+review before `--apply`.
 
 ## Wait Policies
 

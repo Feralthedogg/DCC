@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(dcc
-    VERSION 2.0.2
+    VERSION 2.1.0
     DESCRIPTION "Discord C Client"
     LANGUAGES C
 )
@@ -2012,6 +2012,25 @@ if(DCC_BUILD_TESTS)
     endif()
     enable_language(CXX)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME dcc_release_version_tests
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_release_version.py)
+    add_test(NAME dcc_api_reference_generator_tests
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_generate_api_reference.py)
+    add_test(NAME dcc_benchmark_clock_tests
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_benchmark_clock.py)
+    add_test(NAME dcc_source_package_metadata_tests
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_source_package.py
+            --config ${CMAKE_CURRENT_BINARY_DIR}/CPackSourceConfig.cmake
+            --cpack ${CMAKE_CPACK_COMMAND})
+    add_test(NAME dcc_benchmark_runner_smoke
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_run_benchmarks.py)
+    foreach(test_name IN ITEMS json_gateway_reuse_smoke request_allocation_smoke)
+        add_executable(dcc_${test_name} tests/${test_name}.c)
+        dcc_target_use_private_headers(dcc_${test_name})
+        target_link_libraries(dcc_${test_name} PRIVATE dcc::dcc)
+        dcc_target_enable_sanitizers(dcc_${test_name})
+        add_test(NAME dcc_${test_name} COMMAND dcc_${test_name})
+    endforeach()
     dcc_resolve_llam_include(DCC_V2_SURFACE_LLAM_INCLUDE)
     add_test(
         NAME dcc_v2_surface_audit
@@ -2295,6 +2314,15 @@ if(DCC_BUILD_TESTS)
     add_executable(dcc_app_windows_include_order_smoke tests/app_windows_include_order_smoke.c)
     target_link_libraries(dcc_app_windows_include_order_smoke PRIVATE dcc::dcc)
     dcc_target_use_private_headers(dcc_app_windows_include_order_smoke)
+
+    add_executable(dcc_interaction_request_smoke
+        tests/interaction_request_smoke.c
+        tests/support/http_smoke_server.c
+    )
+    target_link_libraries(dcc_interaction_request_smoke PRIVATE dcc::dcc)
+    dcc_target_use_private_headers(dcc_interaction_request_smoke)
+    dcc_target_enable_sanitizers(dcc_interaction_request_smoke)
+    add_test(NAME dcc_interaction_request_smoke COMMAND dcc_interaction_request_smoke)
 
     add_executable(dcc_interaction_flow_smoke
         tests/interaction_flow_smoke.c
@@ -3046,7 +3074,7 @@ if(DCC_BUILD_TESTS)
         set_tests_properties(dcc_doctor_help PROPERTIES PASS_REGULAR_EXPRESSION "--require-dave")
         add_test(NAME dcc_doctor_json COMMAND dcc_doctor --json)
         set_tests_properties(dcc_doctor_json PROPERTIES
-            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"2.0.2\",\"dcc_version_ok\":true"
+            PASS_REGULAR_EXPRESSION "\"dcc_version\":\"${PROJECT_VERSION}\",\"dcc_version_ok\":true"
         )
         add_test(NAME dcc_doctor_require_token COMMAND dcc_doctor --json --require-token)
         set_tests_properties(dcc_doctor_require_token PROPERTIES
@@ -3789,6 +3817,13 @@ if(DCC_BUILD_TESTS)
 
     if(Python3_Interpreter_FOUND)
         add_test(
+            NAME dcc_doc_examples_sync
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/sync_doc_examples.py --check
+        )
+        set_tests_properties(dcc_doc_examples_sync PROPERTIES
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+        add_test(
             NAME dcc_gateway_fast_path_audit
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/audit_gateway_fast_path.py
         )
@@ -3949,6 +3984,28 @@ if(DCC_BUILD_TESTS)
 endif()
 
 if(DCC_BUILD_BENCHMARKS)
+    if(NOT WIN32)
+        add_executable(dcc_operation_bench tests/operation_bench.c)
+        dcc_target_use_private_headers(dcc_operation_bench)
+        target_link_libraries(dcc_operation_bench PRIVATE dcc::dcc)
+        dcc_target_enable_sanitizers(dcc_operation_bench)
+    endif()
+    add_executable(dcc_runtime_bench tests/runtime_bench.c)
+    dcc_target_use_private_headers(dcc_runtime_bench)
+    target_link_libraries(dcc_runtime_bench PRIVATE dcc::dcc)
+    dcc_target_enable_sanitizers(dcc_runtime_bench)
+    if(DCC_BUILD_TESTS)
+        add_test(NAME dcc_runtime_benchmark_report_smoke
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/run_benchmarks.py
+                --repeat 1 -- $<TARGET_FILE:dcc_runtime_bench>)
+        set_tests_properties(dcc_runtime_benchmark_report_smoke PROPERTIES
+            ENVIRONMENT "DCC_BENCH_ITERS=10")
+        if(TARGET dcc_operation_bench)
+            add_test(NAME dcc_operation_benchmark_report_smoke
+                COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/run_benchmarks.py
+                    --repeat 1 -- $<TARGET_FILE:dcc_operation_bench>)
+        endif()
+    endif()
     add_executable(dcc_json_gateway_bench tests/json_gateway_bench.c)
     dcc_target_use_private_headers(dcc_json_gateway_bench)
     target_link_libraries(dcc_json_gateway_bench PRIVATE dcc::dcc)
@@ -4197,6 +4254,7 @@ install(
         PATTERN "*.h"
         PATTERN "*.sh"
         PATTERN "Makefile"
+        PATTERN "CMakeLists.txt"
         PATTERN "README.md"
 )
 
@@ -4248,28 +4306,6 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
 set(CPACK_PACKAGE_VENDOR "DCC")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-set(CPACK_SOURCE_IGNORE_FILES
-    "/build[^/]*/"
-    "/CMakeFiles/"
-    "/CMakeCache[.]txt$"
-    "/cmake_install[.]cmake$"
-    "/install_manifest[.]txt$"
-    "/Testing/"
-    "/site/"
-    "/target/"
-    "/dist/"
-    "/[.]venv/"
-    "/compile_commands[.]json$"
-    "/__pycache__/"
-    "[.]pyc$"
-    "/[.]DS_Store$"
-    "/[.]env($|[.])"
-    "/[.]git/"
-    "/include/dcc/sugar[.]h$"
-    "/include/dcc/sugar/"
-    "/include/dcc/app/legacy[.]h$"
-    "/include/dcc/rest/core[.]h$"
-    "/include/dcc/rest/core/"
-    "/include/dcc/rest/response_helpers[.]h$"
-)
+include(cmake/SourcePackageIgnore.cmake)
+dcc_source_package_ignore_files("${CMAKE_CURRENT_SOURCE_DIR}" CPACK_SOURCE_IGNORE_FILES)
 include(CPack)

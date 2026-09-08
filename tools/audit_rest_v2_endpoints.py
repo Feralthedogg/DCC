@@ -4208,7 +4208,7 @@ def main() -> int:
         return 0
 
     cmake_text = (root / "CMakeLists.txt").read_text(encoding="utf-8")
-    if "VERSION 2.0.2" in cmake_text:
+    if re.search(r"\bVERSION\s+2\.[0-9]+\.[0-9]+\b", cmake_text):
         expected_generic = {
             "dcc_rest_firewall_attach", "dcc_rest_firewall_check",
             "dcc_rest_firewall_create", "dcc_rest_firewall_decision_string",

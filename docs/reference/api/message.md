@@ -2,7 +2,7 @@
 
 # `<dcc/message.h>`
 
-Source: [`include/dcc/message.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/message.h)
+Source: [`include/dcc/message.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/message.h)
 
 ## `DCC_ALLOWED_MENTIONS_BUILDER_INIT`
 

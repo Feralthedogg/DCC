@@ -11,6 +11,7 @@ import re
 import sys
 
 from generate_api_reference import installed_headers
+from release_version import project_version
 
 
 def digest(value: str) -> str:
@@ -22,6 +23,7 @@ def normalized(value: str) -> str:
 
 
 def artifacts(source: Path) -> dict[Path, str]:
+    version = project_version(source)
     declarations = []
     functions = []
     inline = []
@@ -90,15 +92,15 @@ def artifacts(source: Path) -> dict[Path, str]:
                              "macros": sorted(macro_names)})
     key = lambda row: (row.get("name", ""), row.get("owner", ""))
     payloads = {
-        "api_v2_declarations.json": {"schema": 1, "version": "2.0.2", "declarations": sorted(declarations, key=key)},
-        "api_v2_function_inventory.json": {"schema": 1, "version": "2.0.2", "functions": sorted(functions, key=key)},
-        "api_v2_inline_api.json": {"schema": 1, "version": "2.0.2", "inline": sorted(inline, key=key)},
-        "api_v2_types.json": {"schema": 1, "version": "2.0.2", "types": sorted(types, key=key)},
-        "api_v2_records.json": {"schema": 1, "version": "2.0.2", "records": sorted(records, key=key)},
-        "api_v2_macro_sources.json": {"schema": 1, "version": "2.0.2", "macros": sorted(macros, key=key)},
-        "api_v2_header_reachability.json": {"schema": 1, "version": "2.0.2", "headers": sorted(reachability, key=lambda row: row["header"])},
+        "api_v2_declarations.json": {"schema": 1, "version": version, "declarations": sorted(declarations, key=key)},
+        "api_v2_function_inventory.json": {"schema": 1, "version": version, "functions": sorted(functions, key=key)},
+        "api_v2_inline_api.json": {"schema": 1, "version": version, "inline": sorted(inline, key=key)},
+        "api_v2_types.json": {"schema": 1, "version": version, "types": sorted(types, key=key)},
+        "api_v2_records.json": {"schema": 1, "version": version, "records": sorted(records, key=key)},
+        "api_v2_macro_sources.json": {"schema": 1, "version": version, "macros": sorted(macros, key=key)},
+        "api_v2_header_reachability.json": {"schema": 1, "version": version, "headers": sorted(reachability, key=lambda row: row["header"])},
         "api_v2_package_contract.json": {
-            "schema": 1, "version": "2.0.2", "cmake_package": "dcc",
+            "schema": 1, "version": version, "cmake_package": "dcc",
             "target": "dcc::dcc", "c_standard": 11,
             "llam_minimum": "2.2.1", "llam_abi_major": 2,
             "pkg_config": {"module": "dcc", "name": "DCC"},

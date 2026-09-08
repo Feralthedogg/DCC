@@ -2,7 +2,7 @@
 
 # `<dcc/events/wait/events.h>`
 
-Source: [`include/dcc/events/wait/events.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/events/wait/events.h)
+Source: [`include/dcc/events/wait/events.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/events/wait/events.h)
 
 ## `dcc_client_wait_for_event`
 

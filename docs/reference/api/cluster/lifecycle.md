@@ -2,7 +2,7 @@
 
 # `<dcc/cluster/lifecycle.h>`
 
-Source: [`include/dcc/cluster/lifecycle.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/cluster/lifecycle.h)
+Source: [`include/dcc/cluster/lifecycle.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/cluster/lifecycle.h)
 
 ## `dcc_cluster_create`
 

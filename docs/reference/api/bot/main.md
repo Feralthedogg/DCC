@@ -2,14 +2,14 @@
 
 # `<dcc/bot/main.h>`
 
-Source: [`include/dcc/bot/main.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/bot/main.h)
+Source: [`include/dcc/bot/main.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/bot/main.h)
 
 ## `DCC_BOT_CONFIG`
 
-Initializes the canonical blocking Bot runner configuration.
+Returns the default Bot runner configuration by value.
 
 ```c
-#define DCC_BOT_CONFIG_INIT \ {sizeof(dcc_bot_config_t), DCC_BOT_CONFIG_VERSION, NULL, \ "DISCORD_TOKEN", 1U, 1U} static inline dcc_bot_config_t DCC_BOT_CONFIG(void) { dcc_bot_config_t value = DCC_BOT_CONFIG_INIT; return value; }
+static inline dcc_bot_config_t DCC_BOT_CONFIG(void) { dcc_bot_config_t value = DCC_BOT_CONFIG_INIT; return value; }
 ```
 
 ## `DCC_BOT_CONFIG_INIT`

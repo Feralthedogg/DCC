@@ -2,7 +2,7 @@
 
 # `<dcc/rest/threads/archives.h>`
 
-Source: [`include/dcc/rest/threads/archives.h`](https://github.com/Feralthedogg/DCC/blob/v2.0.2/include/dcc/rest/threads/archives.h)
+Source: [`include/dcc/rest/threads/archives.h`](https://github.com/Feralthedogg/DCC/blob/main/include/dcc/rest/threads/archives.h)
 
 ## `dcc_rest_get_active_threads`
 

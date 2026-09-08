@@ -35,7 +35,15 @@ typedef struct dcc_app_interaction_action {
   size_t reserved_bytes;
   dcc_rest_result_fn callback;
   void *user_data;
+  dcc_rest_call_options_t options;
+  dcc_rest_request_t *request;
+  uint8_t caller_reference;
 } dcc_app_interaction_action_t;
+
+static void dcc_app_interaction_queue_result(
+    dcc_client_t *client, const dcc_rest_result_t *result, void *user_data);
+static void dcc_app_interaction_queue_post_result(
+    dcc_client_t *client, const dcc_rest_result_t *result, void *user_data);
 
 #if defined(_WIN32)
 typedef CRITICAL_SECTION dcc_app_interaction_mutex_t;
@@ -178,7 +186,11 @@ dcc_app_interaction_action_free(dcc_app_interaction_action_t *action) {
     if (action->path != NULL)
       dcc_endpoint_secure_zero(action->path, strlen(action->path) + 1U);
     free(action->path);
+    if (action->body != NULL &&
+        (action->options.flags & DCC_REST_CALL_FLAG_SENSITIVE_REQUEST_BODY) != 0U)
+      dcc_endpoint_secure_zero(action->body, action->body_len);
     free(action->body);
+    dcc_rest_request_handle_release(action->request);
     free(action);
   }
 }
@@ -187,7 +199,7 @@ static dcc_status_t dcc_app_interaction_action_measure(
     dcc_app_interaction_action_t *action) {
   if (action == NULL || action->path == NULL)
     return DCC_ERR_INVALID_ARG;
-  size_t charge = sizeof(*action);
+  size_t charge = sizeof(*action) + sizeof(dcc_rest_request_t);
   size_t path_bytes = strlen(action->path) + 1U;
   size_t body_bytes = action->body != NULL ? action->body_len + 1U : 0U;
   if (path_bytes > SIZE_MAX - charge ||
@@ -195,6 +207,27 @@ static dcc_status_t dcc_app_interaction_action_measure(
     return DCC_ERR_RESOURCE_LIMIT;
   action->reserved_bytes = charge + path_bytes + body_bytes;
   return DCC_OK;
+}
+
+/* Called with the queue lock held. Charge retained handle storage before
+ * allocating it; failure leaves neither a reservation nor a handle behind. */
+static dcc_status_t dcc_app_interaction_action_admit_storage(
+    dcc_app_interaction_action_t *action) {
+  dcc_status_t status = dcc_app_interaction_action_measure(action);
+  if (status == DCC_OK)
+    status = dcc_app_interaction_action_reserve(action->queue,
+                                                action->reserved_bytes);
+  if (status != DCC_OK)
+    return status;
+  if (action->options.size == 0U)
+    action->options = (dcc_rest_call_options_t)DCC_REST_CALL_OPTIONS_INIT;
+  status = dcc_rest_request_handle_create(
+      action->queue->client, dcc_app_interaction_queue_result, action,
+      dcc_app_interaction_queue_post_result, action, action->caller_reference,
+      &action->request);
+  if (status != DCC_OK)
+    dcc_app_interaction_action_release(action->queue, action->reserved_bytes);
+  return status;
 }
 
 dcc_app_interaction_queue_t *
@@ -413,9 +446,6 @@ void dcc_app_interaction_queue_release_timer(
 
 static dcc_status_t
 dcc_app_interaction_queue_submit_head(dcc_app_interaction_queue_t *queue);
-static void dcc_app_interaction_queue_post_result(
-    dcc_client_t *client, const dcc_rest_result_t *result, void *user_data);
-
 static void dcc_app_interaction_queue_result(dcc_client_t *client,
                                              const dcc_rest_result_t *result,
                                              void *user_data) {
@@ -448,14 +478,20 @@ static void dcc_app_interaction_queue_deliver_synthetic(
   dcc_status_t status = first_status;
   while (actions != NULL) {
     dcc_app_interaction_action_t *next = actions->next;
-    dcc_rest_result_t synthetic = {
-        .size = sizeof(synthetic),
-        .version = DCC_REST_RESULT_VERSION,
+    dcc_rest_terminal_completion_t synthetic = {
+        .operation = "dcc_interaction_queue",
         .transport_status = status,
+        .legacy_error = status,
+        .result_flags = (actions->options.flags &
+                         DCC_REST_CALL_FLAG_SENSITIVE_RESULT_BODY) != 0U
+                            ? DCC_REST_RESULT_FLAG_SENSITIVE_BODY
+                            : 0U,
     };
-    dcc_rest_deliver_terminal_result(
-        client, "dcc_interaction_queue", &synthetic, status, NULL, NULL,
-        actions->callback, actions->user_data);
+    (void)client;
+    /* Detached dependents are advanced by this loop, not recursively by the
+     * normal queue post-hook. Finalize owns callback, observer and wait state. */
+    actions->request->post_hook = NULL;
+    dcc_rest_request_handle_finalize(actions->request, &synthetic);
     dcc_app_interaction_mutex_lock(&queue->mutex);
     dcc_app_interaction_action_release(queue, actions->reserved_bytes);
     dcc_app_interaction_mutex_unlock(&queue->mutex);
@@ -477,6 +513,9 @@ static void dcc_app_interaction_queue_post_result(
   dcc_status_t dependent_status = DCC_ERR_STATE;
 
   dcc_app_interaction_mutex_lock(&queue->mutex);
+  /* This post-hook still uses queue after making the next worker eligible.
+   * Its own reference also closes the empty-queue/owner-destroy race. */
+  ++queue->references;
   if (queue->head == action) {
     queue->head = action->next;
     if (queue->head == NULL)
@@ -515,6 +554,7 @@ static void dcc_app_interaction_queue_post_result(
   dcc_app_interaction_mutex_lock(&queue->mutex);
   if (dependent != NULL)
     queue->active = 0U;
+  --queue->references;
   int finalize = queue->references == 0U && queue->active == 0U &&
                  queue->head == NULL;
   dcc_app_interaction_mutex_unlock(&queue->mutex);
@@ -527,20 +567,20 @@ dcc_app_interaction_queue_submit_head(dcc_app_interaction_queue_t *queue) {
   dcc_app_interaction_action_t *action = queue->head;
   if (action == NULL || queue->active != 0U)
     return DCC_OK;
-  dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
-  options.callback = dcc_app_interaction_queue_result;
-  options.user_data = action;
+  if (atomic_load_explicit(&action->request->cancel_requested,
+                           memory_order_acquire))
+    return DCC_ERR_CANCELED;
   dcc_rest_request_desc_t description = DCC_REST_REQUEST_DESC_INIT;
   description.method = action->method;
   description.path = action->path;
   description.content_type = action->content_type;
   description.body = action->body;
   description.body_len = action->body_len;
-  description.options = &options;
+  description.options = &action->options;
   queue->active = 1U;
-  dcc_status_t status = dcc_rest_submit_operation_with_post_hook(
+  dcc_status_t status = dcc_rest_submit_existing_handle(
       queue->client, &description, "dcc_interaction_queue", 1U,
-      dcc_app_interaction_queue_post_result, action, NULL);
+      action->request);
   if (status != DCC_OK)
     queue->active = 0U;
   return status;
@@ -583,8 +623,16 @@ dcc_app_interaction_queue_path(const dcc_interaction_t *interaction,
 
 static dcc_status_t dcc_app_interaction_queue_enqueue(
     dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
-    dcc_rest_result_fn callback, void *user_data, uint8_t kind,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request,
+    uint8_t kind,
     dcc_interaction_flow_state_t projected_state) {
+  if (out_request != NULL)
+    *out_request = NULL;
+  dcc_rest_call_options_t normalized;
+  if (dcc_rest_call_options_normalize(options, &normalized) != DCC_OK ||
+      normalized.auth_mode != DCC_REST_AUTH_DEFAULT ||
+      normalized.audit_log_reason != NULL || normalized.auth_token != NULL)
+    return DCC_ERR_INVALID_ARG;
   if (flow == NULL || flow->queue == NULL || flow->interaction == NULL)
     return DCC_ERR_INVALID_ARG;
   dcc_app_interaction_queue_t *queue = flow->queue;
@@ -593,8 +641,10 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
     return DCC_ERR_NOMEM;
   action->queue = queue;
   action->content_type = "application/json";
-  action->callback = callback;
-  action->user_data = user_data;
+  action->callback = normalized.callback;
+  action->user_data = normalized.user_data;
+  action->options = normalized;
+  action->caller_reference = out_request != NULL;
 
   dcc_app_interaction_mutex_lock(&queue->mutex);
   if (queue->failed != 0U || queue->owner_destroyed != 0U) {
@@ -680,12 +730,11 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
     return status;
   }
 
-  status = dcc_app_interaction_action_measure(action);
-  if (status == DCC_OK)
-    status = dcc_app_interaction_action_reserve(queue,
-                                                action->reserved_bytes);
+  status = dcc_app_interaction_action_admit_storage(action);
   if (status != DCC_OK) {
     dcc_app_interaction_mutex_unlock(&queue->mutex);
+    if (action->caller_reference && action->request != NULL)
+      dcc_rest_request_handle_release(action->request);
     dcc_app_interaction_action_free(action);
     return status;
   }
@@ -700,6 +749,10 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
   queue->projected_state = projected_state;
   queue->projected_original_exists = action->terminal_original_exists;
   flow->state = projected_state;
+  /* Queue lock prevents callback delivery until admission/output publication
+   * is complete; REST publication precedes worker eligibility as well. */
+  if (out_request != NULL)
+    *out_request = action->request;
   status = dcc_app_interaction_queue_submit_head(queue);
   if (status != DCC_OK) {
     queue->head = NULL;
@@ -708,6 +761,10 @@ static dcc_status_t dcc_app_interaction_queue_enqueue(
     queue->projected_original_exists = previous_original_exists;
     flow->state = previous;
     dcc_app_interaction_action_release(queue, action->reserved_bytes);
+    if (out_request != NULL) {
+      *out_request = NULL;
+      dcc_rest_request_handle_release(action->request);
+    }
     dcc_app_interaction_action_free(action);
   } else if (is_initial != 0U) {
     queue->initial_admitted = 1U;
@@ -775,10 +832,7 @@ dcc_status_t dcc_app_interaction_queue_initial_response(
     dcc_app_interaction_action_free(action);
     return DCC_ERR_STATE;
   }
-  status = dcc_app_interaction_action_measure(action);
-  if (status == DCC_OK)
-    status = dcc_app_interaction_action_reserve(queue,
-                                                action->reserved_bytes);
+  status = dcc_app_interaction_action_admit_storage(action);
   if (status == DCC_OK) {
     dcc_interaction_flow_state_t previous = queue->projected_state;
     uint8_t previous_original_exists = queue->projected_original_exists;
@@ -804,6 +858,8 @@ dcc_status_t dcc_app_interaction_queue_initial_response(
       dcc_app_interaction_action_release(queue, action->reserved_bytes);
       dcc_app_interaction_action_free(action);
     }
+  } else {
+    dcc_app_interaction_action_free(action);
   }
   dcc_app_interaction_mutex_unlock(&queue->mutex);
   return status;
@@ -835,10 +891,7 @@ dcc_status_t dcc_app_interaction_queue_delete_original(
   dcc_status_t status =
       dcc_app_interaction_queue_path(flow->interaction, 1U, &action->path);
   if (status == DCC_OK)
-    status = dcc_app_interaction_action_measure(action);
-  if (status == DCC_OK)
-    status = dcc_app_interaction_action_reserve(queue,
-                                                action->reserved_bytes);
+    status = dcc_app_interaction_action_admit_storage(action);
   if (status != DCC_OK) {
     dcc_app_interaction_mutex_unlock(&queue->mutex);
     dcc_app_interaction_action_free(action);
@@ -863,6 +916,33 @@ dcc_status_t dcc_app_interaction_queue_delete_original(
   dcc_app_interaction_mutex_unlock(&queue->mutex);
   return status;
 }
+dcc_status_t dcc_app_interaction_queue_reply_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  return dcc_app_interaction_queue_enqueue(
+      flow, message, options, out_request, UINT8_MAX, DCC_INTERACTION_FLOW_READY);
+}
+
+dcc_status_t dcc_app_interaction_queue_defer_ex(
+    dcc_interaction_flow_t *flow, const dcc_rest_call_options_t *options,
+    dcc_rest_request_t **out_request) {
+  return dcc_app_interaction_queue_enqueue(
+      flow, NULL, options, out_request, 3U, DCC_INTERACTION_FLOW_DEFERRED);
+}
+
+dcc_status_t dcc_app_interaction_queue_edit_original_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  return dcc_app_interaction_queue_enqueue(
+      flow, message, options, out_request, 1U, DCC_INTERACTION_FLOW_ORIGINAL_EDITED);
+}
+
+dcc_status_t dcc_app_interaction_queue_followup_ex(
+    dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
+    const dcc_rest_call_options_t *options, dcc_rest_request_t **out_request) {
+  return dcc_app_interaction_queue_enqueue(
+      flow, message, options, out_request, 2U, DCC_INTERACTION_FLOW_FOLLOWED_UP);
+}
 
 dcc_status_t
 dcc_app_interaction_queue_reply(dcc_interaction_flow_t *flow,
@@ -870,24 +950,34 @@ dcc_app_interaction_queue_reply(dcc_interaction_flow_t *flow,
                                 dcc_rest_result_fn callback, void *user_data) {
   if (flow == NULL)
     return DCC_ERR_INVALID_ARG;
+  dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+  options.callback = callback;
+  /* Legacy callback-only APIs ignore user_data when no callback is supplied. */
+  options.user_data = callback != NULL ? user_data : NULL;
   return dcc_app_interaction_queue_enqueue(
-      flow, message, callback, user_data, UINT8_MAX,
+      flow, message, &options, NULL, UINT8_MAX,
       DCC_INTERACTION_FLOW_READY);
 }
 
 dcc_status_t dcc_app_interaction_queue_edit_original(
     dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
     dcc_rest_result_fn callback, void *user_data) {
+  dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+  options.callback = callback;
+  options.user_data = callback != NULL ? user_data : NULL;
   return dcc_app_interaction_queue_enqueue(
-      flow, message, callback, user_data, 1U,
+      flow, message, &options, NULL, 1U,
       DCC_INTERACTION_FLOW_ORIGINAL_EDITED);
 }
 
 dcc_status_t dcc_app_interaction_queue_followup(
     dcc_interaction_flow_t *flow, const dcc_message_builder_t *message,
     dcc_rest_result_fn callback, void *user_data) {
+  dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+  options.callback = callback;
+  options.user_data = callback != NULL ? user_data : NULL;
   return dcc_app_interaction_queue_enqueue(
-      flow, message, callback, user_data, 2U, DCC_INTERACTION_FLOW_FOLLOWED_UP);
+      flow, message, &options, NULL, 2U, DCC_INTERACTION_FLOW_FOLLOWED_UP);
 }
 
 dcc_status_t dcc_app_interaction_queue_defer(dcc_interaction_flow_t *flow,
@@ -901,6 +991,9 @@ dcc_status_t dcc_app_interaction_queue_defer(dcc_interaction_flow_t *flow,
       update != 0U ? DCC_INTERACTION_FLOW_DEFERRED_UPDATE
                    : (ephemeral != 0U ? DCC_INTERACTION_FLOW_DEFERRED_EPHEMERAL
                                       : DCC_INTERACTION_FLOW_DEFERRED);
+  dcc_rest_call_options_t options = DCC_REST_CALL_OPTIONS_INIT;
+  options.callback = callback;
+  options.user_data = callback != NULL ? user_data : NULL;
   return dcc_app_interaction_queue_enqueue(
-      flow, NULL, callback, user_data, kind, projected);
+      flow, NULL, &options, NULL, kind, projected);
 }
