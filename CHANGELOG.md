@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.0 - Unreleased
+## 2.1.0 - 2026-09-08
 
 Additive minor update preserving existing public signatures and record layouts,
 ABI major 2, and the LLAM 2.2.1 minimum.

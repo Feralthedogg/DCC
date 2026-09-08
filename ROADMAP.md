@@ -1,6 +1,6 @@
 # DCC Roadmap
 
-DCC 2.1.0 is in development (unreleased), focused on ownership clarity,
+DCC 2.1.0 is the current stable release, focused on ownership clarity,
 additive Context/Flow operation control, and measured allocation reductions.
 DCC's direction through the 2.x line is stability-first. New surface area should make
 existing bots easier to operate, test, or upgrade rather than duplicate Discord

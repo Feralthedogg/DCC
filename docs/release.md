@@ -1,7 +1,7 @@
 # DCC Release Checklist
 
-DCC 2.1.0 is development/unreleased. This checklist prepares a release; it does
-not imply that a tag, package, or GitHub Release has been published.
+DCC 2.1.0 is the current stable release. This checklist documents the
+published tag, package, and GitHub Release verification path.
 
 Run the release check from the repository root:
 
@@ -28,22 +28,22 @@ Binary release archives include:
 
 Users install LLAM separately before installing DCC, or explicitly ask the DCC
 installer to fetch LLAM. The following are examples for the existing 2.0.2
-release, not download links for unreleased 2.1.0:
+historical 2.0.2 release, not the current 2.1.0 download links:
 
 ```sh
 curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
-curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v2.0.2/install.sh |
-  sh -s -- --version 2.0.2 \
-    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v2.0.2" \
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v2.1.0/install.sh |
+  sh -s -- --version 2.1.0 \
+    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v2.1.0" \
     --prefix "$HOME/.local"
 ```
 
 Windows installs use the release PowerShell installer:
 
 ```powershell
-Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v2.0.2/install.ps1" -OutFile install.ps1
-.\install.ps1 -Version 2.0.2 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v2.0.2" -Prefix "$env:LOCALAPPDATA\DCC"
+Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v2.1.0/install.ps1" -OutFile install.ps1
+.\install.ps1 -Version 2.1.0 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v2.1.0" -Prefix "$env:LOCALAPPDATA\DCC"
 ```
 
 Pass `--install-llam` when you want the POSIX installer to fetch the DCC-tested
@@ -53,7 +53,7 @@ different target is allowed for staging, but the installer warns because the
 resulting binaries and libraries may not run on the current machine.
 
 Only when release approval and verification are complete, a maintainer may
-publish a matching semantic version tag. For the future 2.1.0 release:
+publish a matching semantic version tag. For the 2.1.0 release:
 
 ```sh
 git tag v2.1.0
@@ -76,8 +76,8 @@ DCC's public C11 decorator macros with a conforming C frontend.
 Verify a downloaded archive before installation:
 
 ```sh
-sha256sum -c dcc-2.0.2-linux-x86_64.tar.gz.sha256
-gh attestation verify dcc-2.0.2-linux-x86_64.tar.gz --repo Feralthedogg/DCC
+sha256sum -c dcc-2.1.0-linux-x86_64.tar.gz.sha256
+gh attestation verify dcc-2.1.0-linux-x86_64.tar.gz --repo Feralthedogg/DCC
 ```
 
 After installation, run `dcc_doctor --json`; production hosts should add

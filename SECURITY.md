@@ -4,7 +4,8 @@
 
 | Version | Security fixes |
 | --- | --- |
-| 2.0.x | Supported |
+| 2.1.x | Supported |
+| 2.0.x | Upgrade recommended |
 | 1.x and older | Upgrade required |
 
 ## Reporting a Vulnerability
@@ -23,6 +24,6 @@ Security-sensitive areas include interaction signature verification, token and
 replay-file handling, REST URL construction, Gateway/voice frame parsing,
 libdave loading, hot-reload worker IPC, installers, and release workflows.
 
-The current stable release line is DCC 2.0.x. Legacy application shortcuts are
-kept as a source-compatibility bridge, but security fixes are issued only for
-the supported 2.0.x line.
+The current stable release line is DCC 2.1.x. Legacy application shortcuts are
+kept as a source-compatibility bridge, but security fixes are issued for the
+supported 2.1.x line.
