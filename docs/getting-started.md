@@ -2,7 +2,7 @@
 
 ## Install
 
-For the current stable release, build DCC 2.1.0 from source with LLAM 2.2.1
+For the current stable release, build DCC 2.1.1 from source with LLAM 2.2.1
 or newer. The installer below fetches the latest published release. Install
 both libraries into the same prefix, then verify:
 

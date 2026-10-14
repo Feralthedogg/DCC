@@ -30,7 +30,20 @@ dcc_status_t dcc_event_bus_add(
     void *user_data,
     dcc_listener_id_t *out_id
 ) {
-    if (bus == NULL || cb == NULL || type < 0 || type >= DCC_EVENT_MAX) {
+    return dcc_event_bus_add_owned(bus, type, cb, user_data, NULL, NULL, out_id);
+}
+
+dcc_status_t dcc_event_bus_add_owned(
+    dcc_event_bus_t *bus,
+    dcc_event_type_t type,
+    dcc_event_cb cb,
+    void *user_data,
+    void (*retain_user_data)(void *user_data),
+    void (*release_user_data)(void *user_data),
+    dcc_listener_id_t *out_id
+) {
+    if (bus == NULL || cb == NULL || type < 0 || type >= DCC_EVENT_MAX ||
+        (retain_user_data == NULL) != (release_user_data == NULL)) {
         return DCC_ERR_INVALID_ARG;
     }
 
@@ -60,7 +73,12 @@ dcc_status_t dcc_event_bus_add(
         .id = id,
         .cb = cb,
         .user_data = user_data,
+        .retain_user_data = retain_user_data,
+        .release_user_data = release_user_data,
     };
+    if (retain_user_data != NULL) {
+        retain_user_data(user_data);
+    }
     dcc_event_bus_unlock(bus);
 
     if (out_id != NULL) {
@@ -78,9 +96,13 @@ dcc_status_t dcc_event_bus_remove(dcc_event_bus_t *bus, dcc_event_type_t type, d
     dcc_event_listener_list_t *list = &bus->listeners[type];
     for (size_t i = 0; i < list->len; ++i) {
         if (list->items[i].id == id) {
+            dcc_event_listener_t removed = list->items[i];
             list->items[i] = list->items[list->len - 1];
             list->len--;
             dcc_event_bus_unlock(bus);
+            if (removed.release_user_data != NULL) {
+                removed.release_user_data(removed.user_data);
+            }
             return DCC_OK;
         }
     }

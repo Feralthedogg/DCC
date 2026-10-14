@@ -4,7 +4,7 @@ DCC is a C11 Discord client runtime built on LLAM 2.2.1. It covers Gateway,
 REST, interaction webhooks, Components V2, voice with the official libdave
 backend, sharding, replay tests, and isolated hot reload.
 
-DCC 2.1.0 is the current stable release. It preserves the DCC 2 ABI and
+DCC 2.1.1 is the current stable release. It preserves the DCC 2 ABI and
 adds owned operation handles for Context/Flow replies, explicit ownership
 guidance, and measured request-allocation reductions. It separates production behavior from development
 convenience: production runners never mutate commands on READY, while

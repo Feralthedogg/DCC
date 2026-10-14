@@ -1,6 +1,6 @@
 # DCC Release Checklist
 
-DCC 2.1.0 is the current stable release. This checklist documents the
+DCC 2.1.1 is the current stable release. This checklist documents the
 published tag, package, and GitHub Release verification path.
 
 Run the release check from the repository root:
@@ -16,7 +16,7 @@ tools/package_release.sh
 ```
 
 This writes normalized archives and checksum files to `target/dist/`, for
-example `dcc-2.1.0-macos-aarch64.tar.gz`. Packaging requires Python 3.10+;
+example `dcc-2.1.1-macos-aarch64.tar.gz`. Packaging requires Python 3.10+;
 `DCC_PYTHON` can select its executable. Numeric version identity comes only from
 `project(dcc VERSION ...)` in `CMakeLists.txt`. Package overrides must be valid
 semantic versions with that same numeric core; mismatches cannot be bypassed.
@@ -27,23 +27,22 @@ Binary release archives include:
 - DCC command-line tools, examples, deployment templates, and docs.
 
 Users install LLAM separately before installing DCC, or explicitly ask the DCC
-installer to fetch LLAM. The following are examples for the existing 2.0.2
-historical 2.0.2 release, not the current 2.1.0 download links:
+installer to fetch LLAM. These examples use the current 2.1.1 download links:
 
 ```sh
 curl -fsSL https://github.com/Feralthedogg/LLAM/releases/latest/download/install.sh |
   sh -s -- --prefix "$HOME/.local"
-curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v2.1.0/install.sh |
-  sh -s -- --version 2.1.0 \
-    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v2.1.0" \
+curl -fsSL https://github.com/Feralthedogg/DCC/releases/download/v2.1.1/install.sh |
+  sh -s -- --version 2.1.1 \
+    --base-url "https://github.com/Feralthedogg/DCC/releases/download/v2.1.1" \
     --prefix "$HOME/.local"
 ```
 
 Windows installs use the release PowerShell installer:
 
 ```powershell
-Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v2.1.0/install.ps1" -OutFile install.ps1
-.\install.ps1 -Version 2.1.0 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v2.1.0" -Prefix "$env:LOCALAPPDATA\DCC"
+Invoke-WebRequest "https://github.com/Feralthedogg/DCC/releases/download/v2.1.1/install.ps1" -OutFile install.ps1
+.\install.ps1 -Version 2.1.1 -BaseUrl "https://github.com/Feralthedogg/DCC/releases/download/v2.1.1" -Prefix "$env:LOCALAPPDATA\DCC"
 ```
 
 Pass `--install-llam` when you want the POSIX installer to fetch the DCC-tested
@@ -53,11 +52,11 @@ different target is allowed for staging, but the installer warns because the
 resulting binaries and libraries may not run on the current machine.
 
 Only when release approval and verification are complete, a maintainer may
-publish a matching semantic version tag. For the 2.1.0 release:
+publish a matching semantic version tag. For the 2.1.1 release:
 
 ```sh
-git tag v2.1.0
-git push origin v2.1.0
+git tag v2.1.1
+git push origin v2.1.1
 ```
 
 The `Release` workflow checks out `DCC` and `LLAM` side by side, builds against
@@ -65,7 +64,7 @@ LLAM through `DCC_LLAM_USE_SUBDIRECTORY=ON`, keeps LLAM's install rules out of
 the DCC package, runs the DCC test suite, creates CPack binary/source archives,
 uploads artifacts, builds `SHA256SUMS`, and creates the GitHub Release. Tag
 versions must match `project(dcc VERSION ...)`. Prerelease tags such as
-`v2.1.0-rc.1` are validated and marked prerelease; stable tags are not.
+`v2.1.1-rc.1` are validated and marked prerelease; stable tags are not.
 The Windows packaging job also compiles the runtime benchmark; timing is not
 a performance pass/fail gate. The workflow also publishes a
 CycloneDX SBOM and signs artifact provenance through GitHub attestations.
@@ -76,8 +75,8 @@ DCC's public C11 decorator macros with a conforming C frontend.
 Verify a downloaded archive before installation:
 
 ```sh
-sha256sum -c dcc-2.1.0-linux-x86_64.tar.gz.sha256
-gh attestation verify dcc-2.1.0-linux-x86_64.tar.gz --repo Feralthedogg/DCC
+sha256sum -c dcc-2.1.1-linux-x86_64.tar.gz.sha256
+gh attestation verify dcc-2.1.1-linux-x86_64.tar.gz --repo Feralthedogg/DCC
 ```
 
 After installation, run `dcc_doctor --json`; production hosts should add

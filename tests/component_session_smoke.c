@@ -11,6 +11,23 @@ typedef struct route_state {
     char action[DCC_COMPONENT_SESSION_ACTION_MAX + 1U];
 } route_state_t;
 
+typedef struct unregister_state {
+    dcc_component_session_listener_t *listener;
+    dcc_status_t status;
+} unregister_state_t;
+
+static void unregister_before_component_listener(
+    dcc_client_t *client,
+    const dcc_event_t *event,
+    void *user_data
+) {
+    (void)event;
+    unregister_state_t *state = (unregister_state_t *)user_data;
+    if (state->listener->state != NULL) {
+        state->status = dcc_client_off_component_session(client, state->listener);
+    }
+}
+
 static int expect_status(
     dcc_component_session_verify_status_t actual,
     dcc_component_session_verify_status_t expected,
@@ -266,6 +283,32 @@ int main(void) {
         route.calls != 1) {
         fprintf(stderr, "component session listener routing failed\n");
         dcc_client_off_component_session(client, &listener);
+        dcc_client_destroy(client);
+        dcc_component_session_store_deinit(&store);
+        dcc_component_session_deinit(&session);
+        return 1;
+    }
+    dcc_client_destroy(client);
+
+    client = NULL;
+    memset(&route, 0, sizeof(route));
+    memset(&listener, 0, sizeof(listener));
+    unregister_state_t unregister = {
+        .listener = &listener,
+        .status = DCC_ERR_STATE,
+    };
+    if (dcc_client_create(&client_options, &client) != DCC_OK ||
+        dcc_client_on(client, DCC_EVENT_BUTTON_CLICK,
+                      unregister_before_component_listener, &unregister, NULL) != DCC_OK ||
+        dcc_client_on_component_session(client, &session, &listener_options,
+                                        on_component_session_action, &route, &listener) != DCC_OK ||
+        !dispatch_component_event(client, button.custom_id) ||
+        unregister.status != DCC_OK ||
+        listener.state != NULL ||
+        route.calls != 1 ||
+        !dispatch_component_event(client, button.custom_id) ||
+        route.calls != 1) {
+        fprintf(stderr, "component session listener removal during dispatch failed\n");
         dcc_client_destroy(client);
         dcc_component_session_store_deinit(&store);
         dcc_component_session_deinit(&session);

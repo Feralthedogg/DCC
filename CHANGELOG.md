@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.1 - 2026-10-14
+
+Patch release preserving the DCC 2 public API and ABI major 2.
+
+- Kept component-session listener state alive through in-flight event dispatch
+  when another callback unregisters the listener, including client teardown.
+- Prevented a use-after-free in the Gateway smoke test's failure diagnostics.
+
 ## 2.1.0 - 2026-09-08
 
 Additive minor update preserving existing public signatures and record layouts,

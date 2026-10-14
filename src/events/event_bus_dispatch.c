@@ -32,6 +32,11 @@ dcc_status_t dcc_event_bus_dispatch(dcc_event_bus_t *bus, dcc_client_t *client, 
             }
         }
         memcpy(snapshot, list->items, snapshot_len * sizeof(*snapshot));
+        for (size_t i = 0; i < snapshot_len; ++i) {
+            if (snapshot[i].retain_user_data != NULL) {
+                snapshot[i].retain_user_data(snapshot[i].user_data);
+            }
+        }
     }
     bus->events_dispatched++;
     dcc_event_bus_unlock(bus);
@@ -40,6 +45,12 @@ dcc_status_t dcc_event_bus_dispatch(dcc_event_bus_t *bus, dcc_client_t *client, 
         snapshot[i].cb(client, event, snapshot[i].user_data);
         if (mutable_event->cancelled) {
             break;
+        }
+    }
+
+    for (size_t i = 0; i < snapshot_len; ++i) {
+        if (snapshot[i].release_user_data != NULL) {
+            snapshot[i].release_user_data(snapshot[i].user_data);
         }
     }
 

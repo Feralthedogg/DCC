@@ -4,12 +4,16 @@
 #include <dcc/events/listeners.h>
 
 #include "internal/json/dcc_json.h"
+#include "internal/client/dcc_client_state_internal.h"
+#include "internal/events/dcc_event_bus_api_internal.h"
 
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 typedef struct dcc_component_session_listener_state {
+    atomic_uint references;
     dcc_component_session_store_t store;
     dcc_component_session_action_cb cb;
     void *user_data;
@@ -20,6 +24,21 @@ typedef struct dcc_component_session_listener_state {
     uint8_t listen_selects;
     uint8_t listen_forms;
 } dcc_component_session_listener_state_t;
+
+static void dcc_component_session_listener_state_retain(void *user_data) {
+    dcc_component_session_listener_state_t *state =
+        (dcc_component_session_listener_state_t *)user_data;
+    (void)atomic_fetch_add_explicit(&state->references, 1U, memory_order_relaxed);
+}
+
+static void dcc_component_session_listener_state_release(void *user_data) {
+    dcc_component_session_listener_state_t *state =
+        (dcc_component_session_listener_state_t *)user_data;
+    if (atomic_fetch_sub_explicit(&state->references, 1U, memory_order_acq_rel) == 1U) {
+        dcc_component_session_store_deinit(&state->store);
+        free(state);
+    }
+}
 
 void dcc_component_session_listener_options_init(
     dcc_component_session_listener_options_t *options
@@ -220,6 +239,7 @@ static dcc_status_t dcc_component_session_listener_state_new(
     if (state == NULL) {
         return DCC_ERR_NOMEM;
     }
+    atomic_init(&state->references, 1U);
     dcc_status_t status = dcc_component_session_listener_copy_store(&state->store, store);
     if (status != DCC_OK) {
         free(state);
@@ -249,8 +269,7 @@ static void dcc_component_session_listener_state_free(
     if (state == NULL) {
         return;
     }
-    dcc_component_session_store_deinit(&state->store);
-    free(state);
+    dcc_component_session_listener_state_release(state);
 }
 
 static dcc_status_t dcc_component_session_register_listener_type(
@@ -263,11 +282,13 @@ static dcc_status_t dcc_component_session_register_listener_type(
     if (!enabled) {
         return DCC_OK;
     }
-    return dcc_client_on(
-        client,
+    return dcc_event_bus_add_owned(
+        &client->events,
         type,
         dcc_component_session_listener_trampoline,
         state,
+        dcc_component_session_listener_state_retain,
+        dcc_component_session_listener_state_release,
         out_id
     );
 }
@@ -346,6 +367,7 @@ dcc_status_t dcc_client_on_component_session_store(
 
     listener.state = state;
     *out_listener = listener;
+    dcc_component_session_listener_state_release(state);
     return DCC_OK;
 }
 
@@ -405,9 +427,6 @@ dcc_status_t dcc_client_off_component_session(
         }
     }
 
-    dcc_component_session_listener_state_free(
-        (dcc_component_session_listener_state_t *)listener->state
-    );
     memset(listener, 0, sizeof(*listener));
     return first_status;
 }

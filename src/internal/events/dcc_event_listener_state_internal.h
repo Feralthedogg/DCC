@@ -9,6 +9,8 @@ typedef struct dcc_event_listener {
     dcc_listener_id_t id;
     dcc_event_cb cb;
     void *user_data;
+    void (*retain_user_data)(void *user_data);
+    void (*release_user_data)(void *user_data);
 } dcc_event_listener_t;
 
 typedef struct dcc_event_listener_list {

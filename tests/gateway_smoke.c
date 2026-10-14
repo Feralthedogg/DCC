@@ -382,7 +382,6 @@ int main(void) {
         voice_final.channel_id == 0;
     dcc_voice_client_destroy(voice_client);
     state.voice_client = NULL;
-    dcc_client_destroy(client);
 
     if (st != DCC_OK || !state.ready_seen || !state.resumed_seen ||
         !state.message_create_seen || !state.message_update_seen || !state.message_delete_seen ||
@@ -571,8 +570,10 @@ int main(void) {
                 state.log_seen,
                 cache_ok);
         fprintf(stderr, "last_error=%s last_log=%s\n", last_error, state.last_log);
+        dcc_client_destroy(client);
         return 1;
     }
+    dcc_client_destroy(client);
     return 0;
 }
 

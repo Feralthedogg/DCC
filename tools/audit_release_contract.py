@@ -66,8 +66,8 @@ def main() -> int:
     compat = json.loads(read(source / "tools/release_compat_base.json"))
     expected_compat = {
         "current_version": version,
-        "previous_stable_tag": "v2.0.2",
-        "compat_base": "b89bbea208d84d23d7f6488556db87ec30c33c31",
+        "previous_stable_tag": "v2.1.0",
+        "compat_base": "099d17864a5f99007093568545c3e8afb0fa718c",
         "comparison_mode": "same_major",
     }
     for key, expected in expected_compat.items():

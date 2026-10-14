@@ -19,6 +19,15 @@ dcc_status_t dcc_event_bus_add(
     void *user_data,
     dcc_listener_id_t *out_id
 );
+dcc_status_t dcc_event_bus_add_owned(
+    dcc_event_bus_t *bus,
+    dcc_event_type_t type,
+    dcc_event_cb cb,
+    void *user_data,
+    void (*retain_user_data)(void *user_data),
+    void (*release_user_data)(void *user_data),
+    dcc_listener_id_t *out_id
+);
 dcc_status_t dcc_event_bus_remove(dcc_event_bus_t *bus, dcc_event_type_t type, dcc_listener_id_t id);
 dcc_status_t dcc_event_bus_dispatch(dcc_event_bus_t *bus, dcc_client_t *client, const dcc_event_t *event);
 void dcc_client_interaction_listeners_deinit(dcc_client_t *client);

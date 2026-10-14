@@ -20,6 +20,12 @@ void dcc_event_bus_deinit(dcc_event_bus_t *bus) {
         return;
     }
     for (size_t i = 0; i < (size_t)DCC_EVENT_MAX; ++i) {
+        for (size_t j = 0; j < bus->listeners[i].len; ++j) {
+            dcc_event_listener_t *listener = &bus->listeners[i].items[j];
+            if (listener->release_user_data != NULL) {
+                listener->release_user_data(listener->user_data);
+            }
+        }
         free(bus->listeners[i].items);
         bus->listeners[i].items = NULL;
         bus->listeners[i].len = 0;
